@@ -7,6 +7,6 @@ namespace Chow.Lexing
 {
     interface ILexer
     {
-        public ITokenStream ConvertToTokens(ITokenStream tokenStream, readonly string[] sourceCodeLines);
+        ITokenStream ConvertToTokens(ITokenStream tokenStream, string[] sourceCodeLines);
     }
 }

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Chow
 {
-    internal class ChowValue
+    public class ChowValue
     {
     }
 }
