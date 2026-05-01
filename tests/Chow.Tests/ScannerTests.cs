@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using Chow.LexicalAnalysis;
-using Chow.Tokens;
 
 namespace Chow.Tests
 {

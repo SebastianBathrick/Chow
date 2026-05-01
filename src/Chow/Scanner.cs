@@ -1,9 +1,8 @@
-using Chow.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace Chow.LexicalAnalysis
+namespace Chow
 {
     /// <summary>
     /// Converts Chow source code into a flat sequence of tokens.
@@ -18,18 +17,15 @@ namespace Chow.LexicalAnalysis
             { "elif", TokenType.Elif },
             { "else", TokenType.Else },
             { "False", TokenType.False },
-            { "false", TokenType.False },
             { "for", TokenType.For },
             { "if", TokenType.If },
             { "in", TokenType.In },
             { "None", TokenType.None },
-            { "none", TokenType.None },
             { "not", TokenType.Not },
             { "or", TokenType.Or },
             { "pass", TokenType.Pass },
             { "return", TokenType.Return },
             { "True", TokenType.True },
-            { "true", TokenType.True },
             { "while", TokenType.While }
         };
 

@@ -1,6 +1,6 @@
 using System;
 
-namespace Chow.LexicalAnalysis
+namespace Chow
 {
     internal sealed class ScannerException : Exception
     {
