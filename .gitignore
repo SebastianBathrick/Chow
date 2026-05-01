@@ -427,3 +427,14 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Coding agent local state
+.claude/
+.cursor/
+
+# Keep repository-owned guidance and automation files tracked
+!AGENTS.md
+!CLAUDE.md
+!.github/
+AGENTS.md
+CLAUDE.md
