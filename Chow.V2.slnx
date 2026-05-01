@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/Chow.Cli/Chow.Cli.csproj" />
+  <Project Path="src/Chow/Chow.csproj" />
+  <Project Path="tests/Chow.Tests/Chow.Tests.csproj" />
+</Solution>
