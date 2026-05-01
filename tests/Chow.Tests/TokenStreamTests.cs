@@ -57,8 +57,8 @@ namespace Chow.Tests
 
             Assert.Multiple(() =>
             {
-                Assert.That(firstPeek.columnIndex, Is.EqualTo(first.columnIndex));
-                Assert.That(secondPeek.columnIndex, Is.EqualTo(first.columnIndex));
+                Assert.That(firstPeek.startColumnIndex, Is.EqualTo(first.startColumnIndex));
+                Assert.That(secondPeek.startColumnIndex, Is.EqualTo(first.startColumnIndex));
                 Assert.That(stream.IsTokenQueued, Is.True);
             });
         }
@@ -80,9 +80,9 @@ namespace Chow.Tests
 
             Assert.Multiple(() =>
             {
-                Assert.That(a.columnIndex, Is.EqualTo(0));
-                Assert.That(b.columnIndex, Is.EqualTo(4));
-                Assert.That(c.columnIndex, Is.EqualTo(6));
+                Assert.That(a.startColumnIndex, Is.EqualTo(0));
+                Assert.That(b.startColumnIndex, Is.EqualTo(4));
+                Assert.That(c.startColumnIndex, Is.EqualTo(6));
             });
         }
 
@@ -97,7 +97,7 @@ namespace Chow.Tests
 
             stream.Dequeue();
 
-            Assert.That(stream.Peek().columnIndex, Is.EqualTo(second.columnIndex));
+            Assert.That(stream.Peek().startColumnIndex, Is.EqualTo(second.startColumnIndex));
         }
 
         [Test]
@@ -112,7 +112,7 @@ namespace Chow.Tests
             Assert.Multiple(() =>
             {
                 Assert.That(stream.IsTokenQueued, Is.True);
-                Assert.That(stream.Peek().columnIndex, Is.EqualTo(4));
+                Assert.That(stream.Peek().startColumnIndex, Is.EqualTo(4));
             });
         }
 

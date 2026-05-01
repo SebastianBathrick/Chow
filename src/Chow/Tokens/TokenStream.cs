@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Chow.Tokens
 {
-    internal sealed class TokenStream : ITokenStream
+    internal sealed class TokenStream
     {
         private const string EmptyStreamMessage = "Token stream is empty.";
 
@@ -55,7 +55,7 @@ namespace Chow.Tokens
                 throw new InvalidOperationException(EmptyStreamMessage);
 
             Token token = tokens[index];
-            return sourceCodeLines[token.lineIndex].Substring(token.columnIndex, token.length);
+            return sourceCodeLines[token.lineNumber].Substring(token.startColumnIndex, token.length);
         }
     }
 }

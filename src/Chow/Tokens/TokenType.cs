@@ -6,5 +6,6 @@ namespace Chow.Tokens
 {
     enum TokenType
     {
+        EndOfLine
     }
 }

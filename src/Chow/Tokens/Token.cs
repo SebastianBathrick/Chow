@@ -7,17 +7,17 @@ namespace Chow.Tokens
     internal readonly struct Token
     {
         public readonly TokenType type;
-        public readonly int lineIndex;
+        public readonly int lineNumber;
 
-        // Using the column index and length, we can extract the token's lexeme without needing to store its actual string
-        public readonly int columnIndex;
+        // Using the start column index and length, we can extract the token's lexeme without needing to store its actual string.
+        public readonly int startColumnIndex;
         public readonly int length;
 
-        public Token(TokenType type, int lineIndex, int columnIndex, int length)
+        public Token(TokenType type, int lineNumber, int startColumnIndex, int length)
         {
             this.type = type;
-            this.lineIndex = lineIndex;
-            this.columnIndex = columnIndex;
+            this.lineNumber = lineNumber;
+            this.startColumnIndex = startColumnIndex;
             this.length = length;
         }
 
