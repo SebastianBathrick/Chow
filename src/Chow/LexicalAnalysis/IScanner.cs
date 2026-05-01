@@ -5,8 +5,8 @@ using System.Text;
 
 namespace Chow.Lexing
 {
-    interface ILexer
+    interface IScanner
     {
-        ITokenStream ConvertToTokens(ITokenStream tokenStream, string[] sourceCodeLines);
+        ITokenStream TokenizeSourceCode(ITokenStream tokenStream, string[] sourceCodeLines);
     }
 }
