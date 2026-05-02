@@ -13,7 +13,8 @@ namespace Chow
         string _srcCode;
         int _scanCharIndex = 0;
         int _currLineNumber = 1;
-        int _currIndentLvl = 0;
+        Stack<int> _indentLevels = new Stack<int>();
+        bool _isAtStartOfLine = true;
 
         private char CurrentChar => _srcCode[_scanCharIndex];
 
@@ -33,12 +34,14 @@ namespace Chow
             _tokens = new List<Token>();
             _scanCharIndex = 0;
             _currLineNumber = 1;
-            _currIndentLvl = 0;
+            _indentLevels = new Stack<int>();
+            _indentLevels.Push(0);
+            _isAtStartOfLine = true;
 
             bool isWhitespaceOnly = _srcCode.Length > 0;
             for (int i = 0; i < _srcCode.Length && isWhitespaceOnly; i++)
             {
-                if (!IsIndentChar(_srcCode[i]))
+                if (!IsIndentChar(_srcCode[i]) && !IsFormFeedChar(_srcCode[i]))
                 {
                     isWhitespaceOnly = false;
                 }
@@ -55,16 +58,26 @@ namespace Chow
                 RunScanIteration();
             }
 
+            AddPendingDedentTokens();
             AddNewToken(TokenType.EndOfCode, string.Empty, _currLineNumber);
             return _tokens;
         }
 
         void RunScanIteration()
         {
+            if (_isAtStartOfLine)
+            {
+                ScanLineStartIndentation();
+
+                if (!IsCharToScan())
+                {
+                    return;
+                }
+            }
+
             if (IsNewlineChar(CurrentChar))
             {
-                TryCreateNewlineToken();
-                TryScanIndentTokens();
+                ScanNewlineToken();
                 return;
             }
 
@@ -76,9 +89,10 @@ namespace Chow
 
             if (IsIndentChar(CurrentChar))
             {
-                throw new InvalidOperationException(
-                    $"Unexpected indentation at line {_currLineNumber}.");
+                throw new ScannerException("Unexpected whitespace.", _currLineNumber);
             }
+
+            throw new ScannerException($"Unexpected character '{CurrentChar}'.", _currLineNumber);
         }
 
         void AddNewToken(TokenType type, string lexeme, int lineNum, object literal = null)
@@ -88,21 +102,17 @@ namespace Chow
 
         // ============================================================================================================
 
-        bool TryCreateNewlineToken()
+        void ScanNewlineToken()
         {
-            bool isNewline = false;
-
             switch (CurrentChar)
             {
                 case '\n':
                     // Unix/Linux/macOS newline
-                    isNewline = true;
                     MoveToNextChar();
                     break;
 
                 case '\r':
                     // Older Mac newline (if not followed by \n)
-                    isNewline = true;
                     MoveToNextChar();
 
                     if (IsCharToScan() && CurrentChar == '\n')
@@ -113,55 +123,87 @@ namespace Chow
                     break;        
             }
 
-            if (isNewline)
-            {
-                // Use a newline for the lexeme for clean debug information
-                AddNewToken(TokenType.Newline, "\n", _currLineNumber);
-                _currLineNumber++;
-            }
-
-            // True will indicate that the current char is at the start of a new line (if there is a char)
-            return isNewline;
+            // Use a newline for the lexeme for clean debug information
+            AddNewToken(TokenType.Newline, "\n", _currLineNumber);
+            _currLineNumber++;
+            _isAtStartOfLine = true;
         }
 
-
-        bool TryScanIndentTokens()
+        void ScanLineStartIndentation()
         {
-            int spaceCount = 0;
+            int indentColumn = ScanIndentColumn();
+
+            if (!IsCharToScan() || IsNewlineChar(CurrentChar))
+            {
+                return;
+            }
+
+            EmitIndentationTokens(indentColumn);
+            _isAtStartOfLine = false;
+        }
+
+        int ScanIndentColumn()
+        {
+            int indentColumn = 0;
+
+            while (IsCharToScan() && IsFormFeedChar(CurrentChar))
+            {
+                MoveToNextChar();
+            }
 
             while (IsCharToScan() && IsIndentChar(CurrentChar))
             {
                 if (CurrentChar == '\t')
                 {
                     // Tab rounds column up to the next multiple of TAB_SIZE (Python rule)
-                    spaceCount = ((spaceCount / TAB_SIZE) + 1) * TAB_SIZE;
+                    indentColumn = ((indentColumn / TAB_SIZE) + 1) * TAB_SIZE;
                 }
                 else
                 {
-                    spaceCount++;
+                    indentColumn++;
                 }
 
                 MoveToNextChar();
             }
 
-            // If its the end of the src code there is no need to change scopes, so skip the new indent/dedents
-            // If there is a newline char then this line is empty, and the line should be effectively ignored
-            if (!IsCharToScan() || IsNewlineChar(CurrentChar))
+            return indentColumn;
+        }
+
+        void EmitIndentationTokens(int indentColumn)
+        {
+            int previousIndentColumn = _indentLevels.Peek();
+
+            if (indentColumn > previousIndentColumn)
             {
-                return false;
+                _indentLevels.Push(indentColumn);
+                AddNewToken(TokenType.Indent, " ", _currLineNumber);
+                return;
             }
 
-            if (spaceCount > _currIndentLvl)
+            if (indentColumn == previousIndentColumn)
             {
-                AddNewToken(TokenType.Indent, " ", _currLineNumber);
+                return;
             }
-            else if (spaceCount < _currIndentLvl)
+
+            while (_indentLevels.Peek() > indentColumn)
             {
+                _indentLevels.Pop();
                 AddNewToken(TokenType.Dedent, string.Empty, _currLineNumber);
             }
 
-            _currIndentLvl = spaceCount;
-            return true;
+            if (_indentLevels.Peek() != indentColumn)
+            {
+                throw new ScannerException("Inconsistent dedent.", _currLineNumber);
+            }
+        }
+
+        void AddPendingDedentTokens()
+        {
+            while (_indentLevels.Count > 1)
+            {
+                _indentLevels.Pop();
+                AddNewToken(TokenType.Dedent, string.Empty, _currLineNumber);
+            }
         }
 
         // ============================================================================================================
@@ -240,6 +282,11 @@ namespace Chow
         static bool IsIndentChar(char checkChar)
         {
             return checkChar == ' ' || checkChar == '\t';
+        }
+
+        static bool IsFormFeedChar(char checkChar)
+        {
+            return checkChar == '\f';
         }
 
         static bool IsNewlineChar(char checkChar)
