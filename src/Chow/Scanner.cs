@@ -8,46 +8,48 @@ namespace Chow
     {
         const int TAB_SIZE = 8;
 
-        List<Token> _tokens = new List<Token>();
+        List<Token> _tokens;
 
         string _srcCode;
-        int _scanCharIndex = 0;
-        int _currLineNumber = 1;
-        Stack<int> _indentLevels = new Stack<int>();
-        bool _isAtStartOfLine = true;
+        int _scanCharIndex;
+        int _currLineNumber;
+        Stack<int> _indentLevels;
+        bool _isAtStartOfLine;
+
+        bool _isDirty;
 
         private char CurrentChar => _srcCode[_scanCharIndex];
 
         public Scanner(string srcCode)
         {
-            if (srcCode == null)
+            if (string.IsNullOrEmpty(srcCode))
             {
                 throw new ArgumentNullException(nameof(srcCode));
             }
+
             _srcCode = srcCode;
-        }
-
-        // ============================================================================================================
-
-        public List<Token> ScanTokens()
-        {
             _tokens = new List<Token>();
             _scanCharIndex = 0;
             _currLineNumber = 1;
             _indentLevels = new Stack<int>();
             _indentLevels.Push(0);
             _isAtStartOfLine = true;
+        }
 
-            bool isWhitespaceOnly = _srcCode.Length > 0;
-            for (int i = 0; i < _srcCode.Length && isWhitespaceOnly; i++)
+        // ============================================================================================================
+
+        public List<Token> ScanTokens()
+        {
+            if (!_isDirty)
             {
-                if (!IsIndentChar(_srcCode[i]) && !IsFormFeedChar(_srcCode[i]))
-                {
-                    isWhitespaceOnly = false;
-                }
+                _isDirty = true;
+            }
+            else
+            {
+                throw new InvalidOperationException("This Scanner instance can only be used once.");
             }
 
-            if (isWhitespaceOnly)
+            if (IsWhitespaceOnly())
             {
                 AddNewToken(TokenType.EmptySourceCode, string.Empty, 1);
                 return _tokens;
@@ -61,6 +63,20 @@ namespace Chow
             AddPendingDedentTokens();
             AddNewToken(TokenType.EndOfCode, string.Empty, _currLineNumber);
             return _tokens;
+        }
+
+        private bool IsWhitespaceOnly()
+        {
+            bool isWhitespaceOnly = _srcCode.Length > 0;
+            for (int i = 0; i < _srcCode.Length && isWhitespaceOnly; i++)
+            {
+                if (!IsIndentChar(_srcCode[i]) && !IsFormFeedChar(_srcCode[i]))
+                {
+                    isWhitespaceOnly = false;
+                }
+            }
+
+            return isWhitespaceOnly;
         }
 
         void RunScanIteration()
@@ -242,12 +258,11 @@ namespace Chow
             {
                 literal = isFloat
                     ? (object)float.Parse(lexeme, CultureInfo.InvariantCulture)
-                    : (object)int.Parse(lexeme, CultureInfo.InvariantCulture);
+                    : int.Parse(lexeme, CultureInfo.InvariantCulture);
             }
             catch (OverflowException)
             {
-                throw new OverflowException(
-                    $"{numTokenType} literal value out of range & parsing failed. Literal Value: {lexeme}");
+                throw new OverflowException($"{numTokenType} literal value out of range & parsing failed. Literal Value: {lexeme}");
             }
             catch (FormatException)
             {

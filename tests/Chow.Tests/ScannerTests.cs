@@ -34,12 +34,9 @@ namespace Chow.Tests
         // ============================================================================================================
 
         [Test]
-        public void ScanTokens_EmptySource_ReturnsOnlyEndOfCodeAtLineOne()
+        public void Constructor_EmptySource_ThrowsArgumentNullException()
         {
-            var tokens = Tokenize("");
-
-            Assert.That(tokens, Has.Count.EqualTo(1));
-            AssertToken(tokens[0], TokenType.EndOfCode, "", 1, null);
+            Assert.That(() => new Scanner(""), Throws.TypeOf<ArgumentNullException>());
         }
 
         [Test]
@@ -478,7 +475,6 @@ namespace Chow.Tests
         // F. EndOfCode terminal token
         // ============================================================================================================
 
-        [TestCase("")]
         [TestCase("42")]
         [TestCase("42\n")]
         [TestCase("1\n    2\n")]
@@ -489,7 +485,6 @@ namespace Chow.Tests
             Assert.That(tokens[^1].Type, Is.EqualTo(TokenType.EndOfCode));
         }
 
-        [TestCase("")]
         [TestCase("42")]
         [TestCase("42\n")]
         [TestCase("1\n    2\n")]
@@ -500,7 +495,6 @@ namespace Chow.Tests
             Assert.That(tokens.Count(t => t.Type == TokenType.EndOfCode), Is.EqualTo(1));
         }
 
-        [TestCase("", 1)]
         [TestCase("42", 1)]
         [TestCase("42\n", 2)]
         [TestCase("\n\n", 3)]
@@ -559,14 +553,16 @@ namespace Chow.Tests
         // ============================================================================================================
 
         [Test]
-        public void ScanTokens_CalledTwiceOnSameInstance_ReturnsEquivalentSequences()
+        public void ScanTokens_CalledTwiceOnSameInstance_ThrowsInvalidOperationException()
         {
             var scanner = new Scanner("1\n    2\n3\n");
 
-            var first = scanner.ScanTokens();
-            var second = scanner.ScanTokens();
+            scanner.ScanTokens();
 
-            Assert.That(second, Is.EqualTo(first));
+            Assert.That(
+                () => scanner.ScanTokens(),
+                Throws.TypeOf<InvalidOperationException>()
+                    .With.Message.EqualTo("This Scanner instance can only be used once."));
         }
 
         [Test]
@@ -579,15 +575,22 @@ namespace Chow.Tests
         }
 
         [Test]
-        public void ScanTokens_SecondCallDoesNotAppendToFirstResult()
+        public void ScanTokens_CalledTwiceAfterWhitespaceOnlySource_ThrowsInvalidOperationException()
         {
-            var scanner = new Scanner("42\n");
+            var scanner = new Scanner("    ");
 
-            var first = scanner.ScanTokens();
-            int firstCount = first.Count;
-            var second = scanner.ScanTokens();
+            scanner.ScanTokens();
 
-            Assert.That(second.Count, Is.EqualTo(firstCount));
+            Assert.That(() => scanner.ScanTokens(), Throws.TypeOf<InvalidOperationException>());
+        }
+
+        [Test]
+        public void ScanTokens_CalledAgainAfterScannerException_ThrowsInvalidOperationException()
+        {
+            var scanner = new Scanner("@");
+
+            Assert.That(() => scanner.ScanTokens(), Throws.TypeOf<ScannerException>());
+            Assert.That(() => scanner.ScanTokens(), Throws.TypeOf<InvalidOperationException>());
         }
 
         // ============================================================================================================
@@ -643,9 +646,9 @@ namespace Chow.Tests
         }
 
         [Test]
-        public void ScanTokens_EmptyString_DoesNotThrow()
+        public void Constructor_EmptyString_ThrowsArgumentNullException()
         {
-            Assert.That(() => new Scanner("").ScanTokens(), Throws.Nothing);
+            Assert.That(() => new Scanner(""), Throws.TypeOf<ArgumentNullException>());
         }
 
         // ============================================================================================================
