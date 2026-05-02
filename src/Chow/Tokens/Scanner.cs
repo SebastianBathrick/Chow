@@ -45,14 +45,12 @@ namespace Chow.Tokens
 
         public List<Token> ScanTokens()
         {
-            if (!_isDirty)
-            {
-                _isDirty = true;
-            }
-            else
+            if (_isDirty)
             {
                 throw new InvalidOperationException("This Scanner instance can only be used once.");
             }
+
+            _isDirty = true;
 
             if (IsWhitespaceOnly())
             {

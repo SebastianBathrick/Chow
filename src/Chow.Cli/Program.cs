@@ -1,3 +1,4 @@
+using Chow.Bytecode;
 using Chow.Syntax;
 using Chow.Tokens;
 
@@ -18,8 +19,12 @@ while (true)
     {
         var scanner = new Scanner(DecodeEscapes(input));
         var parser = new Parser(scanner.ScanTokens());
+        Node tree = parser.BuildSyntaxTree();
 
-        Console.WriteLine(parser.BuildSyntaxTree());
+        Console.WriteLine(tree);
+
+        var compiler = new Compiler(tree);
+        Console.WriteLine(compiler.CompileSyntaxTree());
     }
     catch (Exception ex)
     {
@@ -84,3 +89,6 @@ static string DecodeEscapes(string input)
 
     return decoded.ToString();
 }
+
+// NOTE: This file is temporary test/development code.
+// Chow.Cli will not have direct access to internal Chow library functionality.

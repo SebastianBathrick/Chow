@@ -8,8 +8,8 @@ namespace Chow.Bytecode
     class Compiler
     {
         Chunk _chunk;
-
         Node _syntaxTreeRoot;
+        bool _isDirty = false;
 
         public Compiler(Node syntaxTreeRoot)
         {
@@ -19,12 +19,29 @@ namespace Chow.Bytecode
             }
 
             _chunk = new Chunk();
-
             _syntaxTreeRoot = syntaxTreeRoot;
         }
 
-        public void CompileTargetNode(Node targetNode)
+        public Chunk CompileSyntaxTree()
         {
+            if (_isDirty)
+            {
+                throw new InvalidOperationException("This Compiler instance can only be used once");
+            }
+
+            _isDirty = true;
+            CompileTargetNode(_syntaxTreeRoot);
+            return _chunk;
+        }
+
+        void CompileTargetNode(Node targetNode)
+        {
+            if (targetNode == null)
+            {
+                // This case occurs when at the end of a branch of the syntax tree
+                return;
+            }
+
             switch (targetNode)
             {
                 case LiteralNode literalNode:
@@ -42,6 +59,7 @@ namespace Chow.Bytecode
 
         void CompileLiteral(LiteralNode literalNode)
         {
+
             TaggedUnion constUnion = TaggedUnion.Empty;
 
             switch (literalNode.Type)
@@ -78,13 +96,12 @@ namespace Chow.Bytecode
 
         void CompileExpression(ExpressionNode expressionNode)
         {
+            // Note: This specific stack order will allow for short circuiting
             CompileTargetNode(expressionNode.Left);
             CompileTargetNode(expressionNode.Right);
 
-
             OperationCode opCode = GetExpressionOperationCode(expressionNode);
             _chunk.PushOperation(opCode, expressionNode.LineNumber);
-
         }
 
 
