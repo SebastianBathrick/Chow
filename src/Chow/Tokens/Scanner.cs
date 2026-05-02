@@ -264,10 +264,24 @@ namespace Chow.Tokens
                     break;
                 
                 case '*':
+                    if (PeekNextChar() == '*')
+                    {
+                        MoveToNextChar();
+                        MoveToNextChar();
+                        AddNewToken(TokenType.StarStar, "**", _currLineNumber);
+                        return true;
+                    }
                     tokenType = TokenType.Star;
                     break;
-                
+
                 case '/':
+                    if (PeekNextChar() == '/')
+                    {
+                        MoveToNextChar();
+                        MoveToNextChar();
+                        AddNewToken(TokenType.SlashSlash, "//", _currLineNumber);
+                        return true;
+                    }
                     tokenType = TokenType.Slash;
                     break;
                 
@@ -387,6 +401,12 @@ namespace Chow.Tokens
         void MoveToNextChar()
         {
             _scanCharIndex++;
+        }
+
+        char PeekNextChar()
+        {
+            int nextIndex = _scanCharIndex + 1;
+            return nextIndex < _srcCode.Length ? _srcCode[nextIndex] : '\0';
         }
 
         // ============================================================================================================

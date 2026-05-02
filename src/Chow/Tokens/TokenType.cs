@@ -41,8 +41,14 @@ namespace Chow
         /// <summary>Multiplication operator: <c>*</c>.</summary>
         Star,
 
+        /// <summary>Exponentiation operator: <c>**</c>.</summary>
+        StarStar,
+
         /// <summary>Division operator: <c>/</c>.</summary>
         Slash,
+
+        /// <summary>Floor division operator: <c>//</c>.</summary>
+        SlashSlash,
 
         /// <summary>Modulo operator: <c>%</c>.</summary>
         Percent,

@@ -8,7 +8,7 @@ namespace Chow.Bytecode
     class Chunk
     {
         List<Operation> _operations = new List<Operation>();
-        List<TaggedUnion> _constants = new List<TaggedUnion>(); 
+        List<TaggedUnion> _consts = new List<TaggedUnion>(); 
         List<int> _operationLineNums = new List<int>();
 
         int _currIndex = 0;
@@ -19,12 +19,19 @@ namespace Chow.Bytecode
         public Operation this[int index] => _operations[index];
 
 
-        public TaggedUnion GetConstant(int index) => _constants[index];
+        public TaggedUnion GetConstant(int index) => _consts[index];
 
-        public int AddConstant(TaggedUnion newConstant)
+        public int AddConstant(TaggedUnion newConst)
         {
-            _constants.Add(newConstant);
-            return _constants.Count - 1; // Provide an index to use as an Operation operand
+            int constIndex = _consts.IndexOf(newConst);
+
+           if (constIndex < 0)
+            {
+                constIndex = _consts.Count;
+                _consts.Add(newConst);
+            }
+
+            return constIndex;
         }
 
         public void PushOperation(OperationCode operationType, int lineNumber, int operand = -1)
@@ -36,16 +43,39 @@ namespace Chow.Bytecode
         public override string ToString()
         {
             var sb = new StringBuilder();
+
+            sb.AppendLine("Constants:");
+            for (int i = 0; i < _consts.Count; i++)
+            {
+                TaggedUnion constant = _consts[i];
+                sb.Append("  ");
+                sb.Append(i);
+                sb.Append(": ");
+                if (constant.IsInteger)
+                {
+                    sb.Append("Int=");
+                    sb.Append(constant.IntegerValue);
+                }
+                else if (constant.IsFloat)
+                {
+                    sb.Append("Float=");
+                    sb.Append(constant.FloatValue);
+                }
+                sb.AppendLine();
+            }
+
+            sb.AppendLine("Operations:");
             for (int i = 0; i < _operations.Count; i++)
             {
                 Operation op = _operations[i];
+                sb.Append("  ");
                 sb.Append(i);
                 sb.Append(": ");
                 sb.Append(op.Code);
 
                 if (op.Operand != -1)
                 {
-                    TaggedUnion constant = _constants[op.Operand];
+                    TaggedUnion constant = _consts[op.Operand];
                     sb.Append(' ');
                     sb.Append(op.Operand);
                     sb.Append(" (");

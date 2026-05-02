@@ -131,6 +131,24 @@ namespace Chow.Tests
         }
 
         [Test]
+        public void BuildSyntaxTree_Modulus_BuildsModulusNode()
+        {
+            AssertBinary(Parse("7 % 2"), ExpressionOperator.Modulus);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_Exponent_BuildsExponentiateNode()
+        {
+            AssertBinary(Parse("2 ** 3"), ExpressionOperator.Exponentiate);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_FloorDivide_BuildsFloorDivideNode()
+        {
+            AssertBinary(Parse("7 // 2"), ExpressionOperator.FloorDivide);
+        }
+
+        [Test]
         public void BuildSyntaxTree_BinaryOperation_AssignsOperatorTokenLineNumber()
         {
             Node result = ParseTokens(
@@ -188,6 +206,52 @@ namespace Chow.Tests
             AssertLiteral(inner.Left, 5, LiteralDataType.Integer);
             AssertLiteral(inner.Right!, 2, LiteralDataType.Integer);
             AssertLiteral(outer.Right!, 1, LiteralDataType.Integer);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_RightAssociativeExponent_BuildsRightLeaningTree()
+        {
+            // 2 ** 3 ** 2 => Exp(2, Exp(3, 2)) — right-associative matches Python: 2**(3**2) = 512
+            Node result = Parse("2 ** 3 ** 2");
+            ExpressionNode outer = AssertBinary(result, ExpressionOperator.Exponentiate);
+            AssertLiteral(outer.Left, 2, LiteralDataType.Integer);
+            ExpressionNode inner = AssertBinary(outer.Right!, ExpressionOperator.Exponentiate);
+            AssertLiteral(inner.Left, 3, LiteralDataType.Integer);
+            AssertLiteral(inner.Right!, 2, LiteralDataType.Integer);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_PrecedenceExpOverNegate_BindsExponentTighter()
+        {
+            // -2 ** 2 => Negate(Exp(2, 2)) — Python: ** binds tighter than unary minus
+            Node result = Parse("-2 ** 2");
+            ExpressionNode negate = AssertUnary(result);
+            ExpressionNode exp = AssertBinary(negate.Left, ExpressionOperator.Exponentiate);
+            AssertLiteral(exp.Left, 2, LiteralDataType.Integer);
+            AssertLiteral(exp.Right!, 2, LiteralDataType.Integer);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_ExponentRightOperandUnary_AllowsNegativeExponent()
+        {
+            // 2 ** -3 => Exp(2, Negate(3))
+            Node result = Parse("2 ** -3");
+            ExpressionNode exp = AssertBinary(result, ExpressionOperator.Exponentiate);
+            AssertLiteral(exp.Left, 2, LiteralDataType.Integer);
+            ExpressionNode negate = AssertUnary(exp.Right!);
+            AssertLiteral(negate.Left, 3, LiteralDataType.Integer);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_PrecedenceModEqualToMul_GroupsLeftToRight()
+        {
+            // 6 % 4 * 2 => Multiply(Modulus(6, 4), 2) — % same precedence as *
+            Node result = Parse("6 % 4 * 2");
+            ExpressionNode mul = AssertBinary(result, ExpressionOperator.Multiply);
+            ExpressionNode mod = AssertBinary(mul.Left, ExpressionOperator.Modulus);
+            AssertLiteral(mod.Left, 6, LiteralDataType.Integer);
+            AssertLiteral(mod.Right!, 4, LiteralDataType.Integer);
+            AssertLiteral(mul.Right!, 2, LiteralDataType.Integer);
         }
 
         [Test]

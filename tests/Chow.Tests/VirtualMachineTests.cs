@@ -82,6 +82,9 @@ namespace Chow.Tests
         [TestCase((int)OperationCode.Add, 5, 3, 8)]
         [TestCase((int)OperationCode.Subtract, 5, 3, 2)]
         [TestCase((int)OperationCode.Multiply, 4, 3, 12)]
+        [TestCase((int)OperationCode.Modulus, 7, 2, 1)]
+        [TestCase((int)OperationCode.Exponentiate, 2, 3, 8)]
+        [TestCase((int)OperationCode.FloorDivide, 7, 2, 3)]
         public void ExecuteChunk_IntegerBinaryOperation_ReturnsIntegerResult(
             int opCode, int left, int right, int expected)
         {
@@ -164,6 +167,84 @@ namespace Chow.Tests
             TaggedUnion result = Execute(chunk);
 
             AssertFloatResult(result, 2.5f);
+        }
+
+        [Test]
+        public void ExecuteChunk_ModulusNegativeDividend_MatchesPythonSign()
+        {
+            // Python: -7 % 2 == 1 (sign of divisor), not -1 (sign of dividend as in C#).
+            var chunk = BuildChunk(c =>
+            {
+                PushIntegerConstant(c, -7);
+                PushIntegerConstant(c, 2);
+                c.PushOperation(OperationCode.Modulus, LINE);
+            });
+
+            TaggedUnion result = Execute(chunk);
+
+            AssertIntegerResult(result, 1);
+        }
+
+        [Test]
+        public void ExecuteChunk_FloorDivideNegativeDividend_FloorsTowardNegativeInfinity()
+        {
+            // Python: -7 // 2 == -4 (floor), not -3 (truncate as in C#).
+            var chunk = BuildChunk(c =>
+            {
+                PushIntegerConstant(c, -7);
+                PushIntegerConstant(c, 2);
+                c.PushOperation(OperationCode.FloorDivide, LINE);
+            });
+
+            TaggedUnion result = Execute(chunk);
+
+            AssertIntegerResult(result, -4);
+        }
+
+        [Test]
+        public void ExecuteChunk_ExponentNegativeIntegerExponent_ReturnsFloatResult()
+        {
+            // Python: 2 ** -1 == 0.5 (float), not 0 (truncated int).
+            var chunk = BuildChunk(c =>
+            {
+                PushIntegerConstant(c, 2);
+                PushIntegerConstant(c, -1);
+                c.PushOperation(OperationCode.Exponentiate, LINE);
+            });
+
+            TaggedUnion result = Execute(chunk);
+
+            AssertFloatResult(result, 0.5f);
+        }
+
+        [Test]
+        public void ExecuteChunk_ExponentFloatBase_ReturnsFloatResult()
+        {
+            var chunk = BuildChunk(c =>
+            {
+                PushFloatConstant(c, 2.0f);
+                PushIntegerConstant(c, 3);
+                c.PushOperation(OperationCode.Exponentiate, LINE);
+            });
+
+            TaggedUnion result = Execute(chunk);
+
+            AssertFloatResult(result, 8.0f);
+        }
+
+        [Test]
+        public void ExecuteChunk_FloorDivideFloatOperand_ReturnsFloatResult()
+        {
+            var chunk = BuildChunk(c =>
+            {
+                PushFloatConstant(c, 7.0f);
+                PushIntegerConstant(c, 2);
+                c.PushOperation(OperationCode.FloorDivide, LINE);
+            });
+
+            TaggedUnion result = Execute(chunk);
+
+            AssertFloatResult(result, 3.0f);
         }
 
         // ============================================================================================================

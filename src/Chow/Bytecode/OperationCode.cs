@@ -6,6 +6,9 @@ namespace Chow.Bytecode
         Subtract,
         Multiply,
         Divide,
+        Modulus,
+        Exponentiate,
+        FloorDivide,
         Negate,
         PushConstant,
     }

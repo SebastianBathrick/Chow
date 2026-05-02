@@ -10,6 +10,9 @@ namespace Chow.Syntax
         Subtract,
         Multiply,
         Divide,
+        Modulus,
+        Exponentiate,
+        FloorDivide,
         Negate
     }
 }

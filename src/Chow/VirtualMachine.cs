@@ -57,6 +57,18 @@ namespace Chow
                     ExecuteBinaryOperation(stack, (l, r) => l / r);
                     break;
 
+                case OperationCode.Modulus:
+                    ExecuteBinaryOperation(stack, (l, r) => l % r);
+                    break;
+
+                case OperationCode.Exponentiate:
+                    ExecuteBinaryOperation(stack, (l, r) => TaggedUnion.Power(l, r));
+                    break;
+
+                case OperationCode.FloorDivide:
+                    ExecuteBinaryOperation(stack, (l, r) => TaggedUnion.FloorDivide(l, r));
+                    break;
+
                 case OperationCode.Negate:
                     ExecuteNegate(stack);
                     break;

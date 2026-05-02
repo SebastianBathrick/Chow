@@ -357,6 +357,48 @@ namespace Chow.Tests
         }
 
         // ============================================================================================================
+        // E2. Multi-character arithmetic operator lexemes
+        // ============================================================================================================
+
+        [Test]
+        public void ScanTokens_StarStarLexeme_ProducesStarStarToken()
+        {
+            var tokens = Tokenize("**");
+
+            Assert.That(tokens, Has.Count.EqualTo(2));
+            AssertToken(tokens[0], TokenType.StarStar, "**", 1, null);
+            AssertToken(tokens[1], TokenType.EndOfCode, string.Empty, 1, null);
+        }
+
+        [Test]
+        public void ScanTokens_SlashSlashLexeme_ProducesSlashSlashToken()
+        {
+            var tokens = Tokenize("//");
+
+            Assert.That(tokens, Has.Count.EqualTo(2));
+            AssertToken(tokens[0], TokenType.SlashSlash, "//", 1, null);
+            AssertToken(tokens[1], TokenType.EndOfCode, string.Empty, 1, null);
+        }
+
+        [Test]
+        public void ScanTokens_StarFollowedBySpaceStar_ProducesTwoStarTokens()
+        {
+            var tokens = Tokenize("* *");
+
+            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.Star));
+            Assert.That(tokens[1].Type, Is.EqualTo(TokenType.Star));
+        }
+
+        [Test]
+        public void ScanTokens_SlashFollowedBySpaceSlash_ProducesTwoSlashTokens()
+        {
+            var tokens = Tokenize("/ /");
+
+            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.Slash));
+            Assert.That(tokens[1].Type, Is.EqualTo(TokenType.Slash));
+        }
+
+        // ============================================================================================================
         // F. Indent / Dedent
         // ============================================================================================================
 

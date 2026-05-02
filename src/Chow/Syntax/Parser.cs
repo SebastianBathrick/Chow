@@ -66,7 +66,7 @@ namespace Chow.Syntax
         {
             Node left = ParseFactor();
 
-            while (Match(TokenType.Star, TokenType.Slash))
+            while (Match(TokenType.Star, TokenType.Slash, TokenType.SlashSlash, TokenType.Percent))
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 Node right = ParseFactor();
@@ -84,7 +84,21 @@ namespace Chow.Syntax
                 return new ExpressionNode(ExpressionOperator.Negate, ParseFactor(), opToken.LineNum);
             }
 
-            return ParsePrimary();
+            return ParseExponent();
+        }
+
+        Node ParseExponent()
+        {
+            Node left = ParsePrimary();
+
+            if (Match(TokenType.StarStar))
+            {
+                Token opToken = _tokens[_tokenIndex - 1];
+                Node right = ParseFactor();
+                return new ExpressionNode(ExpressionOperator.Exponentiate, left, right, opToken.LineNum);
+            }
+
+            return left;
         }
 
         Node ParsePrimary()
@@ -151,6 +165,17 @@ namespace Chow.Syntax
             return false;
         }
 
+        bool Match(TokenType typeA, TokenType typeB, TokenType typeC, TokenType typeD)
+        {
+            if (Check(typeA) || Check(typeB) || Check(typeC) || Check(typeD))
+            {
+                MoveToNextToken();
+                return true;
+            }
+
+            return false;
+        }
+
         Token Consume(TokenType type, string message)
         {
             if (Check(type))
@@ -182,6 +207,15 @@ namespace Chow.Syntax
 
                 case TokenType.Slash:
                     return ExpressionOperator.Divide;
+
+                case TokenType.Percent:
+                    return ExpressionOperator.Modulus;
+
+                case TokenType.StarStar:
+                    return ExpressionOperator.Exponentiate;
+
+                case TokenType.SlashSlash:
+                    return ExpressionOperator.FloorDivide;
 
                 default:
                     throw new InvalidOperationException($"Unexpected binary operator: {type}");

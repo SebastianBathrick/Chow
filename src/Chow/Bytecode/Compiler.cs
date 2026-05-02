@@ -127,6 +127,18 @@ namespace Chow.Bytecode
                     opCode = OperationCode.Divide;
                     break;
 
+                case ExpressionOperator.Modulus:
+                    opCode = OperationCode.Modulus;
+                    break;
+
+                case ExpressionOperator.Exponentiate:
+                    opCode = OperationCode.Exponentiate;
+                    break;
+
+                case ExpressionOperator.FloorDivide:
+                    opCode = OperationCode.FloorDivide;
+                    break;
+
                 case ExpressionOperator.Negate:
                     opCode = OperationCode.Negate;
                     break;
