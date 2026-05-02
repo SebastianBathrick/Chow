@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace Chow
 {
@@ -22,25 +23,44 @@ namespace Chow
             _srcCode = srcCode;
         }
 
+        // ============================================================================================================
+
         public List<Token> ScanTokens()
         {
             while (IsCharToScan())
             {
-                if (IsNewlineChar(CurrentChar) && TryIncrementLineNumber())
-                {
+                RunScanIteration();
+            }
 
-                }
-                
+            AddNewToken(TokenType.EndOfCode, string.Empty, _currLineNumber);
+            return _tokens;
+        }
 
-                if (IsDigitChar(CurrentChar))
+        void RunScanIteration()
+        {
+            if (IsNewlineChar(CurrentChar) && TryCreateNewlineToken())
+            {
+                if (TryScanIndentTokens())
                 {
-                    ScanNumericToken();
-                    continue;
+                    // Return if there are no remaining characters or the line is empty
+                    return;
                 }
+            }
+
+            if (IsDigitChar(CurrentChar))
+            {
+                ScanNumericToken();
             }
         }
 
-        bool TryIncrementLineNumber()
+        void AddNewToken(TokenType type, string lexeme, int lineNum, object literal = null)
+        {
+            _tokens.Add(new Token(type, lexeme, lineNum, literal));
+        }
+
+        // ============================================================================================================
+
+        bool TryCreateNewlineToken()
         {
             bool isNewline = false;
 
@@ -77,12 +97,8 @@ namespace Chow
             return isNewline;
         }
 
-        void AddNewToken(TokenType type, string lexeme, int lineNum, object literal = null)
-        {
-            _tokens.Add(new Token(type, lexeme, lineNum, literal));
-        }
 
-        void ScanIndentLevelTokens()
+        bool TryScanIndentTokens()
         {
             int spaceCount = 0;
 
@@ -97,7 +113,7 @@ namespace Chow
             // If there is a newline char then this line is empty, and the line should be effectively ignored
             if (!IsCharToScan() || IsNewlineChar(CurrentChar))
             {
-                return;
+                return false;
             }
 
             int prevIndentLvl = _currIndentLvl;
@@ -120,13 +136,17 @@ namespace Chow
                     lexeme = string.Empty;
                 }
 
+                AddNewToken(newTokenType, lexeme, _currLineNumber);
             }
+
+            return true;
         }
+
+        // ============================================================================================================
 
         void ScanNumericToken()
         {
             int startIndex = _scanCharIndex;
-            int length = 1;
 
             // Move past digits before any decimal point (if any)
             MoveToNextChar();
@@ -134,7 +154,6 @@ namespace Chow
             while (IsCharToScan() && IsDigitChar(CurrentChar))
             {
                 MoveToNextChar();
-                length++;
             }
 
             // If there is a decimal point, move past it and any following digits
@@ -143,21 +162,22 @@ namespace Chow
             if (isFloat)
             {
                 MoveToNextChar();
-                length++;
 
                 while (IsCharToScan() && IsDigitChar(CurrentChar))
                 {
                     MoveToNextChar();
-                    length++;
                 }
             }
 
+            int length = _scanCharIndex - startIndex;
             string lexeme = _srcCode.Substring(startIndex, length);
             object literal = null;
 
             try
             {
-                literal = isFloat ? (object)float.Parse(lexeme) : int.Parse(lexeme);
+                literal = isFloat
+                    ? float.Parse(lexeme, CultureInfo.InvariantCulture)
+                    : int.Parse(lexeme, CultureInfo.InvariantCulture);
             }
             catch (FormatException)
             {

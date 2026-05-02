@@ -145,6 +145,6 @@ namespace Chow
         Dedent,
 
         /// <summary>End-of-file sentinel token appended after all source code is scanned.</summary>
-        EndOfFile
+        EndOfCode
     }
 }
