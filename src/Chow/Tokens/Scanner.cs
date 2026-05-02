@@ -65,6 +65,11 @@ namespace Chow.Tokens
                 RunScanIteration();
             }
 
+            if (_openBracketStack.Count > 0)
+            {
+                throw new ScannerException("Bracket(s) never closed in source code", _currLineNumber);
+            }
+
             AddPendingDedentTokens();
             AddNewToken(TokenType.EndOfCode, string.Empty, _currLineNumber);
             return _tokens;
@@ -140,6 +145,7 @@ namespace Chow.Tokens
 
             // Use a newline for the lexeme for clean debug information
             AddNewToken(TokenType.Newline, "\n", _currLineNumber);
+            
             _currLineNumber++;
             _isAtStartOfLine = true;
         }

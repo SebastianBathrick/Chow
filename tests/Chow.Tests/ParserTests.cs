@@ -19,7 +19,7 @@ namespace Chow.Tests
         static Token Token(TokenType type, string lexeme, int lineNumber, object literal = null!) =>
             new Token(type, lexeme, lineNumber, literal);
 
-        static void AssertLiteral(Node node, object expectedValue, LiteralNode.DataType expectedType)
+        static void AssertLiteral(Node node, object expectedValue, LiteralDataType expectedType)
         {
             Assert.That(node, Is.InstanceOf<LiteralNode>());
             LiteralNode literal = (LiteralNode)node;
@@ -30,10 +30,10 @@ namespace Chow.Tests
             });
         }
 
-        static ExpressionOperationNode AssertBinary(Node node, ExpressionOperationNode.OperatorType expectedOp)
+        static ExpressionNode AssertBinary(Node node, ExpressionNode.ExpressionOperator expectedOp)
         {
-            Assert.That(node, Is.InstanceOf<ExpressionOperationNode>());
-            ExpressionOperationNode op = (ExpressionOperationNode)node;
+            Assert.That(node, Is.InstanceOf<ExpressionNode>());
+            ExpressionNode op = (ExpressionNode)node;
             Assert.Multiple(() =>
             {
                 Assert.That(op.Operator, Is.EqualTo(expectedOp));
@@ -42,13 +42,13 @@ namespace Chow.Tests
             return op;
         }
 
-        static ExpressionOperationNode AssertUnary(Node node)
+        static ExpressionNode AssertUnary(Node node)
         {
-            Assert.That(node, Is.InstanceOf<ExpressionOperationNode>());
-            ExpressionOperationNode op = (ExpressionOperationNode)node;
+            Assert.That(node, Is.InstanceOf<ExpressionNode>());
+            ExpressionNode op = (ExpressionNode)node;
             Assert.Multiple(() =>
             {
-                Assert.That(op.Operator, Is.EqualTo(ExpressionOperationNode.OperatorType.Negate));
+                Assert.That(op.Operator, Is.EqualTo(ExpressionNode.ExpressionOperator.Negate));
                 Assert.That(op.Right, Is.Null);
             });
             return op;
@@ -72,14 +72,14 @@ namespace Chow.Tests
         public void BuildSyntaxTree_IntegerLiteral_ReturnsLiteralNodeWithIntegerType()
         {
             Node result = Parse("42");
-            AssertLiteral(result, 42, LiteralNode.DataType.Integer);
+            AssertLiteral(result, 42, LiteralDataType.Integer);
         }
 
         [Test]
         public void BuildSyntaxTree_FloatLiteral_ReturnsLiteralNodeWithFloatType()
         {
             Node result = Parse("3.14");
-            AssertLiteral(result, 3.14f, LiteralNode.DataType.Float);
+            AssertLiteral(result, 3.14f, LiteralDataType.Float);
         }
 
         [Test]
@@ -109,25 +109,25 @@ namespace Chow.Tests
         [Test]
         public void BuildSyntaxTree_Addition_BuildsAddNode()
         {
-            AssertBinary(Parse("1 + 2"), ExpressionOperationNode.OperatorType.Add);
+            AssertBinary(Parse("1 + 2"), ExpressionNode.ExpressionOperator.Add);
         }
 
         [Test]
         public void BuildSyntaxTree_Subtraction_BuildsSubtractNode()
         {
-            AssertBinary(Parse("3 - 1"), ExpressionOperationNode.OperatorType.Subtract);
+            AssertBinary(Parse("3 - 1"), ExpressionNode.ExpressionOperator.Subtract);
         }
 
         [Test]
         public void BuildSyntaxTree_Multiplication_BuildsMultiplyNode()
         {
-            AssertBinary(Parse("2 * 3"), ExpressionOperationNode.OperatorType.Multiply);
+            AssertBinary(Parse("2 * 3"), ExpressionNode.ExpressionOperator.Multiply);
         }
 
         [Test]
         public void BuildSyntaxTree_Division_BuildsDivideNode()
         {
-            AssertBinary(Parse("6 / 2"), ExpressionOperationNode.OperatorType.Divide);
+            AssertBinary(Parse("6 / 2"), ExpressionNode.ExpressionOperator.Divide);
         }
 
         [Test]
@@ -159,11 +159,11 @@ namespace Chow.Tests
         {
             // 1 + 2 * 3 => Add(1, Multiply(2, 3))
             Node result = Parse("1 + 2 * 3");
-            ExpressionOperationNode add = AssertBinary(result, ExpressionOperationNode.OperatorType.Add);
-            AssertLiteral(add.Left, 1, LiteralNode.DataType.Integer);
-            ExpressionOperationNode mul = AssertBinary(add.Right!, ExpressionOperationNode.OperatorType.Multiply);
-            AssertLiteral(mul.Left, 2, LiteralNode.DataType.Integer);
-            AssertLiteral(mul.Right!, 3, LiteralNode.DataType.Integer);
+            ExpressionNode add = AssertBinary(result, ExpressionNode.ExpressionOperator.Add);
+            AssertLiteral(add.Left, 1, LiteralDataType.Integer);
+            ExpressionNode mul = AssertBinary(add.Right!, ExpressionNode.ExpressionOperator.Multiply);
+            AssertLiteral(mul.Left, 2, LiteralDataType.Integer);
+            AssertLiteral(mul.Right!, 3, LiteralDataType.Integer);
         }
 
         [Test]
@@ -171,11 +171,11 @@ namespace Chow.Tests
         {
             // 1 + 2 + 3 => Add(Add(1, 2), 3)
             Node result = Parse("1 + 2 + 3");
-            ExpressionOperationNode outer = AssertBinary(result, ExpressionOperationNode.OperatorType.Add);
-            ExpressionOperationNode inner = AssertBinary(outer.Left, ExpressionOperationNode.OperatorType.Add);
-            AssertLiteral(inner.Left, 1, LiteralNode.DataType.Integer);
-            AssertLiteral(inner.Right!, 2, LiteralNode.DataType.Integer);
-            AssertLiteral(outer.Right!, 3, LiteralNode.DataType.Integer);
+            ExpressionNode outer = AssertBinary(result, ExpressionNode.ExpressionOperator.Add);
+            ExpressionNode inner = AssertBinary(outer.Left, ExpressionNode.ExpressionOperator.Add);
+            AssertLiteral(inner.Left, 1, LiteralDataType.Integer);
+            AssertLiteral(inner.Right!, 2, LiteralDataType.Integer);
+            AssertLiteral(outer.Right!, 3, LiteralDataType.Integer);
         }
 
         [Test]
@@ -183,11 +183,11 @@ namespace Chow.Tests
         {
             // 5 - 2 - 1 => Subtract(Subtract(5, 2), 1) — catches accidental right-associativity
             Node result = Parse("5 - 2 - 1");
-            ExpressionOperationNode outer = AssertBinary(result, ExpressionOperationNode.OperatorType.Subtract);
-            ExpressionOperationNode inner = AssertBinary(outer.Left, ExpressionOperationNode.OperatorType.Subtract);
-            AssertLiteral(inner.Left, 5, LiteralNode.DataType.Integer);
-            AssertLiteral(inner.Right!, 2, LiteralNode.DataType.Integer);
-            AssertLiteral(outer.Right!, 1, LiteralNode.DataType.Integer);
+            ExpressionNode outer = AssertBinary(result, ExpressionNode.ExpressionOperator.Subtract);
+            ExpressionNode inner = AssertBinary(outer.Left, ExpressionNode.ExpressionOperator.Subtract);
+            AssertLiteral(inner.Left, 5, LiteralDataType.Integer);
+            AssertLiteral(inner.Right!, 2, LiteralDataType.Integer);
+            AssertLiteral(outer.Right!, 1, LiteralDataType.Integer);
         }
 
         [Test]
@@ -201,8 +201,8 @@ namespace Chow.Tests
                 Token(TokenType.Integer, "1", 5, 1),
                 Token(TokenType.EndOfCode, string.Empty, 5));
 
-            ExpressionOperationNode outer = AssertBinary(result, ExpressionOperationNode.OperatorType.Subtract);
-            ExpressionOperationNode inner = AssertBinary(outer.Left, ExpressionOperationNode.OperatorType.Subtract);
+            ExpressionNode outer = AssertBinary(result, ExpressionNode.ExpressionOperator.Subtract);
+            ExpressionNode inner = AssertBinary(outer.Left, ExpressionNode.ExpressionOperator.Subtract);
 
             Assert.Multiple(() =>
             {
@@ -220,20 +220,20 @@ namespace Chow.Tests
         {
             // (1 + 2) * 3 => Multiply(Add(1, 2), 3)
             Node result = Parse("(1 + 2) * 3");
-            ExpressionOperationNode mul = AssertBinary(result, ExpressionOperationNode.OperatorType.Multiply);
-            ExpressionOperationNode add = AssertBinary(mul.Left, ExpressionOperationNode.OperatorType.Add);
-            AssertLiteral(add.Left, 1, LiteralNode.DataType.Integer);
-            AssertLiteral(add.Right!, 2, LiteralNode.DataType.Integer);
-            AssertLiteral(mul.Right!, 3, LiteralNode.DataType.Integer);
+            ExpressionNode mul = AssertBinary(result, ExpressionNode.ExpressionOperator.Multiply);
+            ExpressionNode add = AssertBinary(mul.Left, ExpressionNode.ExpressionOperator.Add);
+            AssertLiteral(add.Left, 1, LiteralDataType.Integer);
+            AssertLiteral(add.Right!, 2, LiteralDataType.Integer);
+            AssertLiteral(mul.Right!, 3, LiteralDataType.Integer);
         }
 
         [Test]
         public void BuildSyntaxTree_NestedParentheses_ParsesInnerFirst()
         {
             Node result = Parse("((1 + 2))");
-            ExpressionOperationNode add = AssertBinary(result, ExpressionOperationNode.OperatorType.Add);
-            AssertLiteral(add.Left, 1, LiteralNode.DataType.Integer);
-            AssertLiteral(add.Right!, 2, LiteralNode.DataType.Integer);
+            ExpressionNode add = AssertBinary(result, ExpressionNode.ExpressionOperator.Add);
+            AssertLiteral(add.Left, 1, LiteralDataType.Integer);
+            AssertLiteral(add.Right!, 2, LiteralDataType.Integer);
         }
 
         // ============================================================================================================
@@ -244,8 +244,8 @@ namespace Chow.Tests
         public void BuildSyntaxTree_UnaryMinusOnInteger_BuildsNegateNode()
         {
             Node result = Parse("-5");
-            ExpressionOperationNode negate = AssertUnary(result);
-            AssertLiteral(negate.Left, 5, LiteralNode.DataType.Integer);
+            ExpressionNode negate = AssertUnary(result);
+            AssertLiteral(negate.Left, 5, LiteralDataType.Integer);
         }
 
         [Test]
@@ -269,9 +269,9 @@ namespace Chow.Tests
         public void BuildSyntaxTree_DoubleUnaryMinus_BuildsNegateOfNegate()
         {
             Node result = Parse("--5");
-            ExpressionOperationNode outer = AssertUnary(result);
-            ExpressionOperationNode inner = AssertUnary(outer.Left);
-            AssertLiteral(inner.Left, 5, LiteralNode.DataType.Integer);
+            ExpressionNode outer = AssertUnary(result);
+            ExpressionNode inner = AssertUnary(outer.Left);
+            AssertLiteral(inner.Left, 5, LiteralDataType.Integer);
         }
 
         [Test]
@@ -279,10 +279,10 @@ namespace Chow.Tests
         {
             // -(1 + 2) => Negate(Add(1, 2))
             Node result = Parse("-(1 + 2)");
-            ExpressionOperationNode negate = AssertUnary(result);
-            ExpressionOperationNode add = AssertBinary(negate.Left, ExpressionOperationNode.OperatorType.Add);
-            AssertLiteral(add.Left, 1, LiteralNode.DataType.Integer);
-            AssertLiteral(add.Right!, 2, LiteralNode.DataType.Integer);
+            ExpressionNode negate = AssertUnary(result);
+            ExpressionNode add = AssertBinary(negate.Left, ExpressionNode.ExpressionOperator.Add);
+            AssertLiteral(add.Left, 1, LiteralDataType.Integer);
+            AssertLiteral(add.Right!, 2, LiteralDataType.Integer);
         }
 
         [Test]
@@ -290,10 +290,10 @@ namespace Chow.Tests
         {
             // -2 * 3 => Multiply(Negate(2), 3)
             Node result = Parse("-2 * 3");
-            ExpressionOperationNode mul = AssertBinary(result, ExpressionOperationNode.OperatorType.Multiply);
-            ExpressionOperationNode negate = AssertUnary(mul.Left);
-            AssertLiteral(negate.Left, 2, LiteralNode.DataType.Integer);
-            AssertLiteral(mul.Right!, 3, LiteralNode.DataType.Integer);
+            ExpressionNode mul = AssertBinary(result, ExpressionNode.ExpressionOperator.Multiply);
+            ExpressionNode negate = AssertUnary(mul.Left);
+            AssertLiteral(negate.Left, 2, LiteralDataType.Integer);
+            AssertLiteral(mul.Right!, 3, LiteralDataType.Integer);
         }
 
         [Test]
@@ -301,10 +301,10 @@ namespace Chow.Tests
         {
             // 1 - -2 => Subtract(1, Negate(2))
             Node result = Parse("1 - -2");
-            ExpressionOperationNode sub = AssertBinary(result, ExpressionOperationNode.OperatorType.Subtract);
-            AssertLiteral(sub.Left, 1, LiteralNode.DataType.Integer);
-            ExpressionOperationNode negate = AssertUnary(sub.Right!);
-            AssertLiteral(negate.Left, 2, LiteralNode.DataType.Integer);
+            ExpressionNode sub = AssertBinary(result, ExpressionNode.ExpressionOperator.Subtract);
+            AssertLiteral(sub.Left, 1, LiteralDataType.Integer);
+            ExpressionNode negate = AssertUnary(sub.Right!);
+            AssertLiteral(negate.Left, 2, LiteralDataType.Integer);
         }
 
         // ============================================================================================================
@@ -315,7 +315,7 @@ namespace Chow.Tests
         public void BuildSyntaxTree_TrailingNewline_ParsesExpression()
         {
             Node result = Parse("1 + 2\n");
-            AssertBinary(result, ExpressionOperationNode.OperatorType.Add);
+            AssertBinary(result, ExpressionNode.ExpressionOperator.Add);
         }
 
         // ============================================================================================================

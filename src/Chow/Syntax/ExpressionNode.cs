@@ -4,26 +4,17 @@ using System.Text;
 
 namespace Chow.Syntax
 {
-    internal class ExpressionOperationNode : Node
+    internal class ExpressionNode : Node
     {
-        public enum OperatorType
-        {
-            Add,
-            Subtract,
-            Multiply,
-            Divide,
-            Negate
-        }
-
-        OperatorType _operator;
+        ExpressionOperator _operator;
         Node _leftOperand;
         Node _rightOperand;
 
-        public OperatorType Operator => _operator;
+        public ExpressionOperator Operator => _operator;
         public Node Left => _leftOperand;
         public Node Right => _rightOperand;
 
-        public ExpressionOperationNode(OperatorType operatorType, Node leftOperand, Node rightOperand, int lineNumber)
+        public ExpressionNode(ExpressionOperator operatorType, Node leftOperand, Node rightOperand, int lineNumber)
             : base(lineNumber)
         {
             _operator = operatorType;
@@ -31,10 +22,10 @@ namespace Chow.Syntax
             _rightOperand = rightOperand;
         }
 
-        public ExpressionOperationNode(OperatorType operatorType, Node operand, int lineNumber)
+        public ExpressionNode(ExpressionOperator operatorType, Node operand, int lineNumber)
             : base(lineNumber)
         {
-            if (operatorType != OperatorType.Negate)
+            if (operatorType != ExpressionOperator.Negate)
                 throw new ArgumentException("Unary constructor is only valid for Negate.", nameof(operatorType));
             _operator = operatorType;
             _leftOperand = operand ?? throw new ArgumentNullException(nameof(operand));

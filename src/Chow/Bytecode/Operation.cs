@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection.Emit;
 using System.Text;
 
 namespace Chow.Bytecode
 {
     readonly struct Operation
     {
-        public OperandType Type { get; }
+        public OperationCode Type { get; }
         public int Operand { get; }
 
-        public Operation(OperandType type, int operand)
+        public Operation(OperationCode type, int operand = -1)
         {
             Type = type;
             Operand = operand;

@@ -6,17 +6,20 @@ namespace Chow.Bytecode
 {
     class Chunk
     {
-        List<Operation> _code = new List<Operation>();
-        List<ChowValue> _constants = new List<ChowValue>(); 
+        List<Operation> _operations = new List<Operation>();
+        List<TaggedUnion> _constants = new List<TaggedUnion>(); 
+        List<int> _operationLineNums = new List<int>();
 
-        public void  AddConstant(ChowValue newConstant)
+        public int AddConstant(TaggedUnion newConstant)
         {
             _constants.Add(newConstant);
+            return _constants.Count - 1; // Provide an index to use as an Operation operand
         }
 
-        public void AddOperation(Operation operation)
+        public void PushOperation(OperationCode operationType, int lineNumber, int operand = -1)
         {
-            _code.Add(operation);
+            _operations.Add(new Operation(operationType, operand));
+            _operationLineNums.Add(lineNumber);
         }
     }
 }

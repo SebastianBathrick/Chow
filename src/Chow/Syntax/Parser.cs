@@ -56,7 +56,7 @@ namespace Chow.Syntax
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 Node right = ParseTerm();
-                left = new ExpressionOperationNode(MapBinary(opToken.Type), left, right, opToken.LineNum);
+                left = new ExpressionNode(MapBinary(opToken.Type), left, right, opToken.LineNum);
             }
 
             return left;
@@ -70,7 +70,7 @@ namespace Chow.Syntax
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 Node right = ParseFactor();
-                left = new ExpressionOperationNode(MapBinary(opToken.Type), left, right, opToken.LineNum);
+                left = new ExpressionNode(MapBinary(opToken.Type), left, right, opToken.LineNum);
             }
 
             return left;
@@ -81,7 +81,7 @@ namespace Chow.Syntax
             if (Match(TokenType.Minus))
             {
                 Token opToken = _tokens[_tokenIndex - 1];
-                return new ExpressionOperationNode(ExpressionOperationNode.OperatorType.Negate, ParseFactor(), opToken.LineNum);
+                return new ExpressionNode(ExpressionOperator.Negate, ParseFactor(), opToken.LineNum);
             }
 
             return ParsePrimary();
@@ -167,18 +167,22 @@ namespace Chow.Syntax
         // Helper Methods
         // ============================================================================================================
 
-        static ExpressionOperationNode.OperatorType MapBinary(TokenType type)
+        static ExpressionOperator MapBinary(TokenType type)
         {
             switch (type)
             {
                 case TokenType.Plus:
-                    return ExpressionOperationNode.OperatorType.Add;
+                    return ExpressionOperator.Add;
+
                 case TokenType.Minus:
-                    return ExpressionOperationNode.OperatorType.Subtract;
+                    return ExpressionOperator.Subtract;
+
                 case TokenType.Star:
-                    return ExpressionOperationNode.OperatorType.Multiply;
+                    return ExpressionOperator.Multiply;
+
                 case TokenType.Slash:
-                    return ExpressionOperationNode.OperatorType.Divide;
+                    return ExpressionOperator.Divide;
+
                 default:
                     throw new InvalidOperationException($"Unexpected binary operator: {type}");
             }
