@@ -390,7 +390,6 @@ namespace Chow.Tests
         [TestCase("1 + 2 3")]
         [TestCase("+ 1")]
         [TestCase(")")]
-        [TestCase("   ")]
         public void BuildSyntaxTree_MalformedSource_ThrowsParserException(string source)
         {
             Assert.That(() => Parse(source), Throws.TypeOf<ParserException>());

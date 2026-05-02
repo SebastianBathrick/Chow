@@ -19,6 +19,7 @@ namespace Chow.Tokens
 
         bool _isAtStartOfLine;
         bool _isDirty;
+        bool _hasContentToken;
 
         private char CurrentChar => _srcCode[_scanCharIndex];
 
@@ -52,12 +53,6 @@ namespace Chow.Tokens
 
             _isDirty = true;
 
-            if (IsWhitespaceOnly())
-            {
-                AddNewToken(TokenType.EmptySourceCode, string.Empty, 1);
-                return _tokens;
-            }
-
             while (IsCharToScan())
             {
                 RunScanIteration();
@@ -66,6 +61,11 @@ namespace Chow.Tokens
             if (_openBracketStack.Count > 0)
             {
                 throw new ScannerException("Bracket(s) never closed in source code", _currLineNumber);
+            }
+
+            if (!_hasContentToken)
+            {
+                return new List<Token>();
             }
 
             AddPendingDedentTokens();
@@ -442,22 +442,12 @@ namespace Chow.Tokens
             return _openBracketStack.Count == 0;
         }
 
-        private bool IsWhitespaceOnly()
-        {
-            bool isWhitespaceOnly = _srcCode.Length > 0;
-            for (int i = 0; i < _srcCode.Length && isWhitespaceOnly; i++)
-            {
-                if (!IsIndentChar(_srcCode[i]) && !IsFormFeedChar(_srcCode[i]))
-                {
-                    isWhitespaceOnly = false;
-                }
-            }
-
-            return isWhitespaceOnly;
-        }
-
         void AddNewToken(TokenType type, string lexeme, int lineNum, object literal = null)
         {
+            if (type != TokenType.Newline)
+            {
+                _hasContentToken = true;
+            }
             _tokens.Add(new Token(type, lexeme, lineNum, literal));
         }
     }

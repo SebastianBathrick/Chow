@@ -9,18 +9,17 @@ namespace Chow.Values
         const float DEFAULT_FLOAT_VALUE = 0.0f;
         const int DEFAULT_INT_VALUE = 0;
 
-        static bool _isEmptyUnionInitialized = false;
-        static TaggedUnion _emptyUnion;
-
         TaggedUnionType _type;
         int _intValue;
         float _floatValue;
 
         public static TaggedUnion Empty = new TaggedUnion(TaggedUnionType.Empty);
+        public static TaggedUnion None = new TaggedUnion(TaggedUnionType.None);
 
         public TaggedUnionType Type => _type;
 
         public bool IsEmpty => _type == TaggedUnionType.Empty;
+        public bool IsNone => _type == TaggedUnionType.None;
         public bool IsInteger => _type == TaggedUnionType.Integer;
         public bool IsFloat => _type == TaggedUnionType.Float;
 

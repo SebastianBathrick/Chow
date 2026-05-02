@@ -29,7 +29,7 @@ namespace Chow
                 MoveToNextOperation();
             }
 
-            return runtimeValStack.Pop();
+            return runtimeValStack.Count == 0 ? TaggedUnion.None : runtimeValStack.Pop();
         }
 
         void ExecuteCurrentOperation(Stack<TaggedUnion> stack)

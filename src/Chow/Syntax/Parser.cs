@@ -33,6 +33,11 @@ namespace Chow.Syntax
                 throw new InvalidOperationException("This Parser instance can only be used once.");
             }
 
+            if (_tokens.Count == 0)
+            {
+                return new EmptyNode();
+            }
+
             Node root = ParseExpression();
 
             if (Check(TokenType.Newline))

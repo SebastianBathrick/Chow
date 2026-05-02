@@ -7,6 +7,7 @@ namespace Chow.Values
     internal enum TaggedUnionType
     {
         Empty,
+        None,
         Integer,
         Float
     }

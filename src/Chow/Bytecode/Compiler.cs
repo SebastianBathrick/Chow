@@ -45,6 +45,9 @@ namespace Chow.Bytecode
 
             switch (targetNode)
             {
+                case EmptyNode _:
+                    break;
+
                 case LiteralNode literalNode:
                     CompileLiteral(literalNode);
                     break;

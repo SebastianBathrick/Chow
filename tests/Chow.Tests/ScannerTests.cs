@@ -40,48 +40,6 @@ namespace Chow.Tests
             Assert.That(() => new Scanner(""), Throws.TypeOf<ArgumentNullException>());
         }
 
-        [Test]
-        public void ScanTokens_SingleLineFeed_EmitsOneNewlineThenEndOfCode()
-        {
-            var tokens = Tokenize("\n");
-
-            Assert.That(tokens, Has.Count.EqualTo(2));
-            AssertToken(tokens[0], TokenType.Newline, "\n", 1, null);
-            AssertToken(tokens[1], TokenType.EndOfCode, "", 2, null);
-        }
-
-        [Test]
-        public void ScanTokens_SingleCarriageReturnLineFeed_EmitsOneNewlineWithCanonicalLexeme()
-        {
-            var tokens = Tokenize("\r\n");
-
-            Assert.That(tokens, Has.Count.EqualTo(2));
-            AssertToken(tokens[0], TokenType.Newline, "\n", 1, null);
-            AssertToken(tokens[1], TokenType.EndOfCode, "", 2, null);
-        }
-
-        [Test]
-        public void ScanTokens_SingleBareCarriageReturn_TreatedAsNewline()
-        {
-            var tokens = Tokenize("\r");
-
-            Assert.That(tokens, Has.Count.EqualTo(2));
-            AssertToken(tokens[0], TokenType.Newline, "\n", 1, null);
-            AssertToken(tokens[1], TokenType.EndOfCode, "", 2, null);
-        }
-
-        [Test]
-        public void ScanTokens_ConsecutiveNewlines_ProducesOneNewlineTokenEach()
-        {
-            var tokens = Tokenize("\n\n\n");
-
-            Assert.That(tokens, Has.Count.EqualTo(4));
-            AssertToken(tokens[0], TokenType.Newline, "\n", 1, null);
-            AssertToken(tokens[1], TokenType.Newline, "\n", 2, null);
-            AssertToken(tokens[2], TokenType.Newline, "\n", 3, null);
-            AssertToken(tokens[3], TokenType.EndOfCode, "", 4, null);
-        }
-
         // ============================================================================================================
         // B. Newline variants & line numbering
         // ============================================================================================================
@@ -135,7 +93,7 @@ namespace Chow.Tests
         [TestCase("\r")]
         public void ScanTokens_NewlineLexemeAlwaysCanonicalLineFeed(string newline)
         {
-            var tokens = Tokenize(newline);
+            var tokens = Tokenize("1" + newline);
 
             var nlToken = tokens.First(t => t.Type == TokenType.Newline);
             Assert.That(nlToken.Lexeme, Is.EqualTo("\n"));
@@ -624,8 +582,6 @@ namespace Chow.Tests
 
         [TestCase("42", 1)]
         [TestCase("42\n", 2)]
-        [TestCase("\n\n", 3)]
-        [TestCase("\n\n\n", 4)]
         public void ScanTokens_EndOfCodeLineNumber_EqualsOnePlusNewlineCount(string source, int expectedLine)
         {
             var tokens = Tokenize(source);
@@ -755,11 +711,10 @@ namespace Chow.Tests
         }
 
         [Test]
-        public void ScanTokens_WhitespaceOnlySourceWithoutNewline_ReturnsEmptySourceCode()
+        public void ScanTokens_NewlinesOnlySource_ReturnsEmptyList()
         {
-            var tokens = new Scanner("    ").ScanTokens();
-            Assert.That(tokens, Has.Count.EqualTo(1));
-            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.EmptySourceCode));
+            var tokens = new Scanner("\n\n\n").ScanTokens();
+            Assert.That(tokens, Is.Empty);
         }
 
         // ============================================================================================================
