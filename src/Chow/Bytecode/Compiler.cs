@@ -1,4 +1,5 @@
 ﻿using Chow.Syntax;
+using Chow.Values;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -96,7 +97,7 @@ namespace Chow.Bytecode
 
         void CompileExpression(ExpressionNode expressionNode)
         {
-            // Note: This specific stack order will allow for short circuiting
+            // Compile operands first so they are pushed onto the runtime stack before the operation consumes them
             CompileTargetNode(expressionNode.Left);
             CompileTargetNode(expressionNode.Right);
 

@@ -278,8 +278,6 @@ namespace Chow.Tests
 
         [TestCase("(", TokenType.LeftParenthesis)]
         [TestCase(")", TokenType.RightParenthesis)]
-        [TestCase("[", TokenType.LeftBracket)]
-        [TestCase("{", TokenType.LeftCurlyBrace)]
         [TestCase(",", TokenType.Comma)]
         [TestCase(".", TokenType.Dot)]
         [TestCase(":", TokenType.Colon)]

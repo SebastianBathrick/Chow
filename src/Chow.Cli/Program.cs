@@ -1,3 +1,4 @@
+using Chow;
 using Chow.Bytecode;
 using Chow.Syntax;
 using Chow.Tokens;
@@ -24,7 +25,11 @@ while (true)
         Console.WriteLine(tree);
 
         var compiler = new Compiler(tree);
-        Console.WriteLine(compiler.CompileSyntaxTree());
+        Chunk chunk = compiler.CompileSyntaxTree();
+        Console.WriteLine(chunk);
+
+        var virtualMachine = new VirtualMachine(chunk);
+        Console.WriteLine(virtualMachine.ExecuteChunk());
     }
     catch (Exception ex)
     {

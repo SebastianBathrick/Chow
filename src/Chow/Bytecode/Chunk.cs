@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Chow.Values;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -9,6 +10,16 @@ namespace Chow.Bytecode
         List<Operation> _operations = new List<Operation>();
         List<TaggedUnion> _constants = new List<TaggedUnion>(); 
         List<int> _operationLineNums = new List<int>();
+
+        int _currIndex = 0;
+
+
+        public int Count => _operations.Count;
+
+        public Operation this[int index] => _operations[index];
+
+
+        public TaggedUnion GetConstant(int index) => _constants[index];
 
         public int AddConstant(TaggedUnion newConstant)
         {
@@ -22,10 +33,6 @@ namespace Chow.Bytecode
             _operationLineNums.Add(lineNumber);
         }
 
-        public int Count => _operations.Count;
-
-        public Operation this[int index] => _operations[index];
-
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -34,7 +41,7 @@ namespace Chow.Bytecode
                 Operation op = _operations[i];
                 sb.Append(i);
                 sb.Append(": ");
-                sb.Append(op.Type);
+                sb.Append(op.Code);
 
                 if (op.Operand != -1)
                 {
@@ -42,12 +49,12 @@ namespace Chow.Bytecode
                     sb.Append(' ');
                     sb.Append(op.Operand);
                     sb.Append(" (");
-                    if (constant.Type == TaggedUnionType.Integer)
+                    if (constant.IsInteger)
                     {
                         sb.Append("Int=");
                         sb.Append(constant.IntegerValue);
                     }
-                    else if (constant.Type == TaggedUnionType.Float)
+                    else if (constant.IsFloat)
                     {
                         sb.Append("Float=");
                         sb.Append(constant.FloatValue);

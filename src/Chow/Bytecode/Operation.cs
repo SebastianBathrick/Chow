@@ -6,12 +6,12 @@ namespace Chow.Bytecode
 {
     readonly struct Operation
     {
-        public OperationCode Type { get; }
+        public OperationCode Code { get; }
         public int Operand { get; }
 
         public Operation(OperationCode type, int operand = -1)
         {
-            Type = type;
+            Code = type;
             Operand = operand;
         }
     }
