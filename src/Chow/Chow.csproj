@@ -13,4 +13,8 @@
     </AssemblyAttribute>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Parsing\" />
+  </ItemGroup>
+
 </Project>

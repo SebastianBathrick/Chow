@@ -1,4 +1,4 @@
-namespace Chow
+namespace Chow.Tokens
 {
     /// <summary>
     /// Represents one lexeme recognized by the scanner.
