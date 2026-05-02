@@ -15,11 +15,14 @@ namespace Chow
         int _currLineNumber = 1;
         int _currIndentLvl = 0;
 
-
         private char CurrentChar => _srcCode[_scanCharIndex];
 
         public Scanner(string srcCode)
         {
+            if (srcCode == null)
+            {
+                throw new ArgumentNullException(nameof(srcCode));
+            }
             _srcCode = srcCode;
         }
 
@@ -31,6 +34,21 @@ namespace Chow
             _scanCharIndex = 0;
             _currLineNumber = 1;
             _currIndentLvl = 0;
+
+            bool isWhitespaceOnly = _srcCode.Length > 0;
+            for (int i = 0; i < _srcCode.Length && isWhitespaceOnly; i++)
+            {
+                if (!IsIndentChar(_srcCode[i]))
+                {
+                    isWhitespaceOnly = false;
+                }
+            }
+
+            if (isWhitespaceOnly)
+            {
+                AddNewToken(TokenType.EmptySourceCode, string.Empty, 1);
+                return _tokens;
+            }
 
             while (IsCharToScan())
             {
@@ -54,6 +72,12 @@ namespace Chow
             {
                 ScanNumericToken();
                 return;
+            }
+
+            if (IsIndentChar(CurrentChar))
+            {
+                throw new InvalidOperationException(
+                    $"Unexpected indentation at line {_currLineNumber}.");
             }
         }
 

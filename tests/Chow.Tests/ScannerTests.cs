@@ -549,9 +549,11 @@ namespace Chow.Tests
         }
 
         [Test]
-        public void ScanTokens_WhitespaceOnlySourceWithoutNewline_Throws()
+        public void ScanTokens_WhitespaceOnlySourceWithoutNewline_ReturnsEmptySourceCode()
         {
-            AssertScanThrowsWithinTimeout("    ");
+            var tokens = new Scanner("    ").ScanTokens();
+            Assert.That(tokens, Has.Count.EqualTo(1));
+            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.EmptySourceCode));
         }
 
         // ============================================================================================================

@@ -145,6 +145,9 @@ namespace Chow
         Dedent,
 
         /// <summary>End-of-file sentinel token appended after all source code is scanned.</summary>
-        EndOfCode
+        EndOfCode,
+
+        /// <summary>Emitted when the entire source consists only of whitespace (spaces/tabs) with no meaningful code.</summary>
+        EmptySourceCode
     }
 }
