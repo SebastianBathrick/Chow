@@ -5,14 +5,14 @@ namespace Chow
     /// </summary>
     readonly struct Token
     {
-        TokenType Type { get; }
+        internal TokenType Type { get; }
 
-        string Lexeme { get; }
+        internal string Lexeme { get; }
 
-        int LineNum { get; }
+        internal int LineNum { get; }
 
         // Can  be null
-        object Literal { get; }
+        internal object Literal { get; }
 
         public Token(TokenType type, string lexeme, int lineNum, object literal)
         {
