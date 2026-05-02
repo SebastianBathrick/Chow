@@ -278,9 +278,7 @@ namespace Chow.Tests
         [TestCase("(", TokenType.LeftParenthesis)]
         [TestCase(")", TokenType.RightParenthesis)]
         [TestCase("[", TokenType.LeftBracket)]
-        [TestCase("]", TokenType.RightBracket)]
         [TestCase("{", TokenType.LeftCurlyBrace)]
-        [TestCase("}", TokenType.RightCurlyBrace)]
         [TestCase(",", TokenType.Comma)]
         [TestCase(".", TokenType.Dot)]
         [TestCase(":", TokenType.Colon)]
@@ -299,6 +297,28 @@ namespace Chow.Tests
             Assert.That(tokens, Has.Count.EqualTo(2));
             AssertToken(tokens[0], (TokenType)expectedType, source, 1, null);
             AssertToken(tokens[1], TokenType.EndOfCode, string.Empty, 1, null);
+        }
+
+        [TestCase("[]", TokenType.LeftBracket, TokenType.RightBracket)]
+        [TestCase("{}", TokenType.LeftCurlyBrace, TokenType.RightCurlyBrace)]
+        public void ScanTokens_MatchedClosingDelimiter_ProducesExpectedTokens(
+            string source,
+            object expectedOpenType,
+            object expectedCloseType)
+        {
+            var tokens = Tokenize(source);
+
+            Assert.That(tokens, Has.Count.EqualTo(3));
+            AssertToken(tokens[0], (TokenType)expectedOpenType, source[0].ToString(), 1, null);
+            AssertToken(tokens[1], (TokenType)expectedCloseType, source[1].ToString(), 1, null);
+            AssertToken(tokens[2], TokenType.EndOfCode, string.Empty, 1, null);
+        }
+
+        [TestCase("]")]
+        [TestCase("}")]
+        public void ScanTokens_UnmatchedClosingDelimiter_ThrowsScannerException(string source)
+        {
+            Assert.That(() => Tokenize(source), Throws.TypeOf<ScannerException>());
         }
 
         [Test]
