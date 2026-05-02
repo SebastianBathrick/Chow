@@ -83,8 +83,9 @@ namespace Chow
         /// <summary>String literal.</summary>
         String,
 
-        /// <summary>Numeric literal.</summary>
-        Number,
+        Integer,
+
+        Float,
 
         /// <summary><c>and</c> keyword.</summary>
         And,
@@ -135,7 +136,7 @@ namespace Chow
         While,
 
         /// <summary>Significant logical line break.</summary>
-        NewLine,
+        Newline,
 
         /// <summary>Increase in leading indentation at the start of a logical line.</summary>
         Indent,

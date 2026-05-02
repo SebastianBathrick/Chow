@@ -64,7 +64,7 @@ namespace Chow.Tests
                 TokenType.Star,
                 TokenType.Slash,
                 TokenType.Percent,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.EndOfFile
             }));
         }
@@ -79,7 +79,7 @@ namespace Chow.Tests
                 TokenType.Equal,
                 TokenType.Greater,
                 TokenType.Less,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.EndOfFile
             }));
         }
@@ -100,7 +100,7 @@ namespace Chow.Tests
                 TokenType.StarEqual,
                 TokenType.SlashEqual,
                 TokenType.PercentEqual,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.EndOfFile
             }));
         }
@@ -120,13 +120,13 @@ namespace Chow.Tests
                 TokenType.False,
                 TokenType.None,
                 TokenType.Identifier,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.EndOfFile
             }));
 
-            Assert.That(tokens[1].Lexeme, Is.EqualTo("branch"));
-            Assert.That(tokens[3].Lexeme, Is.EqualTo("orchid"));
-            Assert.That(tokens[7].Lexeme, Is.EqualTo("name_1"));
+            Assert.That(tokens[1].Value, Is.EqualTo("branch"));
+            Assert.That(tokens[3].Value, Is.EqualTo("orchid"));
+            Assert.That(tokens[7].Value, Is.EqualTo("name_1"));
         }
 
         [Test]
@@ -155,7 +155,7 @@ namespace Chow.Tests
                 TokenType.True,
                 TokenType.True,
                 TokenType.While,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.EndOfFile
             }));
         }
@@ -170,7 +170,7 @@ namespace Chow.Tests
                 TokenType.Identifier,
                 TokenType.Identifier,
                 TokenType.Identifier,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.EndOfFile
             }));
         }
@@ -186,11 +186,11 @@ namespace Chow.Tests
                 {
                     TokenType.Identifier,
                     TokenType.Identifier,
-                    TokenType.NewLine,
+                    TokenType.Newline,
                     TokenType.EndOfFile
                 }));
-                Assert.That(tokens[0].Lexeme, Is.EqualTo("_name"));
-                Assert.That(tokens[1].Lexeme, Is.EqualTo("_value2"));
+                Assert.That(tokens[0].Value, Is.EqualTo("_name"));
+                Assert.That(tokens[1].Value, Is.EqualTo("_value2"));
             });
         }
 
@@ -202,11 +202,11 @@ namespace Chow.Tests
             Assert.Multiple(() =>
             {
                 Assert.That(tokens[0].Type, Is.EqualTo(TokenType.String));
-                Assert.That(tokens[0].Lexeme, Is.EqualTo("'chow'"));
+                Assert.That(tokens[0].Value, Is.EqualTo("'chow'"));
                 Assert.That(tokens[0].LiteralValue, Is.EqualTo("chow"));
-                Assert.That(tokens[1].Type, Is.EqualTo(TokenType.Number));
+                Assert.That(tokens[1].Type, Is.EqualTo(TokenType.Integer));
                 Assert.That(tokens[1].LiteralValue, Is.EqualTo(123.0d));
-                Assert.That(tokens[2].Type, Is.EqualTo(TokenType.Number));
+                Assert.That(tokens[2].Type, Is.EqualTo(TokenType.Integer));
                 Assert.That(tokens[2].LiteralValue, Is.EqualTo(45.67d));
             });
         }
@@ -219,7 +219,7 @@ namespace Chow.Tests
             Assert.Multiple(() =>
             {
                 Assert.That(tokens[0].Type, Is.EqualTo(TokenType.String));
-                Assert.That(tokens[0].Lexeme, Is.EqualTo("\"chow\""));
+                Assert.That(tokens[0].Value, Is.EqualTo("\"chow\""));
                 Assert.That(tokens[0].LiteralValue, Is.EqualTo("chow"));
             });
         }
@@ -232,7 +232,7 @@ namespace Chow.Tests
             Assert.Multiple(() =>
             {
                 Assert.That(tokens[0].Type, Is.EqualTo(TokenType.String));
-                Assert.That(tokens[0].Lexeme, Is.EqualTo("'don\\'t'"));
+                Assert.That(tokens[0].Value, Is.EqualTo("'don\\'t'"));
                 Assert.That(tokens[0].LiteralValue, Is.EqualTo("don\\'t"));
             });
         }
@@ -246,13 +246,13 @@ namespace Chow.Tests
             {
                 Assert.That(TokenTypes(tokens), Is.EqualTo(new[]
                 {
-                    TokenType.Number,
+                    TokenType.Integer,
                     TokenType.Dot,
-                    TokenType.Number,
-                    TokenType.NewLine,
+                    TokenType.Integer,
+                    TokenType.Newline,
                     TokenType.EndOfFile
                 }));
-                Assert.That(tokens[0].Lexeme, Is.EqualTo("123"));
+                Assert.That(tokens[0].Value, Is.EqualTo("123"));
                 Assert.That(tokens[0].LiteralValue, Is.EqualTo(123.0d));
             });
         }
@@ -265,9 +265,9 @@ namespace Chow.Tests
             Assert.That(TokenTypes(tokens), Is.EqualTo(new[]
             {
                 TokenType.Identifier,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Identifier,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.EndOfFile
             }));
         }
@@ -280,7 +280,7 @@ namespace Chow.Tests
             Assert.That(TokenTypes(tokens), Is.EqualTo(new[]
             {
                 TokenType.Identifier,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.EndOfFile
             }));
         }
@@ -293,7 +293,7 @@ namespace Chow.Tests
             Assert.That(TokenTypes(tokens), Is.EqualTo(new[]
             {
                 TokenType.Pass,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.EndOfFile
             }));
         }
@@ -308,15 +308,15 @@ namespace Chow.Tests
                 TokenType.If,
                 TokenType.True,
                 TokenType.Colon,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Indent,
                 TokenType.Pass,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Pass,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Dedent,
                 TokenType.Pass,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.EndOfFile
             }));
         }
@@ -331,11 +331,11 @@ namespace Chow.Tests
                 TokenType.Identifier,
                 TokenType.Equal,
                 TokenType.LeftParenthesis,
-                TokenType.Number,
+                TokenType.Integer,
                 TokenType.RightParenthesis,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Identifier,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.EndOfFile
             }));
         }
@@ -350,13 +350,13 @@ namespace Chow.Tests
                 TokenType.Identifier,
                 TokenType.Equal,
                 TokenType.LeftBracket,
-                TokenType.Number,
+                TokenType.Integer,
                 TokenType.Comma,
-                TokenType.Number,
+                TokenType.Integer,
                 TokenType.RightBracket,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Identifier,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.EndOfFile
             }));
         }
@@ -371,21 +371,21 @@ namespace Chow.Tests
                 TokenType.If,
                 TokenType.True,
                 TokenType.Colon,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Indent,
                 TokenType.Pass,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.If,
                 TokenType.False,
                 TokenType.Colon,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Indent,
                 TokenType.Pass,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Dedent,
                 TokenType.Dedent,
                 TokenType.Pass,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.EndOfFile
             }));
         }
@@ -400,18 +400,18 @@ namespace Chow.Tests
                 TokenType.If,
                 TokenType.True,
                 TokenType.Colon,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Indent,
                 TokenType.If,
                 TokenType.False,
                 TokenType.Colon,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Indent,
                 TokenType.Pass,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Dedent,
                 TokenType.Pass,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Dedent,
                 TokenType.EndOfFile
             }));
@@ -424,7 +424,7 @@ namespace Chow.Tests
 
             Token indent = tokens.Single(token => token.Type == TokenType.Indent);
 
-            Assert.That(indent.Lexeme, Is.EqualTo("    "));
+            Assert.That(indent.Value, Is.EqualTo("    "));
         }
 
         [Test]
@@ -437,10 +437,10 @@ namespace Chow.Tests
                 TokenType.If,
                 TokenType.True,
                 TokenType.Colon,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Indent,
                 TokenType.Pass,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Dedent,
                 TokenType.EndOfFile
             }));
@@ -466,7 +466,7 @@ namespace Chow.Tests
             Assert.Multiple(() =>
             {
                 Assert.That(tokens[0].LineNumber, Is.EqualTo(1));
-                Assert.That(tokens[1].Type, Is.EqualTo(TokenType.NewLine));
+                Assert.That(tokens[1].Type, Is.EqualTo(TokenType.Newline));
                 Assert.That(tokens[1].LineNumber, Is.EqualTo(1));
                 Assert.That(tokens[2].LineNumber, Is.EqualTo(2));
             });
@@ -540,11 +540,11 @@ namespace Chow.Tests
                 {
                     TokenType.Identifier,
                     TokenType.Identifier,
-                    TokenType.NewLine,
+                    TokenType.Newline,
                     TokenType.EndOfFile
                 }));
-                Assert.That(tokens[0].Lexeme, Is.EqualTo("name1"));
-                Assert.That(tokens[1].Lexeme, Is.EqualTo("a1b2"));
+                Assert.That(tokens[0].Value, Is.EqualTo("name1"));
+                Assert.That(tokens[1].Value, Is.EqualTo("a1b2"));
             });
         }
 
@@ -574,9 +574,9 @@ namespace Chow.Tests
             Assert.That(TokenTypes(tokens), Is.EqualTo(new[]
             {
                 TokenType.Identifier,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.Identifier,
-                TokenType.NewLine,
+                TokenType.Newline,
                 TokenType.EndOfFile
             }));
         }
@@ -596,8 +596,8 @@ namespace Chow.Tests
 
             Assert.Multiple(() =>
             {
-                Assert.That(tokens[0].Lexeme, Is.EqualTo("123"));
-                Assert.That(tokens[1].Lexeme, Is.EqualTo("1.5"));
+                Assert.That(tokens[0].Value, Is.EqualTo("123"));
+                Assert.That(tokens[1].Value, Is.EqualTo("1.5"));
             });
         }
 
@@ -621,7 +621,7 @@ namespace Chow.Tests
             Assert.Multiple(() =>
             {
                 Assert.That(tokens[0].LineNumber, Is.EqualTo(1));
-                Assert.That(tokens[1].Type, Is.EqualTo(TokenType.NewLine));
+                Assert.That(tokens[1].Type, Is.EqualTo(TokenType.Newline));
                 Assert.That(tokens[2].LineNumber, Is.EqualTo(2));
             });
         }
