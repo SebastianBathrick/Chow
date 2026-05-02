@@ -107,12 +107,8 @@ namespace Chow.Values
 
         public static TaggedUnion operator /(TaggedUnion left, TaggedUnion right)
         {
-            if (EitherIsFloat(left, right))
-            {
-                return new TaggedUnion(AsFloat(left) / AsFloat(right));
-            }
-
-            return new TaggedUnion(left.IntegerValue / right.IntegerValue);
+            // Python semantics: `/` always produces a float, even for int / int.
+            return new TaggedUnion(AsFloat(left) / AsFloat(right));
         }
 
         static bool EitherIsFloat(TaggedUnion left, TaggedUnion right)

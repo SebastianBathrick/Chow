@@ -82,7 +82,6 @@ namespace Chow.Tests
         [TestCase((int)OperationCode.Add, 5, 3, 8)]
         [TestCase((int)OperationCode.Subtract, 5, 3, 2)]
         [TestCase((int)OperationCode.Multiply, 4, 3, 12)]
-        [TestCase((int)OperationCode.Divide, 10, 4, 2)]
         public void ExecuteChunk_IntegerBinaryOperation_ReturnsIntegerResult(
             int opCode, int left, int right, int expected)
         {
@@ -151,6 +150,22 @@ namespace Chow.Tests
             AssertFloatResult(result, 3.5f);
         }
 
+        [Test]
+        public void ExecuteChunk_IntegerDivision_ReturnsFloatResult()
+        {
+            // Python semantics: `/` always yields a float, even for int / int.
+            var chunk = BuildChunk(c =>
+            {
+                PushIntegerConstant(c, 10);
+                PushIntegerConstant(c, 4);
+                c.PushOperation(OperationCode.Divide, LINE);
+            });
+
+            TaggedUnion result = Execute(chunk);
+
+            AssertFloatResult(result, 2.5f);
+        }
+
         // ============================================================================================================
         // E. Negate
         // ============================================================================================================
@@ -208,7 +223,7 @@ namespace Chow.Tests
         [Test]
         public void ExecuteChunk_NestedBinaryOperations_ReturnsCorrectResult()
         {
-            // Bytecode for ((10 - 4) / 2) -> 3. Reversed pop on the divide would yield 0 (integer truncation).
+            // Bytecode for ((10 - 4) / 2) -> 3.0. Divide always yields float per Python semantics.
             var chunk = BuildChunk(c =>
             {
                 PushIntegerConstant(c, 10);
@@ -220,7 +235,7 @@ namespace Chow.Tests
 
             TaggedUnion result = Execute(chunk);
 
-            AssertIntegerResult(result, 3);
+            AssertFloatResult(result, 3.0f);
         }
     }
 }
