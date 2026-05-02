@@ -24,19 +24,33 @@ namespace Chow
 
         public override string ToString()
         {
-            string literalText = Literal == null ? "null" : Literal.ToString();
-
-            return $"{Type} {FormatLexeme(Lexeme)} {literalText} line {LineNum}";
+            return $"Token(type={Type}, lexeme=\"{FormatLexeme(Lexeme)}\", literal={FormatLiteral(Literal)}, line={LineNum})";
         }
 
         static string FormatLexeme(string lexeme)
         {
             return lexeme
                 .Replace("\\", "\\\\")
+                .Replace("\"", "\\\"")
                 .Replace("\r", "\\r")
                 .Replace("\n", "\\n")
                 .Replace("\t", "\\t")
                 .Replace("\f", "\\f");
+        }
+
+        static string FormatLiteral(object literal)
+        {
+            if (literal == null)
+            {
+                return "null";
+            }
+
+            if (literal is string stringLiteral)
+            {
+                return $"\"{FormatLexeme(stringLiteral)}\"";
+            }
+
+            return literal.ToString();
         }
     }
 }
