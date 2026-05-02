@@ -11,6 +11,8 @@ namespace Chow.Tests
 
         static List<Token> Tokenize(string source) => new Scanner(source).ScanTokens();
 
+        static List<TokenType> TokenTypes(string source) => Tokenize(source).Select(token => token.Type).ToList();
+
         static void AssertToken(
             Token token,
             TokenType expectedType,
@@ -26,32 +28,6 @@ namespace Chow.Tests
                 Assert.That(token.Literal, Is.EqualTo(expectedLiteral));
             });
         }
-
-        // Runs ScanTokens on a worker thread; fails the test cleanly on timeout
-        // instead of hanging the runner. Used for inputs that may infinite-loop
-        // on the current Scanner implementation.
-        static void AssertScanThrowsWithinTimeout(string source, int timeoutMs = 1000)
-        {
-            Exception? captured = null;
-            var task = Task.Run(() =>
-            {
-                try { new Scanner(source).ScanTokens(); }
-                catch (Exception ex) { captured = ex; }
-            });
-
-            bool finished = task.Wait(timeoutMs);
-
-            Assert.That(finished, Is.True,
-                $"Scanner did not terminate within {timeoutMs}ms on input {Repr(source)} — likely infinite loop.");
-            Assert.That(captured, Is.Not.Null,
-                $"Scanner terminated without throwing on input {Repr(source)}.");
-        }
-
-        static string Repr(string s) => "\"" + s
-            .Replace("\\", "\\\\")
-            .Replace("\r", "\\r")
-            .Replace("\n", "\\n")
-            .Replace("\t", "\\t") + "\"";
 
         // ============================================================================================================
         // A. Empty / minimal input
@@ -303,12 +279,12 @@ namespace Chow.Tests
         // ============================================================================================================
 
         [Test]
-        public void ScanTokens_IndentedSecondLine_EmitsExactlyOneIndentRegardlessOfSpaceCount()
+        public void ScanTokens_IndentedSecondLine_EmitsIndentAndFinalDedent()
         {
             var tokens = Tokenize("1\n    2\n");
 
             Assert.That(tokens.Count(t => t.Type == TokenType.Indent), Is.EqualTo(1));
-            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(0));
+            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(1));
         }
 
         [Test]
@@ -321,21 +297,88 @@ namespace Chow.Tests
         }
 
         [Test]
-        public void ScanTokens_SameIndentTwoConsecutiveLines_EmitsNoIndentOrDedent()
+        public void ScanTokens_SameIndentTwoConsecutiveLines_EmitsNoAdditionalIndentOrDedentUntilEof()
         {
             var tokens = Tokenize("1\n    2\n    3\n");
 
             Assert.That(tokens.Count(t => t.Type == TokenType.Indent), Is.EqualTo(1));
-            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(0));
+            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(1));
         }
 
         [Test]
-        public void ScanTokens_DedentSpanningMultipleLevels_EmitsSingleDedent()
+        public void ScanTokens_DedentSpanningMultipleLevels_EmitsOneDedentPerClosedIndent()
         {
             var tokens = Tokenize("1\n    2\n        3\n1\n");
 
             Assert.That(tokens.Count(t => t.Type == TokenType.Indent), Is.EqualTo(2));
-            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(1));
+            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(2));
+        }
+
+        [Test]
+        public void ScanTokens_NestedIndentAtEof_EmitsOneDedentPerRemainingIndent()
+        {
+            var tokenTypes = TokenTypes("1\n    2\n        3");
+
+            Assert.That(tokenTypes, Is.EqualTo(new[]
+            {
+                TokenType.Integer,
+                TokenType.Newline,
+                TokenType.Indent,
+                TokenType.Integer,
+                TokenType.Newline,
+                TokenType.Indent,
+                TokenType.Integer,
+                TokenType.Dedent,
+                TokenType.Dedent,
+                TokenType.EndOfCode
+            }));
+        }
+
+        [Test]
+        public void ScanTokens_DedentToPreviousIndentLevel_IsAccepted()
+        {
+            var tokenTypes = TokenTypes("1\n    2\n        3\n    4\n");
+
+            Assert.That(tokenTypes, Is.EqualTo(new[]
+            {
+                TokenType.Integer,
+                TokenType.Newline,
+                TokenType.Indent,
+                TokenType.Integer,
+                TokenType.Newline,
+                TokenType.Indent,
+                TokenType.Integer,
+                TokenType.Newline,
+                TokenType.Dedent,
+                TokenType.Integer,
+                TokenType.Newline,
+                TokenType.Dedent,
+                TokenType.EndOfCode
+            }));
+        }
+
+        [Test]
+        public void ScanTokens_DedentToUnmatchedIndentLevel_ThrowsScannerException()
+        {
+            Assert.That(() => Tokenize("1\n    2\n  3\n"), Throws.TypeOf<ScannerException>());
+        }
+
+        [Test]
+        public void ScanTokens_DedentBeforeContent_EmitsDedentBeforeLineToken()
+        {
+            var tokenTypes = TokenTypes("1\n    2\n3");
+
+            Assert.That(tokenTypes, Is.EqualTo(new[]
+            {
+                TokenType.Integer,
+                TokenType.Newline,
+                TokenType.Indent,
+                TokenType.Integer,
+                TokenType.Newline,
+                TokenType.Dedent,
+                TokenType.Integer,
+                TokenType.EndOfCode
+            }));
         }
 
         [Test]
@@ -391,11 +434,12 @@ namespace Chow.Tests
         [Test]
         public void ScanTokens_TabAfterPartialColumn_RoundsUpToNextMultipleOfEight()
         {
-            // line 2 = 4 spaces (col 4). line 3 = 4 spaces + tab → col 8 (deeper).
+            // line 2 = 4 spaces (col 4). line 3 = 4 spaces + tab -> col 8 (deeper).
             var tokens = Tokenize("1\n    2\n    \t3\n");
 
-            // Two distinct indent levels established → two Indent tokens.
+            // Two distinct indent levels established -> two Indent tokens.
             Assert.That(tokens.Count(t => t.Type == TokenType.Indent), Is.EqualTo(2));
+            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(2));
         }
 
         [Test]
@@ -404,7 +448,7 @@ namespace Chow.Tests
             var tokens = Tokenize("1\n    2\n\n    3\n");
 
             Assert.That(tokens.Count(t => t.Type == TokenType.Indent), Is.EqualTo(1));
-            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(0));
+            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(1));
         }
 
         [Test]
@@ -413,7 +457,21 @@ namespace Chow.Tests
             var tokens = Tokenize("1\n    2\n        \n    3\n");
 
             Assert.That(tokens.Count(t => t.Type == TokenType.Indent), Is.EqualTo(1));
-            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(0));
+            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ScanTokens_FormFeedAtLineStart_IgnoredForIndentCalculation()
+        {
+            var tokenTypes = TokenTypes("\f    42");
+
+            Assert.That(tokenTypes, Is.EqualTo(new[]
+            {
+                TokenType.Indent,
+                TokenType.Integer,
+                TokenType.Dedent,
+                TokenType.EndOfCode
+            }));
         }
 
         // ============================================================================================================
@@ -533,19 +591,37 @@ namespace Chow.Tests
         }
 
         // ============================================================================================================
-        // I. Invalid input — must throw (timeout-guarded; will fail until Scanner enforces these)
+        // I. Scanner/parser boundary for indentation
         // ============================================================================================================
 
         [Test]
-        public void ScanTokens_LeadingSpacesOnFirstLine_Throws()
+        public void ScanTokens_LeadingSpacesOnFirstLine_TokenizedForParserToValidate()
         {
-            AssertScanThrowsWithinTimeout("    42\n");
+            var tokenTypes = TokenTypes("    42\n");
+
+            Assert.That(tokenTypes, Is.EqualTo(new[]
+            {
+                TokenType.Indent,
+                TokenType.Integer,
+                TokenType.Newline,
+                TokenType.Dedent,
+                TokenType.EndOfCode
+            }));
         }
 
         [Test]
-        public void ScanTokens_LeadingTabOnFirstLine_Throws()
+        public void ScanTokens_LeadingTabOnFirstLine_TokenizedForParserToValidate()
         {
-            AssertScanThrowsWithinTimeout("\t42\n");
+            var tokenTypes = TokenTypes("\t42\n");
+
+            Assert.That(tokenTypes, Is.EqualTo(new[]
+            {
+                TokenType.Indent,
+                TokenType.Integer,
+                TokenType.Newline,
+                TokenType.Dedent,
+                TokenType.EndOfCode
+            }));
         }
 
         [Test]
