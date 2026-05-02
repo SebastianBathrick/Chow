@@ -9,13 +9,15 @@ namespace Chow
         const int TAB_SIZE = 8;
 
         List<Token> _tokens;
+        Stack<int> _indentLevels;
+        Stack<char> _openBracketStack;
 
         string _srcCode;
+
         int _scanCharIndex;
         int _currLineNumber;
-        Stack<int> _indentLevels;
-        bool _isAtStartOfLine;
 
+        bool _isAtStartOfLine;
         bool _isDirty;
 
         private char CurrentChar => _srcCode[_scanCharIndex];
@@ -33,6 +35,7 @@ namespace Chow
             _currLineNumber = 1;
             _indentLevels = new Stack<int>();
             _indentLevels.Push(0);
+            _openBracketStack = new Stack<char>();
             _isAtStartOfLine = true;
         }
 
@@ -73,7 +76,10 @@ namespace Chow
         {
             if (_isAtStartOfLine)
             {
-                ScanLineStartIndentation();
+                if (IsLineAndIndentLogicEnabled())
+                {
+                    ScanLineStartIndentation();
+                }
 
                 if (!IsCharToScan())
                 {
@@ -90,6 +96,11 @@ namespace Chow
             if (IsDigitChar(CurrentChar))
             {
                 ScanNumericToken();
+                return;
+            }
+
+            if (ScanSingleCharToken())
+            {
                 return;
             }
 
@@ -213,6 +224,103 @@ namespace Chow
         // Lexeme-Dependent Token Scan Methods
         // ============================================================================================================
 
+        bool ScanSingleCharToken()
+        {
+            TokenType tokenType;
+
+            switch (CurrentChar)
+            {
+                case '(':
+                    tokenType = TokenType.LeftParenthesis;
+                    break;
+                
+                case ')':
+                    tokenType = TokenType.RightParenthesis;
+                    break;
+                
+                case ',':
+                    tokenType = TokenType.Comma;
+                    break;
+                
+                case '.':
+                    tokenType = TokenType.Dot;
+                    break;
+                
+                case ':':
+                    tokenType = TokenType.Colon;
+                    break;
+                
+                case '+':
+                    tokenType = TokenType.Plus;
+                    break;
+                
+                case '-':
+                    tokenType = TokenType.Minus;
+                    break;
+                
+                case '*':
+                    tokenType = TokenType.Star;
+                    break;
+                
+                case '/':
+                    tokenType = TokenType.Slash;
+                    break;
+                
+                case '%':
+                    tokenType = TokenType.Percent;
+                    break;
+                
+                case '=':
+                    tokenType = TokenType.Equal;
+                    break;
+                
+                case '>':
+                    tokenType = TokenType.Greater;
+                    break;
+                
+                case '<':
+                    tokenType = TokenType.Less;
+                    break;
+                
+                // Indentation and line-break rules are not enforced (for lists and dictionary declarations)
+                case '[':
+                    tokenType = TokenType.LeftBracket;
+                    _openBracketStack.Push('[');
+                    break;
+                
+                case ']':
+                    tokenType = TokenType.RightBracket;
+
+                    if (_openBracketStack.Count == 0 || _openBracketStack.Pop() != '[')
+                    {
+                        throw new ScannerException("Unexpected ']'", _currLineNumber);
+                    }
+                    break;
+                
+                case '{':
+                    tokenType = TokenType.LeftCurlyBrace;
+                    _openBracketStack.Push('{');
+                    break;
+                
+                case '}':
+                    tokenType = TokenType.RightCurlyBrace;
+
+                    if (_openBracketStack.Count == 0 || _openBracketStack.Pop() != '{')
+                    {
+                        throw new ScannerException("Unexpected '}'", _currLineNumber);
+                    }
+                    break;
+                
+                default:
+                    return false;
+            }
+
+            string lexeme = CurrentChar.ToString();
+            MoveToNextChar();
+            AddNewToken(tokenType, lexeme, _currLineNumber);
+            return true;
+        }
+
         void ScanNumericToken()
         {
             int startIndex = _scanCharIndex;
@@ -245,7 +353,9 @@ namespace Chow
 
             try
             {
-                literal = isFloat ? float.Parse(lexeme, CultureInfo.InvariantCulture) : int.Parse(lexeme, CultureInfo.InvariantCulture);
+                literal = isFloat
+                    ? (object)float.Parse(lexeme, CultureInfo.InvariantCulture)
+                    : int.Parse(lexeme, CultureInfo.InvariantCulture);
             }
             catch (OverflowException)
             {
@@ -301,6 +411,11 @@ namespace Chow
         // ============================================================================================================
         // Helper Methods
         // ============================================================================================================
+
+        bool IsLineAndIndentLogicEnabled()
+        {
+            return _openBracketStack.Count == 0;
+        }
 
         private bool IsWhitespaceOnly()
         {

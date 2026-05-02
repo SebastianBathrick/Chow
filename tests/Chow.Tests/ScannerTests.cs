@@ -272,7 +272,73 @@ namespace Chow.Tests
         }
 
         // ============================================================================================================
-        // E. Indent / Dedent
+        // E. Single-character lexemes
+        // ============================================================================================================
+
+        [TestCase("(", TokenType.LeftParenthesis)]
+        [TestCase(")", TokenType.RightParenthesis)]
+        [TestCase("[", TokenType.LeftBracket)]
+        [TestCase("]", TokenType.RightBracket)]
+        [TestCase("{", TokenType.LeftCurlyBrace)]
+        [TestCase("}", TokenType.RightCurlyBrace)]
+        [TestCase(",", TokenType.Comma)]
+        [TestCase(".", TokenType.Dot)]
+        [TestCase(":", TokenType.Colon)]
+        [TestCase("+", TokenType.Plus)]
+        [TestCase("-", TokenType.Minus)]
+        [TestCase("*", TokenType.Star)]
+        [TestCase("/", TokenType.Slash)]
+        [TestCase("%", TokenType.Percent)]
+        [TestCase("=", TokenType.Equal)]
+        [TestCase(">", TokenType.Greater)]
+        [TestCase("<", TokenType.Less)]
+        public void ScanTokens_SingleCharacterLexeme_ProducesExpectedToken(string source, object expectedType)
+        {
+            var tokens = Tokenize(source);
+
+            Assert.That(tokens, Has.Count.EqualTo(2));
+            AssertToken(tokens[0], (TokenType)expectedType, source, 1, null);
+            AssertToken(tokens[1], TokenType.EndOfCode, string.Empty, 1, null);
+        }
+
+        [Test]
+        public void ScanTokens_SingleCharacterLexemeSequence_ProducesTokenForEachCharacter()
+        {
+            var tokenTypes = TokenTypes("()[]{} ,.:+-*/%=><".Replace(" ", string.Empty));
+
+            Assert.That(tokenTypes, Is.EqualTo(new[]
+            {
+                TokenType.LeftParenthesis,
+                TokenType.RightParenthesis,
+                TokenType.LeftBracket,
+                TokenType.RightBracket,
+                TokenType.LeftCurlyBrace,
+                TokenType.RightCurlyBrace,
+                TokenType.Comma,
+                TokenType.Dot,
+                TokenType.Colon,
+                TokenType.Plus,
+                TokenType.Minus,
+                TokenType.Star,
+                TokenType.Slash,
+                TokenType.Percent,
+                TokenType.Equal,
+                TokenType.Greater,
+                TokenType.Less,
+                TokenType.EndOfCode
+            }));
+        }
+
+        [Test]
+        public void ScanTokens_SingleCharacterLexemeOnLaterLine_HasCurrentLineNumber()
+        {
+            var tokens = Tokenize("\n+");
+
+            AssertToken(tokens[1], TokenType.Plus, "+", 2, null);
+        }
+
+        // ============================================================================================================
+        // F. Indent / Dedent
         // ============================================================================================================
 
         [Test]
@@ -472,7 +538,7 @@ namespace Chow.Tests
         }
 
         // ============================================================================================================
-        // F. EndOfCode terminal token
+        // G. EndOfCode terminal token
         // ============================================================================================================
 
         [TestCase("42")]
@@ -518,7 +584,7 @@ namespace Chow.Tests
         }
 
         // ============================================================================================================
-        // G. Cross-cutting line-number correctness
+        // H. Cross-cutting line-number correctness
         // ============================================================================================================
 
         [Test]
@@ -549,7 +615,7 @@ namespace Chow.Tests
         }
 
         // ============================================================================================================
-        // H. State / idempotency
+        // I. State / idempotency
         // ============================================================================================================
 
         [Test]
@@ -594,7 +660,7 @@ namespace Chow.Tests
         }
 
         // ============================================================================================================
-        // I. Scanner/parser boundary for indentation
+        // J. Scanner/parser boundary for indentation
         // ============================================================================================================
 
         [Test]
@@ -636,7 +702,7 @@ namespace Chow.Tests
         }
 
         // ============================================================================================================
-        // J. Constructor
+        // K. Constructor
         // ============================================================================================================
 
         [Test]
@@ -652,7 +718,7 @@ namespace Chow.Tests
         }
 
         // ============================================================================================================
-        // K. Lexeme correctness for literal slices
+        // L. Lexeme correctness for literal slices
         // ============================================================================================================
 
         [TestCase("0")]

@@ -17,6 +17,12 @@ namespace Chow
         /// <summary>Closing square bracket: <c>]</c>.</summary>
         RightBracket,
 
+        /// <summary>Opening curly brace: <c>{</c>.</summary>
+        LeftCurlyBrace,
+
+        /// <summary>Closing curly brace: <c>}</c>.</summary>
+        RightCurlyBrace,
+
         /// <summary>Comma separator: <c>,</c>.</summary>
         Comma,
 
