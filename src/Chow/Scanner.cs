@@ -37,6 +37,8 @@ namespace Chow
         }
 
         // ============================================================================================================
+        // Primary Methods
+        // ============================================================================================================
 
         public List<Token> ScanTokens()
         {
@@ -65,19 +67,7 @@ namespace Chow
             return _tokens;
         }
 
-        private bool IsWhitespaceOnly()
-        {
-            bool isWhitespaceOnly = _srcCode.Length > 0;
-            for (int i = 0; i < _srcCode.Length && isWhitespaceOnly; i++)
-            {
-                if (!IsIndentChar(_srcCode[i]) && !IsFormFeedChar(_srcCode[i]))
-                {
-                    isWhitespaceOnly = false;
-                }
-            }
-
-            return isWhitespaceOnly;
-        }
+        
 
         void RunScanIteration()
         {
@@ -111,11 +101,8 @@ namespace Chow
             throw new ScannerException($"Unexpected character '{CurrentChar}'.", _currLineNumber);
         }
 
-        void AddNewToken(TokenType type, string lexeme, int lineNum, object literal = null)
-        {
-            _tokens.Add(new Token(type, lexeme, lineNum, literal));
-        }
-
+        // ============================================================================================================
+        // Newline & Indentation Token Scan Methods
         // ============================================================================================================
 
         void ScanNewlineToken()
@@ -223,6 +210,8 @@ namespace Chow
         }
 
         // ============================================================================================================
+        // Lexeme-Dependent Token Scan Methods
+        // ============================================================================================================
 
         void ScanNumericToken()
         {
@@ -256,9 +245,7 @@ namespace Chow
 
             try
             {
-                literal = isFloat
-                    ? (object)float.Parse(lexeme, CultureInfo.InvariantCulture)
-                    : int.Parse(lexeme, CultureInfo.InvariantCulture);
+                literal = isFloat ? float.Parse(lexeme, CultureInfo.InvariantCulture) : int.Parse(lexeme, CultureInfo.InvariantCulture);
             }
             catch (OverflowException)
             {
@@ -273,7 +260,9 @@ namespace Chow
             AddNewToken(numTokenType, lexeme, _currLineNumber, literal);
         }
 
-        #region Char Pointer Methods
+        // ============================================================================================================
+        // Char Pointer Methods
+        // ============================================================================================================
 
         bool IsCharToScan()
         {
@@ -285,9 +274,9 @@ namespace Chow
             _scanCharIndex++;
         }
 
-        #endregion
-
-        #region Char Classification Methods
+        // ============================================================================================================
+        // Char Classification Methods
+        // ============================================================================================================
 
         static bool IsDigitChar(char checkChar)
         {
@@ -309,6 +298,27 @@ namespace Chow
             return checkChar == '\n' || checkChar == '\r';
         }
 
-        #endregion
+        // ============================================================================================================
+        // Helper Methods
+        // ============================================================================================================
+
+        private bool IsWhitespaceOnly()
+        {
+            bool isWhitespaceOnly = _srcCode.Length > 0;
+            for (int i = 0; i < _srcCode.Length && isWhitespaceOnly; i++)
+            {
+                if (!IsIndentChar(_srcCode[i]) && !IsFormFeedChar(_srcCode[i]))
+                {
+                    isWhitespaceOnly = false;
+                }
+            }
+
+            return isWhitespaceOnly;
+        }
+
+        void AddNewToken(TokenType type, string lexeme, int lineNum, object literal = null)
+        {
+            _tokens.Add(new Token(type, lexeme, lineNum, literal));
+        }
     }
 }
