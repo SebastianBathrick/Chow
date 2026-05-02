@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow
+namespace Chow.Bytecode
 {
     enum OperationCode
     {

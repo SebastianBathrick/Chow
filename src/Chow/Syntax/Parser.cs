@@ -3,7 +3,7 @@ using Chow.Tokens;
 using System;
 using System.Collections.Generic;
 
-namespace Chow.Parsing
+namespace Chow.Syntax
 {
     class Parser
     {
@@ -56,7 +56,7 @@ namespace Chow.Parsing
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 Node right = ParseTerm();
-                left = new ExpressionOperationNode(MapBinary(opToken.Type), left, right);
+                left = new ExpressionOperationNode(MapBinary(opToken.Type), left, right, opToken.LineNum);
             }
 
             return left;
@@ -70,7 +70,7 @@ namespace Chow.Parsing
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 Node right = ParseFactor();
-                left = new ExpressionOperationNode(MapBinary(opToken.Type), left, right);
+                left = new ExpressionOperationNode(MapBinary(opToken.Type), left, right, opToken.LineNum);
             }
 
             return left;
@@ -80,7 +80,8 @@ namespace Chow.Parsing
         {
             if (Match(TokenType.Minus))
             {
-                return new ExpressionOperationNode(ExpressionOperationNode.OperatorType.Negate, ParseFactor());
+                Token opToken = _tokens[_tokenIndex - 1];
+                return new ExpressionOperationNode(ExpressionOperationNode.OperatorType.Negate, ParseFactor(), opToken.LineNum);
             }
 
             return ParsePrimary();
@@ -95,7 +96,7 @@ namespace Chow.Parsing
                 {
                     Token token = CurrentToken;
                     MoveToNextToken();
-                    return new LiteralNode(token.Literal);
+                    return new LiteralNode(token.Literal, token.LineNum);
                 }
 
                 case TokenType.LeftParenthesis:

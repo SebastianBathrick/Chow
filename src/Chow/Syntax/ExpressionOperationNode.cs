@@ -23,14 +23,16 @@ namespace Chow.Syntax
         public Node Left => _leftOperand;
         public Node Right => _rightOperand;
 
-        public ExpressionOperationNode(OperatorType operatorType, Node leftOperand, Node rightOperand)
+        public ExpressionOperationNode(OperatorType operatorType, Node leftOperand, Node rightOperand, int lineNumber)
+            : base(lineNumber)
         {
             _operator = operatorType;
             _leftOperand = leftOperand ?? throw new ArgumentNullException(nameof(leftOperand));
             _rightOperand = rightOperand;
         }
 
-        public ExpressionOperationNode(OperatorType operatorType, Node operand)
+        public ExpressionOperationNode(OperatorType operatorType, Node operand, int lineNumber)
+            : base(lineNumber)
         {
             if (operatorType != OperatorType.Negate)
                 throw new ArgumentException("Unary constructor is only valid for Negate.", nameof(operatorType));
@@ -44,11 +46,11 @@ namespace Chow.Syntax
 
             if (_rightOperand == null)
             {
-                return $"[{_operator}\n{indentedLeft}\n]";
+                return $"[{_operator} line={LineNumber}\n{indentedLeft}\n]";
             }
 
             string indentedRight = IndentChildren(_rightOperand.ToString());
-            return $"[{_operator}\n{indentedLeft}\n{indentedRight}\n]";
+            return $"[{_operator} line={LineNumber}\n{indentedLeft}\n{indentedRight}\n]";
         }
 
         static string IndentChildren(string nodeString)

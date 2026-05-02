@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow
+namespace Chow.Bytecode
 {
-    internal class Chunk
+    class Chunk
     {
-        List<OperationCode> _code = new List<OperationCode>();
+        List<Operation> _code = new List<Operation>();
         List<ChowValue> _constants = new List<ChowValue>(); 
 
         public void  AddConstant(ChowValue newConstant)
@@ -14,9 +14,9 @@ namespace Chow
             _constants.Add(newConstant);
         }
 
-        public void AppendCode(OperationCode operationCode)
+        public void AddOperation(Operation operation)
         {
-            _code.Add(operationCode);
+            _code.Add(operation);
         }
     }
 }

@@ -18,7 +18,8 @@ namespace Chow.Syntax
         public object Value => _value;
         public DataType Type => _type;
 
-        public LiteralNode(object value)
+        public LiteralNode(object value, int lineNumber)
+            : base(lineNumber)
         {
             if (value == null)
                 throw new ArgumentNullException(nameof(value));
@@ -35,7 +36,7 @@ namespace Chow.Syntax
 
         public override string ToString()
         {
-            return _value.ToString();
+            return $"{_value} line={LineNumber}";
         }
     }
 }
