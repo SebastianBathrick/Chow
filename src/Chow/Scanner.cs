@@ -27,6 +27,11 @@ namespace Chow
 
         public List<Token> ScanTokens()
         {
+            _tokens = new List<Token>();
+            _scanCharIndex = 0;
+            _currLineNumber = 1;
+            _currIndentLvl = 0;
+
             while (IsCharToScan())
             {
                 RunScanIteration();
@@ -38,18 +43,17 @@ namespace Chow
 
         void RunScanIteration()
         {
-            if (IsNewlineChar(CurrentChar) && TryCreateNewlineToken())
+            if (IsNewlineChar(CurrentChar))
             {
-                if (TryScanIndentTokens())
-                {
-                    // Return if there are no remaining characters or the line is empty
-                    return;
-                }
+                TryCreateNewlineToken();
+                TryScanIndentTokens();
+                return;
             }
 
             if (IsDigitChar(CurrentChar))
             {
                 ScanNumericToken();
+                return;
             }
         }
 
@@ -87,10 +91,9 @@ namespace Chow
 
             if (isNewline)
             {
-                _currLineNumber++;
-
                 // Use a newline for the lexeme for clean debug information
                 AddNewToken(TokenType.Newline, "\n", _currLineNumber);
+                _currLineNumber++;
             }
 
             // True will indicate that the current char is at the start of a new line (if there is a char)
@@ -118,6 +121,7 @@ namespace Chow
 
             int prevIndentLvl = _currIndentLvl;
             int indentLvlChange = spaceCount - prevIndentLvl;
+
             _currIndentLvl = prevIndentLvl + indentLvlChange;
 
             while (indentLvlChange != 0)
@@ -171,13 +175,19 @@ namespace Chow
 
             int length = _scanCharIndex - startIndex;
             string lexeme = _srcCode.Substring(startIndex, length);
-            object literal = null;
+            TokenType numTokenType = isFloat ? TokenType.Float : TokenType.Integer;
+            object literal;
 
             try
             {
                 literal = isFloat
-                    ? float.Parse(lexeme, CultureInfo.InvariantCulture)
-                    : int.Parse(lexeme, CultureInfo.InvariantCulture);
+                    ? (object)float.Parse(lexeme, CultureInfo.InvariantCulture)
+                    : (object)int.Parse(lexeme, CultureInfo.InvariantCulture);
+            }
+            catch (OverflowException)
+            {
+                throw new OverflowException(
+                    $"{numTokenType} literal value out of range & parsing failed. Literal Value: {lexeme}");
             }
             catch (FormatException)
             {
@@ -185,7 +195,7 @@ namespace Chow
                 throw new InvalidOperationException();
             }
 
-            AddNewToken(isFloat ? TokenType.Float : TokenType.Integer, lexeme, _currLineNumber, literal);
+            AddNewToken(numTokenType, lexeme, _currLineNumber, literal);
         }
 
         #region Char Pointer Methods
