@@ -107,8 +107,16 @@ namespace Chow
 
             while (IsCharToScan() && IsIndentChar(CurrentChar))
             {
-                var isTab = CurrentChar == '\t';
-                spaceCount += isTab ? TAB_SIZE : 1;
+                if (CurrentChar == '\t')
+                {
+                    // Tab rounds column up to the next multiple of TAB_SIZE (Python rule)
+                    spaceCount = ((spaceCount / TAB_SIZE) + 1) * TAB_SIZE;
+                }
+                else
+                {
+                    spaceCount++;
+                }
+
                 MoveToNextChar();
             }
 
@@ -119,30 +127,16 @@ namespace Chow
                 return false;
             }
 
-            int prevIndentLvl = _currIndentLvl;
-            int indentLvlChange = spaceCount - prevIndentLvl;
-
-            _currIndentLvl = prevIndentLvl + indentLvlChange;
-
-            while (indentLvlChange != 0)
+            if (spaceCount > _currIndentLvl)
             {
-                TokenType newTokenType = indentLvlChange > 0 ? TokenType.Indent : TokenType.Dedent;
-                string lexeme;
-
-                if (newTokenType == TokenType.Indent)
-                {
-                    indentLvlChange--;
-                    lexeme = " ";
-                }
-                else
-                {
-                    indentLvlChange++;
-                    lexeme = string.Empty;
-                }
-
-                AddNewToken(newTokenType, lexeme, _currLineNumber);
+                AddNewToken(TokenType.Indent, " ", _currLineNumber);
+            }
+            else if (spaceCount < _currIndentLvl)
+            {
+                AddNewToken(TokenType.Dedent, string.Empty, _currLineNumber);
             }
 
+            _currIndentLvl = spaceCount;
             return true;
         }
 
