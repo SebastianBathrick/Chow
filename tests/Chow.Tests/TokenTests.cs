@@ -1,4 +1,5 @@
 using Chow;
+using Chow.Tokens;
 
 namespace Chow.Tests
 {

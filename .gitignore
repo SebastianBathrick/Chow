@@ -439,3 +439,4 @@ FodyWeavers.xsd
 AGENTS.md
 CLAUDE.md
 .github/copilot-instructions.md
+BytecodeTransformations.md

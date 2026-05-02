@@ -106,7 +106,8 @@ namespace Chow.Tokens
 
             if (IsIndentChar(CurrentChar))
             {
-                throw new ScannerException("Unexpected whitespace.", _currLineNumber);
+                MoveToNextChar();
+                return;
             }
 
             throw new ScannerException($"Unexpected character '{CurrentChar}'.", _currLineNumber);

@@ -6,5 +6,6 @@ namespace Chow.Syntax
 {
     internal abstract class Node
     {
+        public abstract override string ToString();
     }
 }

@@ -1,6 +1,7 @@
-using Chow;
+using Chow.Parsing;
+using Chow.Tokens;
 
-Console.WriteLine("Enter source to scan. Use Ctrl+Z then Enter to quit.");
+Console.WriteLine("Enter an expression to parse. Use Ctrl+Z then Enter to quit.");
 Console.WriteLine("Escapes are supported: \\n, \\r, \\t, \\f, \\\\.");
 
 while (true)
@@ -16,12 +17,9 @@ while (true)
     try
     {
         var scanner = new Scanner(DecodeEscapes(input));
-        List<Token> tokens = scanner.ScanTokens();
+        var parser = new Parser(scanner.ScanTokens());
 
-        foreach (Token token in tokens)
-        {
-            Console.WriteLine(token);
-        }
+        Console.WriteLine(parser.BuildSyntaxTree());
     }
     catch (Exception ex)
     {

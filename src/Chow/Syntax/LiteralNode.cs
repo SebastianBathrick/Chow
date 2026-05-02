@@ -21,11 +21,21 @@ namespace Chow.Syntax
         public LiteralNode(object value)
         {
             if (value == null)
-            {
                 throw new ArgumentNullException(nameof(value));
-            }
+
+            if (value is int)
+                _type = DataType.Integer;
+            else if (value is float)
+                _type = DataType.Float;
+            else
+                throw new ArgumentException($"Unsupported literal type: {value.GetType().Name}", nameof(value));
 
             _value = value;
+        }
+
+        public override string ToString()
+        {
+            return _value.ToString();
         }
     }
 }
