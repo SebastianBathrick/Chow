@@ -39,11 +39,11 @@ namespace Chow.Tokens
             { "assert", TokenType.Assert },
         };
             
-        List<Token> _tokens;
-        Stack<int> _indentLevels;
-        Stack<char> _openBracketStack;
+        readonly List<Token> _tokens;
+        readonly Stack<int> _indentLevels;
+        readonly Stack<char> _openBracketStack;
 
-        string _srcCode;
+        readonly string _srcCode;
 
         int _scanCharIndex;
         int _currLineNumber;
@@ -66,9 +66,9 @@ namespace Chow.Tokens
             _scanCharIndex = 0;
             _currLineNumber = 1;
             _indentLevels = new Stack<int>();
-            _indentLevels.Push(0);
             _openBracketStack = new Stack<char>();
             _isAtStartOfLine = true;
+            _indentLevels.Push(0);
         }
 
         #region Primary Methods
@@ -118,9 +118,9 @@ namespace Chow.Tokens
                 }
             }
 
-            if (IsCommentPrefix(CurrentChar))
+            if (IsNameLeadingChar(CurrentChar))
             {
-                SkipRemainingLineChars();
+                ScanNameToken();
             }
             else if (IsNewlineChar(CurrentChar))
             {
@@ -130,18 +130,17 @@ namespace Chow.Tokens
             {
                 ScanNumericToken();
             }
-            else if (TryScanSingleCharToken())
-            {
-                return;
-            }
             else if (IsIndentChar(CurrentChar))
             {
                 MoveToNextChar();
             }
-            else
+            else if (IsCommentPrefix(CurrentChar))
+            {
+                SkipRemainingLineChars();
+            }
+            else if (!TryScanSingleCharToken())
             {
                 throw new ScannerException($"Unexpected character '{CurrentChar}'.", _currLineNumber);
-
             }
         }
 
@@ -156,6 +155,29 @@ namespace Chow.Tokens
         #endregion
 
         #region Newline & Indentation Token Scan Methods
+
+        void ScanNameToken()
+        {
+            int startIndex = _scanCharIndex;
+
+            while (IsCharToScan() && IsNameTrailChar(CurrentChar))
+            {
+                MoveToNextChar();
+            }
+
+            string lexeme = _srcCode.Substring(startIndex, _scanCharIndex - startIndex);
+            
+            TokenType tokenType;
+
+            if (_keywords.TryGetValue(lexeme, out tokenType))
+            {
+                AddNewToken(tokenType, lexeme, _currLineNumber);
+            }
+            else
+            {
+                AddNewToken(TokenType.Identifier, lexeme, _currLineNumber);
+            }
+        }
 
         void ScanNewlineToken()
         {
@@ -456,6 +478,11 @@ namespace Chow.Tokens
             return checkChar >= '0' && checkChar <= '9';
         }
 
+        static bool IsAlphaChar(char checkChar)
+        {
+            return (checkChar >= 'a' && checkChar <= 'z') || (checkChar >= 'A' && checkChar <= 'Z');
+        }
+
         static bool IsIndentChar(char checkChar)
         {
             return checkChar == ' ' || checkChar == '\t';
@@ -474,6 +501,16 @@ namespace Chow.Tokens
         static bool IsCommentPrefix(char checkChar)
         {
             return checkChar == '#';
+        }
+
+        static bool IsNameLeadingChar(char checkChar)
+        {
+            return IsAlphaChar(checkChar) || checkChar == '_';
+        }
+
+        static bool IsNameTrailChar(char checkChar)
+        {
+            return IsAlphaChar(checkChar) || IsDigitChar(checkChar) || checkChar == '_';
         }
 
         #endregion

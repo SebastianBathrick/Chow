@@ -11,10 +11,13 @@ namespace Chow.Tests
         // ------------------------------------------------------------------------------------------------------------
 
         static Node Parse(string source) =>
-            new Parser(new Scanner(source).ScanTokens()).BuildSyntaxTree();
+            UnwrapSingleStatement(new Parser(new Scanner(source).ScanTokens()).BuildSyntaxTree());
 
         static Node ParseTokens(params Token[] tokens) =>
-            new Parser(new List<Token>(tokens)).BuildSyntaxTree();
+            UnwrapSingleStatement(new Parser(new List<Token>(tokens)).BuildSyntaxTree());
+
+        static Node UnwrapSingleStatement(Node root) =>
+            ((BlockNode)((SyntaxTreeRoot)root).TopLevelBlock)[0];
 
         static Token Token(TokenType type, string lexeme, int lineNumber, object literal = null!) =>
             new Token(type, lexeme, lineNumber, literal);

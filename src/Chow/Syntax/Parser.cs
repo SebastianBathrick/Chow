@@ -38,15 +38,67 @@ namespace Chow.Syntax
                 return new EmptyNode();
             }
 
-            Node root = ParseExpression();
+            Node block = ParseBlock(isTopLevel: true);
+            Consume(TokenType.EndOfCode, "Expected end of code.");
+            return new SyntaxTreeRoot(block, block.LineNumber);
+        }
 
-            if (Check(TokenType.Newline))
+        Node ParseBlock(bool isTopLevel = false)
+        {
+            int lineNumber;
+
+            if (!isTopLevel)
             {
-                MoveToNextToken();
+                lineNumber = Consume(TokenType.Indent, "Expected indent.").LineNum;
+            }
+            else
+            {
+                lineNumber = CurrentToken.LineNum;
             }
 
-            Consume(TokenType.EndOfCode, "Expected end of expression.");
-            return root;
+            List<Node> statements = new List<Node>();
+
+            while (!Check(TokenType.Dedent) && !Check(TokenType.EndOfCode))
+            {
+                statements.Add(ParseStatement());
+
+                if (Check(TokenType.Newline))
+                {
+                    MoveToNextToken();
+                }
+                else if (!Check(TokenType.Dedent) && !Check(TokenType.EndOfCode))
+                {
+                    throw new ParserException("Expected newline after statement.", CurrentToken.LineNum);
+                }
+            }
+
+            if (!isTopLevel)
+            {
+                Consume(TokenType.Dedent, "Expected dedent.");
+            }
+
+            return new BlockNode(statements, lineNumber);
+        }
+
+        Node ParseStatement()
+        {
+            if (Check(TokenType.Identifier) && CheckNext(TokenType.Equal))
+            {
+                return ParseVariableAssignment();
+            }
+
+            return ParseExpression();
+        }
+
+        Node ParseVariableAssignment()
+        {
+            Token identifierToken = Consume(TokenType.Identifier, "Expected variable name.");
+            Node identifierNode = new IdentifierNode(identifierToken.Lexeme, identifierToken.LineNum);
+
+            Consume(TokenType.Equal, "Expected '=' after variable name.");
+            Node expression = ParseExpression();
+
+            return new VariableAssignmentNode(identifierNode, expression, identifierToken.LineNum);
         }
 
         // ============================================================================================================
@@ -57,7 +109,7 @@ namespace Chow.Syntax
         {
             Node left = ParseTerm();
 
-            while (Match(TokenType.Plus, TokenType.Minus))
+            while (IsTokenTypeMatch(TokenType.Plus, TokenType.Minus))
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 Node right = ParseTerm();
@@ -71,7 +123,7 @@ namespace Chow.Syntax
         {
             Node left = ParseFactor();
 
-            while (Match(TokenType.Star, TokenType.Slash, TokenType.SlashSlash, TokenType.Percent))
+            while (IsTokenTypeMatch(TokenType.Star, TokenType.Slash, TokenType.SlashSlash, TokenType.Percent))
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 Node right = ParseFactor();
@@ -83,7 +135,7 @@ namespace Chow.Syntax
 
         Node ParseFactor()
         {
-            if (Match(TokenType.Minus))
+            if (IsTokenTypeMatch(TokenType.Minus))
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 return new ExpressionNode(ExpressionOperator.Negate, ParseFactor(), opToken.LineNum);
@@ -96,7 +148,7 @@ namespace Chow.Syntax
         {
             Node left = ParsePrimary();
 
-            if (Match(TokenType.StarStar))
+            if (IsTokenTypeMatch(TokenType.StarStar))
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 Node right = ParseFactor();
@@ -110,21 +162,22 @@ namespace Chow.Syntax
         {
             switch (CurrentToken.Type)
             {
+                case TokenType.Identifier:
+                    Token identifierToken = CurrentToken;
+                    MoveToNextToken();
+                    return new IdentifierNode(identifierToken.Lexeme, identifierToken.LineNum);
+
                 case TokenType.Integer:
                 case TokenType.Float:
-                {
-                    Token token = CurrentToken;
+                    Token numericToken = CurrentToken;
                     MoveToNextToken();
-                    return new LiteralNode(token.Literal, token.LineNum);
-                }
+                    return new LiteralNode(numericToken.Literal, numericToken.LineNum);
 
                 case TokenType.LeftParenthesis:
-                {
                     MoveToNextToken();
                     Node inner = ParseExpression();
                     Consume(TokenType.RightParenthesis, "Expected ')' after expression.");
                     return inner;
-                }
 
                 default:
                     throw new ParserException("Expected expression.", CurrentToken.LineNum);
@@ -148,32 +201,21 @@ namespace Chow.Syntax
             return CurrentToken.Type == type;
         }
 
-        bool Match(TokenType type)
+        bool CheckNext(TokenType type)
         {
-            if (Check(type))
-            {
-                MoveToNextToken();
-                return true;
-            }
-
-            return false;
+            int nextIndex = _tokenIndex + 1;
+            return nextIndex < _tokens.Count && _tokens[nextIndex].Type == type;
         }
 
-        bool Match(TokenType typeA, TokenType typeB)
+        bool IsTokenTypeMatch(params TokenType[] types)
         {
-            if (Check(typeA) || Check(typeB))
+            foreach (TokenType type in types)
             {
-                MoveToNextToken();
-                return true;
-            }
+                if (!Check(type))
+                {
+                    continue;
+                }
 
-            return false;
-        }
-
-        bool Match(TokenType typeA, TokenType typeB, TokenType typeC, TokenType typeD)
-        {
-            if (Check(typeA) || Check(typeB) || Check(typeC) || Check(typeD))
-            {
                 MoveToNextToken();
                 return true;
             }
@@ -183,14 +225,14 @@ namespace Chow.Syntax
 
         Token Consume(TokenType type, string message)
         {
-            if (Check(type))
+            if (!Check(type))
             {
-                Token token = CurrentToken;
-                MoveToNextToken();
-                return token;
+                throw new ParserException(message, CurrentToken.LineNum);
             }
 
-            throw new ParserException(message, CurrentToken.LineNum);
+            Token token = CurrentToken;
+            MoveToNextToken();
+            return token;
         }
 
         // ============================================================================================================
