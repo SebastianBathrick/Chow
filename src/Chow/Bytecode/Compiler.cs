@@ -32,6 +32,7 @@ namespace Chow.Bytecode
 
             _isDirty = true;
             CompileTargetNode(_syntaxTreeRoot);
+
             return _chunk;
         }
 

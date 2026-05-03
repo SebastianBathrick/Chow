@@ -8,6 +8,37 @@ namespace Chow.Tokens
     {
         const int TAB_SIZE = 8;
 
+        private static readonly IReadOnlyDictionary<string, TokenType> _keywords = new Dictionary<string, TokenType>
+        {
+            { "True", TokenType.True },
+            { "False", TokenType.False },
+            { "None", TokenType.None },
+            { "and", TokenType.And },
+            { "or", TokenType.Or },
+            { "not", TokenType.Not },
+            { "is", TokenType.Is },
+            { "in", TokenType.In },
+            { "def", TokenType.Def },
+            { "return", TokenType.Return },
+            { "class", TokenType.Class },
+            { "with", TokenType.With },
+            { "as", TokenType.As },
+            { "global", TokenType.Global },
+            { "if", TokenType.If },
+            { "else", TokenType.Else },
+            { "elif", TokenType.Elif },
+            { "for", TokenType.For },
+            { "while", TokenType.While },
+            { "break", TokenType.Break },
+            { "continue", TokenType.Continue },
+            { "pass", TokenType.Pass },
+            { "try", TokenType.Try },
+            { "except", TokenType.Except },
+            { "finally", TokenType.Finally },
+            { "raise", TokenType.Raise },
+            { "assert", TokenType.Assert },
+        };
+            
         List<Token> _tokens;
         Stack<int> _indentLevels;
         Stack<char> _openBracketStack;
@@ -40,9 +71,7 @@ namespace Chow.Tokens
             _isAtStartOfLine = true;
         }
 
-        // ============================================================================================================
-        // Primary Methods
-        // ============================================================================================================
+        #region Primary Methods
 
         public List<Token> ScanTokens()
         {
@@ -70,10 +99,9 @@ namespace Chow.Tokens
 
             AddPendingDedentTokens();
             AddNewToken(TokenType.EndOfCode, string.Empty, _currLineNumber);
+            
             return _tokens;
         }
-
-        
 
         void RunScanIteration()
         {
@@ -125,9 +153,9 @@ namespace Chow.Tokens
             }
         }
 
-        // ============================================================================================================
-        // Newline & Indentation Token Scan Methods
-        // ============================================================================================================
+        #endregion
+
+        #region Newline & Indentation Token Scan Methods
 
         void ScanNewlineToken()
         {
@@ -147,6 +175,7 @@ namespace Chow.Tokens
                         // Windows/MS-DOS newline
                         MoveToNextChar();
                     }
+
                     break;        
             }
 
@@ -234,9 +263,9 @@ namespace Chow.Tokens
             }
         }
 
-        // ============================================================================================================
-        // Lexeme-Dependent Token Scan Methods
-        // ============================================================================================================
+        #endregion
+
+        #region Lexeme-Dependent Token Scan Methods
 
         bool TryScanSingleCharToken()
         {
@@ -398,9 +427,9 @@ namespace Chow.Tokens
             AddNewToken(numTokenType, lexeme, _currLineNumber, literal);
         }
 
-        // ============================================================================================================
-        // Char Pointer Methods
-        // ============================================================================================================
+        #endregion
+
+        #region Char Pointer Methods
 
         bool IsCharToScan()
         {
@@ -418,9 +447,9 @@ namespace Chow.Tokens
             return nextIndex < _srcCode.Length ? _srcCode[nextIndex] : '\0';
         }
 
-        // ============================================================================================================
-        // Char Classification Methods
-        // ============================================================================================================
+        #endregion
+
+        #region Char Classification Methods
 
         static bool IsDigitChar(char checkChar)
         {
@@ -447,9 +476,9 @@ namespace Chow.Tokens
             return checkChar == '#';
         }
 
-        // ============================================================================================================
-        // Helper Methods
-        // ============================================================================================================
+        #endregion
+
+        #region Helper Methods
 
         bool IsLineAndIndentLogicEnabled()
         {
@@ -464,5 +493,7 @@ namespace Chow.Tokens
             }
             _tokens.Add(new Token(type, lexeme, lineNum, literal));
         }
+
+        #endregion
     }
 }

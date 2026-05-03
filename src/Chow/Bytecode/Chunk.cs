@@ -48,9 +48,11 @@ namespace Chow.Bytecode
             for (int i = 0; i < _consts.Count; i++)
             {
                 TaggedUnion constant = _consts[i];
+
                 sb.Append("  ");
                 sb.Append(i);
                 sb.Append(": ");
+
                 if (constant.IsInteger)
                 {
                     sb.Append("Int=");
@@ -61,6 +63,7 @@ namespace Chow.Bytecode
                     sb.Append("Float=");
                     sb.Append(constant.FloatValue);
                 }
+
                 sb.AppendLine();
             }
 
@@ -68,6 +71,7 @@ namespace Chow.Bytecode
             for (int i = 0; i < _operations.Count; i++)
             {
                 Operation op = _operations[i];
+
                 sb.Append("  ");
                 sb.Append(i);
                 sb.Append(": ");
@@ -76,9 +80,11 @@ namespace Chow.Bytecode
                 if (op.Operand != -1)
                 {
                     TaggedUnion constant = _consts[op.Operand];
+
                     sb.Append(' ');
                     sb.Append(op.Operand);
                     sb.Append(" (");
+
                     if (constant.IsInteger)
                     {
                         sb.Append("Int=");
@@ -89,6 +95,7 @@ namespace Chow.Bytecode
                         sb.Append("Float=");
                         sb.Append(constant.FloatValue);
                     }
+
                     sb.Append(')');
                 }
 

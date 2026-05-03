@@ -65,6 +65,87 @@ namespace Chow
         /// <summary>User-defined name or non-keyword identifier.</summary>
         Identifier,
 
+        /// <summary>Keyword: <c>True</c>.</summary>
+        True,
+
+        /// <summary>Keyword: <c>False</c>.</summary>
+        False,
+
+        /// <summary>Keyword: <c>None</c>.</summary>
+        None,
+
+        /// <summary>Keyword: <c>and</c>.</summary>
+        And,
+
+        /// <summary>Keyword: <c>or</c>.</summary>
+        Or,
+
+        /// <summary>Keyword: <c>not</c>.</summary>
+        Not,
+
+        /// <summary>Keyword: <c>is</c>.</summary>
+        Is,
+
+        /// <summary>Keyword: <c>in</c>.</summary>
+        In,
+
+        /// <summary>Keyword: <c>def</c>.</summary>
+        Def,
+
+        /// <summary>Keyword: <c>return</c>.</summary>
+        Return,
+
+        /// <summary>Keyword: <c>class</c>.</summary>
+        Class,
+
+        /// <summary>Keyword: <c>with</c>.</summary>
+        With,
+
+        /// <summary>Keyword: <c>as</c>.</summary>
+        As,
+
+        /// <summary>Keyword: <c>global</c>.</summary>
+        Global,
+
+        /// <summary>Keyword: <c>if</c>.</summary>
+        If,
+
+        /// <summary>Keyword: <c>else</c>.</summary>
+        Else,
+
+        /// <summary>Keyword: <c>elif</c>.</summary>
+        Elif,
+
+        /// <summary>Keyword: <c>for</c>.</summary>
+        For,
+
+        /// <summary>Keyword: <c>while</c>.</summary>
+        While,
+
+        /// <summary>Keyword: <c>break</c>.</summary>
+        Break,
+
+        /// <summary>Keyword: <c>continue</c>.</summary>
+        Continue,
+
+        /// <summary>Keyword: <c>pass</c>.</summary>
+        Pass,
+
+        /// <summary>Keyword: <c>try</c>.</summary>
+        Try,
+
+        /// <summary>Keyword: <c>except</c>.</summary>
+        Except,
+
+        /// <summary>Keyword: <c>finally</c>.</summary>
+        Finally,
+
+        /// <summary>Keyword: <c>raise</c>.</summary>
+        Raise,
+
+        /// <summary>Keyword: <c>assert</c>.</summary>
+        Assert,
+
         /// <summary>String literal.</summary>
         String,
 
