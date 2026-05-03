@@ -19,9 +19,7 @@ namespace Chow.Syntax
             _tokens = tokens ?? throw new ArgumentNullException(nameof(tokens));
         }
 
-        // ============================================================================================================
-        // Primary Methods
-        // ============================================================================================================
+        #region Primary Methods
 
         public Node BuildSyntaxTree()
         {
@@ -102,9 +100,9 @@ namespace Chow.Syntax
             return new VariableAssignmentNode(identifierNode, expression, identifierToken.LineNum);
         }
 
-        // ============================================================================================================
-        // Grammar Methods
-        // ============================================================================================================
+        #endregion
+
+        #region Grammar Methods
 
         Node ParseExpression()
         {
@@ -185,9 +183,9 @@ namespace Chow.Syntax
             }
         }
 
-        // ============================================================================================================
-        // Token Helpers
-        // ============================================================================================================
+        #endregion
+
+        #region Token Helpers
 
         void MoveToNextToken()
         {
@@ -236,9 +234,9 @@ namespace Chow.Syntax
             return token;
         }
 
-        // ============================================================================================================
-        // Helper Methods
-        // ============================================================================================================
+        #endregion
+
+        #region Helper Methods
 
         static ExpressionOperator MapBinary(TokenType type)
         {
@@ -269,5 +267,7 @@ namespace Chow.Syntax
                     throw new InvalidOperationException($"Unexpected binary operator: {type}");
             }
         }
+
+        #endregion
     }
 }
