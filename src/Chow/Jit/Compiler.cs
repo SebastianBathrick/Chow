@@ -1,4 +1,5 @@
-﻿using Chow.Syntax.Trees;
+﻿using Chow.Syntax;
+using Chow.Syntax.Trees;
 using Chow.Syntax.Trees.Expressions;
 using Chow.Values;
 using System;
@@ -24,7 +25,7 @@ namespace Chow.Jit
             _syntaxTreeRoot = syntaxTreeRoot;
         }
 
-        public Chunk CompileSyntaxTree()
+        public Chunk CompileSyntaxTreeRoot()
         {
             if (_isDirty)
             {
@@ -50,6 +51,14 @@ namespace Chow.Jit
                 case EmptyNode _:
                     break;
 
+                case SyntaxTreeRoot root:
+                    CompileSyntaxTreeRoot(root);
+                    break;
+
+                case BlockNode blockNode:
+                    CompileBlockNode(blockNode);
+                    break;
+
                 case LiteralNode literalNode:
                     CompileLiteral(literalNode);
                     break;
@@ -58,9 +67,39 @@ namespace Chow.Jit
                     CompileExpression(expressionNode);
                     break;
 
+                case VariableAssignmentNode varAssignNode:
+                    CompileVariableAssignment(varAssignNode);
+                    break;
+
                 default:
                     throw new NotImplementedException($"Compilation of {targetNode.GetType().Name} is not implemented.");
             }
+        }
+
+        void CompileBlockNode(BlockNode blockNode)
+        {
+            foreach (Node statement in blockNode.Statements)
+            {
+                CompileTargetNode(statement);
+            }
+        }
+
+        void CompileSyntaxTreeRoot(SyntaxTreeRoot root)
+        {
+            CompileTargetNode(root.TopLevelBlock);
+        }
+
+        int AddIdentifier(Node node)
+        {
+            IdentifierNode identifierNode = node as IdentifierNode;
+            return _chunk.AddConstant(new TaggedUnion(identifierNode.Value));
+        }
+
+        void CompileVariableAssignment(VariableAssignmentNode varAssignNode)
+        {
+            CompileTargetNode(varAssignNode.Expression);
+            int identifierIndex = AddIdentifier(varAssignNode.Identifier);
+            _chunk.PushOperation(OperationCode.StoreVariable, varAssignNode.LineNumber, identifierIndex);
         }
 
         void CompileLiteral(LiteralNode literalNode)

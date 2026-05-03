@@ -19,7 +19,7 @@ namespace Chow
             Node syntaxTreeRoot = parser.BuildSyntaxTree();
 
             Compiler compiler = new Compiler(syntaxTreeRoot);
-            Chunk chunk = compiler.CompileSyntaxTree();
+            Chunk chunk = compiler.CompileSyntaxTreeRoot();
 
             VirtualMachine vm = new VirtualMachine(chunk);
             vm.ExecuteChunk();

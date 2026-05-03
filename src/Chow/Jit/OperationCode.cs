@@ -11,5 +11,6 @@ namespace Chow.Jit
         FloorDivide,
         Negate,
         PushConstant,
+        StoreVariable,
     }
 }

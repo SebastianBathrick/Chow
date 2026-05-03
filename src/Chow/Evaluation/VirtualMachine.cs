@@ -1,6 +1,7 @@
 using Chow.Jit;
 using Chow.Values;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
@@ -21,61 +22,70 @@ namespace Chow.Evaluation
 
         public TaggedUnion ExecuteChunk()
         {
-            Stack<TaggedUnion> runtimeValStack = new Stack<TaggedUnion>();
+            Stack<TaggedUnion> valStack = new Stack<TaggedUnion>();
+            Dictionary<string, TaggedUnion> varMap = new Dictionary<string, TaggedUnion>();
 
             while (IsRemainingOperation())
             {
-                ExecuteCurrentOperation(runtimeValStack);
+                switch (CurrentOperation.Code)
+                {
+                    case OperationCode.PushConstant:
+                        // The operand is the index of the constant in the chunk's constant pool.
+                        valStack.Push(_chunk.GetConstant(CurrentOperation.Operand));
+                        break;
+
+                    case OperationCode.Add:
+                        ExecuteBinaryOperation(valStack, (l, r) => l + r);
+                        break;
+
+                    case OperationCode.Subtract:
+                        ExecuteBinaryOperation(valStack, (l, r) => l - r);
+                        break;
+
+                    case OperationCode.Multiply:
+                        ExecuteBinaryOperation(valStack, (l, r) => l * r);
+                        break;
+
+                    case OperationCode.Divide:
+                        ExecuteBinaryOperation(valStack, (l, r) => l / r);
+                        break;
+
+                    case OperationCode.Modulus:
+                        ExecuteBinaryOperation(valStack, (l, r) => l % r);
+                        break;
+
+                    case OperationCode.Exponentiate:
+                        ExecuteBinaryOperation(valStack, (l, r) => TaggedUnion.Power(l, r));
+                        break;
+
+                    case OperationCode.FloorDivide:
+                        ExecuteBinaryOperation(valStack, (l, r) => TaggedUnion.FloorDivide(l, r));
+                        break;
+
+                    case OperationCode.Negate:
+                        ExecuteNegate(valStack);
+                        break;
+
+                    // Statements
+                    case OperationCode.StoreVariable:
+                        // The operand is the index of the variable name in the chunk's constant pool.
+                        string varName = _chunk.GetConstant(CurrentOperation.Operand).StringValue;
+                        varMap[varName] = valStack.Pop();
+                        break;
+
+                    default:
+                        throw new NotImplementedException($"Execution of {CurrentOperation.Code} is not implemented.");
+                }
+
                 MoveToNextOperation();
             }
 
-            return runtimeValStack.Count == 0 ? TaggedUnion.None : runtimeValStack.Pop();
+            return valStack.Count == 0 ? TaggedUnion.None : valStack.Pop();
         }
 
         void ExecuteCurrentOperation(Stack<TaggedUnion> stack)
         {
-            switch (CurrentOperation.Code)
-            {
-                case OperationCode.PushConstant:
-                    // The operand is the index of the constant in the chunk's constant pool.
-                    stack.Push(_chunk.GetConstant(CurrentOperation.Operand));
-                    break;
 
-                case OperationCode.Add:
-                    ExecuteBinaryOperation(stack, (l, r) => l + r);
-                    break;
-
-                case OperationCode.Subtract:
-                    ExecuteBinaryOperation(stack, (l, r) => l - r);
-                    break;
-
-                case OperationCode.Multiply:
-                    ExecuteBinaryOperation(stack, (l, r) => l * r);
-                    break;
-
-                case OperationCode.Divide:
-                    ExecuteBinaryOperation(stack, (l, r) => l / r);
-                    break;
-
-                case OperationCode.Modulus:
-                    ExecuteBinaryOperation(stack, (l, r) => l % r);
-                    break;
-
-                case OperationCode.Exponentiate:
-                    ExecuteBinaryOperation(stack, (l, r) => TaggedUnion.Power(l, r));
-                    break;
-
-                case OperationCode.FloorDivide:
-                    ExecuteBinaryOperation(stack, (l, r) => TaggedUnion.FloorDivide(l, r));
-                    break;
-
-                case OperationCode.Negate:
-                    ExecuteNegate(stack);
-                    break;
-
-                default:
-                    throw new NotImplementedException($"Execution of {CurrentOperation.Code} is not implemented.");
-            }
         }
 
         static void ExecuteBinaryOperation(Stack<TaggedUnion> stack, Func<TaggedUnion, TaggedUnion, TaggedUnion> operation)

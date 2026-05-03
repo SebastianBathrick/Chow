@@ -8,7 +8,7 @@ namespace Chow.Syntax.Trees
     {
         string _name;
 
-        public string Name => _name;
+        public string Value => _name;
 
         public IdentifierNode(string name, int lineNumber)
             : base(lineNumber)

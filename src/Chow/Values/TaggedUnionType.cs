@@ -9,6 +9,7 @@ namespace Chow.Values
         Empty,
         None,
         Integer,
-        Float
+        Float,
+        String
     }
 }

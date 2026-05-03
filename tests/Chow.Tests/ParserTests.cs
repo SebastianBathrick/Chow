@@ -19,7 +19,7 @@ namespace Chow.Tests
             UnwrapSingleStatement(new Parser(new List<Token>(tokens)).BuildSyntaxTree());
 
         static Node UnwrapSingleStatement(Node root) =>
-            ((BlockNode)((SyntaxTreeRoot)root).TopLevelBlock)[0];
+            ((BlockNode)((SyntaxTreeRoot)root).TopLevelBlock).Statements[0];
 
         static Token Token(TokenType type, string lexeme, int lineNumber, object literal = null!) =>
             new Token(type, lexeme, lineNumber, literal);

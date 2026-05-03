@@ -8,10 +8,12 @@ namespace Chow.Values
     {
         const float DEFAULT_FLOAT_VALUE = 0.0f;
         const int DEFAULT_INT_VALUE = 0;
+        const string DEFAULT_STRING_VALUE = null;
 
         TaggedUnionType _type;
         int _intValue;
         float _floatValue;
+        string _stringValue;
 
         public static TaggedUnion Empty = new TaggedUnion(TaggedUnionType.Empty);
         public static TaggedUnion None = new TaggedUnion(TaggedUnionType.None);
@@ -22,6 +24,7 @@ namespace Chow.Values
         public bool IsNone => _type == TaggedUnionType.None;
         public bool IsInteger => _type == TaggedUnionType.Integer;
         public bool IsFloat => _type == TaggedUnionType.Float;
+        public bool IsString => _type == TaggedUnionType.String;
 
         public int IntegerValue
         {
@@ -51,11 +54,26 @@ namespace Chow.Values
             }
         }
 
+        public string StringValue
+        {
+            get
+            {
+                ValidateTaggedUnionType(TaggedUnionType.String);
+                return _stringValue;
+            }
+            set
+            {
+                ValidateTaggedUnionType(TaggedUnionType.String);
+                _stringValue = value;
+            }
+        }
+
         private TaggedUnion(TaggedUnionType type)
         {
             _type = type;
             _intValue = DEFAULT_INT_VALUE;
             _floatValue = DEFAULT_FLOAT_VALUE;
+            _stringValue = DEFAULT_STRING_VALUE;
         }
 
         public TaggedUnion(float value)
@@ -63,6 +81,7 @@ namespace Chow.Values
             _floatValue = value;
             _type = TaggedUnionType.Float; 
             _intValue = DEFAULT_INT_VALUE;
+            _stringValue = DEFAULT_STRING_VALUE;
         }
 
         public TaggedUnion(int value)
@@ -70,12 +89,22 @@ namespace Chow.Values
             _intValue = value;
             _type = TaggedUnionType.Integer;
             _floatValue = DEFAULT_FLOAT_VALUE;
+            _stringValue = DEFAULT_STRING_VALUE;
+        }
+
+        public TaggedUnion(string value)
+        {
+            _stringValue = value;
+            _type = TaggedUnionType.String;
+            _intValue = DEFAULT_INT_VALUE;
+            _floatValue = DEFAULT_FLOAT_VALUE;
         }
 
 
 
         public static TaggedUnion operator +(TaggedUnion left, TaggedUnion right)
         {
+            ThrowIfStringOperands(left, right);
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion(AsFloat(left) + AsFloat(right));
@@ -86,6 +115,7 @@ namespace Chow.Values
 
         public static TaggedUnion operator -(TaggedUnion left, TaggedUnion right)
         {
+            ThrowIfStringOperands(left, right);
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion(AsFloat(left) - AsFloat(right));
@@ -96,6 +126,7 @@ namespace Chow.Values
 
         public static TaggedUnion operator *(TaggedUnion left, TaggedUnion right)
         {
+            ThrowIfStringOperands(left, right);
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion(AsFloat(left) * AsFloat(right));
@@ -106,12 +137,14 @@ namespace Chow.Values
 
         public static TaggedUnion operator /(TaggedUnion left, TaggedUnion right)
         {
+            ThrowIfStringOperands(left, right);
             // Python semantics: `/` always produces a float, even for int / int.
             return new TaggedUnion(AsFloat(left) / AsFloat(right));
         }
 
         public static TaggedUnion operator %(TaggedUnion left, TaggedUnion right)
         {
+            ThrowIfStringOperands(left, right);
             // Python semantics: result has the sign of the divisor.
             if (EitherIsFloat(left, right))
             {
@@ -127,6 +160,7 @@ namespace Chow.Values
 
         public static TaggedUnion FloorDivide(TaggedUnion left, TaggedUnion right)
         {
+            ThrowIfStringOperands(left, right);
             // Python semantics: floors toward negative infinity.
             if (EitherIsFloat(left, right))
             {
@@ -138,6 +172,7 @@ namespace Chow.Values
 
         public static TaggedUnion Power(TaggedUnion left, TaggedUnion right)
         {
+            ThrowIfStringOperands(left, right);
             // Python semantics: float if either operand is float, or if exponent is negative.
             if (EitherIsFloat(left, right))
             {
@@ -166,6 +201,8 @@ namespace Chow.Values
                     return left._intValue == right._intValue;
                 case TaggedUnionType.Float:
                     return left._floatValue == right._floatValue;
+                case TaggedUnionType.String:
+                    return left._stringValue == right._stringValue;
                 default:
                     return true;
             }
@@ -179,6 +216,14 @@ namespace Chow.Values
         static bool EitherIsFloat(TaggedUnion left, TaggedUnion right)
         {
             return left.IsFloat || right.IsFloat;
+        }
+
+        static void ThrowIfStringOperands(TaggedUnion left, TaggedUnion right)
+        {
+            if (left.IsString || right.IsString)
+            {
+                throw new InvalidOperationException("String operands are not supported for this operation.");
+            }
         }
 
         static float AsFloat(TaggedUnion union)
@@ -204,6 +249,8 @@ namespace Chow.Values
                     return _intValue.GetHashCode();
                 case TaggedUnionType.Float:
                     return _floatValue.GetHashCode();
+                case TaggedUnionType.String:
+                    return _stringValue?.GetHashCode() ?? 0;
                 default:
                     return _type.GetHashCode();
             }
@@ -219,6 +266,11 @@ namespace Chow.Values
             if (IsFloat)
             {
                 return $"TaggedUnion(type={_type}, value={_floatValue})";
+            }
+
+            if (IsString)
+            {
+                return $"TaggedUnion(type={_type}, value={_stringValue})";
             }
 
             return $"TaggedUnion(type={_type}, value={_intValue})";

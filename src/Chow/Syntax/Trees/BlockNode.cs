@@ -10,7 +10,7 @@ namespace Chow.Syntax.Trees
 
         public int Count => _statements.Count;
 
-        public Node this[int index] => _statements[index];
+        public IReadOnlyList<Node> Statements => _statements;
 
         public BlockNode(List<Node> statements, int lineNumber)
             : base(lineNumber)

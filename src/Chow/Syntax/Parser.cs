@@ -86,7 +86,13 @@ namespace Chow.Syntax
                 return ParseVariableAssignment();
             }
 
-            return ParseExpression();
+            switch (CurrentToken.Type)
+            {
+                case TokenType.Identifier:
+                    return ParseVariableAssignment();
+                default:
+                    throw new ParserException("Expected statement.", CurrentToken.LineNum);
+            }
         }
 
         Node ParseVariableAssignment()

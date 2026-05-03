@@ -3,6 +3,7 @@ using Chow.Jit;
 using Chow.Syntax;
 using Chow.Syntax.Trees;
 using Chow.Tokens;
+using Chow.Evaluation;
 
 Console.WriteLine("Enter an expression to parse. Use Ctrl+Z then Enter to quit.");
 Console.WriteLine("Escapes are supported: \\n, \\r, \\t, \\f, \\\\.");
@@ -26,7 +27,7 @@ while (true)
         Console.WriteLine(tree);
 
         var compiler = new Compiler(tree);
-        Chunk chunk = compiler.CompileSyntaxTree();
+        Chunk chunk = compiler.CompileSyntaxTreeRoot();
         Console.WriteLine(chunk);
 
         var virtualMachine = new VirtualMachine(chunk);
