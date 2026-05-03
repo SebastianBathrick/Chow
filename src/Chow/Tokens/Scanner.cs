@@ -90,30 +90,39 @@ namespace Chow.Tokens
                 }
             }
 
-            if (IsNewlineChar(CurrentChar))
+            if (IsCommentPrefix(CurrentChar))
+            {
+                SkipRemainingLineChars();
+            }
+            else if (IsNewlineChar(CurrentChar))
             {
                 ScanNewlineToken();
-                return;
             }
-
-            if (IsDigitChar(CurrentChar))
+            else if (IsDigitChar(CurrentChar))
             {
                 ScanNumericToken();
-                return;
             }
-
-            if (ScanSingleCharToken())
+            else if (TryScanSingleCharToken())
             {
                 return;
             }
-
-            if (IsIndentChar(CurrentChar))
+            else if (IsIndentChar(CurrentChar))
             {
                 MoveToNextChar();
-                return;
             }
+            else
+            {
+                throw new ScannerException($"Unexpected character '{CurrentChar}'.", _currLineNumber);
 
-            throw new ScannerException($"Unexpected character '{CurrentChar}'.", _currLineNumber);
+            }
+        }
+
+        private void SkipRemainingLineChars()
+        {
+            while (IsCharToScan() && !IsNewlineChar(CurrentChar))
+            {
+                MoveToNextChar();
+            }
         }
 
         // ============================================================================================================
@@ -152,7 +161,7 @@ namespace Chow.Tokens
         {
             int indentColumn = ScanIndentColumn();
 
-            if (!IsCharToScan() || IsNewlineChar(CurrentChar))
+            if (!IsCharToScan() || IsNewlineChar(CurrentChar) || IsCommentPrefix(CurrentChar))
             {
                 return;
             }
@@ -229,7 +238,7 @@ namespace Chow.Tokens
         // Lexeme-Dependent Token Scan Methods
         // ============================================================================================================
 
-        bool ScanSingleCharToken()
+        bool TryScanSingleCharToken()
         {
             TokenType tokenType;
 
@@ -431,6 +440,11 @@ namespace Chow.Tokens
         static bool IsNewlineChar(char checkChar)
         {
             return checkChar == '\n' || checkChar == '\r';
+        }
+
+        static bool IsCommentPrefix(char checkChar)
+        {
+            return checkChar == '#';
         }
 
         // ============================================================================================================

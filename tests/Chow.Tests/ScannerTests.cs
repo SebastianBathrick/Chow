@@ -734,7 +734,58 @@ namespace Chow.Tests
         }
 
         // ============================================================================================================
-        // L. Lexeme correctness for literal slices
+        // L. Comments
+        // ============================================================================================================
+
+        [Test]
+        public void ScanTokens_InlineComment_SkipsRestOfLine()
+        {
+            var tokenTypes = TokenTypes("42 # this is a comment\n");
+
+            Assert.That(tokenTypes, Is.EqualTo(new[]
+            {
+                TokenType.Integer,
+                TokenType.Newline,
+                TokenType.EndOfCode
+            }));
+        }
+
+        [Test]
+        public void ScanTokens_CommentOnlySource_ReturnsEmptyList()
+        {
+            var tokens = new Scanner("# only a comment").ScanTokens();
+
+            Assert.That(tokens, Is.Empty);
+        }
+
+        [Test]
+        public void ScanTokens_IndentedCommentLine_DoesNotAffectIndentStack()
+        {
+            var tokenTypes = TokenTypes("1\n    # indented comment\n2\n");
+
+            Assert.That(tokenTypes, Is.EqualTo(new[]
+            {
+                TokenType.Integer,
+                TokenType.Newline,
+                TokenType.Newline,
+                TokenType.Integer,
+                TokenType.Newline,
+                TokenType.EndOfCode
+            }));
+        }
+
+        [Test]
+        public void ScanTokens_CommentLine_AdvancesLineNumber()
+        {
+            var tokens = Tokenize("1\n# comment\n2\n");
+
+            var integers = tokens.Where(t => t.Type == TokenType.Integer).ToList();
+            Assert.That(integers[0].LineNum, Is.EqualTo(1));
+            Assert.That(integers[1].LineNum, Is.EqualTo(3));
+        }
+
+        // ============================================================================================================
+        // M. Lexeme correctness for literal slices
         // ============================================================================================================
 
         [TestCase("0")]
