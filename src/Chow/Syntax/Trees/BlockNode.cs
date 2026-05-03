@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow.Syntax
+namespace Chow.Syntax.Trees
 {
     internal class BlockNode : Node
     {

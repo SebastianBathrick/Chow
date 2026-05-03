@@ -1,6 +1,7 @@
 using Chow;
-using Chow.Bytecode;
+using Chow.Jit;
 using Chow.Syntax;
+using Chow.Syntax.Trees;
 using Chow.Tokens;
 
 Console.WriteLine("Enter an expression to parse. Use Ctrl+Z then Enter to quit.");

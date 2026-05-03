@@ -1,4 +1,6 @@
 using Chow.Syntax;
+using Chow.Syntax.Trees;
+using Chow.Syntax.Trees.Expressions;
 using Chow.Tokens;
 
 namespace Chow.Tests

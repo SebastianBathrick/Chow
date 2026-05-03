@@ -1,10 +1,10 @@
-using Chow.Bytecode;
+using Chow.Jit;
 using Chow.Values;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow
+namespace Chow.Evaluation
 {
     sealed class VirtualMachine
     {

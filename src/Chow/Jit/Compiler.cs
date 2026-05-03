@@ -1,10 +1,11 @@
-﻿using Chow.Syntax;
+﻿using Chow.Syntax.Trees;
+using Chow.Syntax.Trees.Expressions;
 using Chow.Values;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow.Bytecode
+namespace Chow.Jit
 {
     class Compiler
     {

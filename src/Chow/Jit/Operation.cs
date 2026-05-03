@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow.Bytecode
+namespace Chow.Jit
 {
     readonly struct Operation
     {

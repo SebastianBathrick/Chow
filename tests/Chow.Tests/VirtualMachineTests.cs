@@ -1,4 +1,4 @@
-using Chow.Bytecode;
+using Chow.Jit;
 using Chow.Values;
 
 namespace Chow.Tests

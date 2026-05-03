@@ -1,4 +1,4 @@
-namespace Chow.Syntax
+namespace Chow.Syntax.Trees
 {
     internal class EmptyNode : Node
     {

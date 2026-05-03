@@ -1,8 +1,10 @@
 ﻿using System;
 using Chow.Tokens;
 using Chow.Syntax;
-using Chow.Bytecode;
+using Chow.Jit;
 using System.Collections.Generic;
+using Chow.Syntax.Trees;
+using Chow.Evaluation;
 
 namespace Chow
 {

@@ -1,4 +1,4 @@
-namespace Chow.Bytecode
+namespace Chow.Jit
 {
     enum OperationCode
     {
