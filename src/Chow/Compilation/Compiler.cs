@@ -32,14 +32,14 @@ namespace Chow.Interpreter.Jit
             _syntaxTreeRoot = syntaxTreeRoot;
         }
 
-        public string GetVariableName(int identifierIndex)
+        public string GetVariableName(int varIndex)
         {
-            if (identifierIndex < 0 || identifierIndex >= _varIdentifierNames.Count)
+            if (varIndex < 0 || varIndex >= _varIdentifierNames.Count)
             {
-                throw new ArgumentOutOfRangeException(nameof(identifierIndex));
+                throw new ArgumentOutOfRangeException(nameof(varIndex));
             }
 
-            return _varIdentifierNames[identifierIndex];
+            return _varIdentifierNames[varIndex];
         }
 
         public Chunk CompileSyntaxTreeRoot()
@@ -172,7 +172,6 @@ namespace Chow.Interpreter.Jit
             _chunk.PushOperation(OperationCode.PushConstant, literalNode.LineNumber, constIndex);
         }
 
-
         void CompileExpression(ExpressionNode expressionNode)
         {
             // Compile operands first so they are pushed onto the runtime stack before the operation consumes them
@@ -182,8 +181,7 @@ namespace Chow.Interpreter.Jit
             OperationCode opCode = GetExpressionOperationCode(expressionNode);
             _chunk.PushOperation(opCode, expressionNode.LineNumber);
         }
-
-
+        
         private static OperationCode GetExpressionOperationCode(ExpressionNode node)
         {
             OperationCode opCode;

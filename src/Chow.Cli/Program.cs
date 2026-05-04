@@ -1,15 +1,10 @@
 using Chow.Interpreter;
-using Chow.Interpreter.Jit;
-using Chow.Interpreter.Syntax;
-using Chow.Interpreter.Syntax.Trees;
-using Chow.Interpreter.Tokens;
-using Chow.Interpreter.Evaluation;
 
-Console.WriteLine("Enter an expression to parse. Use Ctrl+Z then Enter to quit.");
-Console.WriteLine("Escapes are supported: \\n, \\r, \\t, \\f, \\\\.");
-
+// We will loop just for testing purposes in Visual Studio so we dont need to restart the program every time we want to test a new file or source code input. In production, this would likely be a one-time execution of a file or source code input and then the program would exit.
 while (true)
 {
+    Console.WriteLine("Enter a file path (with extension or path separator) or inline source code:");
+    Console.WriteLine("Escapes are supported: \\n, \\r, \\t, \\f, \\\\.");
     Console.Write("> ");
     string? input = Console.ReadLine();
 
@@ -20,23 +15,49 @@ while (true)
 
     try
     {
-        var scanner = new Scanner(DecodeEscapes(input));
-        var parser = new Parser(scanner.ScanTokens());
-        Node tree = parser.BuildSyntaxTree();
-
-        Console.WriteLine(tree);
-
-        var compiler = new Compiler(tree);
-        Chunk chunk = compiler.CompileSyntaxTreeRoot();
-        Console.WriteLine(chunk);
-
-        var virtualMachine = new VirtualMachine(chunk);
-        Console.WriteLine(virtualMachine.ExecuteChunk());
+        string sourceCode;
+        if (LooksLikeFilePath(input))
+        {
+            sourceCode = ReadFileContents(input);
+            sourceCode = DecodeEscapes(sourceCode);
+        }
+        else
+        {
+            sourceCode = DecodeEscapes(input);
+        }
+        ChowInstance instance = new ChowInstance();
+        instance.Run(sourceCode);
+        Console.WriteLine(instance.GetVariableDebugInfo());
     }
     catch (Exception ex)
     {
         Console.WriteLine(ex);
     }
+}
+
+static bool LooksLikeFilePath(string input)
+{
+    return input.Contains('/') || input.Contains('\\') || Path.HasExtension(input);
+}
+
+static string ReadFileContents(string filePath)
+{
+    if (string.IsNullOrWhiteSpace(filePath))
+        throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
+
+    if (!string.Equals(Path.GetExtension(filePath), ".chw", StringComparison.OrdinalIgnoreCase))
+        throw new ArgumentException($"File must have a .chw extension: {filePath}", nameof(filePath));
+
+    string fullPath = Path.GetFullPath(filePath);
+
+    if (!File.Exists(fullPath))
+        throw new FileNotFoundException($"File not found at path: {fullPath}", fullPath);
+
+    FileInfo fileInfo = new FileInfo(fullPath);
+    if (fileInfo.Length == 0)
+        throw new InvalidOperationException($"File is empty: {fullPath}");
+
+    return File.ReadAllText(fullPath);
 }
 
 static string DecodeEscapes(string input)

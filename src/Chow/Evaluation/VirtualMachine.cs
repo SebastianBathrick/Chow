@@ -10,6 +10,8 @@ namespace Chow.Interpreter.Evaluation
     sealed class VirtualMachine
     {
         readonly Chunk _chunk;
+        List<TaggedUnion> _variables = new List<TaggedUnion>();
+
         int _opsListIndex;
 
         private Operation CurrentOperation => _chunk[_opsListIndex];
@@ -23,7 +25,6 @@ namespace Chow.Interpreter.Evaluation
         public TaggedUnion ExecuteChunk()
         {
             Stack<TaggedUnion> valStack = new Stack<TaggedUnion>();
-            List<TaggedUnion> variables = new List<TaggedUnion>();
 
             while (IsRemainingOperation())
             {
@@ -76,13 +77,13 @@ namespace Chow.Interpreter.Evaluation
                         int storeIndex = CurrentOperation.Operand;
                         TaggedUnion storeValue = valStack.Pop();
                         
-                        if (storeIndex == variables.Count)
+                        if (storeIndex == _variables.Count)
                         {
-                            variables.Add(storeValue);
+                            _variables.Add(storeValue);
                         }
                         else
                         {
-                            variables[storeIndex] = storeValue;
+                            _variables[storeIndex] = storeValue;
                         }
                         
                         break;
@@ -91,7 +92,7 @@ namespace Chow.Interpreter.Evaluation
                         // This is for variable access for expressions in all statements that include them.
 
                         // The operand is the variable's slot index. The Compiler validates the variable exists before emitting LoadVariable.
-                        valStack.Push(variables[CurrentOperation.Operand]);
+                        valStack.Push(_variables[CurrentOperation.Operand]);
                         break;
 
                     default:
@@ -134,6 +135,19 @@ namespace Chow.Interpreter.Evaluation
         public bool IsRemainingOperation()
         {
             return _opsListIndex != _chunk.Count;
+        }
+
+        // TODO: Remove when no longer needed. This is for debugging developement
+        public List<(int varIndex, TaggedUnion value)> GetVariableDebugInfo()
+        {
+            var debugInfo = new List<(int varIndex, TaggedUnion value)>();
+            
+            for (int i = 0; i < _variables.Count; i++)
+            {
+                debugInfo.Add((i, _variables[i]));
+            }
+
+            return debugInfo;
         }
     }
 }
