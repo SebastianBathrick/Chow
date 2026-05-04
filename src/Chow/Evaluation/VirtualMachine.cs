@@ -11,9 +11,10 @@ namespace Chow.Interpreter.Evaluation
     {
         readonly Chunk _chunk;
 
-        // FLAT STORAGE IS TEMPORARY AND A NEW CLASS WILL BE CREATED TO HANDLE VARIABLE SCOPE AND LIFETIME
+        // TEMPORARY: name-keyed dict precedes the planned scope/lifetime class. The Operation.Operand
+        // resolves to a name via Chunk.ReadVariableName; the value is then read/written here by name.
         // REVIEW VARIABLE ASSIGNMENT COMPILATION FOR EXTRA DETAILS.
-        List<TaggedUnion> _variables = new List<TaggedUnion>();
+        Dictionary<string, TaggedUnion> _variables = new Dictionary<string, TaggedUnion>();
 
         int _opsListIndex;
 
@@ -34,8 +35,7 @@ namespace Chow.Interpreter.Evaluation
                 switch (CurrentOperation.Code)
                 {
                     case OperationCode.PushConstant:
-                        // The operand is the index of the constant in the chunk's constant pool.
-                        valStack.Push(_chunk.GetConstant(CurrentOperation.Operand));
+                        valStack.Push(_chunk.ReadConstant(CurrentOperation.Operand));
                         break;
 
                     case OperationCode.Add:
@@ -74,28 +74,16 @@ namespace Chow.Interpreter.Evaluation
 
 
                     case OperationCode.AssignToVariable:
-                        // This is for variable declaration and assignment. The Compiler emits StoreVariable for both, and it is the only way to mutate variables.
-
-                        // The operand is the variable's slot index, assigned by the Compiler in declaration order.
-                        int storeIndex = CurrentOperation.Operand;
-                        TaggedUnion storeValue = valStack.Pop();
-                        
-                        if (storeIndex == _variables.Count)
-                        {
-                            _variables.Add(storeValue);
-                        }
-                        else
-                        {
-                            _variables[storeIndex] = storeValue;
-                        }
-                        
+                        // Operand -> name via Chunk; dict indexer handles both insert and overwrite.
+                        string assignName = _chunk.ReadVariableName(CurrentOperation.Operand);
+                        _variables[assignName] = valStack.Pop();
                         break;
 
                     case OperationCode.LoadVariable:
-                        // This is for variable access for expressions in all statements that include them.
-
-                        // The operand is the variable's slot index. The Compiler validates the variable exists before emitting LoadVariable.
-                        valStack.Push(_variables[CurrentOperation.Operand]);
+                        // Operand -> name via Chunk. Semantic analysis is responsible for ensuring the
+                        // name exists before this op runs; KeyNotFoundException here is a contract violation.
+                        string loadName = _chunk.ReadVariableName(CurrentOperation.Operand);
+                        valStack.Push(_variables[loadName]);
                         break;
 
                     default:
@@ -141,13 +129,13 @@ namespace Chow.Interpreter.Evaluation
         }
 
         // TODO: Remove when no longer needed. This is for debugging developement
-        public List<(int varIndex, TaggedUnion value)> GetVariableDebugInfo()
+        public List<(string name, TaggedUnion value)> GetVariableDebugInfo()
         {
-            var debugInfo = new List<(int varIndex, TaggedUnion value)>();
-            
-            for (int i = 0; i < _variables.Count; i++)
+            var debugInfo = new List<(string name, TaggedUnion value)>();
+
+            foreach (KeyValuePair<string, TaggedUnion> kvp in _variables)
             {
-                debugInfo.Add((i, _variables[i]));
+                debugInfo.Add((kvp.Key, kvp.Value));
             }
 
             return debugInfo;

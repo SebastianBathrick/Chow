@@ -319,5 +319,82 @@ namespace Chow.Tests
 
             AssertFloatResult(result, 3.0f);
         }
+
+        // ============================================================================================================
+        // G. Variables (assign / load via Chunk-resolved name)
+        // ============================================================================================================
+
+        static void EmitAssignInteger(Chunk chunk, string name, int value)
+        {
+            PushIntegerConstant(chunk, value);
+            int operand = chunk.RegisterVariableName(name);
+            chunk.PushOperation(OperationCode.AssignToVariable, LINE, operand);
+        }
+
+        static void EmitLoad(Chunk chunk, string name)
+        {
+            int operand = chunk.FindVariableName(name);
+            chunk.PushOperation(OperationCode.LoadVariable, LINE, operand);
+        }
+
+        [Test]
+        public void ExecuteChunk_AssignThenLoad_ReturnsAssignedValue()
+        {
+            var chunk = BuildChunk(c =>
+            {
+                EmitAssignInteger(c, "x", 5);
+                EmitLoad(c, "x");
+            });
+
+            var vm = new VirtualMachine(chunk);
+            TaggedUnion result = vm.ExecuteChunk();
+
+            AssertIntegerResult(result, 5);
+            var debug = vm.GetVariableDebugInfo();
+            Assert.That(debug, Has.Count.EqualTo(1));
+            Assert.That(debug[0].name, Is.EqualTo("x"));
+        }
+
+        [Test]
+        public void ExecuteChunk_ReassignVariable_OverwritesPreviousValue()
+        {
+            var chunk = BuildChunk(c =>
+            {
+                EmitAssignInteger(c, "x", 5);
+                EmitAssignInteger(c, "x", 7);
+                EmitLoad(c, "x");
+            });
+
+            var vm = new VirtualMachine(chunk);
+            TaggedUnion result = vm.ExecuteChunk();
+
+            AssertIntegerResult(result, 7);
+            var debug = vm.GetVariableDebugInfo();
+            Assert.That(debug, Has.Count.EqualTo(1));
+            Assert.That(debug[0].name, Is.EqualTo("x"));
+        }
+
+        [Test]
+        public void ExecuteChunk_MultipleVariables_StoredIndependently()
+        {
+            var chunk = BuildChunk(c =>
+            {
+                EmitAssignInteger(c, "a", 1);
+                EmitAssignInteger(c, "b", 2);
+                EmitLoad(c, "a");
+                EmitLoad(c, "b");
+                c.PushOperation(OperationCode.Add, LINE);
+            });
+
+            var vm = new VirtualMachine(chunk);
+            TaggedUnion result = vm.ExecuteChunk();
+
+            AssertIntegerResult(result, 3);
+            var debug = vm.GetVariableDebugInfo();
+            Assert.That(debug, Has.Count.EqualTo(2));
+            var names = debug.Select(t => t.name).ToList();
+            Assert.That(names, Does.Contain("a"));
+            Assert.That(names, Does.Contain("b"));
+        }
     }
 }

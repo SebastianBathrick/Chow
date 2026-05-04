@@ -22,14 +22,7 @@ namespace Chow.Interpreter.Jit
             }
 
             _chunk = new Chunk();
-            _varIdentifierMap = new Dictionary<string, int>();
-            _varIdentifierNames = new List<string>();
             _syntaxTreeRoot = syntaxTreeRoot;
-        }
-
-        public string GetVariableName(int varIndex)
-        {
-            return _chunk.GetVariableName(varIndex);
         }
 
         public Chunk CompileSyntaxTreeRoot()
@@ -115,7 +108,7 @@ namespace Chow.Interpreter.Jit
              * 1. Pop a value off the stack representing the new/initial value for the variable. The new/initial value 
              *    is stored in a TaggedUnion and represents an expression evaluated at runtime. This can be of any type.
              *    
-             * 2. Use the current Operation.Index to get the variable's name stored as a string inside Chunk during 
+             * 2. Use the current Operation.Operand to get the variable's name stored as a string inside Chunk during 
              *    compile-time (i.e., the compilation logic code below). It's stored this way so Operations don't have 
              *    to store the identifiers themselves.
              *    
@@ -128,14 +121,14 @@ namespace Chow.Interpreter.Jit
 
             // If a variable with the same name already exists in the chunk, the index of the existing variable will be returned.
             // Otherwise, the new variable will be added to the chunk and its new index will be returned.
-            int nameIndex = _chunk.RegisterVariableName(varAssignNode.Name);
-            _chunk.PushOperation(OperationCode.AssignToVariable, varAssignNode.LineNumber, nameIndex);
+            int varNameOperand = _chunk.RegisterVariableName(varAssignNode.Name);
+            _chunk.PushOperation(OperationCode.AssignToVariable, varAssignNode.LineNumber, varNameOperand);
         }
 
         void CompileVariableFactor(VariableFactorNode varFactorNode)
         {
-            int identifierIndex = _chunk.FindVariableIndex(varFactorNode.VariableName);
-            _chunk.PushOperation(OperationCode.LoadVariable, varFactorNode.LineNumber, identifierIndex);
+            int varNameOperand = _chunk.FindVariableName(varFactorNode.VariableName);
+            _chunk.PushOperation(OperationCode.LoadVariable, varFactorNode.LineNumber, varNameOperand);
         }
 
         void CompileLiteral(LiteralNode literalNode)
@@ -170,8 +163,8 @@ namespace Chow.Interpreter.Jit
                 throw new InvalidOperationException();
             }
 
-            // If a constant of the same value already exists in the chunk, the index of the existing constant will be returned.
-            // Otherwise, the new constant will be added to the chunk and its new index will be returned.
+            // If a constant of the same value already exists in the chunk, the operand of the existing constant will be returned.
+            // Otherwise, the new constant will be added to the chunk and its new operand will be returned.
             int constIndex = _chunk.RegisterConstant(constUnion);
             _chunk.PushOperation(OperationCode.PushConstant, literalNode.LineNumber, constIndex);
         }

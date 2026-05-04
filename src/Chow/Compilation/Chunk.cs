@@ -23,8 +23,15 @@ namespace Chow.Interpreter.Jit
 
         #region Constant Methods
 
-        public TaggedUnion GetConstant(int index) => _consts[index];
+        public TaggedUnion ReadConstant(int operand) => _consts[operand];
 
+        /// <summary>
+        /// Stores a constant value and returns an integer for use as an operand assigned to <see cref="Operation"/> instance(s).
+        /// </summary>
+        /// <param name="newConst">TaggedUnion containing a constant primitive value.</param>
+        /// <returns>Integer representing the operand used to read the constant at runtime.</returns>
+        /// <remarks>If an existing constant has the same value as <paramref name="newConst"/> then the operand for 
+        /// that existing constant will be returned. Otherwise, the new constant is stored and a new operand is returned</remarks>
         public int RegisterConstant(TaggedUnion newConst)
         {
             int constIndex = FindConstantIndex(newConst);
@@ -38,6 +45,7 @@ namespace Chow.Interpreter.Jit
             return constIndex;
         }
 
+        // The constant list's index is only to be refered to as "operand" in the public API to hide interal functionality
         int FindConstantIndex(TaggedUnion constant) => _consts.IndexOf(constant);
 
         #endregion
@@ -51,13 +59,22 @@ namespace Chow.Interpreter.Jit
         // via dedicated variable methods, so when variable-names are stored differently in Chunk, no client code will 
         // need to be changed.
 
-        // NOTE: Making the GetConstant call does return a new struct, and that is slower, but it is temporary and I want
+        // NOTE: Making the ReadConstant call does return a new struct, and that is slower, but it is temporary and I want
         // them to work identically as constants for the time being. Less code to manage.
-        public string GetVariableName(int index) => GetConstant(index).StringValue;
+        public string ReadVariableName(int operand) => ReadConstant(operand).StringValue;
 
         // This is one piece of functionality that constant will never have publically (still going to change internally for variables)
-        public int FindVariableIndex(string varName) => FindConstantIndex(new TaggedUnion(varName));
+        public int FindVariableName(string varName) => FindConstantIndex(new TaggedUnion(varName));
 
+        /// <summary>
+        /// Used to register a variable name compile-time and return an operand for use in <see cref="Operation"/> instance(s) 
+        /// that declare or reference that variable.
+        /// </summary>
+        /// <param name="varName">Variable name to register.</param>
+        /// <returns>If an existing constant has the same value as <paramref name="varName"/> then the operand for 
+        /// that existing constant will be returned. Otherwise, the new variable name is stored and a new operand is returned.</returns>
+        /// <remarks>This is ONLY for storing variable names COMPILE-TIME. NOT for storing variable names runtime, AND NOT NEVER
+        /// for storing variable values. </remarks>
         public int RegisterVariableName(string varName) => RegisterConstant(new TaggedUnion(varName));
 
         #endregion

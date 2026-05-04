@@ -35,13 +35,12 @@ namespace Chow.Interpreter
         // TODO: Remove when no longer needed. This is for debugging developement
         public string GetVariableDebugInfo()
         {
-            List<(int varIndex, TaggedUnion union)> varInfoList = _vm.GetVariableDebugInfo();
+            List<(string name, TaggedUnion union)> varInfoList = _vm.GetVariableDebugInfo();
             StringBuilder sb = new StringBuilder();
 
-            foreach (var (varIndex, union) in varInfoList)
+            foreach (var (name, union) in varInfoList)
             {
-                var name = _compiler.GetVariableName(varIndex);
-                sb.AppendLine($"Variable \"{name}\" (Index {varIndex}):\n\t{union}\n");
+                sb.AppendLine($"Variable \"{name}\":\n\t{union}\n");
             }
             return sb.ToString();
         }
