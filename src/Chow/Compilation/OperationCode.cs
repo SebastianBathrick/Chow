@@ -11,7 +11,7 @@ namespace Chow.Interpreter.Jit
         FloorDivide,
         Negate,
         PushConstant,
-        StoreVariable,
+        AssignToVariable,
         LoadVariable,
     }
 }

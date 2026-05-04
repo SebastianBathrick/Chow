@@ -1,9 +1,9 @@
+using Chow.Interpreter.Syntax.Trees;
 using Chow.Interpreter.Syntax.Trees.Expressions;
 using Chow.Interpreter.Syntax.Trees.Statements;
-using Chow.Interpreter.Syntax.Trees;
 using Chow.Interpreter.Tokens;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 
 namespace Chow.Interpreter.Syntax
 {
@@ -106,7 +106,7 @@ namespace Chow.Interpreter.Syntax
             Consume(TokenType.Equal, "Expected '=' after variable name.");
             Node expression = ParseExpression();
 
-            return new VariableAssignmentNode(identifierToken.Lexeme, expression, identifierToken.LineNum);
+            return new VariableAssignNode(identifierToken.Lexeme, expression, identifierToken.LineNum);
         }
 
         #endregion

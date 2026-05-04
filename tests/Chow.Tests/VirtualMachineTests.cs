@@ -24,13 +24,13 @@ namespace Chow.Tests
 
         static void PushIntegerConstant(Chunk chunk, int value)
         {
-            int index = chunk.AddConstant(new TaggedUnion(value));
+            int index = chunk.RegisterConstant(new TaggedUnion(value));
             chunk.PushOperation(OperationCode.PushConstant, LINE, index);
         }
 
         static void PushFloatConstant(Chunk chunk, float value)
         {
-            int index = chunk.AddConstant(new TaggedUnion(value));
+            int index = chunk.RegisterConstant(new TaggedUnion(value));
             chunk.PushOperation(OperationCode.PushConstant, LINE, index);
         }
 

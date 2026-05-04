@@ -10,6 +10,9 @@ namespace Chow.Interpreter.Evaluation
     sealed class VirtualMachine
     {
         readonly Chunk _chunk;
+
+        // FLAT STORAGE IS TEMPORARY AND A NEW CLASS WILL BE CREATED TO HANDLE VARIABLE SCOPE AND LIFETIME
+        // REVIEW VARIABLE ASSIGNMENT COMPILATION FOR EXTRA DETAILS.
         List<TaggedUnion> _variables = new List<TaggedUnion>();
 
         int _opsListIndex;
@@ -70,7 +73,7 @@ namespace Chow.Interpreter.Evaluation
                     // Statements
 
 
-                    case OperationCode.StoreVariable:
+                    case OperationCode.AssignToVariable:
                         // This is for variable declaration and assignment. The Compiler emits StoreVariable for both, and it is the only way to mutate variables.
 
                         // The operand is the variable's slot index, assigned by the Compiler in declaration order.

@@ -11,6 +11,7 @@ namespace Chow.Interpreter.Values
         const string DEFAULT_STRING_VALUE = null;
         const bool DEFAULT_BOOL_VALUE = false;
 
+        // TODO: Test whether using explicit struct layouts meaningly affects performance
         Tag _type;
         int _intValue;
         float _floatValue;
@@ -132,18 +133,21 @@ namespace Chow.Interpreter.Values
             _stringValue = DEFAULT_STRING_VALUE;
         }
 
-
+        // TODO: Refactor operator overloads to create less new TaggedUnions by using helper functions that only use the
+        // values for the type being mutated
 
         // TODO: Temporary reference table for current operator rules. Update as type support changes.
         // Operators covered: + - * / % FloorDivide Power
         //
-        //   bool   op bool          -> int    ( /  -> float)
-        //   int    op int           -> int    ( /  -> float)
-        //   float  op (int|float)   -> float
-        //   int    op float         -> float
-        //   bool   op (int|float)   -> NotImplementedException (coercion not implemented)
-        //   any    op string        -> InvalidOperationException
-        //   Empty/None as operand   -> InvalidOperationException (via property access)
+        //   bool   op bool                -> int    ( /  -> float)
+        //   int    op int                 -> int    ( /  -> float)
+        //   float  op (int|float)         -> float
+        //   int    op float               -> float
+        //   int ** negative int           -> float
+        //   bool   op (int|float)         -> NotImplementedException (coercion not implemented)
+        //   any    op string              -> InvalidOperationException
+        //   Empty/None as operand         -> InvalidOperationException (via property access)
+        //   int|bool % 0, int|bool // 0   -> DivideByZeroException [low-priority: value-level]
         public static TaggedUnion operator +(TaggedUnion left, TaggedUnion right)
         {
             ThrowIfStringOperands(left, right);

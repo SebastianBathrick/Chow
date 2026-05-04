@@ -14,11 +14,6 @@ namespace Chow.Interpreter.Jit
         Node _syntaxTreeRoot;
         bool _isDirty = false;
 
-        // Indexes the VirtualMachine uses to access variables instead of string identifiers.
-        // Not stored in Chunk: identifier strings are only needed at compile time and for compile-time errors.
-        Dictionary<string, int> _varIdentifierMap;
-        List<string> _varIdentifierNames;
-
         public Compiler(Node syntaxTreeRoot)
         {
             if (syntaxTreeRoot == null)
@@ -34,12 +29,7 @@ namespace Chow.Interpreter.Jit
 
         public string GetVariableName(int varIndex)
         {
-            if (varIndex < 0 || varIndex >= _varIdentifierNames.Count)
-            {
-                throw new ArgumentOutOfRangeException(nameof(varIndex));
-            }
-
-            return _varIdentifierNames[varIndex];
+            return _chunk.GetVariableName(varIndex);
         }
 
         public Chunk CompileSyntaxTreeRoot()
@@ -84,8 +74,8 @@ namespace Chow.Interpreter.Jit
                     CompileExpression(expressionNode);
                     break;
 
-                case VariableAssignmentNode varAssignNode:
-                    CompileVariableAssignment(varAssignNode);
+                case VariableAssignNode varAssignNode:
+                    CompileVariableAssign(varAssignNode);
                     break;
 
                 case VariableFactorNode varFactorNode:
@@ -110,29 +100,41 @@ namespace Chow.Interpreter.Jit
             CompileTargetNode(root.TopLevelBlock);
         }
 
-        void CompileVariableAssignment(VariableAssignmentNode varAssignNode)
+        void CompileVariableAssign(VariableAssignNode varAssignNode)
         {
+            /* [NOTE]
+             * 
+             * Assume that before compilation, variable semantics have been verified, and there are no name 
+             * conflicts, and no unknown identifiers. Semantic analysis occurs between parsing and compilation.
+             * 
+             * [HOW VARIABLE ASSIGNMENTS WORK]
+             * 
+             * Assignments and declarations share syntax because the virtual machine handles them similarly due to 
+             * dynamic typing. Here is how the VirtualMachine runs an assignment operation: 
+             * 
+             * 1. Pop a value off the stack representing the new/initial value for the variable. The new/initial value 
+             *    is stored in a TaggedUnion and represents an expression evaluated at runtime. This can be of any type.
+             *    
+             * 2. Use the current Operation.Index to get the variable's name stored as a string inside Chunk during 
+             *    compile-time (i.e., the compilation logic code below). It's stored this way so Operations don't have 
+             *    to store the identifiers themselves.
+             *    
+             * 3. Maps the new/initial value to the variable name in VirtualMachine's Dictionary<string, TaggedUnion> 
+             *    field. If the name is already a key in the dictionary, then overwrite the existing value with the 
+             *    new/initial value. 
+             */
+
             CompileTargetNode(varAssignNode.Expression);
 
-            int identifierIndex;
-            if (!_varIdentifierMap.TryGetValue(varAssignNode.Identifier, out identifierIndex))
-            {
-                identifierIndex = _varIdentifierMap.Count;
-                _varIdentifierMap.Add(varAssignNode.Identifier, identifierIndex);
-                _varIdentifierNames.Add(varAssignNode.Identifier);
-            }
-
-            _chunk.PushOperation(OperationCode.StoreVariable, varAssignNode.LineNumber, identifierIndex);
+            // If a variable with the same name already exists in the chunk, the index of the existing variable will be returned.
+            // Otherwise, the new variable will be added to the chunk and its new index will be returned.
+            int nameIndex = _chunk.RegisterVariableName(varAssignNode.Name);
+            _chunk.PushOperation(OperationCode.AssignToVariable, varAssignNode.LineNumber, nameIndex);
         }
 
         void CompileVariableFactor(VariableFactorNode varFactorNode)
         {
-            int identifierIndex;
-            if (!_varIdentifierMap.TryGetValue(varFactorNode.Identifier, out identifierIndex))
-            {
-                throw new InvalidOperationException($"Undefined variable '{varFactorNode.Identifier}' on line {varFactorNode.LineNumber}.");
-            }
-
+            int identifierIndex = _chunk.FindVariableIndex(varFactorNode.VariableName);
             _chunk.PushOperation(OperationCode.LoadVariable, varFactorNode.LineNumber, identifierIndex);
         }
 
@@ -166,9 +168,11 @@ namespace Chow.Interpreter.Jit
             {
                 // This case should never occur unless the Parser is bugged. Refer to the inline comment above for more info
                 throw new InvalidOperationException();
-            }    
+            }
 
-            int constIndex = _chunk.AddConstant(constUnion);
+            // If a constant of the same value already exists in the chunk, the index of the existing constant will be returned.
+            // Otherwise, the new constant will be added to the chunk and its new index will be returned.
+            int constIndex = _chunk.RegisterConstant(constUnion);
             _chunk.PushOperation(OperationCode.PushConstant, literalNode.LineNumber, constIndex);
         }
 

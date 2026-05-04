@@ -6,7 +6,7 @@ namespace Chow.Interpreter.Syntax.Trees
     {
         string _identifier;
 
-        public string Identifier => _identifier;
+        public string VariableName => _identifier;
 
         public VariableFactorNode(string identifier, int lineNumber)
             : base(lineNumber)
