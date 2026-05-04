@@ -104,11 +104,6 @@ namespace Chow.Evaluation
             return valStack.Count == 0 ? TaggedUnion.None : valStack.Pop();
         }
 
-        void ExecuteCurrentOperation(Stack<TaggedUnion> stack)
-        {
-
-        }
-
         static void ExecuteBinaryOperation(Stack<TaggedUnion> stack, Func<TaggedUnion, TaggedUnion, TaggedUnion> operation)
         {
             // Floats coerce integers into floats inside TaggedUnion's operator overloads

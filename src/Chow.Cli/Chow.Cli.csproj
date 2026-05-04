@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Chow\Chow.csproj" />
+    <ProjectReference Include="..\Chow\Chow.Interpreter.csproj" />
   </ItemGroup>
 
 </Project>

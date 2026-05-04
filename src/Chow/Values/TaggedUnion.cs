@@ -13,6 +13,8 @@ namespace Chow.Values
         TaggedUnionType _type;
         int _intValue;
         float _floatValue;
+
+        // TODO: Add an object type and use it for strings instead of a separate field, to save space.
         string _stringValue;
 
         public static TaggedUnion Empty = new TaggedUnion(TaggedUnionType.Empty);
