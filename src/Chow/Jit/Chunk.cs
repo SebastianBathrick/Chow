@@ -8,10 +8,9 @@ namespace Chow.Jit
     class Chunk
     {
         List<Operation> _operations = new List<Operation>();
-        List<TaggedUnion> _consts = new List<TaggedUnion>(); 
+        List<TaggedUnion> _consts = new List<TaggedUnion>();
         List<int> _operationLineNums = new List<int>();
 
-        int _currIndex = 0;
 
 
         public int Count => _operations.Count;

@@ -14,6 +14,8 @@ namespace Chow.Jit
         Node _syntaxTreeRoot;
         bool _isDirty = false;
 
+        Dictionary<string, int> _varIdentifierMap;
+
         public Compiler(Node syntaxTreeRoot)
         {
             if (syntaxTreeRoot == null)
@@ -22,6 +24,7 @@ namespace Chow.Jit
             }
 
             _chunk = new Chunk();
+            _varIdentifierMap = new Dictionary<string, int>();
             _syntaxTreeRoot = syntaxTreeRoot;
         }
 
@@ -89,16 +92,10 @@ namespace Chow.Jit
             CompileTargetNode(root.TopLevelBlock);
         }
 
-        int AddIdentifier(Node node)
-        {
-            IdentifierNode identifierNode = node as IdentifierNode;
-            return _chunk.AddConstant(new TaggedUnion(identifierNode.Value));
-        }
-
         void CompileVariableAssignment(VariableAssignmentNode varAssignNode)
         {
             CompileTargetNode(varAssignNode.Expression);
-            int identifierIndex = AddIdentifier(varAssignNode.Identifier);
+            int identifierIndex = _chunk.AddConstant(new TaggedUnion(varAssignNode.Identifier));
             _chunk.PushOperation(OperationCode.StoreVariable, varAssignNode.LineNumber, identifierIndex);
         }
 

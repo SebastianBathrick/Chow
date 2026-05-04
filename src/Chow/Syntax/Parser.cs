@@ -98,12 +98,10 @@ namespace Chow.Syntax
         Node ParseVariableAssignment()
         {
             Token identifierToken = Consume(TokenType.Identifier, "Expected variable name.");
-            Node identifierNode = new IdentifierNode(identifierToken.Lexeme, identifierToken.LineNum);
-
             Consume(TokenType.Equal, "Expected '=' after variable name.");
             Node expression = ParseExpression();
 
-            return new VariableAssignmentNode(identifierNode, expression, identifierToken.LineNum);
+            return new VariableAssignmentNode(identifierToken.Lexeme, expression, identifierToken.LineNum);
         }
 
         #endregion
@@ -170,7 +168,7 @@ namespace Chow.Syntax
                 case TokenType.Identifier:
                     Token identifierToken = CurrentToken;
                     MoveToNextToken();
-                    return new IdentifierNode(identifierToken.Lexeme, identifierToken.LineNum);
+                    return new VariableFactorNode(identifierToken.Lexeme, identifierToken.LineNum);
 
                 case TokenType.Integer:
                 case TokenType.Float:

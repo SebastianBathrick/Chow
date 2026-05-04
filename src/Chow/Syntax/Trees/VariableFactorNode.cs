@@ -1,17 +1,14 @@
-using Chow.Syntax.Trees;
 using System;
 
-namespace Chow.Syntax
+namespace Chow.Syntax.Trees
 {
-    internal class VariableAssignmentNode : Node
+    internal class VariableFactorNode : Node
     {
         string _identifier;
-        Node _expression;
 
         public string Identifier => _identifier;
-        public Node Expression => _expression;
 
-        public VariableAssignmentNode(string identifier, Node expression, int lineNumber)
+        public VariableFactorNode(string identifier, int lineNumber)
             : base(lineNumber)
         {
             if (identifier == null)
@@ -24,18 +21,12 @@ namespace Chow.Syntax
                 throw new ArgumentException("Identifier name cannot be empty.", nameof(identifier));
             }
 
-            if (expression == null)
-            {
-                throw new ArgumentNullException(nameof(expression));
-            }
-
             _identifier = identifier;
-            _expression = expression;
         }
 
         public override string ToString()
         {
-            return $"VariableAssignment({_identifier}, {_expression}) line={LineNumber}";
+            return $"VariableFactor({_identifier}) line={LineNumber}";
         }
     }
 }
