@@ -8,7 +8,7 @@ using Chow.Evaluation;
 
 namespace Chow
 {
-    public static class ChowRuntime
+    public static class ChowState
     {
         public static ChowValue ExecuteSourceCode(string sourceCode)
         {
