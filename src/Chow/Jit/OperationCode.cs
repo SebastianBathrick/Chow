@@ -12,5 +12,6 @@ namespace Chow.Jit
         Negate,
         PushConstant,
         StoreVariable,
+        LoadVariable,
     }
 }

@@ -23,7 +23,7 @@ namespace Chow.Evaluation
         public TaggedUnion ExecuteChunk()
         {
             Stack<TaggedUnion> valStack = new Stack<TaggedUnion>();
-            Dictionary<string, TaggedUnion> varMap = new Dictionary<string, TaggedUnion>();
+            List<TaggedUnion> variables = new List<TaggedUnion>();
 
             while (IsRemainingOperation())
             {
@@ -67,10 +67,31 @@ namespace Chow.Evaluation
                         break;
 
                     // Statements
+
+
                     case OperationCode.StoreVariable:
-                        // The operand is the index of the variable name in the chunk's constant pool.
-                        string varName = _chunk.GetConstant(CurrentOperation.Operand).StringValue;
-                        varMap[varName] = valStack.Pop();
+                        // This is for variable declaration and assignment. The Compiler emits StoreVariable for both, and it is the only way to mutate variables.
+
+                        // The operand is the variable's slot index, assigned by the Compiler in declaration order.
+                        int storeIndex = CurrentOperation.Operand;
+                        TaggedUnion storeValue = valStack.Pop();
+                        
+                        if (storeIndex == variables.Count)
+                        {
+                            variables.Add(storeValue);
+                        }
+                        else
+                        {
+                            variables[storeIndex] = storeValue;
+                        }
+                        
+                        break;
+
+                    case OperationCode.LoadVariable:
+                        // This is for variable access for expressions in all statements that include them.
+
+                        // The operand is the variable's slot index. The Compiler validates the variable exists before emitting LoadVariable.
+                        valStack.Push(variables[CurrentOperation.Operand]);
                         break;
 
                     default:

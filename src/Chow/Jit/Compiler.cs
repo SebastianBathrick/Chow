@@ -14,7 +14,10 @@ namespace Chow.Jit
         Node _syntaxTreeRoot;
         bool _isDirty = false;
 
+        // Indexes the VirtualMachine uses to access variables instead of string identifiers.
+        // Not stored in Chunk: identifier strings are only needed at compile time and for compile-time errors.
         Dictionary<string, int> _varIdentifierMap;
+        List<string> _varIdentifierNames;
 
         public Compiler(Node syntaxTreeRoot)
         {
@@ -25,7 +28,18 @@ namespace Chow.Jit
 
             _chunk = new Chunk();
             _varIdentifierMap = new Dictionary<string, int>();
+            _varIdentifierNames = new List<string>();
             _syntaxTreeRoot = syntaxTreeRoot;
+        }
+
+        public string GetVariableName(int identifierIndex)
+        {
+            if (identifierIndex < 0 || identifierIndex >= _varIdentifierNames.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(identifierIndex));
+            }
+
+            return _varIdentifierNames[identifierIndex];
         }
 
         public Chunk CompileSyntaxTreeRoot()
@@ -74,6 +88,10 @@ namespace Chow.Jit
                     CompileVariableAssignment(varAssignNode);
                     break;
 
+                case VariableFactorNode varFactorNode:
+                    CompileVariableFactor(varFactorNode);
+                    break;
+
                 default:
                     throw new NotImplementedException($"Compilation of {targetNode.GetType().Name} is not implemented.");
             }
@@ -95,8 +113,27 @@ namespace Chow.Jit
         void CompileVariableAssignment(VariableAssignmentNode varAssignNode)
         {
             CompileTargetNode(varAssignNode.Expression);
-            int identifierIndex = _chunk.AddConstant(new TaggedUnion(varAssignNode.Identifier));
+
+            int identifierIndex;
+            if (!_varIdentifierMap.TryGetValue(varAssignNode.Identifier, out identifierIndex))
+            {
+                identifierIndex = _varIdentifierMap.Count;
+                _varIdentifierMap.Add(varAssignNode.Identifier, identifierIndex);
+                _varIdentifierNames.Add(varAssignNode.Identifier);
+            }
+
             _chunk.PushOperation(OperationCode.StoreVariable, varAssignNode.LineNumber, identifierIndex);
+        }
+
+        void CompileVariableFactor(VariableFactorNode varFactorNode)
+        {
+            int identifierIndex;
+            if (!_varIdentifierMap.TryGetValue(varFactorNode.Identifier, out identifierIndex))
+            {
+                throw new InvalidOperationException($"Undefined variable '{varFactorNode.Identifier}' on line {varFactorNode.LineNumber}.");
+            }
+
+            _chunk.PushOperation(OperationCode.LoadVariable, varFactorNode.LineNumber, identifierIndex);
         }
 
         void CompileLiteral(LiteralNode literalNode)
