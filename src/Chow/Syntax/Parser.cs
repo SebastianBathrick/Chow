@@ -1,8 +1,9 @@
-using Chow.Interpreter.Syntax.Trees;
 using Chow.Interpreter.Syntax.Trees.Expressions;
+using Chow.Interpreter.Syntax.Trees.Statements;
+using Chow.Interpreter.Syntax.Trees;
 using Chow.Interpreter.Tokens;
-using System;
 using System.Collections.Generic;
+using System;
 
 namespace Chow.Interpreter.Syntax
 {
@@ -79,6 +80,10 @@ namespace Chow.Interpreter.Syntax
             return new BlockNode(statements, lineNumber);
         }
 
+        #endregion
+
+        #region Statement Methods
+
         Node ParseStatement()
         {
             if (Check(TokenType.Identifier) && CheckNext(TokenType.Equal))
@@ -106,7 +111,7 @@ namespace Chow.Interpreter.Syntax
 
         #endregion
 
-        #region Grammar Methods
+        #region Expression Methods
 
         Node ParseExpression()
         {

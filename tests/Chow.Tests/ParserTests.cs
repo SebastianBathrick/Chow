@@ -2,6 +2,7 @@ using Chow.Interpreter;
 using Chow.Interpreter.Syntax;
 using Chow.Interpreter.Syntax.Trees;
 using Chow.Interpreter.Syntax.Trees.Expressions;
+using Chow.Interpreter.Syntax.Trees.Statements;
 using Chow.Interpreter.Tokens;
 
 namespace Chow.Tests

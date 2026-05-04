@@ -9,35 +9,38 @@ namespace Chow.Interpreter.Values
         const float DEFAULT_FLOAT_VALUE = 0.0f;
         const int DEFAULT_INT_VALUE = 0;
         const string DEFAULT_STRING_VALUE = null;
+        const bool DEFAULT_BOOL_VALUE = false;
 
-        TaggedUnionType _type;
+        Tag _type;
         int _intValue;
         float _floatValue;
+        bool _boolValue;
 
         // TODO: Add an object type and use it for strings instead of a separate field, to save space.
         string _stringValue;
 
-        public static TaggedUnion Empty = new TaggedUnion(TaggedUnionType.Empty);
-        public static TaggedUnion None = new TaggedUnion(TaggedUnionType.None);
+        public static TaggedUnion Empty = new TaggedUnion(Tag.Empty);
+        public static TaggedUnion None = new TaggedUnion(Tag.None);
 
-        public TaggedUnionType Type => _type;
+        public Tag Tag => _type;
 
-        public bool IsEmpty => _type == TaggedUnionType.Empty;
-        public bool IsNone => _type == TaggedUnionType.None;
-        public bool IsInteger => _type == TaggedUnionType.Integer;
-        public bool IsFloat => _type == TaggedUnionType.Float;
-        public bool IsString => _type == TaggedUnionType.String;
+        public bool IsEmpty => _type == Tag.Empty;
+        public bool IsNone => _type == Tag.None;
+        public bool IsInteger => _type == Tag.Integer;
+        public bool IsFloat => _type == Tag.Float;
+        public bool IsString => _type == Tag.String;
+        public bool IsBoolean => _type == Tag.Boolean;
 
         public int IntegerValue
         {
             get
             {
-                ValidateTaggedUnionType(TaggedUnionType.Integer);
+                ValidateTaggedUnionType(Tag.Integer);
                 return _intValue;
             }
             set
             {
-                ValidateTaggedUnionType(TaggedUnionType.Integer);
+                ValidateTaggedUnionType(Tag.Integer);
                 _intValue = value;
             }
         }
@@ -46,12 +49,12 @@ namespace Chow.Interpreter.Values
         {
             get
             {
-                ValidateTaggedUnionType(TaggedUnionType.Float);
+                ValidateTaggedUnionType(Tag.Float);
                 return _floatValue;
             }
             set
             {
-                ValidateTaggedUnionType(TaggedUnionType.Float);
+                ValidateTaggedUnionType(Tag.Float);
                 _floatValue = value;
             }
         }
@@ -60,53 +63,96 @@ namespace Chow.Interpreter.Values
         {
             get
             {
-                ValidateTaggedUnionType(TaggedUnionType.String);
+                ValidateTaggedUnionType(Tag.String);
                 return _stringValue;
             }
             set
             {
-                ValidateTaggedUnionType(TaggedUnionType.String);
+                ValidateTaggedUnionType(Tag.String);
                 _stringValue = value;
             }
         }
 
-        private TaggedUnion(TaggedUnionType type)
+        public bool BooleanValue
+        {
+            get
+            {
+                ValidateTaggedUnionType(Tag.Boolean);
+                return _boolValue;
+            }
+            set
+            {
+                ValidateTaggedUnionType(Tag.Boolean);
+                _boolValue = value;
+            }
+        }
+
+        private TaggedUnion(Tag type)
         {
             _type = type;
             _intValue = DEFAULT_INT_VALUE;
             _floatValue = DEFAULT_FLOAT_VALUE;
             _stringValue = DEFAULT_STRING_VALUE;
+            _boolValue = DEFAULT_BOOL_VALUE;
         }
 
         public TaggedUnion(float value)
         {
             _floatValue = value;
-            _type = TaggedUnionType.Float; 
+            _type = Tag.Float;
             _intValue = DEFAULT_INT_VALUE;
             _stringValue = DEFAULT_STRING_VALUE;
+            _boolValue = DEFAULT_BOOL_VALUE;
         }
 
         public TaggedUnion(int value)
         {
             _intValue = value;
-            _type = TaggedUnionType.Integer;
+            _type = Tag.Integer;
             _floatValue = DEFAULT_FLOAT_VALUE;
             _stringValue = DEFAULT_STRING_VALUE;
+            _boolValue = DEFAULT_BOOL_VALUE;
         }
 
         public TaggedUnion(string value)
         {
             _stringValue = value;
-            _type = TaggedUnionType.String;
+            _type = Tag.String;
             _intValue = DEFAULT_INT_VALUE;
             _floatValue = DEFAULT_FLOAT_VALUE;
+            _boolValue = DEFAULT_BOOL_VALUE;
+        }
+
+        public TaggedUnion(bool value)
+        {
+            _boolValue = value;
+            _type = Tag.Boolean;
+            _intValue = DEFAULT_INT_VALUE;
+            _floatValue = DEFAULT_FLOAT_VALUE;
+            _stringValue = DEFAULT_STRING_VALUE;
         }
 
 
 
+        // TODO: Temporary reference table for current operator rules. Update as type support changes.
+        // Operators covered: + - * / % FloorDivide Power
+        //
+        //   bool   op bool          -> int    ( /  -> float)
+        //   int    op int           -> int    ( /  -> float)
+        //   float  op (int|float)   -> float
+        //   int    op float         -> float
+        //   bool   op (int|float)   -> NotImplementedException (coercion not implemented)
+        //   any    op string        -> InvalidOperationException
+        //   Empty/None as operand   -> InvalidOperationException (via property access)
         public static TaggedUnion operator +(TaggedUnion left, TaggedUnion right)
         {
             ThrowIfStringOperands(left, right);
+            // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
+            ThrowIfMixedBoolNumeric(left, right);
+            if (BothAreBoolean(left, right))
+            {
+                return new TaggedUnion(BoolAsInt(left) + BoolAsInt(right));
+            }
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion(AsFloat(left) + AsFloat(right));
@@ -118,6 +164,12 @@ namespace Chow.Interpreter.Values
         public static TaggedUnion operator -(TaggedUnion left, TaggedUnion right)
         {
             ThrowIfStringOperands(left, right);
+            // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
+            ThrowIfMixedBoolNumeric(left, right);
+            if (BothAreBoolean(left, right))
+            {
+                return new TaggedUnion(BoolAsInt(left) - BoolAsInt(right));
+            }
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion(AsFloat(left) - AsFloat(right));
@@ -129,6 +181,12 @@ namespace Chow.Interpreter.Values
         public static TaggedUnion operator *(TaggedUnion left, TaggedUnion right)
         {
             ThrowIfStringOperands(left, right);
+            // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
+            ThrowIfMixedBoolNumeric(left, right);
+            if (BothAreBoolean(left, right))
+            {
+                return new TaggedUnion(BoolAsInt(left) * BoolAsInt(right));
+            }
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion(AsFloat(left) * AsFloat(right));
@@ -140,14 +198,28 @@ namespace Chow.Interpreter.Values
         public static TaggedUnion operator /(TaggedUnion left, TaggedUnion right)
         {
             ThrowIfStringOperands(left, right);
+            // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
+            ThrowIfMixedBoolNumeric(left, right);
             // Python semantics: `/` always produces a float, even for int / int.
+            if (BothAreBoolean(left, right))
+            {
+                return new TaggedUnion((float)BoolAsInt(left) / BoolAsInt(right));
+            }
             return new TaggedUnion(AsFloat(left) / AsFloat(right));
         }
 
         public static TaggedUnion operator %(TaggedUnion left, TaggedUnion right)
         {
             ThrowIfStringOperands(left, right);
+            // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
+            ThrowIfMixedBoolNumeric(left, right);
             // Python semantics: result has the sign of the divisor.
+            if (BothAreBoolean(left, right))
+            {
+                int a = BoolAsInt(left);
+                int b = BoolAsInt(right);
+                return new TaggedUnion(((a % b) + b) % b);
+            }
             if (EitherIsFloat(left, right))
             {
                 float l = AsFloat(left);
@@ -155,15 +227,21 @@ namespace Chow.Interpreter.Values
                 return new TaggedUnion(((l % r) + r) % r);
             }
 
-            int a = left.IntegerValue;
-            int b = right.IntegerValue;
-            return new TaggedUnion(((a % b) + b) % b);
+            int ai = left.IntegerValue;
+            int bi = right.IntegerValue;
+            return new TaggedUnion(((ai % bi) + bi) % bi);
         }
 
         public static TaggedUnion FloorDivide(TaggedUnion left, TaggedUnion right)
         {
             ThrowIfStringOperands(left, right);
+            // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
+            ThrowIfMixedBoolNumeric(left, right);
             // Python semantics: floors toward negative infinity.
+            if (BothAreBoolean(left, right))
+            {
+                return new TaggedUnion((int)Math.Floor(BoolAsInt(left) / (double)BoolAsInt(right)));
+            }
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion((float)Math.Floor(AsFloat(left) / (double)AsFloat(right)));
@@ -175,7 +253,13 @@ namespace Chow.Interpreter.Values
         public static TaggedUnion Power(TaggedUnion left, TaggedUnion right)
         {
             ThrowIfStringOperands(left, right);
+            // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
+            ThrowIfMixedBoolNumeric(left, right);
             // Python semantics: float if either operand is float, or if exponent is negative.
+            if (BothAreBoolean(left, right))
+            {
+                return new TaggedUnion((int)Math.Pow(BoolAsInt(left), BoolAsInt(right)));
+            }
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion((float)Math.Pow(AsFloat(left), AsFloat(right)));
@@ -199,12 +283,14 @@ namespace Chow.Interpreter.Values
 
             switch (left._type)
             {
-                case TaggedUnionType.Integer:
+                case Tag.Integer:
                     return left._intValue == right._intValue;
-                case TaggedUnionType.Float:
+                case Tag.Float:
                     return left._floatValue == right._floatValue;
-                case TaggedUnionType.String:
+                case Tag.String:
                     return left._stringValue == right._stringValue;
+                case Tag.Boolean:
+                    return left._boolValue == right._boolValue;
                 default:
                     return true;
             }
@@ -220,11 +306,38 @@ namespace Chow.Interpreter.Values
             return left.IsFloat || right.IsFloat;
         }
 
+        static bool BothAreBoolean(TaggedUnion left, TaggedUnion right)
+        {
+            return left.IsBoolean && right.IsBoolean;
+        }
+
+        static int BoolAsInt(TaggedUnion union)
+        {
+            return union.BooleanValue ? 1 : 0;
+        }
+
         static void ThrowIfStringOperands(TaggedUnion left, TaggedUnion right)
         {
             if (left.IsString || right.IsString)
             {
                 throw new InvalidOperationException("String operands are not supported for this operation.");
+            }
+        }
+
+        // TODO: Temporary guard. Delete when mixed bool/numeric coercion is implemented.
+        static void ThrowIfMixedBoolNumeric(TaggedUnion left, TaggedUnion right)
+        {
+            bool leftBool = left.IsBoolean;
+            bool rightBool = right.IsBoolean;
+            if (leftBool == rightBool)
+            {
+                return;
+            }
+
+            bool otherIsNumeric = leftBool ? (right.IsInteger || right.IsFloat) : (left.IsInteger || left.IsFloat);
+            if (otherIsNumeric)
+            {
+                throw new NotImplementedException("Mixed boolean and numeric operands are not yet implemented.");
             }
         }
 
@@ -247,12 +360,14 @@ namespace Chow.Interpreter.Values
         {
             switch (_type)
             {
-                case TaggedUnionType.Integer:
+                case Tag.Integer:
                     return _intValue.GetHashCode();
-                case TaggedUnionType.Float:
+                case Tag.Float:
                     return _floatValue.GetHashCode();
-                case TaggedUnionType.String:
+                case Tag.String:
                     return _stringValue?.GetHashCode() ?? 0;
+                case Tag.Boolean:
+                    return _boolValue.GetHashCode();
                 default:
                     return _type.GetHashCode();
             }
@@ -275,17 +390,36 @@ namespace Chow.Interpreter.Values
                 return $"TaggedUnion(type={_type}, value={_stringValue})";
             }
 
+            if (IsBoolean)
+            {
+                return $"TaggedUnion(type={_type}, value={_boolValue})";
+            }
+
             return $"TaggedUnion(type={_type}, value={_intValue})";
         }
 
-        void ValidateTaggedUnionType(TaggedUnionType desiredType)
+        void ValidateTaggedUnionType(Tag desiredType)
         {
             if (_type == desiredType)
             {
                 return;
             }
 
+            // TODO: Replace this branch with actual coercion (bool<->int<->float) once implemented.
+            if (IsPythonCoercibleNumeric(desiredType) && IsPythonCoercibleNumeric(_type))
+            {
+                throw new NotImplementedException($"{desiredType} access on union of type {_type} requires Python coercion that is not yet implemented.");
+            }
+
             throw new InvalidOperationException($"{desiredType} access attempt but union's type is {_type}");
+        }
+
+        // TODO: Temporary helper used only by the coercion-not-implemented guard. Remove with that guard.
+        static bool IsPythonCoercibleNumeric(Tag type)
+        {
+            return type == Tag.Boolean
+                || type == Tag.Integer
+                || type == Tag.Float;
         }
     }
 }

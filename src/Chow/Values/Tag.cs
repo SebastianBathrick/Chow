@@ -4,12 +4,13 @@ using System.Text;
 
 namespace Chow.Interpreter.Values
 {
-    internal enum TaggedUnionType
+    internal enum Tag
     {
         Empty,
         None,
         Integer,
         Float,
-        String
+        String,
+        Boolean
     }
 }
