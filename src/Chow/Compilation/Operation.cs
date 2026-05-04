@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow.Jit
+namespace Chow.Interpreter.Jit
 {
     readonly struct Operation
     {

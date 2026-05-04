@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace Chow.Tokens
+namespace Chow.Interpreter.Tokens
 {
     sealed class Scanner
     {

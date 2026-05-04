@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow.Values
+namespace Chow.Interpreter.Values
 {
     struct TaggedUnion
     {

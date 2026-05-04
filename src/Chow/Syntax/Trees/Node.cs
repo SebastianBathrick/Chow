@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow.Syntax.Trees
+namespace Chow.Interpreter.Syntax.Trees
 {
     internal abstract class Node
     {

@@ -1,9 +1,9 @@
-﻿using Chow.Values;
+using Chow.Interpreter.Values;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow.Jit
+namespace Chow.Interpreter.Jit
 {
     class Chunk
     {

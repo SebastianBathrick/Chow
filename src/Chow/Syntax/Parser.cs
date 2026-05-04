@@ -1,10 +1,10 @@
-using Chow.Syntax.Trees;
-using Chow.Syntax.Trees.Expressions;
-using Chow.Tokens;
+using Chow.Interpreter.Syntax.Trees;
+using Chow.Interpreter.Syntax.Trees.Expressions;
+using Chow.Interpreter.Tokens;
 using System;
 using System.Collections.Generic;
 
-namespace Chow.Syntax
+namespace Chow.Interpreter.Syntax
 {
     class Parser
     {

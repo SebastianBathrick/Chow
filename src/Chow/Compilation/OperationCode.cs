@@ -1,4 +1,4 @@
-namespace Chow.Jit
+namespace Chow.Interpreter.Jit
 {
     enum OperationCode
     {

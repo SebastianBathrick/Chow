@@ -1,11 +1,11 @@
-using Chow.Jit;
-using Chow.Values;
+using Chow.Interpreter.Jit;
+using Chow.Interpreter.Values;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow.Evaluation
+namespace Chow.Interpreter.Evaluation
 {
     sealed class VirtualMachine
     {

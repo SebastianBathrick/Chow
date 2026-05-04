@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow.Syntax.Trees.Expressions
+namespace Chow.Interpreter.Syntax.Trees.Expressions
 {
     internal enum ExpressionOperator
     {

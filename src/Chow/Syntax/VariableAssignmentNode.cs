@@ -1,7 +1,7 @@
-using Chow.Syntax.Trees;
+using Chow.Interpreter.Syntax.Trees;
 using System;
 
-namespace Chow.Syntax
+namespace Chow.Interpreter.Syntax
 {
     internal class VariableAssignmentNode : Node
     {

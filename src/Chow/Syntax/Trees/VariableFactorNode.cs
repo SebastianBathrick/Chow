@@ -1,6 +1,6 @@
 using System;
 
-namespace Chow.Syntax.Trees
+namespace Chow.Interpreter.Syntax.Trees
 {
     internal class VariableFactorNode : Node
     {

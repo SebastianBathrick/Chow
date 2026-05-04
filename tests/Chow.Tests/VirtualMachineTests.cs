@@ -1,6 +1,6 @@
-using Chow.Evaluation;
-using Chow.Jit;
-using Chow.Values;
+using Chow.Interpreter.Evaluation;
+using Chow.Interpreter.Jit;
+using Chow.Interpreter.Values;
 
 namespace Chow.Tests
 {

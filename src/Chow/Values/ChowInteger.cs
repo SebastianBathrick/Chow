@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow
+namespace Chow.Interpreter
 {
     internal class ChowInteger : ChowValue
     {

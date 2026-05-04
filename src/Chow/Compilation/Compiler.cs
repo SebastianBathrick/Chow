@@ -1,12 +1,12 @@
-﻿using Chow.Syntax;
-using Chow.Syntax.Trees;
-using Chow.Syntax.Trees.Expressions;
-using Chow.Values;
+using Chow.Interpreter.Syntax;
+using Chow.Interpreter.Syntax.Trees;
+using Chow.Interpreter.Syntax.Trees.Expressions;
+using Chow.Interpreter.Values;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow.Jit
+namespace Chow.Interpreter.Jit
 {
     class Compiler
     {

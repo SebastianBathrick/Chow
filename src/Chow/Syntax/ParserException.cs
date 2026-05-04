@@ -1,6 +1,6 @@
 using System;
 
-namespace Chow.Syntax
+namespace Chow.Interpreter.Syntax
 {
     internal sealed class ParserException : Exception
     {

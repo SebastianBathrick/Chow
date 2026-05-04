@@ -1,12 +1,12 @@
-﻿using System;
-using Chow.Tokens;
-using Chow.Syntax;
-using Chow.Jit;
+using System;
+using Chow.Interpreter.Tokens;
+using Chow.Interpreter.Syntax;
+using Chow.Interpreter.Jit;
 using System.Collections.Generic;
-using Chow.Syntax.Trees;
-using Chow.Evaluation;
+using Chow.Interpreter.Syntax.Trees;
+using Chow.Interpreter.Evaluation;
 
-namespace Chow
+namespace Chow.Interpreter
 {
     public static class ChowState
     {

@@ -1,9 +1,9 @@
-using Chow;
-using Chow.Jit;
-using Chow.Syntax;
-using Chow.Syntax.Trees;
-using Chow.Tokens;
-using Chow.Evaluation;
+using Chow.Interpreter;
+using Chow.Interpreter.Jit;
+using Chow.Interpreter.Syntax;
+using Chow.Interpreter.Syntax.Trees;
+using Chow.Interpreter.Tokens;
+using Chow.Interpreter.Evaluation;
 
 Console.WriteLine("Enter an expression to parse. Use Ctrl+Z then Enter to quit.");
 Console.WriteLine("Escapes are supported: \\n, \\r, \\t, \\f, \\\\.");

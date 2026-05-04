@@ -1,4 +1,4 @@
-namespace Chow.Syntax.Trees.Expressions
+namespace Chow.Interpreter.Syntax.Trees.Expressions
 {
     internal enum LiteralDataType
     {
