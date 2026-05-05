@@ -9,6 +9,7 @@ namespace Chow.Interpreter.Jit
     {
         List<Operation> _operations = new List<Operation>();
         List<TaggedUnion> _consts = new List<TaggedUnion>();
+        List<string> _variableNames = new List<string>();
         List<int> _operationLineNums = new List<int>();
 
         public int Count => _operations.Count;
@@ -36,12 +37,13 @@ namespace Chow.Interpreter.Jit
         {
             int constIndex = FindConstantIndex(newConst);
 
-            if (constIndex < 0)
+            if (constIndex >= 0)
             {
-                constIndex = _consts.Count;
-                _consts.Add(newConst);
+                return constIndex;
             }
 
+            constIndex = _consts.Count;
+            _consts.Add(newConst);
             return constIndex;
         }
 
@@ -52,30 +54,32 @@ namespace Chow.Interpreter.Jit
 
         #region Variable Name Methods
 
-        // TEMPORARY LOGIC: This public API is intended to abstract how variable identifiers are stored and accessed.
-        // This public API will remain the same, but their function logic will change later in developement. Currently
-        // variables are internally stored the exact same way as constants, and internally retrieved the exact same way
-        // as constants due to time constraints. However, all variable-name related logic will be accessed by the client
-        // via dedicated variable methods, so when variable-names are stored differently in Chunk, no client code will 
-        // need to be changed.
+        public string ReadVariableName(int operand) => _variableNames[operand];
 
-        // NOTE: Making the ReadConstant call does return a new struct, and that is slower, but it is temporary and I want
-        // them to work identically as constants for the time being. Less code to manage.
-        public string ReadVariableName(int operand) => ReadConstant(operand).StringValue;
-
-        // This is one piece of functionality that constant will never have publically (still going to change internally for variables)
-        public int FindVariableName(string varName) => FindConstantIndex(new TaggedUnion(varName));
+        public int FindVariableName(string varName) => _variableNames.IndexOf(varName);
 
         /// <summary>
-        /// Used to register a variable name compile-time and return an operand for use in <see cref="Operation"/> instance(s) 
+        /// Used to register a variable name compile-time and return an operand for use in <see cref="Operation"/> instance(s)
         /// that declare or reference that variable.
         /// </summary>
         /// <param name="varName">Variable name to register.</param>
-        /// <returns>If an existing constant has the same value as <paramref name="varName"/> then the operand for 
-        /// that existing constant will be returned. Otherwise, the new variable name is stored and a new operand is returned.</returns>
+        /// <returns>If a variable name equal to <paramref name="varName"/> is already registered, the operand for the
+        /// existing entry is returned. Otherwise, the new variable name is stored and a new operand is returned.</returns>
         /// <remarks>This is ONLY for storing variable names COMPILE-TIME. NOT for storing variable names runtime, AND NOT NEVER
         /// for storing variable values. </remarks>
-        public int RegisterVariableName(string varName) => RegisterConstant(new TaggedUnion(varName));
+        public int RegisterVariableName(string varName)
+        {
+            int existing = FindVariableName(varName);
+
+            if (existing >= 0)
+            {
+                return existing;
+            }
+
+            int operand = _variableNames.Count;
+            _variableNames.Add(varName);
+            return operand;
+        }
 
         #endregion
 
@@ -86,23 +90,20 @@ namespace Chow.Interpreter.Jit
             sb.AppendLine("Constants:");
             for (int i = 0; i < _consts.Count; i++)
             {
-                TaggedUnion constant = _consts[i];
-
                 sb.Append("  ");
                 sb.Append(i);
                 sb.Append(": ");
+                AppendConstant(sb, _consts[i]);
+                sb.AppendLine();
+            }
 
-                if (constant.IsInteger)
-                {
-                    sb.Append("Int=");
-                    sb.Append(constant.IntegerValue);
-                }
-                else if (constant.IsFloat)
-                {
-                    sb.Append("Float=");
-                    sb.Append(constant.FloatValue);
-                }
-
+            sb.AppendLine("Variables:");
+            for (int i = 0; i < _variableNames.Count; i++)
+            {
+                sb.Append("  ");
+                sb.Append(i);
+                sb.Append(": ");
+                sb.Append(_variableNames[i]);
                 sb.AppendLine();
             }
 
@@ -118,23 +119,10 @@ namespace Chow.Interpreter.Jit
 
                 if (op.Operand != -1)
                 {
-                    TaggedUnion constant = _consts[op.Operand];
-
                     sb.Append(' ');
                     sb.Append(op.Operand);
                     sb.Append(" (");
-
-                    if (constant.IsInteger)
-                    {
-                        sb.Append("Int=");
-                        sb.Append(constant.IntegerValue);
-                    }
-                    else if (constant.IsFloat)
-                    {
-                        sb.Append("Float=");
-                        sb.Append(constant.FloatValue);
-                    }
-
+                    AppendOperandTarget(sb, op);
                     sb.Append(')');
                 }
 
@@ -145,6 +133,45 @@ namespace Chow.Interpreter.Jit
             }
 
             return sb.ToString();
+        }
+
+        static void AppendConstant(StringBuilder sb, TaggedUnion constant)
+        {
+            if (constant.IsInteger)
+            {
+                sb.Append("Int=");
+                sb.Append(constant.IntegerValue);
+            }
+            else if (constant.IsFloat)
+            {
+                sb.Append("Float=");
+                sb.Append(constant.FloatValue);
+            }
+            else if (constant.IsString)
+            {
+                sb.Append("String=");
+                sb.Append(constant.StringValue);
+            }
+            else if (constant.IsBoolean)
+            {
+                sb.Append("Bool=");
+                sb.Append(constant.BooleanValue);
+            }
+        }
+
+        void AppendOperandTarget(StringBuilder sb, Operation op)
+        {
+            switch (op.Code)
+            {
+                case OperationCode.PushConstant:
+                    AppendConstant(sb, _consts[op.Operand]);
+                    break;
+                case OperationCode.AssignToVariable:
+                case OperationCode.LoadVariable:
+                    sb.Append("Var=");
+                    sb.Append(_variableNames[op.Operand]);
+                    break;
+            }
         }
     }
 }
