@@ -1,13 +1,26 @@
 using Chow.Interpreter;
 
+Console.TreatControlCAsInput = true;
+
 const string LINE_INDICATOR = ">>> ";
 const string LINE_SEPERATOR = "\n";
 
 bool isRunning = true;
+bool showHelp = false;
 int startTop = 0;
 int cursorX = 0;
 int cursorY = 0;
+int desiredX = 0;
+int drawnLineCount = 0;
 List<string> lines = new() { string.Empty };
+string[] helpLines = new[]
+{
+    "Shortcuts:",
+    "  [ENTER]:        Submit          [ARROWS]:       Move",
+    "  [SHIFT+ENTER]:  Newline         [BACKSPACE]:    Delete Char",
+    "  [ESC]:          Cancel          [CTRL+R]:       Reset Input",
+    "  [CTRL+L]:       Clear Screen    [F1]:           Toggle Help",
+};
 
 do
 {
@@ -16,8 +29,6 @@ do
         isRunning = false;
         continue;
     }
-
-    lines.Add(string.Empty);
 
     try
     {
@@ -42,6 +53,8 @@ bool ReadEditableBlock(out string sourceCode)
     startTop = Console.CursorTop - lines.Count;
     cursorY = lines.Count - 1;
     cursorX = lines[cursorY].Length;
+    desiredX = cursorX;
+    drawnLineCount = lines.Count;
 
     while (true)
     {
@@ -54,7 +67,7 @@ bool ReadEditableBlock(out string sourceCode)
             case ConsoleKey.Enter:
                 if (!key.Modifiers.HasFlag(ConsoleModifiers.Shift))
                 {
-                    Console.SetCursorPosition(0, startTop + lines.Count);
+                    Console.SetCursorPosition(0, BlockTop() + lines.Count);
                     Console.WriteLine();
 
                     sourceCode = string.Join(LINE_SEPERATOR, lines);
@@ -65,7 +78,7 @@ bool ReadEditableBlock(out string sourceCode)
                 break;
 
             case ConsoleKey.Escape:
-                Console.SetCursorPosition(0, startTop + lines.Count);
+                Console.SetCursorPosition(0, BlockTop() + lines.Count);
                 Console.WriteLine();
                 sourceCode = string.Empty;
                 return false;
@@ -87,7 +100,83 @@ bool ReadEditableBlock(out string sourceCode)
                 break;
 
             case ConsoleKey.Backspace:
-                Backspace();
+                if (key.Modifiers.HasFlag(ConsoleModifiers.Control))
+                {
+                    BackspaceToken();
+                }
+                else
+                {
+                    Backspace();
+                }
+                break;
+
+            case ConsoleKey.F1:
+                showHelp = !showHelp;
+                break;
+
+            case ConsoleKey.C:
+                if (key.Modifiers.HasFlag(ConsoleModifiers.Control))
+                {
+                    Console.SetCursorPosition(0, BlockTop() + lines.Count);
+                    Console.WriteLine();
+                    Console.WriteLine("Keyboard Interupt");
+
+                    int reserve = lines.Count + (showHelp ? helpLines.Length : 0);
+
+                    for (int i = 0; i < reserve; i++)
+                    {
+                        Console.WriteLine();
+                    }
+
+                    startTop = Console.CursorTop - reserve;
+                    drawnLineCount = reserve;
+                }
+                else if (!char.IsControl(key.KeyChar))
+                {
+                    InsertChar(key.KeyChar);
+                }
+                break;
+
+            case ConsoleKey.D:
+                if (key.Modifiers.HasFlag(ConsoleModifiers.Control))
+                {
+                    Console.SetCursorPosition(0, BlockTop() + lines.Count);
+                    Console.WriteLine();
+                    sourceCode = string.Empty;
+                    return false;
+                }
+                else if (!char.IsControl(key.KeyChar))
+                {
+                    InsertChar(key.KeyChar);
+                }
+                break;
+
+            case ConsoleKey.L:
+                if (key.Modifiers.HasFlag(ConsoleModifiers.Control))
+                {
+                    Console.Clear();
+                    startTop = 0;
+                    drawnLineCount = lines.Count;
+                }
+                else if (!char.IsControl(key.KeyChar))
+                {
+                    InsertChar(key.KeyChar);
+                }
+                break;
+
+            case ConsoleKey.R:
+                if (key.Modifiers.HasFlag(ConsoleModifiers.Control))
+                {
+                    lines.Clear();
+                    lines.Add(string.Empty);
+                    cursorX = 0;
+                    cursorY = 0;
+                    desiredX = 0;
+                }
+                else if (!char.IsControl(key.KeyChar))
+                {
+                    InsertChar(key.KeyChar);
+                }
                 break;
 
             default:
@@ -100,30 +189,58 @@ bool ReadEditableBlock(out string sourceCode)
     }
 }
 
+int BlockTop()
+{
+    return startTop + (showHelp ? helpLines.Length : 0);
+}
+
+void WriteFullWidthLine(string text)
+{
+    Console.Write(text);
+    int remaining = Console.WindowWidth - text.Length;
+
+    if (remaining > 0)
+    {
+        Console.Write(new string(' ', remaining));
+    }
+}
+
 void Draw()
 {
-    for (int i = 0; i < lines.Count; i++)
+    int helpCount = showHelp ? helpLines.Length : 0;
+
+    for (int i = 0; i < helpCount; i++)
     {
         Console.SetCursorPosition(0, startTop + i);
-
-        string text = LINE_INDICATOR + lines[i];
-        Console.Write(text);
-
-        int remaining = Console.WindowWidth - text.Length;
-
-        if (remaining > 0)
-        {
-            Console.Write(new string(' ', remaining));
-        }
+        WriteFullWidthLine(helpLines[i]);
     }
 
-    Console.SetCursorPosition(LINE_INDICATOR.Length + cursorX, startTop + cursorY);
+    int blockTop = startTop + helpCount;
+
+    for (int i = 0; i < lines.Count; i++)
+    {
+        Console.SetCursorPosition(0, blockTop + i);
+        WriteFullWidthLine(LINE_INDICATOR + lines[i]);
+    }
+
+    int totalRows = helpCount + lines.Count;
+
+    for (int i = totalRows; i < drawnLineCount; i++)
+    {
+        Console.SetCursorPosition(0, startTop + i);
+        Console.Write(new string(' ', Console.WindowWidth));
+    }
+
+    drawnLineCount = totalRows;
+
+    Console.SetCursorPosition(LINE_INDICATOR.Length + cursorX, blockTop + cursorY);
 }
 
 void InsertChar(char c)
 {
     lines[cursorY] = lines[cursorY].Insert(cursorX, c.ToString());
     cursorX++;
+    desiredX = cursorX;
 }
 
 void NewLine()
@@ -138,6 +255,7 @@ void NewLine()
 
     cursorY++;
     cursorX = 0;
+    desiredX = cursorX;
 }
 
 void Backspace()
@@ -154,6 +272,44 @@ void Backspace()
         lines.RemoveAt(cursorY);
         cursorY--;
     }
+    desiredX = cursorX;
+}
+
+void BackspaceToken()
+{
+    if (cursorX == 0)
+    {
+        Backspace();
+        return;
+    }
+
+    string line = lines[cursorY];
+    int end = cursorX;
+    int i = end;
+
+    while (i > 0 && char.IsWhiteSpace(line[i - 1]))
+    {
+        i--;
+    }
+
+    if (i > 0)
+    {
+        bool wordChunk = IsWordChar(line[i - 1]);
+
+        while (i > 0 && IsWordChar(line[i - 1]) == wordChunk && !char.IsWhiteSpace(line[i - 1]))
+        {
+            i--;
+        }
+    }
+
+    lines[cursorY] = line.Remove(i, end - i);
+    cursorX = i;
+    desiredX = cursorX;
+}
+
+static bool IsWordChar(char c)
+{
+    return char.IsLetterOrDigit(c) || c == '_';
 }
 
 void MoveLeft()
@@ -167,6 +323,7 @@ void MoveLeft()
         cursorY--;
         cursorX = lines[cursorY].Length;
     }
+    desiredX = cursorX;
 }
 
 void MoveRight()
@@ -180,6 +337,7 @@ void MoveRight()
         cursorY++;
         cursorX = 0;
     }
+    desiredX = cursorX;
 }
 
 void MoveUp()
@@ -187,7 +345,12 @@ void MoveUp()
     if (cursorY > 0)
     {
         cursorY--;
-        cursorX = Math.Min(cursorX, lines[cursorY].Length);
+        cursorX = Math.Min(desiredX, lines[cursorY].Length);
+    }
+    else
+    {
+        cursorX = 0;
+        desiredX = cursorX;
     }
 }
 
@@ -196,7 +359,12 @@ void MoveDown()
     if (cursorY < lines.Count - 1)
     {
         cursorY++;
-        cursorX = Math.Min(cursorX, lines[cursorY].Length);
+        cursorX = Math.Min(desiredX, lines[cursorY].Length);
+    }
+    else
+    {
+        cursorX = lines[cursorY].Length;
+        desiredX = cursorX;
     }
 }
 
