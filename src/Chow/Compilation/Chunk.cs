@@ -166,8 +166,8 @@ namespace Chow.Interpreter.Compilation
                 case OperationCode.PushConstant:
                     AppendConstant(sb, _consts[op.Operand]);
                     break;
-                case OperationCode.AssignToVariable:
-                case OperationCode.LoadVariable:
+                case OperationCode.AssignOrDeclareVariable:
+                case OperationCode.PushVariableValue:
                     sb.Append("Var=");
                     sb.Append(_variableNames[op.Operand]);
                     break;

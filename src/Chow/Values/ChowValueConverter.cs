@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Chow.Interpreter.Values
 {
-    internal static class ApiValueConverter
+    internal static class ChowValueConverter
     {
         public static TaggedUnion ToTaggedUnion(ChowValue value)
         {
@@ -36,7 +36,7 @@ namespace Chow.Interpreter.Values
             switch (taggedUnion.Tag)
             {
                 case Tag.None:
-                    return ChowNone.Instance;
+                    return ChowValue.None;
                 case Tag.Integer:
                     return new ChowInteger(taggedUnion.IntegerValue);
                 case Tag.Float:

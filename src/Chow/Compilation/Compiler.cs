@@ -80,6 +80,11 @@ namespace Chow.Interpreter.Compilation
             }
         }
 
+        void CompileSyntaxTreeRoot(SyntaxTreeRoot root)
+        {
+            CompileTargetNode(root.TopLevelBlock);
+        }
+
         void CompileBlockNode(BlockNode blockNode)
         {
             foreach (Node statement in blockNode.Statements)
@@ -88,10 +93,7 @@ namespace Chow.Interpreter.Compilation
             }
         }
 
-        void CompileSyntaxTreeRoot(SyntaxTreeRoot root)
-        {
-            CompileTargetNode(root.TopLevelBlock);
-        }
+        #region Statement Compilation
 
         void CompileVariableAssign(VariableAssignNode varAssignNode)
         {
@@ -122,52 +124,29 @@ namespace Chow.Interpreter.Compilation
             // If a variable with the same name already exists in the chunk, the index of the existing variable will be returned.
             // Otherwise, the new variable will be added to the chunk and its new index will be returned.
             int varNameOperand = _chunk.RegisterVariableName(varAssignNode.Name);
-            _chunk.PushOperation(OperationCode.AssignToVariable, varAssignNode.LineNumber, varNameOperand);
+            _chunk.PushOperation(OperationCode.AssignOrDeclareVariable, varAssignNode.LineNumber, varNameOperand);
         }
 
         void CompileVariableFactor(VariableFactorNode varFactorNode)
         {
             int varNameOperand = _chunk.FindVariableName(varFactorNode.VariableName);
-            _chunk.PushOperation(OperationCode.LoadVariable, varFactorNode.LineNumber, varNameOperand);
+            _chunk.PushOperation(OperationCode.PushVariableValue, varFactorNode.LineNumber, varNameOperand);
         }
 
-        void CompileLiteral(LiteralNode literalNode)
+        void CompileReturn(ReturnNode returnNode)
         {
-
-            TaggedUnion constUnion = TaggedUnion.Empty;
-
-            switch (literalNode.Type)
+            if (returnNode.Expression != null)
             {
-                case LiteralDataType.Integer:
-                    // Cases for LiteralDataType like this should not fail unless the Parser is bugged
-                    if (literalNode.Value is int intVal)
-                    {
-                        constUnion = new TaggedUnion(intVal);
-                    }
-                    break;
-
-                case LiteralDataType.Float:
-                    if (literalNode.Value is float floatVal)
-                    {
-                        constUnion = new TaggedUnion(floatVal);
-                    }
-                    break;
-
-                default:
-                    throw new NotImplementedException($"Compilation of literal type {literalNode.Type} is not implemented.");
+                CompileTargetNode(returnNode.Expression);
             }
 
-            if (constUnion.IsEmpty)
-            {
-                // This case should never occur unless the Parser is bugged. Refer to the inline comment above for more info
-                throw new InvalidOperationException();
-            }
+            _chunk.PushOperation(operationType: OperationCode.ReturnValue, returnNode.LineNumber);
 
-            // If a constant of the same value already exists in the chunk, the operand of the existing constant will be returned.
-            // Otherwise, the new constant will be added to the chunk and its new operand will be returned.
-            int constIndex = _chunk.RegisterConstant(constUnion);
-            _chunk.PushOperation(OperationCode.PushConstant, literalNode.LineNumber, constIndex);
         }
+
+        #endregion
+
+        #region Expression Compilation
 
         void CompileExpression(ExpressionNode expressionNode)
         {
@@ -222,5 +201,45 @@ namespace Chow.Interpreter.Compilation
 
             return opCode;
         }
+
+        void CompileLiteral(LiteralNode literalNode)
+        {
+
+            TaggedUnion constUnion = TaggedUnion.Empty;
+
+            switch (literalNode.Type)
+            {
+                case LiteralDataType.Integer:
+                    // Cases for LiteralDataType like this should not fail unless the Parser is bugged
+                    if (literalNode.Value is int intVal)
+                    {
+                        constUnion = new TaggedUnion(intVal);
+                    }
+                    break;
+
+                case LiteralDataType.Float:
+                    if (literalNode.Value is float floatVal)
+                    {
+                        constUnion = new TaggedUnion(floatVal);
+                    }
+                    break;
+
+                default:
+                    throw new NotImplementedException($"Compilation of literal type {literalNode.Type} is not implemented.");
+            }
+
+            if (constUnion.IsEmpty)
+            {
+                // This case should never occur unless the Parser is bugged. Refer to the inline comment above for more info
+                throw new InvalidOperationException();
+            }
+
+            // If a constant of the same value already exists in the chunk, the operand of the existing constant will be returned.
+            // Otherwise, the new constant will be added to the chunk and its new operand will be returned.
+            int constIndex = _chunk.RegisterConstant(constUnion);
+            _chunk.PushOperation(OperationCode.PushConstant, literalNode.LineNumber, constIndex);
+        }
+
+        #endregion
     }
 }

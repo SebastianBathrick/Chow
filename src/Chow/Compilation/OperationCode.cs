@@ -11,7 +11,8 @@ namespace Chow.Interpreter.Compilation
         FloorDivide,
         Negate,
         PushConstant,
-        AssignToVariable,
-        LoadVariable,
+        AssignOrDeclareVariable,
+        PushVariableValue,
+        ReturnValue
     }
 }

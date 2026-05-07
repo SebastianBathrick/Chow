@@ -143,6 +143,7 @@ namespace Chow.Interpreter.Syntax
 
         Node ParseReturn()
         {
+            int lineNumber = CurrentToken.LineNum;
             Consume(TokenType.Return, "Expected 'return' keyword.");
             Node expression;
 

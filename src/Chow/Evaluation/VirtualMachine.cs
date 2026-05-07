@@ -16,6 +16,7 @@ namespace Chow.Interpreter.Evaluation
         // REVIEW VARIABLE ASSIGNMENT COMPILATION FOR EXTRA DETAILS.
         Dictionary<string, TaggedUnion> _variables = new Dictionary<string, TaggedUnion>();
 
+        Stack<TaggedUnion> _valStack = new Stack<TaggedUnion>();
         int _opsListIndex;
 
         private Instruction CurrentOperation => _chunk[_opsListIndex];
@@ -28,63 +29,64 @@ namespace Chow.Interpreter.Evaluation
 
         public TaggedUnion ExecuteChunk()
         {
-            Stack<TaggedUnion> valStack = new Stack<TaggedUnion>();
-
             while (IsRemainingOperation())
             {
                 switch (CurrentOperation.Code)
                 {
                     case OperationCode.PushConstant:
-                        valStack.Push(_chunk.ReadConstant(CurrentOperation.Operand));
+                        _valStack.Push(_chunk.ReadConstant(CurrentOperation.Operand));
                         break;
 
                     case OperationCode.Add:
-                        ExecuteBinaryOperation(valStack, (l, r) => l + r);
+                        ExecuteBinaryOperation((l, r) => l + r);
                         break;
 
                     case OperationCode.Subtract:
-                        ExecuteBinaryOperation(valStack, (l, r) => l - r);
+                        ExecuteBinaryOperation((l, r) => l - r);
                         break;
 
                     case OperationCode.Multiply:
-                        ExecuteBinaryOperation(valStack, (l, r) => l * r);
+                        ExecuteBinaryOperation((l, r) => l * r);
                         break;
 
                     case OperationCode.Divide:
-                        ExecuteBinaryOperation(valStack, (l, r) => l / r);
+                        ExecuteBinaryOperation((l, r) => l / r);
                         break;
 
                     case OperationCode.Modulus:
-                        ExecuteBinaryOperation(valStack, (l, r) => l % r);
+                        ExecuteBinaryOperation((l, r) => l % r);
                         break;
 
                     case OperationCode.Exponentiate:
-                        ExecuteBinaryOperation(valStack, (l, r) => TaggedUnion.Power(l, r));
+                        ExecuteBinaryOperation((l, r) => TaggedUnion.Power(l, r));
                         break;
 
                     case OperationCode.FloorDivide:
-                        ExecuteBinaryOperation(valStack, (l, r) => TaggedUnion.FloorDivide(l, r));
+                        ExecuteBinaryOperation((l, r) => TaggedUnion.FloorDivide(l, r));
                         break;
 
                     case OperationCode.Negate:
-                        ExecuteNegate(valStack);
+                        ExecuteNegate();
                         break;
 
                     // Statements
 
-
-                    case OperationCode.AssignToVariable:
-                        // Operand -> name via Chunk; dict indexer handles both insert and overwrite.
-                        string assignName = _chunk.ReadVariableName(CurrentOperation.Operand);
-                        _variables[assignName] = valStack.Pop();
+                    case OperationCode.AssignOrDeclareVariable:
+                        AssignOrDeclareVariable();
                         break;
 
-                    case OperationCode.LoadVariable:
-                        // Operand -> name via Chunk. Semantic analysis is responsible for ensuring the
-                        // name exists before this op runs; KeyNotFoundException here is a contract violation.
-                        string loadName = _chunk.ReadVariableName(CurrentOperation.Operand);
-                        valStack.Push(_variables[loadName]);
+                    case OperationCode.PushVariableValue:
+                        PushVariableValue();
                         break;
+
+                    case OperationCode.ReturnValue:
+                        // Temporarily return the value because only top-level code exists currently
+                        if (_valStack.Count == 0)
+                        {
+                            return TaggedUnion.None;
+                        }
+
+                        return _valStack.Pop();
 
                     default:
                         throw new NotImplementedException($"Execution of {CurrentOperation.Code} is not implemented.");
@@ -93,29 +95,43 @@ namespace Chow.Interpreter.Evaluation
                 MoveToNextOperation();
             }
 
-            return valStack.Count == 0 ? TaggedUnion.None : valStack.Pop();
+            return _valStack.Count == 0 ? TaggedUnion.None : _valStack.Pop();
         }
 
-        static void ExecuteBinaryOperation(Stack<TaggedUnion> stack, Func<TaggedUnion, TaggedUnion, TaggedUnion> operation)
+        private void PushVariableValue()
+        {
+            // Operand -> name via Chunk. Semantic analysis is responsible for ensuring the
+            // name exists before this op runs; KeyNotFoundException here is a contract violation.
+            string loadName = _chunk.ReadVariableName(CurrentOperation.Operand);
+            _valStack.Push(_variables[loadName]);
+        }
+
+        private void AssignOrDeclareVariable()
+        {
+            // Operand -> name via Chunk; dict indexer handles both insert and overwrite.
+            string assignName = _chunk.ReadVariableName(CurrentOperation.Operand);
+            _variables[assignName] = _valStack.Pop();
+        }
+
+        void ExecuteBinaryOperation(Func<TaggedUnion, TaggedUnion, TaggedUnion> operation)
         {
             // Floats coerce integers into floats inside TaggedUnion's operator overloads
-            TaggedUnion right = stack.Pop();
-            TaggedUnion left = stack.Pop();
-            stack.Push(operation(left, right));
+            TaggedUnion right = _valStack.Pop();
+            TaggedUnion left = _valStack.Pop();
+            _valStack.Push(operation(left, right));
         }
 
-        static void ExecuteNegate(Stack<TaggedUnion> stack)
+        void ExecuteNegate()
         {
-            TaggedUnion operand = stack.Pop();
+            TaggedUnion operand = _valStack.Pop();
 
             if (operand.IsFloat)
             {
-                stack.Push(new TaggedUnion(-operand.FloatValue));
+                _valStack.Push(new TaggedUnion(-operand.FloatValue));
+                return;
             }
-            else
-            {
-                stack.Push(new TaggedUnion(-operand.IntegerValue));
-            }
+
+            _valStack.Push(new TaggedUnion(-operand.IntegerValue));
         }
 
         void MoveToNextOperation()

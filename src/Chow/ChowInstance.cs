@@ -28,8 +28,8 @@ namespace Chow.Interpreter
             Chunk chunk = _compiler.CompileSyntaxTreeRoot();
 
             _vm = new VirtualMachine(chunk);
-            _vm.ExecuteChunk();
-            return null;
+            TaggedUnion returnValueUnion = _vm.ExecuteChunk();
+            return ChowValueConverter.ToChowValue(returnValueUnion);
         }
 
         // TODO: Remove when no longer needed. This is for debugging developement
