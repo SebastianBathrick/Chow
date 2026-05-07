@@ -8,7 +8,7 @@ namespace Chow.Interpreter.Tokens
     {
         #region Fields & Consts
 
-        const int TAB_SIZE = 8;
+        const int TAB_SIZE = 4;
 
         private static readonly IReadOnlyDictionary<string, TokenType> _keywords = new Dictionary<string, TokenType>
         {

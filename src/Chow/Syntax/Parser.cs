@@ -177,7 +177,7 @@ namespace Chow.Interpreter.Syntax
                 case TokenType.Identifier:
                     Token identifierToken = CurrentToken;
                     MoveToNextToken();
-                    return new VariableFactorNode(identifierToken.Lexeme, identifierToken.LineNum);
+                    return new IdentifierNode(identifierToken.Lexeme, identifierToken.LineNum);
 
                 case TokenType.Integer:
                 case TokenType.Float:

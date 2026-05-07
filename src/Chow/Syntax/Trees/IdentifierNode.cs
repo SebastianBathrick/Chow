@@ -2,13 +2,13 @@ using System;
 
 namespace Chow.Interpreter.Syntax.Trees
 {
-    internal class VariableFactorNode : Node
+    internal class IdentifierNode : Node
     {
         string _identifier;
 
-        public string VariableName => _identifier;
+        public string Name => _identifier;
 
-        public VariableFactorNode(string identifier, int lineNumber)
+        public IdentifierNode(string identifier, int lineNumber)
             : base(lineNumber)
         {
             if (identifier == null)

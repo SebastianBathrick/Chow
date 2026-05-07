@@ -69,7 +69,7 @@ namespace Chow.Interpreter.Compilation
                     CompileVariableAssign(varAssignNode);
                     break;
 
-                case VariableFactorNode varFactorNode:
+                case IdentifierNode varFactorNode:
                     CompileVariableFactor(varFactorNode);
                     break;
 
@@ -131,9 +131,10 @@ namespace Chow.Interpreter.Compilation
             _chunk.PushOperation(OperationCode.AssignOrDeclareVariable, varAssignNode.LineNumber, varNameOperand);
         }
 
-        void CompileVariableFactor(VariableFactorNode varFactorNode)
+        void CompileVariableFactor(IdentifierNode varFactorNode)
         {
-            int varNameOperand = _chunk.FindVariableName(varFactorNode.VariableName);
+            // Register to have its own constant in case the variable with this name is declared in a previous environment
+            int varNameOperand = _chunk.RegisterVariableName(varFactorNode.Name);
             _chunk.PushOperation(OperationCode.PushVariableValue, varFactorNode.LineNumber, varNameOperand);
         }
 
@@ -145,7 +146,6 @@ namespace Chow.Interpreter.Compilation
             }
 
             _chunk.PushOperation(operationType: OperationCode.ReturnValue, returnNode.LineNumber);
-
         }
 
         #endregion
