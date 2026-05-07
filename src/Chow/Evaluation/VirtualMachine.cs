@@ -8,24 +8,21 @@ namespace Chow.Interpreter.Evaluation
     sealed class VirtualMachine
     {
         readonly Chunk _chunk;
-
-        // TEMPORARY: name-keyed dict precedes the planned scope/lifetime class. The Operation.Operand
-        // resolves to a name via Chunk.ReadVariableName; the value is then read/written here by name.
-        // REVIEW VARIABLE ASSIGNMENT COMPILATION FOR EXTRA DETAILS.
-        Dictionary<string, TaggedUnion> _variables = new Dictionary<string, TaggedUnion>();
+        readonly ChowEnvironment _enviro = new ChowEnvironment();
 
         Stack<TaggedUnion> _valStack = new Stack<TaggedUnion>();
         int _opsListIndex;
 
         private Instruction CurrentOperation => _chunk[_opsListIndex];
 
-        public VirtualMachine(Chunk chunk)
+        public VirtualMachine(Chunk chunk, ChowEnvironment enviro)
         {
-            _chunk = chunk ?? throw new ArgumentNullException(nameof(chunk));
+            _chunk = chunk;
+            _enviro = enviro == null ? new ChowEnvironment() : enviro;
             _opsListIndex = 0;
         }
 
-        public TaggedUnion ExecuteChunk()
+        public ChowEnvironment ExecuteChunk()
         {
             while (IsRemainingOperation())
             {
@@ -78,13 +75,15 @@ namespace Chow.Interpreter.Evaluation
                         break;
 
                     case OperationCode.ReturnValue:
-                        // Temporarily return the value because only top-level code exists currently
+                        // Temporarily allow return statements on top-level and print the return value to the console for debugging
                         if (_valStack.Count == 0)
                         {
-                            return TaggedUnion.None;
+                            Console.WriteLine(TaggedUnion.None);
+                            return _enviro;
                         }
 
-                        return _valStack.Pop();
+                        Console.WriteLine(_valStack.Pop());
+                        break;
 
                     default:
                         throw new NotImplementedException($"Execution of {CurrentOperation.Code} is not implemented.");
@@ -93,7 +92,7 @@ namespace Chow.Interpreter.Evaluation
                 MoveToNextOperation();
             }
 
-            return _valStack.Count == 0 ? TaggedUnion.None : _valStack.Pop();
+            return _enviro;
         }
 
         private void PushVariableValue()
@@ -101,14 +100,15 @@ namespace Chow.Interpreter.Evaluation
             // Operand -> name via Chunk. Semantic analysis is responsible for ensuring the
             // name exists before this op runs; KeyNotFoundException here is a contract violation.
             string loadName = _chunk.ReadVariableName(CurrentOperation.Operand);
-            _valStack.Push(_variables[loadName]);
+            _valStack.Push(_enviro.GetVariableValue(loadName));
         }
 
         private void AssignOrDeclareVariable()
         {
             // Operand -> name via Chunk; dict indexer handles both insert and overwrite.
             string assignName = _chunk.ReadVariableName(CurrentOperation.Operand);
-            _variables[assignName] = _valStack.Pop();
+            TaggedUnion assignVal = _valStack.Pop();
+            _enviro.AssignVariableValue(assignName, assignVal);
         }
 
         void ExecuteBinaryOperation(Func<TaggedUnion, TaggedUnion, TaggedUnion> operation)
@@ -140,19 +140,6 @@ namespace Chow.Interpreter.Evaluation
         public bool IsRemainingOperation()
         {
             return _opsListIndex != _chunk.Count;
-        }
-
-        // TODO: Remove when no longer needed. This is for debugging developement
-        public List<(string name, TaggedUnion value)> GetVariableDebugInfo()
-        {
-            var debugInfo = new List<(string name, TaggedUnion value)>();
-
-            foreach (KeyValuePair<string, TaggedUnion> kvp in _variables)
-            {
-                debugInfo.Add((kvp.Key, kvp.Value));
-            }
-
-            return debugInfo;
         }
     }
 }

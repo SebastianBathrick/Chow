@@ -82,6 +82,8 @@ namespace Chow.Interpreter.Compilation
 
         #endregion
 
+        #region ToString Methods
+
         public override string ToString()
         {
             var sb = new StringBuilder();
@@ -172,5 +174,7 @@ namespace Chow.Interpreter.Compilation
                     break;
             }
         }
+
+        #endregion
     }
 }
