@@ -490,7 +490,7 @@ namespace Chow.Interpreter.Tokens
         char PeekNextChar()
         {
             int nextIndex = _scanCharIndex + 1;
-            return nextIndex < _srcCode.Length ? CurrentChar : '\0';
+            return nextIndex < _srcCode.Length ? _srcCode[nextIndex] : '\0';
         }
 
         #endregion
