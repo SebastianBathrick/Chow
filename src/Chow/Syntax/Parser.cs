@@ -77,10 +77,15 @@ namespace Chow.Interpreter.Syntax
 
                 case TokenType.Return:
                     return ParseReturn();
-
-                default:
-                    throw new ParserException("Expected statement.", CurrentToken.LineNum);
             }
+
+            if (IsPrimaryTokenType())
+            {
+                // These standalone expressions and their result will be discarded OR be sent to a special execution hook
+                return ParseExpressionStatement();
+            }
+
+            throw new ParserException("Expected statement.", CurrentToken.LineNum);
         }
 
         Node ParseVariableAssignment()
@@ -110,6 +115,13 @@ namespace Chow.Interpreter.Syntax
             return new ReturnNode(expression, lineNumber);
         }
 
+        Node ParseExpressionStatement()
+        {
+            int lineNum = CurrentToken.LineNum;
+            Node expression = ParseExpression();
+            return new ExprStatementNode(expression, lineNum);
+        }
+
         #endregion
 
         #region Expression Methods
@@ -122,7 +134,7 @@ namespace Chow.Interpreter.Syntax
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 Node right = ParseTerm();
-                left = new ExpressionNode(MapBinary(opToken.Type), left, right, opToken.LineNum);
+                left = new ExprNode(MapBinary(opToken.Type), left, right, opToken.LineNum);
             }
 
             return left;
@@ -136,7 +148,7 @@ namespace Chow.Interpreter.Syntax
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 Node right = ParseFactor();
-                left = new ExpressionNode(MapBinary(opToken.Type), left, right, opToken.LineNum);
+                left = new ExprNode(MapBinary(opToken.Type), left, right, opToken.LineNum);
             }
 
             return left;
@@ -147,7 +159,7 @@ namespace Chow.Interpreter.Syntax
             if (IsTokenTypeMatch(TokenType.Minus))
             {
                 Token opToken = _tokens[_tokenIndex - 1];
-                return new ExpressionNode(ExpressionOperator.Negate, ParseFactor(), opToken.LineNum);
+                return new ExprNode(ExpressionOperator.Negate, ParseFactor(), opToken.LineNum);
             }
 
             return ParseExponent();
@@ -161,7 +173,7 @@ namespace Chow.Interpreter.Syntax
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 Node right = ParseFactor();
-                return new ExpressionNode(ExpressionOperator.Exponentiate, left, right, opToken.LineNum);
+                return new ExprNode(ExpressionOperator.Exponentiate, left, right, opToken.LineNum);
             }
 
             return left;

@@ -2,7 +2,7 @@ using System;
 
 namespace Chow.Interpreter.Syntax.Trees.Expressions
 {
-    internal class ExpressionNode : Node
+    internal class ExprNode : Node
     {
         ExpressionOperator _operator;
         Node _leftOperand;
@@ -12,7 +12,7 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
         public Node Left => _leftOperand;
         public Node Right => _rightOperand;
 
-        public ExpressionNode(ExpressionOperator operatorType, Node leftOperand, Node rightOperand, int lineNumber)
+        public ExprNode(ExpressionOperator operatorType, Node leftOperand, Node rightOperand, int lineNumber)
             : base(lineNumber)
         {
             _operator = operatorType;
@@ -20,7 +20,7 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
             _rightOperand = rightOperand;
         }
 
-        public ExpressionNode(ExpressionOperator operatorType, Node operand, int lineNumber)
+        public ExprNode(ExpressionOperator operatorType, Node operand, int lineNumber)
             : base(lineNumber)
         {
             if (operatorType != ExpressionOperator.Negate)

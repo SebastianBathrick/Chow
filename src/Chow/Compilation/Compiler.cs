@@ -61,7 +61,7 @@ namespace Chow.Interpreter.Compilation
                     CompileLiteral(literalNode);
                     break;
 
-                case ExpressionNode expressionNode:
+                case ExprNode expressionNode:
                     CompileExpression(expressionNode);
                     break;
 
@@ -74,9 +74,12 @@ namespace Chow.Interpreter.Compilation
                     break;
 
                 case ReturnNode returnNode:
-
                     // If it returns early, still parse the remaining code in the chunk for debugging (subject to change)
                     CompileReturn(returnNode);
+                    break;
+
+                case ExprStatementNode exprStmtNode:
+                    CompileExpressionStatement(exprStmtNode);
                     break;
 
                 default:
@@ -148,21 +151,27 @@ namespace Chow.Interpreter.Compilation
             _chunk.PushOperation(operationType: OperationCode.ReturnValue, returnNode.LineNumber);
         }
 
+        void CompileExpressionStatement(ExprStatementNode exprStmtNode)
+        {
+            CompileTargetNode(exprStmtNode.Expression);
+            _chunk.PushOperation(OperationCode.PopExprStmntResult, exprStmtNode.LineNumber);
+        }
+
         #endregion
 
         #region Expression Compilation
 
-        void CompileExpression(ExpressionNode expressionNode)
+        void CompileExpression(ExprNode exprNode)
         {
             // Compile operands first so they are pushed onto the runtime stack before the operation consumes them
-            CompileTargetNode(expressionNode.Left);
-            CompileTargetNode(expressionNode.Right);
+            CompileTargetNode(exprNode.Left);
+            CompileTargetNode(exprNode.Right);
 
-            OperationCode opCode = GetExpressionOperationCode(expressionNode);
-            _chunk.PushOperation(opCode, expressionNode.LineNumber);
+            OperationCode opCode = GetExpressionOperationCode(exprNode);
+            _chunk.PushOperation(opCode, exprNode.LineNumber);
         }
 
-        private static OperationCode GetExpressionOperationCode(ExpressionNode node)
+        private static OperationCode GetExpressionOperationCode(ExprNode node)
         {
             OperationCode opCode;
             switch (node.Operator)

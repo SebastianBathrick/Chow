@@ -9,7 +9,7 @@ while (true)
     try
     {
         var srcCode = string.Join(NEWLINE_CHAR, GetLineList());
-        module.Run(srcCode);
+        module.Execute(srcCode);
     }
     catch (Exception ex)
     {

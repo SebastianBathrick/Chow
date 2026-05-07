@@ -1,4 +1,5 @@
 using Chow.Interpreter.Compilation;
+using Chow.Interpreter.Hooks;
 using Chow.Interpreter.Values;
 using System;
 using System.Collections.Generic;
@@ -8,18 +9,21 @@ namespace Chow.Interpreter.Evaluation
     sealed class VirtualMachine
     {
         readonly Chunk _chunk;
-        readonly ChowEnvironment _enviro = new ChowEnvironment();
+        readonly ChowEnvironment _enviro;
 
-        Stack<TaggedUnion> _valStack = new Stack<TaggedUnion>();
+        Stack<TaggedUnion> _valStack;
+        IExecutionHook _exprStmntHook;
         int _opsListIndex;
 
         private Instruction CurrentOperation => _chunk[_opsListIndex];
 
-        public VirtualMachine(Chunk chunk, ChowEnvironment enviro)
+        public VirtualMachine(Chunk chunk, ChowEnvironment enviro, IExecutionHook exprStmntHook)
         {
             _chunk = chunk;
             _enviro = enviro == null ? new ChowEnvironment() : enviro;
+            _valStack = new Stack<TaggedUnion>();
             _opsListIndex = 0;
+            _exprStmntHook = exprStmntHook;
         }
 
         public ChowEnvironment ExecuteChunk()
@@ -72,6 +76,18 @@ namespace Chow.Interpreter.Evaluation
 
                     case OperationCode.PushVariableValue:
                         PushVariableValue();
+                        break;
+
+                    case OperationCode.PopExprStmntResult:
+                        // Pop the result of an expression statement and ignore it, but trigger the expression statement hook for debugging
+                        if (_exprStmntHook == null)
+                        {
+                            _valStack.Pop();
+                            break;
+                        }
+
+                        TaggedUnion exprResult = _valStack.Pop();
+                        _exprStmntHook.Invoke(ChowValueConverter.ToChowValue(exprResult));
                         break;
 
                     case OperationCode.ReturnValue:

@@ -13,6 +13,7 @@ namespace Chow.Interpreter.Compilation
         PushConstant,
         AssignOrDeclareVariable,
         PushVariableValue,
-        ReturnValue
+        ReturnValue,
+        PopExprStmntResult
     }
 }
