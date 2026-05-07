@@ -11,7 +11,7 @@ while (true)
     try
     {
         var srcCode = string.Join(NEWLINE_CHAR, GetLineList(START_INDICATOR, TRAILING_INDICATOR));
-        module.Run(srcCode);
+        module.Execute(srcCode);
     }
     catch (Exception ex)
     {
