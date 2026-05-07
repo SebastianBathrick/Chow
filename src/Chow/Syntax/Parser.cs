@@ -107,7 +107,7 @@ namespace Chow.Interpreter.Syntax
                 expression = null;
             }
 
-            return new ReturnNode(expression, CurrentToken.LineNum);
+            return new ReturnNode(expression, lineNumber);
         }
 
         #endregion

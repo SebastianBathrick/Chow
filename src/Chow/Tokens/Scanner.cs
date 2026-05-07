@@ -81,7 +81,7 @@ namespace Chow.Interpreter.Tokens
                 return _tokens;
             }
 
-            // Skip to the first line that starts with a character that is not whitespace, a comment, or newline character
+            // Skip to the first line that does not start with whitespace, a comment, or newline character
             SkipToCodeStart();
 
             while (IsCharToScan())
@@ -94,6 +94,7 @@ namespace Chow.Interpreter.Tokens
                 throw new ScannerException("Bracket(s) never closed in source code", _currLineNumber);
             }
 
+            // Add dedent tokens for each block nested within the top-level to mark their end
             AddRemainingDedentTokens();
             AddEndOfCodeToken();
 
