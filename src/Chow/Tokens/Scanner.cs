@@ -6,6 +6,8 @@ namespace Chow.Interpreter.Tokens
 {
     sealed class Scanner
     {
+        #region Fields & Consts
+
         const int TAB_SIZE = 8;
 
         private static readonly IReadOnlyDictionary<string, TokenType> _keywords = new Dictionary<string, TokenType>
@@ -52,6 +54,10 @@ namespace Chow.Interpreter.Tokens
 
         private char CurrentChar => _srcCode[_scanCharIndex];
 
+        #endregion
+
+        #region Constructor & Primary Methods
+        
         public Scanner(string srcCode)
         {
             _srcCode = srcCode;
@@ -64,17 +70,11 @@ namespace Chow.Interpreter.Tokens
             _indentLevels.Push(0);
         }
 
-        #region Primary Methods
-
         public List<Token> ScanTokens()
         {
-            if (_isDirty)
-            {
-                throw new InvalidOperationException("This Scanner instance can only be used once.");
-            }
+            ValidateIsNotDirty();
 
-            _isDirty = true;
-
+            // If source code is null, emit end of code token, so it can be treated as if it were an empty string or whitespace
             if (_srcCode == null)
             {
                 AddEndOfCodeToken();
@@ -94,13 +94,21 @@ namespace Chow.Interpreter.Tokens
                 throw new ScannerException("Bracket(s) never closed in source code", _currLineNumber);
             }
 
-            AddPendingDedentTokens();
+            AddRemainingDedentTokens();
             AddEndOfCodeToken();
 
             return _tokens;
         }
 
+        private void ValidateIsNotDirty()
+        {
+            if (_isDirty)
+            {
+                throw new InvalidOperationException("This Scanner instance can only be used once.");
+            }
 
+            _isDirty = true;
+        }
 
         void RunScanIteration()
         {
@@ -158,17 +166,15 @@ namespace Chow.Interpreter.Tokens
             }
 
             string lexeme = _srcCode.Substring(startIndex, _scanCharIndex - startIndex);
-            
             TokenType tokenType;
 
             if (_keywords.TryGetValue(lexeme, out tokenType))
             {
                 AddNewToken(tokenType, lexeme, _currLineNumber);
+                return;
             }
-            else
-            {
-                AddNewToken(TokenType.Identifier, lexeme, _currLineNumber);
-            }
+    
+            AddNewToken(TokenType.Identifier, lexeme, _currLineNumber);
         }
 
         void ScanNewlineToken()
@@ -176,32 +182,6 @@ namespace Chow.Interpreter.Tokens
             // Use a newline for the lexeme for clean debug information
             AddNewToken(TokenType.Newline, "\n", _currLineNumber);
             MovePastNewline();
-        }
-
-        private void MovePastNewline()
-        {
-            switch (CurrentChar)
-            {
-                case '\n':
-                    // Unix/Linux/macOS newline
-                    MoveToNextChar();
-                    break;
-
-                case '\r':
-                    // Older Mac newline (if not followed by \n)
-                    MoveToNextChar();
-
-                    if (IsCharToScan() && CurrentChar == '\n')
-                    {
-                        // Windows/MS-DOS newline
-                        MoveToNextChar();
-                    }
-
-                    break;
-            }
-
-            _currLineNumber++;
-            _isAtStartOfLine = true;
         }
 
         void ScanLineStartIndentation()
@@ -266,13 +246,15 @@ namespace Chow.Interpreter.Tokens
                 AddNewToken(TokenType.Dedent, string.Empty, _currLineNumber);
             }
 
-            if (_indentLevels.Peek() != indentColumn)
+            if (_indentLevels.Peek() == indentColumn)
             {
-                throw new ScannerException("Inconsistent dedent.", _currLineNumber);
+                return;
             }
+
+            throw new ScannerException("Inconsistent dedent.", _currLineNumber);
         }
 
-        void AddPendingDedentTokens()
+        void AddRemainingDedentTokens()
         {
             while (_indentLevels.Count > 1)
             {
@@ -455,9 +437,14 @@ namespace Chow.Interpreter.Tokens
 
             try
             {
-                literal = isFloat
-                    ? (object)float.Parse(lexeme, CultureInfo.InvariantCulture)
-                    : int.Parse(lexeme, CultureInfo.InvariantCulture);
+                if (isFloat)
+                {
+                    literal = (object)float.Parse(lexeme, CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    literal = int.Parse(lexeme, CultureInfo.InvariantCulture);
+                }
             }
             catch (OverflowException)
             {
@@ -540,6 +527,32 @@ namespace Chow.Interpreter.Tokens
         #endregion
 
         #region Helper Methods
+        
+        private void MovePastNewline()
+        {
+            switch (CurrentChar)
+            {
+                case '\n':
+                    // Unix/Linux/macOS newline
+                    MoveToNextChar();
+                    break;
+
+                case '\r':
+                    // Older Mac newline (if not followed by \n)
+                    MoveToNextChar();
+
+                    if (IsCharToScan() && CurrentChar == '\n')
+                    {
+                        // Windows/MS-DOS newline
+                        MoveToNextChar();
+                    }
+
+                    break;
+            }
+
+            _currLineNumber++;
+            _isAtStartOfLine = true;
+        }
 
         private void SkipToCodeStart()
         {
