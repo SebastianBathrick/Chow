@@ -1,9 +1,7 @@
 using Chow.Interpreter.Compilation;
 using Chow.Interpreter.Values;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Chow.Interpreter.Evaluation
 {

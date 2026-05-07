@@ -1,12 +1,12 @@
-using System;
-using Chow.Interpreter.Tokens;
-using Chow.Interpreter.Syntax;
 using Chow.Interpreter.Compilation;
-using System.Collections.Generic;
-using Chow.Interpreter.Syntax.Trees;
 using Chow.Interpreter.Evaluation;
-using System.Text;
+using Chow.Interpreter.Syntax;
+using Chow.Interpreter.Syntax.Trees;
+using Chow.Interpreter.Tokens;
 using Chow.Interpreter.Values;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Chow.Interpreter
 {

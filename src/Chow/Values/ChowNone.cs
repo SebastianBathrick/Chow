@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Chow.Interpreter.Values
 {
@@ -16,8 +14,8 @@ namespace Chow.Interpreter.Values
         }
 
         // Only one instance of ChowNone should exist
-        private ChowNone() 
-        { 
+        private ChowNone()
+        {
             if (_instance != null)
             {
                 throw new InvalidOperationException("Only one instance of ChowNone should exist.");

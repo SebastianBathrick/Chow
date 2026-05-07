@@ -40,7 +40,7 @@ namespace Chow.Interpreter.Tokens
             { "raise", TokenType.Raise },
             { "assert", TokenType.Assert },
         };
-            
+
         readonly List<Token> _tokens;
         readonly Stack<int> _indentLevels;
         readonly Stack<char> _openBracketStack;
@@ -57,7 +57,7 @@ namespace Chow.Interpreter.Tokens
         #endregion
 
         #region Constructor & Primary Methods
-        
+
         public Scanner(string srcCode)
         {
             _srcCode = srcCode;
@@ -173,7 +173,7 @@ namespace Chow.Interpreter.Tokens
                 AddNewToken(tokenType, lexeme, _currLineNumber);
                 return;
             }
-    
+
             AddNewToken(TokenType.Identifier, lexeme, _currLineNumber);
         }
 
@@ -276,31 +276,31 @@ namespace Chow.Interpreter.Tokens
                 case '(':
                     tokenType = TokenType.LeftParenthesis;
                     break;
-                
+
                 case ')':
                     tokenType = TokenType.RightParenthesis;
                     break;
-                
+
                 case ',':
                     tokenType = TokenType.Comma;
                     break;
-                
+
                 case '.':
                     tokenType = TokenType.Dot;
                     break;
-                
+
                 case ':':
                     tokenType = TokenType.Colon;
                     break;
-                
+
                 case '+':
                     tokenType = TokenType.Plus;
                     break;
-                
+
                 case '-':
                     tokenType = TokenType.Minus;
                     break;
-                
+
                 case '*':
                     if (TryScanCompoundOp('*', TokenType.StarStar, "**"))
                     {
@@ -352,13 +352,13 @@ namespace Chow.Interpreter.Tokens
 
                     tokenType = TokenType.Less;
                     break;
-                
+
                 // Indentation and line-break rules are not enforced (for lists and dictionary declarations)
                 case '[':
                     tokenType = TokenType.LeftBracket;
                     _openBracketStack.Push('[');
                     break;
-                
+
                 case ']':
                     tokenType = TokenType.RightBracket;
 
@@ -367,12 +367,12 @@ namespace Chow.Interpreter.Tokens
                         throw new ScannerException("Unexpected ']'", _currLineNumber);
                     }
                     break;
-                
+
                 case '{':
                     tokenType = TokenType.LeftCurlyBrace;
                     _openBracketStack.Push('{');
                     break;
-                
+
                 case '}':
                     tokenType = TokenType.RightCurlyBrace;
 
@@ -381,7 +381,7 @@ namespace Chow.Interpreter.Tokens
                         throw new ScannerException("Unexpected '}'", _currLineNumber);
                     }
                     break;
-                
+
                 default:
                     return false;
             }
@@ -398,7 +398,7 @@ namespace Chow.Interpreter.Tokens
             {
                 return false;
             }
-            
+
             MoveToNextChar();
             MoveToNextChar();
             AddNewToken(compoundType, compoundStrRep, _currLineNumber);
@@ -527,7 +527,7 @@ namespace Chow.Interpreter.Tokens
         #endregion
 
         #region Helper Methods
-        
+
         private void MovePastNewline()
         {
             switch (CurrentChar)

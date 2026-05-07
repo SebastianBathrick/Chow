@@ -1,5 +1,4 @@
-﻿using Chow.Interpreter.Syntax.Trees;
-using System;
+﻿using System;
 
 namespace Chow.Interpreter.Syntax.Trees.Statements
 {

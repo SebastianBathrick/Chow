@@ -1,5 +1,5 @@
-using Chow.Interpreter.Evaluation;
 using Chow.Interpreter.Compilation;
+using Chow.Interpreter.Evaluation;
 using Chow.Interpreter.Values;
 
 namespace Chow.Tests

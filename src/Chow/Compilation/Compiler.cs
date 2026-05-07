@@ -3,8 +3,6 @@ using Chow.Interpreter.Syntax.Trees.Expressions;
 using Chow.Interpreter.Syntax.Trees.Statements;
 using Chow.Interpreter.Values;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Chow.Interpreter.Compilation
 {
@@ -163,7 +161,7 @@ namespace Chow.Interpreter.Compilation
             OperationCode opCode = GetExpressionOperationCode(expressionNode);
             _chunk.PushOperation(opCode, expressionNode.LineNumber);
         }
-        
+
         private static OperationCode GetExpressionOperationCode(ExpressionNode node)
         {
             OperationCode opCode;
