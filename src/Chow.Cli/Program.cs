@@ -1,5 +1,213 @@
 using Chow.Interpreter;
 
+const string LINE_INDICATOR = ">>> ";
+const string LINE_SEPERATOR = "\n";
+
+bool isRunning = true;
+string? input = null;
+
+do
+{
+    input = ReadEditableBlock(input);
+
+    // If input is null, that means the user pressed Escape to exit the REPL.
+    // Escape returns null regardless of whether they entered any text or not.
+    // However, an empty or whitespace-string is considered valid to test the interpreter's handling of such input.
+    if (input == null)
+    {
+        isRunning = false;
+        continue;
+    }
+
+    try
+    {
+        ChowInstance instance = new ChowInstance();
+        instance.Run(input);
+        Console.WriteLine(instance.GetVariableDebugInfo());
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(ex);
+    }
+}
+while (isRunning);
+
+return 0;
+    
+static string? ReadEditableBlock(string sourceCode)
+{
+    List<string> lines;
+
+    if (sourceCode != null)
+    {
+        lines = sourceCode.Split(LINE_SEPERATOR).ToList();
+    }
+    else
+    {
+        lines = new() { string.Empty };
+    }
+
+
+    int cursorX = 0;
+    int cursorY = 0;
+    int startTop = Console.CursorTop;
+
+    while (true)
+    {
+        Draw(lines, cursorX, cursorY, startTop);
+
+        ConsoleKeyInfo key = Console.ReadKey(true);
+
+        switch (key.Key)
+        {
+            case ConsoleKey.Enter:
+                if (!key.Modifiers.HasFlag(ConsoleModifiers.Shift))
+                {
+                    Console.SetCursorPosition(0, startTop + lines.Count);
+                    Console.WriteLine();
+
+                    return string.Join(LINE_SEPERATOR, lines);
+                }
+
+                NewLine(lines, ref cursorX, ref cursorY);
+                break;
+
+            case ConsoleKey.Escape:
+                Console.SetCursorPosition(0, startTop + lines.Count);
+                Console.WriteLine();
+                return null;
+
+            case ConsoleKey.LeftArrow:
+                MoveLeft(lines, ref cursorX, ref cursorY);
+                break;
+
+            case ConsoleKey.RightArrow:
+                MoveRight(lines, ref cursorX, ref cursorY);
+                break;
+
+            case ConsoleKey.UpArrow:
+                MoveUp(lines, ref cursorX, ref cursorY);
+                break;
+
+            case ConsoleKey.DownArrow:
+                MoveDown(lines, ref cursorX, ref cursorY);
+                break;
+
+            case ConsoleKey.Backspace:
+                Backspace(lines, ref cursorX, ref cursorY);
+                break;
+
+            default:
+                if (!char.IsControl(key.KeyChar))
+                {
+                    InsertChar(lines, key.KeyChar, ref cursorX, ref cursorY);
+                }
+                break;
+        }
+    }
+}
+
+static void Draw(List<string> lines, int cursorX, int cursorY, int startTop)
+{
+    for (int i = 0; i < lines.Count; i++)
+    {
+        Console.SetCursorPosition(0, startTop + i);
+
+        string text = LINE_INDICATOR + lines[i];
+        Console.Write(text);
+
+        int remaining = Console.WindowWidth - text.Length;
+
+        if (remaining > 0)
+        {
+            Console.Write(new string(' ', remaining));
+        }
+    }
+
+    Console.SetCursorPosition(LINE_INDICATOR.Length + cursorX, startTop + cursorY);
+}
+
+static void InsertChar(List<string> lines, char c, ref int cursorX, ref int cursorY)
+{
+    lines[cursorY] = lines[cursorY].Insert(cursorX, c.ToString());
+    cursorX++;
+}
+
+static void NewLine(List<string> lines, ref int cursorX, ref int cursorY)
+{
+    string current = lines[cursorY];
+
+    string before = current.Substring(0, cursorX);
+    string after = current.Substring(cursorX);
+
+    lines[cursorY] = before;
+    lines.Insert(cursorY + 1, after);
+
+    cursorY++;
+    cursorX = 0;
+}
+
+static void Backspace(List<string> lines, ref int cursorX, ref int cursorY)
+{
+    if (cursorX > 0)
+    {
+        lines[cursorY] = lines[cursorY].Remove(cursorX - 1, 1);
+        cursorX--;
+    }
+    else if (cursorY > 0)
+    {
+        cursorX = lines[cursorY - 1].Length;
+        lines[cursorY - 1] += lines[cursorY];
+        lines.RemoveAt(cursorY);
+        cursorY--;
+    }
+}
+
+static void MoveLeft(List<string> lines, ref int cursorX, ref int cursorY)
+{
+    if (cursorX > 0)
+    {
+        cursorX--;
+    }
+    else if (cursorY > 0)
+    {
+        cursorY--;
+        cursorX = lines[cursorY].Length;
+    }
+}
+
+static void MoveRight(List<string> lines, ref int cursorX, ref int cursorY)
+{
+    if (cursorX < lines[cursorY].Length)
+    {
+        cursorX++;
+    }
+    else if (cursorY < lines.Count - 1)
+    {
+        cursorY++;
+        cursorX = 0;
+    }
+}
+
+static void MoveUp(List<string> lines, ref int cursorX, ref int cursorY)
+{
+    if (cursorY > 0)
+    {
+        cursorY--;
+        cursorX = Math.Min(cursorX, lines[cursorY].Length);
+    }
+}
+
+static void MoveDown(List<string> lines, ref int cursorX, ref int cursorY)
+{
+    if (cursorY < lines.Count - 1)
+    {
+        cursorY++;
+        cursorX = Math.Min(cursorX, lines[cursorY].Length);
+    }
+}
+
+/*
 // We will loop just for testing purposes in Visual Studio so we dont need to restart the program every time we want to test a new file or source code input. In production, this would likely be a one-time execution of a file or source code input and then the program would exit.
 while (true)
 {
@@ -120,3 +328,4 @@ static string DecodeEscapes(string input)
 
 // NOTE: This file is temporary test/development code.
 // Chow.Cli will not have direct access to internal Chow library functionality.
+*/

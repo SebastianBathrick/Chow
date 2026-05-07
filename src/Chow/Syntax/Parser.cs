@@ -43,12 +43,17 @@ namespace Chow.Interpreter.Syntax
             return new SyntaxTreeRoot(block, block.LineNumber);
         }
 
+        // TODO: Split top-level parsing and nested block parsing
         Node ParseBlock(bool isTopLevel = false)
         {
             int lineNumber;
 
             if (!isTopLevel)
             {
+                // Function definitions and conditional statements (before their bodies) will include a colon
+                Consume(TokenType.Colon, "Expected colon before block.");
+
+                // This case does not account for the indent level (there currently is only top-level code)
                 lineNumber = Consume(TokenType.Indent, "Expected indent.").LineNum;
             }
             else
@@ -57,16 +62,40 @@ namespace Chow.Interpreter.Syntax
             }
 
             List<Node> statements = new List<Node>();
+            
+            // At least one statement is expected to be a valid block
+            bool isStatementNext = true;
 
-            while (!Check(TokenType.Dedent) && !Check(TokenType.EndOfCode))
+            // Each iteration will start at the beginning of a line
+            while (isStatementNext)
             {
+                // Skip any blank lines between statements or at the end of blocks.
+                if (Check(TokenType.Newline))
+                {
+                    MoveToNextToken();
+                    continue;
+                }
+                // A dedent signifies a statement outside this block, meaning this block has ended (if not top-level).
+                else if (Check(TokenType.Dedent) && !isTopLevel)
+                {
+                    // Don't consume as the dedent will be consumed after this loop
+                    isStatementNext = false;
+                    continue;
+                }
+
                 statements.Add(ParseStatement());
 
+                // Statements must be seperated by newlines, so if not at the end of the code expect a newline.
                 if (Check(TokenType.Newline))
                 {
                     MoveToNextToken();
                 }
-                else if (!Check(TokenType.Dedent) && !Check(TokenType.EndOfCode))
+                else if (Check(TokenType.EndOfCode))
+                {
+                    isStatementNext = false;
+                    continue;
+                }
+                else
                 {
                     throw new ParserException("Expected newline after statement.", CurrentToken.LineNum);
                 }
@@ -95,6 +124,10 @@ namespace Chow.Interpreter.Syntax
             {
                 case TokenType.Identifier:
                     return ParseVariableAssignment();
+
+                case TokenType.Return:
+                    return ParseReturn();
+
                 default:
                     throw new ParserException("Expected statement.", CurrentToken.LineNum);
             }
@@ -105,8 +138,25 @@ namespace Chow.Interpreter.Syntax
             Token identifierToken = Consume(TokenType.Identifier, "Expected variable name.");
             Consume(TokenType.Equal, "Expected '=' after variable name.");
             Node expression = ParseExpression();
-
             return new VariableAssignNode(identifierToken.Lexeme, expression, identifierToken.LineNum);
+        }
+
+        Node ParseReturn()
+        {
+            Consume(TokenType.Return, "Expected 'return' keyword.");
+            Node expression;
+
+            if (IsPrimaryTokenType())
+            {
+                expression = ParseExpression();
+            }
+            else
+            {
+                // Void functions always return None, and their calls inside expressions will not cause an error
+                expression = null;
+            }
+
+            return new ReturnNode(expression, CurrentToken.LineNum);
         }
 
         #endregion
@@ -168,6 +218,9 @@ namespace Chow.Interpreter.Syntax
 
         Node ParsePrimary()
         {
+            // Note: After adding a new primary token type, remember to update IsPrimaryTokenType() as well. Not doing
+            //       so will cause IsPrimaryTokenType() to return false for the new TokenType, which will break certain
+            //       statements that behaviors rely on knowing whether an expression is present or not (e.g. return statements).
             switch (CurrentToken.Type)
             {
                 case TokenType.Identifier:
@@ -181,10 +234,14 @@ namespace Chow.Interpreter.Syntax
                     MoveToNextToken();
                     return new LiteralNode(numericToken.Literal, numericToken.LineNum);
 
+                case TokenType.None:
+                    Consume(TokenType.None);
+                    return new LiteralNode(null, CurrentToken.LineNum);
+
                 case TokenType.LeftParenthesis:
                     MoveToNextToken();
                     Node inner = ParseExpression();
-                    Consume(TokenType.RightParenthesis, "Expected ')' after expression.");
+                    Consume(TokenType.RightParenthesis);
                     return inner;
 
                 default:
@@ -212,7 +269,9 @@ namespace Chow.Interpreter.Syntax
         bool CheckNext(TokenType type)
         {
             int nextIndex = _tokenIndex + 1;
-            return nextIndex < _tokens.Count && _tokens[nextIndex].Type == type;
+
+            // This method will never be called when the current token is EndOfCode, so we don't need to check for out-of-range.
+            return _tokens[nextIndex].Type == type;
         }
 
         bool IsTokenTypeMatch(params TokenType[] types)
@@ -231,7 +290,7 @@ namespace Chow.Interpreter.Syntax
             return false;
         }
 
-        Token Consume(TokenType type, string message)
+        Token Consume(TokenType type, string message = "")
         {
             if (!Check(type))
             {
@@ -246,6 +305,15 @@ namespace Chow.Interpreter.Syntax
         #endregion
 
         #region Helper Methods
+        bool IsPrimaryTokenType()
+        {
+            TokenType type = CurrentToken.Type;
+            return type == TokenType.Identifier ||
+                   type == TokenType.Integer ||
+                   type == TokenType.Float ||
+                   type == TokenType.None ||
+                   type == TokenType.LeftParenthesis;
+        }
 
         static ExpressionOperator MapBinary(TokenType type)
         {

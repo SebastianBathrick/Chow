@@ -2,15 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow.Interpreter
+namespace Chow.Interpreter.Values
 {
     public abstract class ChowValue
     {
-        public abstract int IntegerValue { get; set; }
-        public abstract float FloatValue { get; set; }
+        public ChowValue None => ChowNone.Instance;
 
-        public abstract bool IsIntegerValue { get; set; }
-        public abstract float IsFloatValue { get; set; }
+        public bool IsNone => this == ChowNone.Instance;
+
+        public abstract int IntegerValue { get; }
+        public abstract float FloatValue { get; }
+        public abstract bool IsIntegerValue { get; }
+        public abstract bool IsFloatValue { get; }
+
     }
 }
 
