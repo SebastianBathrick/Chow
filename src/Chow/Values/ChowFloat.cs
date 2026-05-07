@@ -14,5 +14,7 @@ namespace Chow.Interpreter.Values
         {
             _floatValue = floatValue;
         }
+
+        public override string ToString() => _floatValue.ToString();
     }
 }

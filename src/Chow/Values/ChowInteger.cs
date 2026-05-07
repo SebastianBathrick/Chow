@@ -18,5 +18,7 @@ namespace Chow.Interpreter.Values
         {
             _integerValue = integerValue;
         }
+
+        public override string ToString() => _integerValue.ToString();
     }
 }

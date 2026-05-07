@@ -6,6 +6,8 @@ namespace Chow.Interpreter.Values
 {
     public class ChowNone : ChowValue
     {
+        private const string NONE_STRING = "None";
+
         private static ChowValue _instance = new ChowNone();
 
         internal static ChowValue Instance
@@ -24,6 +26,7 @@ namespace Chow.Interpreter.Values
 
         // Throw ChowConversionException
         public override int IntegerValue { get => throw new InvalidCastException(GetType(), typeof(int), this); }
+
         public override float FloatValue { get => throw new InvalidCastException(GetType(), typeof(float), this); }
 
         public override bool IsIntegerValue
@@ -35,5 +38,7 @@ namespace Chow.Interpreter.Values
         {
             get { return false; }
         }
+
+        public override string ToString() => NONE_STRING;
     }
 }
