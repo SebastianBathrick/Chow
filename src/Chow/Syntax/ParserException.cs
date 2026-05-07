@@ -6,8 +6,7 @@ namespace Chow.Interpreter.Syntax
     {
         public int LineNumber { get; }
 
-        public ParserException(string message, int lineNumber)
-            : base($"[line {lineNumber}] Error: {message}")
+        public ParserException(string message, int lineNumber)  : base($"[line {lineNumber}] Error: {message}")
         {
             LineNumber = lineNumber;
         }
