@@ -3,22 +3,22 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow.Interpreter.Jit
+namespace Chow.Interpreter.Compilation
 {
     class Chunk
     {
-        List<Operation> _operations = new List<Operation>();
+        List<Instruction> _operations = new List<Instruction>();
         List<TaggedUnion> _consts = new List<TaggedUnion>();
         List<string> _variableNames = new List<string>();
         List<int> _operationLineNums = new List<int>();
 
         public int Count => _operations.Count;
 
-        public Operation this[int index] => _operations[index];
+        public Instruction this[int index] => _operations[index];
 
         public void PushOperation(OperationCode operationType, int lineNumber, int operand = -1)
         {
-            _operations.Add(new Operation(operationType, operand));
+            _operations.Add(new Instruction(operationType, operand));
             _operationLineNums.Add(lineNumber);
         }
 
@@ -27,7 +27,7 @@ namespace Chow.Interpreter.Jit
         public TaggedUnion ReadConstant(int operand) => _consts[operand];
 
         /// <summary>
-        /// Stores a constant value and returns an integer for use as an operand assigned to <see cref="Operation"/> instance(s).
+        /// Stores a constant value and returns an integer for use as an operand assigned to <see cref="Instruction"/> instance(s).
         /// </summary>
         /// <param name="newConst">TaggedUnion containing a constant primitive value.</param>
         /// <returns>Integer representing the operand used to read the constant at runtime.</returns>
@@ -59,7 +59,7 @@ namespace Chow.Interpreter.Jit
         public int FindVariableName(string varName) => _variableNames.IndexOf(varName);
 
         /// <summary>
-        /// Used to register a variable name compile-time and return an operand for use in <see cref="Operation"/> instance(s)
+        /// Used to register a variable name compile-time and return an operand for use in <see cref="Instruction"/> instance(s)
         /// that declare or reference that variable.
         /// </summary>
         /// <param name="varName">Variable name to register.</param>
@@ -110,7 +110,7 @@ namespace Chow.Interpreter.Jit
             sb.AppendLine("Operations:");
             for (int i = 0; i < _operations.Count; i++)
             {
-                Operation op = _operations[i];
+                Instruction op = _operations[i];
 
                 sb.Append("  ");
                 sb.Append(i);
@@ -159,7 +159,7 @@ namespace Chow.Interpreter.Jit
             }
         }
 
-        void AppendOperandTarget(StringBuilder sb, Operation op)
+        void AppendOperandTarget(StringBuilder sb, Instruction op)
         {
             switch (op.Code)
             {

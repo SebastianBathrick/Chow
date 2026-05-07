@@ -1,7 +1,7 @@
 using System;
 using Chow.Interpreter.Tokens;
 using Chow.Interpreter.Syntax;
-using Chow.Interpreter.Jit;
+using Chow.Interpreter.Compilation;
 using System.Collections.Generic;
 using Chow.Interpreter.Syntax.Trees;
 using Chow.Interpreter.Evaluation;

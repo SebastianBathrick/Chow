@@ -1,4 +1,4 @@
-using Chow.Interpreter.Jit;
+using Chow.Interpreter.Compilation;
 using Chow.Interpreter.Values;
 using System;
 using System.Collections;
@@ -18,7 +18,7 @@ namespace Chow.Interpreter.Evaluation
 
         int _opsListIndex;
 
-        private Operation CurrentOperation => _chunk[_opsListIndex];
+        private Instruction CurrentOperation => _chunk[_opsListIndex];
 
         public VirtualMachine(Chunk chunk)
         {

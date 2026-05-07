@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Chow.Interpreter.Jit
+namespace Chow.Interpreter.Compilation
 {
-    readonly struct Operation
+    readonly struct Instruction
     {
         public OperationCode Code { get; }
         public int Operand { get; }
 
-        public Operation(OperationCode type, int operand = -1)
+        public Instruction(OperationCode type, int operand = -1)
         {
             Code = type;
             Operand = operand;
