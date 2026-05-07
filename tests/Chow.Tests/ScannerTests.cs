@@ -35,9 +35,10 @@ namespace Chow.Tests
         // ============================================================================================================
 
         [Test]
-        public void Constructor_EmptySource_ThrowsArgumentNullException()
+        public void ScanTokens_EmptySource_ReturnsEndOfCode()
         {
-            Assert.That(() => new Scanner(""), Throws.TypeOf<ArgumentNullException>());
+            var tokens = new Scanner("").ScanTokens();
+            Assert.That(tokens.Select(t => t.Type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
 
         // ============================================================================================================
@@ -311,7 +312,7 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("\n+");
 
-            AssertToken(tokens[1], TokenType.Plus, "+", 2, null);
+            AssertToken(tokens[0], TokenType.Plus, "+", 2, null);
         }
 
         // ============================================================================================================
@@ -681,40 +682,48 @@ namespace Chow.Tests
         // ============================================================================================================
 
         [Test]
-        public void ScanTokens_LeadingSpacesOnFirstLine_TokenizedForParserToValidate()
+        public void ScanTokens_LeadingSpacesOnFirstLine_ThrowsScannerException()
         {
-            var tokenTypes = TokenTypes("    42\n");
+            Assert.That(() => TokenTypes("    42\n"), Throws.TypeOf<ScannerException>());
+        }
+
+        [Test]
+        public void ScanTokens_LeadingTabOnFirstLine_ThrowsScannerException()
+        {
+            Assert.That(() => TokenTypes("\t42\n"), Throws.TypeOf<ScannerException>());
+        }
+
+        [Test]
+        public void ScanTokens_IndentedBlankLineBeforeCode_DoesNotThrow()
+        {
+            var tokenTypes = TokenTypes("    \n42\n");
 
             Assert.That(tokenTypes, Is.EqualTo(new[]
             {
-                TokenType.Indent,
                 TokenType.Integer,
                 TokenType.Newline,
-                TokenType.Dedent,
                 TokenType.EndOfCode
             }));
         }
 
         [Test]
-        public void ScanTokens_LeadingTabOnFirstLine_TokenizedForParserToValidate()
+        public void ScanTokens_LeadingNewlinesBeforeCode_NotEmittedAsTokens()
         {
-            var tokenTypes = TokenTypes("\t42\n");
+            var tokenTypes = TokenTypes("\n\n42\n");
 
             Assert.That(tokenTypes, Is.EqualTo(new[]
             {
-                TokenType.Indent,
                 TokenType.Integer,
                 TokenType.Newline,
-                TokenType.Dedent,
                 TokenType.EndOfCode
             }));
         }
 
         [Test]
-        public void ScanTokens_NewlinesOnlySource_ReturnsEmptyList()
+        public void ScanTokens_NewlinesOnlySource_ReturnsEndOfCode()
         {
             var tokens = new Scanner("\n\n\n").ScanTokens();
-            Assert.That(tokens, Is.Empty);
+            Assert.That(tokens.Select(t => t.Type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
 
         // ============================================================================================================
@@ -722,15 +731,10 @@ namespace Chow.Tests
         // ============================================================================================================
 
         [Test]
-        public void Constructor_NullSource_ThrowsArgumentNullException()
+        public void ScanTokens_NullSource_ReturnsEndOfCode()
         {
-            Assert.That(() => new Scanner(null!), Throws.TypeOf<ArgumentNullException>());
-        }
-
-        [Test]
-        public void Constructor_EmptyString_ThrowsArgumentNullException()
-        {
-            Assert.That(() => new Scanner(""), Throws.TypeOf<ArgumentNullException>());
+            var tokens = new Scanner(null!).ScanTokens();
+            Assert.That(tokens.Select(t => t.Type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
 
         // ============================================================================================================
@@ -751,11 +755,11 @@ namespace Chow.Tests
         }
 
         [Test]
-        public void ScanTokens_CommentOnlySource_ReturnsEmptyList()
+        public void ScanTokens_CommentOnlySource_ReturnsEndOfCode()
         {
             var tokens = new Scanner("# only a comment").ScanTokens();
 
-            Assert.That(tokens, Is.Empty);
+            Assert.That(tokens.Select(t => t.Type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
 
         [Test]
