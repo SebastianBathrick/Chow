@@ -12,19 +12,8 @@ namespace Chow.Interpreter.Syntax.Trees
 
         public IReadOnlyList<Node> Statements => _statements;
 
-        public BlockNode(List<Node> statements, int lineNumber)
-            : base(lineNumber)
+        public BlockNode(List<Node> statements, int lineNumber) : base(lineNumber)
         {
-            if (statements == null)
-            {
-                throw new ArgumentNullException(nameof(statements));
-            }
-
-            if (statements.Count == 0)
-            {
-                throw new ArgumentException("A block must contain at least one statement.", nameof(statements));
-            }
-
             _statements = statements;
         }
 

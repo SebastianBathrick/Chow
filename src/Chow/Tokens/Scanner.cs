@@ -50,17 +50,11 @@ namespace Chow.Interpreter.Tokens
 
         bool _isAtStartOfLine;
         bool _isDirty;
-        bool _hasContentToken;
 
         private char CurrentChar => _srcCode[_scanCharIndex];
 
         public Scanner(string srcCode)
         {
-            if (string.IsNullOrEmpty(srcCode))
-            {
-                throw new ArgumentNullException(nameof(srcCode));
-            }
-
             _srcCode = srcCode;
             _tokens = new List<Token>();
             _scanCharIndex = 0;
@@ -82,6 +76,15 @@ namespace Chow.Interpreter.Tokens
 
             _isDirty = true;
 
+            if (_srcCode == null)
+            {
+                AddEndOfCodeToken();
+                return _tokens;
+            }
+
+            // Skip to the first line that starts with a character that is not whitespace, a comment, or newline character
+            SkipToCodeStart();
+
             while (IsCharToScan())
             {
                 RunScanIteration();
@@ -92,15 +95,15 @@ namespace Chow.Interpreter.Tokens
                 throw new ScannerException("Bracket(s) never closed in source code", _currLineNumber);
             }
 
-            if (!_hasContentToken)
-            {
-                return new List<Token>();
-            }
-
             AddPendingDedentTokens();
-            AddNewToken(TokenType.EndOfCode, string.Empty, _currLineNumber);
-            
+            AddEndOfCodeToken();
+
             return _tokens;
+        }
+
+        private void AddEndOfCodeToken()
+        {
+            AddNewToken(TokenType.EndOfCode, string.Empty, _currLineNumber);
         }
 
         void RunScanIteration()
@@ -144,6 +147,33 @@ namespace Chow.Interpreter.Tokens
             }
         }
 
+        private void SkipToCodeStart()
+        {
+            while (IsCharToScan())
+            {
+                if (IsIndentChar(CurrentChar))
+                {
+                    MoveToNextChar();
+                }
+                else if (IsNewlineChar(CurrentChar))
+                {
+                    MovePastNewline();
+                }
+                else if (IsCommentPrefix(CurrentChar))
+                {
+                    SkipRemainingLineChars();
+                }
+                else if (!_isAtStartOfLine)
+                {
+                    throw new ScannerException($"Unexpected indentation.", _currLineNumber);
+                }
+                else
+                {
+                    return;
+                }
+            }
+        }
+
         private void SkipRemainingLineChars()
         {
             while (IsCharToScan() && !IsNewlineChar(CurrentChar))
@@ -181,6 +211,13 @@ namespace Chow.Interpreter.Tokens
 
         void ScanNewlineToken()
         {
+            // Use a newline for the lexeme for clean debug information
+            AddNewToken(TokenType.Newline, "\n", _currLineNumber);
+            MovePastNewline();
+        }
+
+        private void MovePastNewline()
+        {
             switch (CurrentChar)
             {
                 case '\n':
@@ -198,12 +235,9 @@ namespace Chow.Interpreter.Tokens
                         MoveToNextChar();
                     }
 
-                    break;        
+                    break;
             }
 
-            // Use a newline for the lexeme for clean debug information
-            AddNewToken(TokenType.Newline, "\n", _currLineNumber);
-            
             _currLineNumber++;
             _isAtStartOfLine = true;
         }
@@ -461,6 +495,7 @@ namespace Chow.Interpreter.Tokens
         void MoveToNextChar()
         {
             _scanCharIndex++;
+            _isAtStartOfLine = false;
         }
 
         char PeekNextChar()
@@ -524,10 +559,6 @@ namespace Chow.Interpreter.Tokens
 
         void AddNewToken(TokenType type, string lexeme, int lineNum, object literal = null)
         {
-            if (type != TokenType.Newline)
-            {
-                _hasContentToken = true;
-            }
             _tokens.Add(new Token(type, lexeme, lineNum, literal));
         }
 

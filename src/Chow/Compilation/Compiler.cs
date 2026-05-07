@@ -88,7 +88,7 @@ namespace Chow.Interpreter.Compilation
 
         void CompileSyntaxTreeRoot(SyntaxTreeRoot root)
         {
-            CompileTargetNode(root.TopLevelBlock);
+            CompileTargetNode(root.ModuleNode);
         }
 
         void CompileBlockNode(BlockNode blockNode)

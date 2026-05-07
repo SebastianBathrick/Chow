@@ -38,75 +38,30 @@ namespace Chow.Interpreter.Syntax
                 return new EmptyNode();
             }
 
-            Node block = ParseBlock(isTopLevel: true);
+            Node module = ParseModule();
             Consume(TokenType.EndOfCode, "Expected end of code.");
-            return new SyntaxTreeRoot(block, block.LineNumber);
+            return new SyntaxTreeRoot(module, module.LineNumber);
         }
 
-        // TODO: Split top-level parsing and nested block parsing
-        Node ParseBlock(bool isTopLevel = false)
+        Node ParseModule()
         {
-            int lineNumber;
-
-            if (!isTopLevel)
-            {
-                // Function definitions and conditional statements (before their bodies) will include a colon
-                Consume(TokenType.Colon, "Expected colon before block.");
-
-                // This case does not account for the indent level (there currently is only top-level code)
-                lineNumber = Consume(TokenType.Indent, "Expected indent.").LineNum;
-            }
-            else
-            {
-                lineNumber = CurrentToken.LineNum;
-            }
-
             List<Node> statements = new List<Node>();
-            
-            // At least one statement is expected to be a valid block
-            bool isStatementNext = true;
 
-            // Each iteration will start at the beginning of a line
-            while (isStatementNext)
+            // Even when modules contain no statements, they are still valid, seeing as their top-level code
+            while (!Check(TokenType.EndOfCode))
             {
-                // Skip any blank lines between statements or at the end of blocks.
+                // The only valid lines start with a newline or the start of a statement
                 if (Check(TokenType.Newline))
                 {
                     MoveToNextToken();
                     continue;
                 }
-                // A dedent signifies a statement outside this block, meaning this block has ended (if not top-level).
-                else if (Check(TokenType.Dedent) && !isTopLevel)
-                {
-                    // Don't consume as the dedent will be consumed after this loop
-                    isStatementNext = false;
-                    continue;
-                }
 
+                // This will throw an exception if the current token is not the start of a statement
                 statements.Add(ParseStatement());
-
-                // Statements must be seperated by newlines, so if not at the end of the code expect a newline.
-                if (Check(TokenType.Newline))
-                {
-                    MoveToNextToken();
-                }
-                else if (Check(TokenType.EndOfCode))
-                {
-                    isStatementNext = false;
-                    continue;
-                }
-                else
-                {
-                    throw new ParserException("Expected newline after statement.", CurrentToken.LineNum);
-                }
             }
 
-            if (!isTopLevel)
-            {
-                Consume(TokenType.Dedent, "Expected dedent.");
-            }
-
-            return new BlockNode(statements, lineNumber);
+            return new ModuleNode(statements);
         }
 
         #endregion
@@ -115,11 +70,6 @@ namespace Chow.Interpreter.Syntax
 
         Node ParseStatement()
         {
-            if (Check(TokenType.Identifier) && CheckNext(TokenType.Equal))
-            {
-                return ParseVariableAssignment();
-            }
-
             switch (CurrentToken.Type)
             {
                 case TokenType.Identifier:

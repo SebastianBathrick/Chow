@@ -6,24 +6,24 @@ namespace Chow.Interpreter.Syntax.Trees
 {
     internal class SyntaxTreeRoot : Node
     {
-        Node _topLvlBlock;
+        Node _moduleNode;
 
-        public Node TopLevelBlock => _topLvlBlock;
+        public Node ModuleNode => _moduleNode;
 
-        public SyntaxTreeRoot(Node topLvlBlock, int lineNumber)
+        public SyntaxTreeRoot(Node moduleNode, int lineNumber)
             : base(lineNumber)
         {
-            if (topLvlBlock == null)
+            if (moduleNode == null)
             {
-                throw new ArgumentNullException(nameof(topLvlBlock));
+                throw new ArgumentNullException(nameof(moduleNode));
             }
 
-            _topLvlBlock = topLvlBlock;
+            _moduleNode = moduleNode;
         }
 
         public override string ToString()
         {
-            return $"SyntaxTreeRoot line={LineNumber}\n{_topLvlBlock}";
+            return $"SyntaxTreeRoot line={LineNumber}\n{_moduleNode}";
         }
     }
 }
