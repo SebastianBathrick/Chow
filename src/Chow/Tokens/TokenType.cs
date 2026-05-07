@@ -56,11 +56,23 @@ namespace Chow.Interpreter
         /// <summary>Assignment operator: <c>=</c>.</summary>
         Equal,
 
+        /// <summary>Equality comparison operator: <c>==</c>.</summary>
+        EqualEqual,
+
+        /// <summary>Inequality comparison operator: <c>!=</c>.</summary>
+        BangEqual,
+
         /// <summary>Greater-than comparison operator: <c>&gt;</c>.</summary>
         Greater,
 
+        /// <summary>Greater-than-or-equal comparison operator: <c>&gt;=</c>.</summary>
+        GreaterEqual,
+
         /// <summary>Less-than comparison operator: <c>&lt;</c>.</summary>
         Less,
+
+        /// <summary>Less-than-or-equal comparison operator: <c>&lt;=</c>.</summary>
+        LessEqual,
 
         /// <summary>User-defined name or non-keyword identifier.</summary>
         Identifier,

@@ -44,7 +44,6 @@ namespace Chow.Interpreter.Tokens
         readonly Stack<char> _openBracketStack;
 
         readonly string _srcCode;
-
         int _scanCharIndex;
         int _currLineNumber;
 
@@ -101,10 +100,7 @@ namespace Chow.Interpreter.Tokens
             return _tokens;
         }
 
-        private void AddEndOfCodeToken()
-        {
-            AddNewToken(TokenType.EndOfCode, string.Empty, _currLineNumber);
-        }
+
 
         void RunScanIteration()
         {
@@ -141,46 +137,12 @@ namespace Chow.Interpreter.Tokens
             {
                 SkipRemainingLineChars();
             }
-            else if (!TryScanSingleCharToken())
+            else if (!TryScanSymbolToken())
             {
                 throw new ScannerException($"Unexpected character '{CurrentChar}'.", _currLineNumber);
             }
         }
 
-        private void SkipToCodeStart()
-        {
-            while (IsCharToScan())
-            {
-                if (IsIndentChar(CurrentChar))
-                {
-                    MoveToNextChar();
-                }
-                else if (IsNewlineChar(CurrentChar))
-                {
-                    MovePastNewline();
-                }
-                else if (IsCommentPrefix(CurrentChar))
-                {
-                    SkipRemainingLineChars();
-                }
-                else if (!_isAtStartOfLine)
-                {
-                    throw new ScannerException($"Unexpected indentation.", _currLineNumber);
-                }
-                else
-                {
-                    return;
-                }
-            }
-        }
-
-        private void SkipRemainingLineChars()
-        {
-            while (IsCharToScan() && !IsNewlineChar(CurrentChar))
-            {
-                MoveToNextChar();
-            }
-        }
 
         #endregion
 
@@ -323,7 +285,7 @@ namespace Chow.Interpreter.Tokens
 
         #region Lexeme-Dependent Token Scan Methods
 
-        bool TryScanSingleCharToken()
+        bool TryScanSymbolToken()
         {
             TokenType tokenType;
 
@@ -358,40 +320,54 @@ namespace Chow.Interpreter.Tokens
                     break;
                 
                 case '*':
-                    if (PeekNextChar() == '*')
+                    if (TryScanCompoundOp('*', TokenType.StarStar, "**"))
                     {
-                        MoveToNextChar();
-                        MoveToNextChar();
-                        AddNewToken(TokenType.StarStar, "**", _currLineNumber);
                         return true;
                     }
+
                     tokenType = TokenType.Star;
                     break;
 
                 case '/':
-                    if (PeekNextChar() == '/')
+                    if (TryScanCompoundOp('/', TokenType.SlashSlash, "//"))
                     {
-                        MoveToNextChar();
-                        MoveToNextChar();
-                        AddNewToken(TokenType.SlashSlash, "//", _currLineNumber);
                         return true;
                     }
+
                     tokenType = TokenType.Slash;
                     break;
-                
+
                 case '%':
                     tokenType = TokenType.Percent;
                     break;
-                
+
+                case '!':
+                    return TryScanCompoundOp('=', TokenType.BangEqual, "!=");
+
                 case '=':
+                    if (TryScanCompoundOp('=', TokenType.EqualEqual, "=="))
+                    {
+                        return true;
+                    }
+
                     tokenType = TokenType.Equal;
                     break;
-                
+
                 case '>':
+                    if (TryScanCompoundOp('=', TokenType.GreaterEqual, ">="))
+                    {
+                        return true;
+                    }
+
                     tokenType = TokenType.Greater;
                     break;
-                
+
                 case '<':
+                    if (TryScanCompoundOp('=', TokenType.LessEqual, "<="))
+                    {
+                        return true;
+                    }
+
                     tokenType = TokenType.Less;
                     break;
                 
@@ -431,6 +407,19 @@ namespace Chow.Interpreter.Tokens
             string lexeme = CurrentChar.ToString();
             MoveToNextChar();
             AddNewToken(tokenType, lexeme, _currLineNumber);
+            return true;
+        }
+
+        bool TryScanCompoundOp(char secondChar, TokenType compoundType, string compoundStrRep)
+        {
+            if (PeekNextChar() != secondChar)
+            {
+                return false;
+            }
+            
+            MoveToNextChar();
+            MoveToNextChar();
+            AddNewToken(compoundType, compoundStrRep, _currLineNumber);
             return true;
         }
 
@@ -501,7 +490,7 @@ namespace Chow.Interpreter.Tokens
         char PeekNextChar()
         {
             int nextIndex = _scanCharIndex + 1;
-            return nextIndex < _srcCode.Length ? _srcCode[nextIndex] : '\0';
+            return nextIndex < _srcCode.Length ? CurrentChar : '\0';
         }
 
         #endregion
@@ -551,6 +540,46 @@ namespace Chow.Interpreter.Tokens
         #endregion
 
         #region Helper Methods
+
+        private void SkipToCodeStart()
+        {
+            while (IsCharToScan())
+            {
+                if (IsIndentChar(CurrentChar))
+                {
+                    MoveToNextChar();
+                }
+                else if (IsNewlineChar(CurrentChar))
+                {
+                    MovePastNewline();
+                }
+                else if (IsCommentPrefix(CurrentChar))
+                {
+                    SkipRemainingLineChars();
+                }
+                else if (_isAtStartOfLine)
+                {
+                    return;
+                }
+                else
+                {
+                    throw new ScannerException($"Unexpected indentation.", _currLineNumber);
+                }
+            }
+        }
+
+        private void SkipRemainingLineChars()
+        {
+            while (IsCharToScan() && !IsNewlineChar(CurrentChar))
+            {
+                MoveToNextChar();
+            }
+        }
+
+        private void AddEndOfCodeToken()
+        {
+            AddNewToken(TokenType.EndOfCode, string.Empty, _currLineNumber);
+        }
 
         bool IsLineAndIndentLogicEnabled()
         {
