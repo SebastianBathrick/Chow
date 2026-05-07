@@ -75,6 +75,12 @@ namespace Chow.Interpreter.Compilation
                     CompileVariableFactor(varFactorNode);
                     break;
 
+                case ReturnNode returnNode:
+
+                    // If it returns early, still parse the remaining code in the chunk for debugging (subject to change)
+                    CompileReturn(returnNode);
+                    break;
+
                 default:
                     throw new NotImplementedException($"Compilation of {targetNode.GetType().Name} is not implemented.");
             }

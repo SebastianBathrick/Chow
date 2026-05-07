@@ -4,25 +4,26 @@ const string LINE_INDICATOR = ">>> ";
 const string LINE_SEPERATOR = "\n";
 
 bool isRunning = true;
-string? input = null;
+int startTop = 0;
+int cursorX = 0;
+int cursorY = 0;
+List<string> lines = new() { string.Empty };
 
 do
 {
-    input = ReadEditableBlock(input);
-
-    // If input is null, that means the user pressed Escape to exit the REPL.
-    // Escape returns null regardless of whether they entered any text or not.
-    // However, an empty or whitespace-string is considered valid to test the interpreter's handling of such input.
-    if (input == null)
+    if (!ReadEditableBlock(out string sourceCode))
     {
         isRunning = false;
         continue;
     }
 
+    lines.Add(string.Empty);
+
     try
     {
         ChowInstance instance = new ChowInstance();
-        instance.Run(input);
+        var returnValue = instance.Run(sourceCode);
+        Console.WriteLine(returnValue);
         Console.WriteLine(instance.GetVariableDebugInfo());
     }
     catch (Exception ex)
@@ -33,28 +34,18 @@ do
 while (isRunning);
 
 return 0;
-    
-static string? ReadEditableBlock(string sourceCode)
+
+bool ReadEditableBlock(out string sourceCode)
 {
-    List<string> lines;
-
-    if (sourceCode != null)
-    {
-        lines = sourceCode.Split(LINE_SEPERATOR).ToList();
-    }
-    else
-    {
-        lines = new() { string.Empty };
-    }
-
-
-    int cursorX = 0;
-    int cursorY = 0;
-    int startTop = Console.CursorTop;
+    for (int i = 0; i < lines.Count; i++)
+        Console.WriteLine();
+    startTop = Console.CursorTop - lines.Count;
+    cursorY = lines.Count - 1;
+    cursorX = lines[cursorY].Length;
 
     while (true)
     {
-        Draw(lines, cursorX, cursorY, startTop);
+        Draw();
 
         ConsoleKeyInfo key = Console.ReadKey(true);
 
@@ -66,48 +57,50 @@ static string? ReadEditableBlock(string sourceCode)
                     Console.SetCursorPosition(0, startTop + lines.Count);
                     Console.WriteLine();
 
-                    return string.Join(LINE_SEPERATOR, lines);
+                    sourceCode = string.Join(LINE_SEPERATOR, lines);
+                    return true;
                 }
 
-                NewLine(lines, ref cursorX, ref cursorY);
+                NewLine();
                 break;
 
             case ConsoleKey.Escape:
                 Console.SetCursorPosition(0, startTop + lines.Count);
                 Console.WriteLine();
-                return null;
+                sourceCode = string.Empty;
+                return false;
 
             case ConsoleKey.LeftArrow:
-                MoveLeft(lines, ref cursorX, ref cursorY);
+                MoveLeft();
                 break;
 
             case ConsoleKey.RightArrow:
-                MoveRight(lines, ref cursorX, ref cursorY);
+                MoveRight();
                 break;
 
             case ConsoleKey.UpArrow:
-                MoveUp(lines, ref cursorX, ref cursorY);
+                MoveUp();
                 break;
 
             case ConsoleKey.DownArrow:
-                MoveDown(lines, ref cursorX, ref cursorY);
+                MoveDown();
                 break;
 
             case ConsoleKey.Backspace:
-                Backspace(lines, ref cursorX, ref cursorY);
+                Backspace();
                 break;
 
             default:
                 if (!char.IsControl(key.KeyChar))
                 {
-                    InsertChar(lines, key.KeyChar, ref cursorX, ref cursorY);
+                    InsertChar(key.KeyChar);
                 }
                 break;
         }
     }
 }
 
-static void Draw(List<string> lines, int cursorX, int cursorY, int startTop)
+void Draw()
 {
     for (int i = 0; i < lines.Count; i++)
     {
@@ -127,13 +120,13 @@ static void Draw(List<string> lines, int cursorX, int cursorY, int startTop)
     Console.SetCursorPosition(LINE_INDICATOR.Length + cursorX, startTop + cursorY);
 }
 
-static void InsertChar(List<string> lines, char c, ref int cursorX, ref int cursorY)
+void InsertChar(char c)
 {
     lines[cursorY] = lines[cursorY].Insert(cursorX, c.ToString());
     cursorX++;
 }
 
-static void NewLine(List<string> lines, ref int cursorX, ref int cursorY)
+void NewLine()
 {
     string current = lines[cursorY];
 
@@ -147,7 +140,7 @@ static void NewLine(List<string> lines, ref int cursorX, ref int cursorY)
     cursorX = 0;
 }
 
-static void Backspace(List<string> lines, ref int cursorX, ref int cursorY)
+void Backspace()
 {
     if (cursorX > 0)
     {
@@ -163,7 +156,7 @@ static void Backspace(List<string> lines, ref int cursorX, ref int cursorY)
     }
 }
 
-static void MoveLeft(List<string> lines, ref int cursorX, ref int cursorY)
+void MoveLeft()
 {
     if (cursorX > 0)
     {
@@ -176,7 +169,7 @@ static void MoveLeft(List<string> lines, ref int cursorX, ref int cursorY)
     }
 }
 
-static void MoveRight(List<string> lines, ref int cursorX, ref int cursorY)
+void MoveRight()
 {
     if (cursorX < lines[cursorY].Length)
     {
@@ -189,7 +182,7 @@ static void MoveRight(List<string> lines, ref int cursorX, ref int cursorY)
     }
 }
 
-static void MoveUp(List<string> lines, ref int cursorX, ref int cursorY)
+void MoveUp()
 {
     if (cursorY > 0)
     {
@@ -198,7 +191,7 @@ static void MoveUp(List<string> lines, ref int cursorX, ref int cursorY)
     }
 }
 
-static void MoveDown(List<string> lines, ref int cursorX, ref int cursorY)
+void MoveDown()
 {
     if (cursorY < lines.Count - 1)
     {

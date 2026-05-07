@@ -18,7 +18,7 @@ namespace Chow.Interpreter.Values
         // Only one instance of ChowNone should exist
         private ChowNone() 
         { 
-            if (_instance == null)
+            if (_instance != null)
             {
                 throw new InvalidOperationException("Only one instance of ChowNone should exist.");
             }
