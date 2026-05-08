@@ -6,17 +6,25 @@ namespace Chow.Interpreter.Evaluation
     internal class ChowEnvironment
     {
         const string SCOPE_BOUNDARY_ELEMENT = "<SCOPE_BOUNDARY>";
+        const int TOP_LVL_SCOPE_DEPTH = 0;
 
-        private Stack<string> _varNameStack = new Stack<string>();
-        private Dictionary<string, TaggedUnion> _varValMap = new Dictionary<string, TaggedUnion>();
+        private Stack<string> _varNameStack;
+        private Dictionary<string, TaggedUnion> _varValMap;
+        private int _scopeDepthLvl;
+
+        public bool IsTopLevelScope => _scopeDepthLvl == TOP_LVL_SCOPE_DEPTH;
 
         public ChowEnvironment()
         {
-            // Push a boundary element to mark the bottom of the top-level scope (which will never be popped)
-            EnterScope();
+            _varValMap = new Dictionary<string, TaggedUnion>();
+            _scopeDepthLvl = TOP_LVL_SCOPE_DEPTH;
+
+            // The bottom of the stack represents the top-level scope (which will never be popped)
+            _varNameStack = new Stack<string>();
+            _varNameStack.Push(SCOPE_BOUNDARY_ELEMENT);
         }
 
-        public bool IsVariable(string name)
+        public bool IsVariableDefined(string name)
         {
             return _varValMap.ContainsKey(name);
         }
@@ -28,6 +36,7 @@ namespace Chow.Interpreter.Evaluation
 
         public void EnterScope()
         {
+            _scopeDepthLvl++;
             _varNameStack.Push(SCOPE_BOUNDARY_ELEMENT);
         }
 
@@ -45,6 +54,8 @@ namespace Chow.Interpreter.Evaluation
                 // Pop another variable name OR the scope boundary element if there's no more variables left in the scope
                 poppedName = _varNameStack.Pop();
             }
+
+            _scopeDepthLvl--;
         }
 
         public void AssignVariableValue(string name, TaggedUnion value)

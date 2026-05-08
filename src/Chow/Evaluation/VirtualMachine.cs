@@ -1,8 +1,9 @@
 using Chow.Interpreter.Compilation;
-using Chow.Interpreter.Hooks;
+using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Values;
-using System;
+using Chow.Interpreter.Hooks;
 using System.Collections.Generic;
+using System;
 
 namespace Chow.Interpreter.Evaluation
 {
@@ -91,15 +92,7 @@ namespace Chow.Interpreter.Evaluation
                         break;
 
                     case OperationCode.ReturnValue:
-                        // Temporarily allow return statements on top-level and print the return value to the console for debugging
-                        if (_valStack.Count == 0)
-                        {
-                            Console.WriteLine(TaggedUnion.None);
-                            return _enviro;
-                        }
-
-                        Console.WriteLine(_valStack.Pop());
-                        break;
+                        throw new NotImplementedException();
 
                     default:
                         throw new NotImplementedException($"Execution of {CurrentOperation.Code} is not implemented.");
@@ -115,8 +108,17 @@ namespace Chow.Interpreter.Evaluation
         {
             // Operand -> name via Chunk. Semantic analysis is responsible for ensuring the
             // name exists before this op runs; KeyNotFoundException here is a contract violation.
-            string loadName = _chunk.ReadVariableName(CurrentOperation.Operand);
-            _valStack.Push(_enviro.GetVariableValue(loadName));
+            string varName = _chunk.ReadVariableName(CurrentOperation.Operand);
+
+            if (_enviro.IsVariableDefined(varName))
+            {
+                TaggedUnion varValue = _enviro.GetVariableValue(varName);
+                _valStack.Push(varValue);
+                return;
+            }
+
+            int errorLineNum = GetCurrentLineNumber();
+            throw new ChowNameErrorException(varName, errorLineNum);
         }
 
         private void AssignOrDeclareVariable()
@@ -142,10 +144,16 @@ namespace Chow.Interpreter.Evaluation
             if (operand.IsFloat)
             {
                 _valStack.Push(new TaggedUnion(-operand.FloatValue));
-                return;
             }
+            else
+            {
+                _valStack.Push(new TaggedUnion(-operand.IntegerValue));
+            }
+        }
 
-            _valStack.Push(new TaggedUnion(-operand.IntegerValue));
+        int GetCurrentLineNumber()
+        {
+            return _chunk.GetOperationLineNumber(_opsListIndex);
         }
 
         void MoveToNextOperation()

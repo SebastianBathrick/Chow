@@ -6,19 +6,24 @@ namespace Chow.Interpreter.Compilation
 {
     class Chunk
     {
-        List<Instruction> _operations = new List<Instruction>();
+        List<Instruction> _opList = new List<Instruction>();
         List<TaggedUnion> _consts = new List<TaggedUnion>();
-        List<string> _variableNames = new List<string>();
-        List<int> _operationLineNums = new List<int>();
+        List<string> _varNames = new List<string>();
+        List<int> _opLineNums = new List<int>();
 
-        public int Count => _operations.Count;
+        public int Count => _opList.Count;
 
-        public Instruction this[int index] => _operations[index];
+        public Instruction this[int index] => _opList[index];
 
         public void PushOperation(OperationCode operationType, int lineNumber, int operand = -1)
         {
-            _operations.Add(new Instruction(operationType, operand));
-            _operationLineNums.Add(lineNumber);
+            _opList.Add(new Instruction(operationType, operand));
+            _opLineNums.Add(lineNumber);
+        }
+
+        public int GetOperationLineNumber(int operand)
+        {
+            return _opLineNums[operand];
         }
 
         #region Constant Methods
@@ -53,9 +58,9 @@ namespace Chow.Interpreter.Compilation
 
         #region Variable Name Methods
 
-        public string ReadVariableName(int operand) => _variableNames[operand];
+        public string ReadVariableName(int operand) => _varNames[operand];
 
-        public int FindVariableName(string varName) => _variableNames.IndexOf(varName);
+        public int FindVariableName(string varName) => _varNames.IndexOf(varName);
 
         /// <summary>
         /// Used to register a variable name compile-time and return an operand for use in <see cref="Instruction"/> instance(s)
@@ -75,8 +80,8 @@ namespace Chow.Interpreter.Compilation
                 return existing;
             }
 
-            int operand = _variableNames.Count;
-            _variableNames.Add(varName);
+            int operand = _varNames.Count;
+            _varNames.Add(varName);
             return operand;
         }
 
@@ -99,19 +104,19 @@ namespace Chow.Interpreter.Compilation
             }
 
             sb.AppendLine("Variables:");
-            for (int i = 0; i < _variableNames.Count; i++)
+            for (int i = 0; i < _varNames.Count; i++)
             {
                 sb.Append("  ");
                 sb.Append(i);
                 sb.Append(": ");
-                sb.Append(_variableNames[i]);
+                sb.Append(_varNames[i]);
                 sb.AppendLine();
             }
 
             sb.AppendLine("Operations:");
-            for (int i = 0; i < _operations.Count; i++)
+            for (int i = 0; i < _opList.Count; i++)
             {
-                Instruction op = _operations[i];
+                Instruction op = _opList[i];
 
                 sb.Append("  ");
                 sb.Append(i);
@@ -127,7 +132,7 @@ namespace Chow.Interpreter.Compilation
                     sb.Append(')');
                 }
 
-                if (i < _operations.Count - 1)
+                if (i < _opList.Count - 1)
                 {
                     sb.AppendLine();
                 }
@@ -170,7 +175,7 @@ namespace Chow.Interpreter.Compilation
                 case OperationCode.AssignOrDeclareVariable:
                 case OperationCode.PushVariableValue:
                     sb.Append("Var=");
-                    sb.Append(_variableNames[op.Operand]);
+                    sb.Append(_varNames[op.Operand]);
                     break;
             }
         }
