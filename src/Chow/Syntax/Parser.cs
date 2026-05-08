@@ -14,7 +14,7 @@ namespace Chow.Interpreter.Syntax
         bool _isDirty;
 
         private Token CurrentToken => _tokens[_tokenIndex];
-        private Token PreviousToken => PreviousToken;
+        private Token PreviousToken => _tokens[_tokenIndex - 1];
 
         public Parser(List<Token> tokens)
         {
@@ -282,7 +282,15 @@ namespace Chow.Interpreter.Syntax
 
                 case TokenType.KeywordNone:
                     Consume(TokenType.KeywordNone);
-                    return new LiteralNode(null, CurrentToken.LineNum);
+                    return new LiteralNode(null, PreviousToken.LineNum);
+
+                case TokenType.KeywordTrue:
+                    Consume(TokenType.KeywordTrue);
+                    return new LiteralNode(true, PreviousToken.LineNum);
+
+                case TokenType.KeywordFalse:
+                    Consume(TokenType.KeywordFalse);
+                    return new LiteralNode(false, PreviousToken.LineNum);
 
                 case TokenType.SymbolLeftParen:
                     MoveToNextToken();
@@ -358,6 +366,8 @@ namespace Chow.Interpreter.Syntax
                    type == TokenType.LiteralInt ||
                    type == TokenType.LiteralFloat ||
                    type == TokenType.KeywordNone ||
+                   type == TokenType.KeywordTrue ||
+                   type == TokenType.KeywordFalse ||
                    type == TokenType.KeywordNot ||
                    type == TokenType.SymbolLeftParen;
         }

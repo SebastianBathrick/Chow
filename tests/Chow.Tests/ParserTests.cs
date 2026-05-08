@@ -101,6 +101,20 @@ namespace Chow.Tests
         }
 
         [Test]
+        public void BuildSyntaxTree_TrueLiteral_ReturnsLiteralNodeWithBooleanType()
+        {
+            Node result = Parse("True");
+            AssertLiteral(result, true, LiteralDataType.Boolean);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_FalseLiteral_ReturnsLiteralNodeWithBooleanType()
+        {
+            Node result = Parse("False");
+            AssertLiteral(result, false, LiteralDataType.Boolean);
+        }
+
+        [Test]
         public void BuildSyntaxTree_Literal_AssignsLiteralTokenLineNumber()
         {
             Node result = ParseTokens(

@@ -23,6 +23,10 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
             {
                 _type = LiteralDataType.Float;
             }
+            else if (value is bool)
+            {
+                _type = LiteralDataType.Boolean;
+            }
             else if (value is null)
             {
                 _type = LiteralDataType.None;
