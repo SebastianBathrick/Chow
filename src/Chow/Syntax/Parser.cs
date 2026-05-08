@@ -14,6 +14,7 @@ namespace Chow.Interpreter.Syntax
         bool _isDirty;
 
         private Token CurrentToken => _tokens[_tokenIndex];
+        private Token PreviousToken => PreviousToken;
 
         public Parser(List<Token> tokens)
         {
@@ -134,11 +135,87 @@ namespace Chow.Interpreter.Syntax
 
         Node ParseExpression()
         {
+            return ParseOr();
+        }
+
+        Node ParseOr()
+        {
+            Node left = ParseAnd();
+
+            while (IsTokenTypeMatch(TokenType.KeywordOr))
+            {
+                Token opToken = PreviousToken;
+                Node right = ParseAnd();
+                left = new ExprNode(ExpressionOperator.Or, left, right, opToken.LineNum);
+            }
+
+            return left;
+        }
+
+        Node ParseAnd()
+        {
+            Node left = ParseNot();
+
+            while (IsTokenTypeMatch(TokenType.KeywordAnd))
+            {
+                Token opToken = PreviousToken;
+                Node right = ParseNot();
+                left = new ExprNode(ExpressionOperator.And, left, right, opToken.LineNum);
+            }
+
+            return left;
+        }
+
+        Node ParseNot()
+        {
+            if (IsTokenTypeMatch(TokenType.KeywordNot))
+            {
+                Token opToken = PreviousToken;
+                return new ExprNode(ExpressionOperator.Not, ParseNot(), opToken.LineNum);
+            }
+
+            return ParseComparison();
+        }
+
+        Node ParseComparison()
+        {
+            Node left = ParseAdditive();
+            Node result = null;
+
+            while (IsTokenTypeMatch(
+                TokenType.SymbolEqualTo,
+                TokenType.SymbolNotEqual,
+                TokenType.SymbolLess,
+                TokenType.SymbolGreater,
+                TokenType.SymbolLessEqual,
+                TokenType.SymbolGreaterEqual))
+            {
+                Token opToken = PreviousToken;
+                Node right = ParseAdditive();
+                Node compare = new ExprNode(MapBinary(opToken.Type), left, right, opToken.LineNum);
+
+                if (result == null)
+                {
+                    result = compare;
+                }
+                else
+                {
+                    result = new ExprNode(ExpressionOperator.And, result, compare, opToken.LineNum);
+                }
+
+                left = right;
+            }
+
+            return result ?? left;
+        }
+
+        Node ParseAdditive()
+        {
             Node left = ParseTerm();
 
             while (IsTokenTypeMatch(TokenType.SymbolPlus, TokenType.SymbolMinus))
             {
-                Token opToken = _tokens[_tokenIndex - 1];
+                Token opToken = PreviousToken;
                 Node right = ParseTerm();
                 left = new ExprNode(MapBinary(opToken.Type), left, right, opToken.LineNum);
             }
@@ -152,7 +229,7 @@ namespace Chow.Interpreter.Syntax
 
             while (IsTokenTypeMatch(TokenType.SymbolMultiply, TokenType.SymbolDivide, TokenType.SymbolFloorDivide, TokenType.SymbolPercent))
             {
-                Token opToken = _tokens[_tokenIndex - 1];
+                Token opToken = PreviousToken;
                 Node right = ParseFactor();
                 left = new ExprNode(MapBinary(opToken.Type), left, right, opToken.LineNum);
             }
@@ -164,7 +241,7 @@ namespace Chow.Interpreter.Syntax
         {
             if (IsTokenTypeMatch(TokenType.SymbolMinus))
             {
-                Token opToken = _tokens[_tokenIndex - 1];
+                Token opToken = PreviousToken;
                 return new ExprNode(ExpressionOperator.Negate, ParseFactor(), opToken.LineNum);
             }
 
@@ -177,7 +254,7 @@ namespace Chow.Interpreter.Syntax
 
             if (IsTokenTypeMatch(TokenType.SymbolExponent))
             {
-                Token opToken = _tokens[_tokenIndex - 1];
+                Token opToken = PreviousToken;
                 Node right = ParseFactor();
                 return new ExprNode(ExpressionOperator.Exponentiate, left, right, opToken.LineNum);
             }
@@ -281,6 +358,7 @@ namespace Chow.Interpreter.Syntax
                    type == TokenType.LiteralInt ||
                    type == TokenType.LiteralFloat ||
                    type == TokenType.KeywordNone ||
+                   type == TokenType.KeywordNot ||
                    type == TokenType.SymbolLeftParen;
         }
 
@@ -308,6 +386,30 @@ namespace Chow.Interpreter.Syntax
 
                 case TokenType.SymbolFloorDivide:
                     return ExpressionOperator.FloorDivide;
+
+                case TokenType.SymbolEqualTo:
+                    return ExpressionOperator.Equal;
+
+                case TokenType.SymbolNotEqual:
+                    return ExpressionOperator.NotEqual;
+
+                case TokenType.SymbolLess:
+                    return ExpressionOperator.Less;
+
+                case TokenType.SymbolGreater:
+                    return ExpressionOperator.Greater;
+
+                case TokenType.SymbolLessEqual:
+                    return ExpressionOperator.LessEqual;
+
+                case TokenType.SymbolGreaterEqual:
+                    return ExpressionOperator.GreaterEqual;
+
+                case TokenType.KeywordAnd:
+                    return ExpressionOperator.And;
+
+                case TokenType.KeywordOr:
+                    return ExpressionOperator.Or;
 
                 default:
                     throw new InvalidOperationException($"Unexpected binary operator: {type}");

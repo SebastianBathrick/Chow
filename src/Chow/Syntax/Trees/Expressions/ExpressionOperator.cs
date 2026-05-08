@@ -9,6 +9,15 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
         Modulus,
         Exponentiate,
         FloorDivide,
-        Negate
+        Negate,
+        Equal,
+        NotEqual,
+        Less,
+        Greater,
+        LessEqual,
+        GreaterEqual,
+        And,
+        Or,
+        Not
     }
 }
