@@ -73,9 +73,15 @@ namespace Chow.Interpreter.Syntax
             switch (CurrentToken.Type)
             {
                 case TokenType.Identifier:
-                    return ParseVariableAssignment();
+                    if (CheckNext(TokenType.SymbolAssign))
+                    {
+                        return ParseVariableAssignment();
+                    }
 
-                case TokenType.Return:
+                    // If no assignment operator is after the, then assume the identifier is a primary in an expression
+                    break;
+
+                case TokenType.KeywordReturn:
                     return ParseReturn();
             }
 
@@ -91,7 +97,7 @@ namespace Chow.Interpreter.Syntax
         Node ParseVariableAssignment()
         {
             Token identifierToken = Consume(TokenType.Identifier, "Expected variable name.");
-            Consume(TokenType.Equal, "Expected '=' after variable name.");
+            Consume(TokenType.SymbolAssign, "Expected '=' after variable name.");
             Node expression = ParseExpression();
             return new VariableAssignNode(identifierToken.Lexeme, expression, identifierToken.LineNum);
         }
@@ -99,7 +105,7 @@ namespace Chow.Interpreter.Syntax
         Node ParseReturn()
         {
             int lineNumber = CurrentToken.LineNum;
-            Consume(TokenType.Return, "Expected 'return' keyword.");
+            Consume(TokenType.KeywordReturn, "Expected 'return' keyword.");
             Node expression;
 
             if (IsPrimaryTokenType())
@@ -130,7 +136,7 @@ namespace Chow.Interpreter.Syntax
         {
             Node left = ParseTerm();
 
-            while (IsTokenTypeMatch(TokenType.Plus, TokenType.Minus))
+            while (IsTokenTypeMatch(TokenType.SymbolPlus, TokenType.SymbolMinus))
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 Node right = ParseTerm();
@@ -144,7 +150,7 @@ namespace Chow.Interpreter.Syntax
         {
             Node left = ParseFactor();
 
-            while (IsTokenTypeMatch(TokenType.Star, TokenType.Slash, TokenType.SlashSlash, TokenType.Percent))
+            while (IsTokenTypeMatch(TokenType.SymbolMultiply, TokenType.SymbolDivide, TokenType.SymbolFloorDivide, TokenType.SymbolPercent))
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 Node right = ParseFactor();
@@ -156,7 +162,7 @@ namespace Chow.Interpreter.Syntax
 
         Node ParseFactor()
         {
-            if (IsTokenTypeMatch(TokenType.Minus))
+            if (IsTokenTypeMatch(TokenType.SymbolMinus))
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 return new ExprNode(ExpressionOperator.Negate, ParseFactor(), opToken.LineNum);
@@ -169,7 +175,7 @@ namespace Chow.Interpreter.Syntax
         {
             Node left = ParsePrimary();
 
-            if (IsTokenTypeMatch(TokenType.StarStar))
+            if (IsTokenTypeMatch(TokenType.SymbolExponent))
             {
                 Token opToken = _tokens[_tokenIndex - 1];
                 Node right = ParseFactor();
@@ -191,20 +197,20 @@ namespace Chow.Interpreter.Syntax
                     MoveToNextToken();
                     return new IdentifierNode(identifierToken.Lexeme, identifierToken.LineNum);
 
-                case TokenType.Integer:
-                case TokenType.Float:
+                case TokenType.LiteralInt:
+                case TokenType.LiteralFloat:
                     Token numericToken = CurrentToken;
                     MoveToNextToken();
                     return new LiteralNode(numericToken.Literal, numericToken.LineNum);
 
-                case TokenType.None:
-                    Consume(TokenType.None);
+                case TokenType.KeywordNone:
+                    Consume(TokenType.KeywordNone);
                     return new LiteralNode(null, CurrentToken.LineNum);
 
-                case TokenType.LeftParenthesis:
+                case TokenType.SymbolLeftParen:
                     MoveToNextToken();
                     Node inner = ParseExpression();
-                    Consume(TokenType.RightParenthesis);
+                    Consume(TokenType.SymbolRightParen);
                     return inner;
 
                 default:
@@ -272,35 +278,35 @@ namespace Chow.Interpreter.Syntax
         {
             TokenType type = CurrentToken.Type;
             return type == TokenType.Identifier ||
-                   type == TokenType.Integer ||
-                   type == TokenType.Float ||
-                   type == TokenType.None ||
-                   type == TokenType.LeftParenthesis;
+                   type == TokenType.LiteralInt ||
+                   type == TokenType.LiteralFloat ||
+                   type == TokenType.KeywordNone ||
+                   type == TokenType.SymbolLeftParen;
         }
 
         static ExpressionOperator MapBinary(TokenType type)
         {
             switch (type)
             {
-                case TokenType.Plus:
+                case TokenType.SymbolPlus:
                     return ExpressionOperator.Add;
 
-                case TokenType.Minus:
+                case TokenType.SymbolMinus:
                     return ExpressionOperator.Subtract;
 
-                case TokenType.Star:
+                case TokenType.SymbolMultiply:
                     return ExpressionOperator.Multiply;
 
-                case TokenType.Slash:
+                case TokenType.SymbolDivide:
                     return ExpressionOperator.Divide;
 
-                case TokenType.Percent:
+                case TokenType.SymbolPercent:
                     return ExpressionOperator.Modulus;
 
-                case TokenType.StarStar:
+                case TokenType.SymbolExponent:
                     return ExpressionOperator.Exponentiate;
 
-                case TokenType.SlashSlash:
+                case TokenType.SymbolFloorDivide:
                     return ExpressionOperator.FloorDivide;
 
                 default:
