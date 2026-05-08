@@ -27,12 +27,19 @@ namespace Chow.Interpreter.Values
 
         public override float FloatValue { get => throw new InvalidCastException(GetType(), typeof(float), this); }
 
+        public override bool BoolValue { get => throw new InvalidCastException(GetType(), typeof(bool), this); }
+
         public override bool IsIntegerValue
         {
             get { return false; }
         }
 
         public override bool IsFloatValue
+        {
+            get { return false; }
+        }
+
+        public override bool IsBoolValue
         {
             get { return false; }
         }

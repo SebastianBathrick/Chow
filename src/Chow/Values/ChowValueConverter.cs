@@ -16,6 +16,11 @@ namespace Chow.Interpreter.Values
                 return TaggedUnion.None;
             }
 
+            if (value.IsBoolValue)
+            {
+                return new TaggedUnion(value.BoolValue);
+            }
+
             if (value.IsIntegerValue)
             {
                 return new TaggedUnion(value.IntegerValue);
@@ -39,8 +44,9 @@ namespace Chow.Interpreter.Values
                     return new ChowInteger(taggedUnion.IntegerValue);
                 case Tag.Float:
                     return new ChowFloat(taggedUnion.FloatValue);
-                case Tag.String:
                 case Tag.Boolean:
+                    return new ChowBool(taggedUnion.BooleanValue);
+                case Tag.String:
                     throw new NotImplementedException();
                 default:
                     throw new InvalidOperationException();

@@ -8,8 +8,10 @@ namespace Chow.Interpreter.Values
 
         public abstract int IntegerValue { get; }
         public abstract float FloatValue { get; }
+        public abstract bool BoolValue { get; }
         public abstract bool IsIntegerValue { get; }
         public abstract bool IsFloatValue { get; }
+        public abstract bool IsBoolValue {  get; }
 
         public abstract override string ToString();
     }

@@ -7,13 +7,13 @@ namespace Chow.Interpreter.Values
 
         private bool _boolValue;
 
-        public bool BooleanValue { get => _boolValue; }
-
         public override int IntegerValue { get => _boolValue ? 1 : 0; }
         public override float FloatValue { get => _boolValue ? 1f : 0f; }
+        public override bool BoolValue { get => _boolValue; }
 
         public override bool IsIntegerValue { get => false; }
         public override bool IsFloatValue { get => false; }
+        public override bool IsBoolValue { get => true; }
 
         public ChowBool(bool boolValue)
         {
