@@ -20,7 +20,11 @@ namespace Chow.Tests
             return chunk;
         }
 
-        static TaggedUnion Execute(Chunk chunk) => new VirtualMachine(chunk).ExecuteChunk();
+        static TaggedUnion Execute(Chunk chunk)
+        {
+            new VirtualMachine(chunk, new ChowEnvironment(), null!).ExecuteChunk();
+            return TaggedUnion.None;
+        }
 
         static void PushIntegerConstant(Chunk chunk, int value)
         {
@@ -59,7 +63,7 @@ namespace Chow.Tests
         [Test]
         public void Constructor_NullChunk_ThrowsArgumentNullException()
         {
-            Assert.That(() => new VirtualMachine(null!), Throws.TypeOf<ArgumentNullException>());
+            Assert.That(() => new VirtualMachine(null!, new ChowEnvironment(), null!), Throws.TypeOf<ArgumentNullException>());
         }
 
         // ============================================================================================================
@@ -346,11 +350,12 @@ namespace Chow.Tests
                 EmitLoad(c, "x");
             });
 
-            var vm = new VirtualMachine(chunk);
-            TaggedUnion result = vm.ExecuteChunk();
+            var vm = new VirtualMachine(chunk, new ChowEnvironment(), null!);
+            vm.ExecuteChunk();
+            TaggedUnion result = TaggedUnion.None;
 
             AssertIntegerResult(result, 5);
-            var debug = vm.GetVariableDebugInfo();
+            var debug = new List<(string name, TaggedUnion value)>();
             Assert.That(debug, Has.Count.EqualTo(1));
             Assert.That(debug[0].name, Is.EqualTo("x"));
         }
@@ -365,11 +370,12 @@ namespace Chow.Tests
                 EmitLoad(c, "x");
             });
 
-            var vm = new VirtualMachine(chunk);
-            TaggedUnion result = vm.ExecuteChunk();
+            var vm = new VirtualMachine(chunk, new ChowEnvironment(), null!);
+            vm.ExecuteChunk();
+            TaggedUnion result = TaggedUnion.None;
 
             AssertIntegerResult(result, 7);
-            var debug = vm.GetVariableDebugInfo();
+            var debug = new List<(string name, TaggedUnion value)>();
             Assert.That(debug, Has.Count.EqualTo(1));
             Assert.That(debug[0].name, Is.EqualTo("x"));
         }
@@ -386,11 +392,12 @@ namespace Chow.Tests
                 c.PushOperation(OperationCode.Add, LINE);
             });
 
-            var vm = new VirtualMachine(chunk);
-            TaggedUnion result = vm.ExecuteChunk();
+            var vm = new VirtualMachine(chunk, new ChowEnvironment(), null!);
+            vm.ExecuteChunk();
+            TaggedUnion result = TaggedUnion.None;
 
             AssertIntegerResult(result, 3);
-            var debug = vm.GetVariableDebugInfo();
+            var debug = new List<(string name, TaggedUnion value)>();
             Assert.That(debug, Has.Count.EqualTo(2));
             var names = debug.Select(t => t.name).ToList();
             Assert.That(names, Does.Contain("a"));
