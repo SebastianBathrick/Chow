@@ -69,6 +69,54 @@ namespace Chow.Interpreter.Evaluation
                         ExecuteNegate();
                         break;
 
+                    case OperationCode.Equal:
+                        ExecuteBinaryOperation((l, r) => new TaggedUnion(l == r));
+                        break;
+
+                    case OperationCode.NotEqual:
+                        ExecuteBinaryOperation((l, r) => new TaggedUnion(l != r));
+                        break;
+
+                    case OperationCode.Less:
+                        ExecuteBinaryOperation((l, r) => new TaggedUnion(l < r));
+                        break;
+
+                    case OperationCode.Greater:
+                        ExecuteBinaryOperation((l, r) => new TaggedUnion(l > r));
+                        break;
+
+                    case OperationCode.LessEqual:
+                        ExecuteBinaryOperation((l, r) => new TaggedUnion(l <= r));
+                        break;
+
+                    case OperationCode.GreaterEqual:
+                        ExecuteBinaryOperation((l, r) => new TaggedUnion(l >= r));
+                        break;
+
+                    case OperationCode.Not:
+                        ExecuteNot();
+                        break;
+
+                    case OperationCode.JumpIfFalseOrPop:
+                        if (!_valStack.Peek().IsTruthy)
+                        {
+                            // Leave the falsy value on the stack as the result of the short-circuited `and`
+                            _opsListIndex = CurrentOperation.Operand;
+                            continue;
+                        }
+                        _valStack.Pop();
+                        break;
+
+                    case OperationCode.JumpIfTrueOrPop:
+                        if (_valStack.Peek().IsTruthy)
+                        {
+                            // Leave the truthy value on the stack as the result of the short-circuited `or`
+                            _opsListIndex = CurrentOperation.Operand;
+                            continue;
+                        }
+                        _valStack.Pop();
+                        break;
+
                     // Statements
 
                     case OperationCode.AssignOrDeclareVariable:
@@ -149,6 +197,12 @@ namespace Chow.Interpreter.Evaluation
             {
                 _valStack.Push(new TaggedUnion(-operand.IntegerValue));
             }
+        }
+
+        void ExecuteNot()
+        {
+            TaggedUnion operand = _valStack.Pop();
+            _valStack.Push(new TaggedUnion(!operand.IsTruthy));
         }
 
         int GetCurrentLineNumber()

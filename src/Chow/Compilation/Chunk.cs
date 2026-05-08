@@ -21,6 +21,11 @@ namespace Chow.Interpreter.Compilation
             _opLineNums.Add(lineNumber);
         }
 
+        public void PatchOperationOperand(int index, int operand)
+        {
+            _opList[index] = new Instruction(_opList[index].Code, operand);
+        }
+
         public int GetOperationLineNumber(int operand)
         {
             return _opLineNums[operand];

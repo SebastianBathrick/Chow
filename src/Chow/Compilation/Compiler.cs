@@ -163,12 +163,37 @@ namespace Chow.Interpreter.Compilation
 
         void CompileExpression(ExprNode exprNode)
         {
+            // `and`/`or` short-circuit, so they cannot use the eager postfix layout used by all other binary operators
+            if (exprNode.Operator == ExpressionOperator.And || exprNode.Operator == ExpressionOperator.Or)
+            {
+                CompileShortCircuit(exprNode);
+                return;
+            }
+
             // Compile operands first so they are pushed onto the runtime stack before the operation consumes them
             CompileTargetNode(exprNode.Left);
             CompileTargetNode(exprNode.Right);
 
             OperationCode opCode = GetExpressionOperationCode(exprNode);
             _chunk.PushOperation(opCode, exprNode.LineNumber);
+        }
+
+        void CompileShortCircuit(ExprNode node)
+        {
+            CompileTargetNode(node.Left);
+
+            OperationCode jumpCode = node.Operator == ExpressionOperator.And
+                ? OperationCode.JumpIfFalseOrPop
+                : OperationCode.JumpIfTrueOrPop;
+
+            // Emit jump with placeholder operand; the real target is unknown until the right side is compiled
+            _chunk.PushOperation(jumpCode, node.LineNumber);
+            int patchIndex = _chunk.Count - 1;
+
+            CompileTargetNode(node.Right);
+
+            // Land just past the right-hand bytecode
+            _chunk.PatchOperationOperand(patchIndex, _chunk.Count);
         }
 
         private static OperationCode GetExpressionOperationCode(ExprNode node)
@@ -230,14 +255,6 @@ namespace Chow.Interpreter.Compilation
 
                 case ExpressionOperator.GreaterEqual:
                     opCode = OperationCode.GreaterEqual;
-                    break;
-
-                case ExpressionOperator.And:
-                    opCode = OperationCode.And;
-                    break;
-
-                case ExpressionOperator.Or:
-                    opCode = OperationCode.Or;
                     break;
 
                 case ExpressionOperator.Not:

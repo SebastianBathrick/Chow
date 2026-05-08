@@ -30,6 +30,24 @@ namespace Chow.Interpreter.Values
         public bool IsString => _type == Tag.String;
         public bool IsBoolean => _type == Tag.Boolean;
 
+        public bool IsTruthy
+        {
+            get
+            {
+                switch (_type)
+                {
+                    case Tag.Boolean:
+                        return _boolValue;
+                    case Tag.Integer:
+                        return _intValue != 0;
+                    case Tag.Float:
+                        return _floatValue != 0f;
+                    default:
+                        return false;
+                }
+            }
+        }
+
         public int IntegerValue
         {
             get
@@ -301,6 +319,70 @@ namespace Chow.Interpreter.Values
         public static bool operator !=(TaggedUnion left, TaggedUnion right)
         {
             return !(left == right);
+        }
+
+        public static bool operator <(TaggedUnion left, TaggedUnion right)
+        {
+            ThrowIfStringOperands(left, right);
+            ThrowIfMixedBoolNumeric(left, right);
+            if (BothAreBoolean(left, right))
+            {
+                return BoolAsInt(left) < BoolAsInt(right);
+            }
+            if (EitherIsFloat(left, right))
+            {
+                return AsFloat(left) < AsFloat(right);
+            }
+
+            return left.IntegerValue < right.IntegerValue;
+        }
+
+        public static bool operator >(TaggedUnion left, TaggedUnion right)
+        {
+            ThrowIfStringOperands(left, right);
+            ThrowIfMixedBoolNumeric(left, right);
+            if (BothAreBoolean(left, right))
+            {
+                return BoolAsInt(left) > BoolAsInt(right);
+            }
+            if (EitherIsFloat(left, right))
+            {
+                return AsFloat(left) > AsFloat(right);
+            }
+
+            return left.IntegerValue > right.IntegerValue;
+        }
+
+        public static bool operator <=(TaggedUnion left, TaggedUnion right)
+        {
+            ThrowIfStringOperands(left, right);
+            ThrowIfMixedBoolNumeric(left, right);
+            if (BothAreBoolean(left, right))
+            {
+                return BoolAsInt(left) <= BoolAsInt(right);
+            }
+            if (EitherIsFloat(left, right))
+            {
+                return AsFloat(left) <= AsFloat(right);
+            }
+
+            return left.IntegerValue <= right.IntegerValue;
+        }
+
+        public static bool operator >=(TaggedUnion left, TaggedUnion right)
+        {
+            ThrowIfStringOperands(left, right);
+            ThrowIfMixedBoolNumeric(left, right);
+            if (BothAreBoolean(left, right))
+            {
+                return BoolAsInt(left) >= BoolAsInt(right);
+            }
+            if (EitherIsFloat(left, right))
+            {
+                return AsFloat(left) >= AsFloat(right);
+            }
+
+            return left.IntegerValue >= right.IntegerValue;
         }
 
         static bool EitherIsFloat(TaggedUnion left, TaggedUnion right)
