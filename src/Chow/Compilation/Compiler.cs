@@ -208,6 +208,42 @@ namespace Chow.Interpreter.Compilation
                     opCode = OperationCode.Negate;
                     break;
 
+                case ExpressionOperator.Equal:
+                    opCode = OperationCode.Equal;
+                    break;
+
+                case ExpressionOperator.NotEqual:
+                    opCode = OperationCode.NotEqual;
+                    break;
+
+                case ExpressionOperator.Less:
+                    opCode = OperationCode.Less;
+                    break;
+
+                case ExpressionOperator.Greater:
+                    opCode = OperationCode.Greater;
+                    break;
+
+                case ExpressionOperator.LessEqual:
+                    opCode = OperationCode.LessEqual;
+                    break;
+
+                case ExpressionOperator.GreaterEqual:
+                    opCode = OperationCode.GreaterEqual;
+                    break;
+
+                case ExpressionOperator.And:
+                    opCode = OperationCode.And;
+                    break;
+
+                case ExpressionOperator.Or:
+                    opCode = OperationCode.Or;
+                    break;
+
+                case ExpressionOperator.Not:
+                    opCode = OperationCode.Not;
+                    break;
+
                 default:
                     throw new NotImplementedException($"Compilation of operator type {node.Operator} is not implemented.");
             }
@@ -235,6 +271,17 @@ namespace Chow.Interpreter.Compilation
                     {
                         constUnion = new TaggedUnion(floatVal);
                     }
+                    break;
+
+                case LiteralDataType.Boolean:
+                    if (literalNode.Value is bool boolVal)
+                    {
+                        constUnion = new TaggedUnion(boolVal);
+                    }
+                    break;
+
+                case LiteralDataType.None:
+                    constUnion = TaggedUnion.None;
                     break;
 
                 default:
