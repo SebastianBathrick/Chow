@@ -12,21 +12,20 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
         public Node Left => _leftOperand;
         public Node Right => _rightOperand;
 
-        public ExprNode(ExpressionOperator operatorType, Node leftOperand, Node rightOperand, int lineNumber)
-            : base(lineNumber)
+        public ExprNode(ExpressionOperator operatorType, Node leftOperand, Node rightOperand, int lineNumber) : base(lineNumber)
         {
             _operator = operatorType;
-            _leftOperand = leftOperand ?? throw new ArgumentNullException(nameof(leftOperand));
+            _leftOperand = leftOperand;
             _rightOperand = rightOperand;
         }
 
-        public ExprNode(ExpressionOperator operatorType, Node operand, int lineNumber)
-            : base(lineNumber)
+        /// <summary>
+        /// Initializes a node representing a negated expression (using unary minus or logical not).
+        /// </summary>
+        public ExprNode(ExpressionOperator operatorType, Node operand, int lineNumber) : base(lineNumber)
         {
-            if (operatorType != ExpressionOperator.Negate)
-                throw new ArgumentException("Unary constructor is only valid for Negate.", nameof(operatorType));
             _operator = operatorType;
-            _leftOperand = operand ?? throw new ArgumentNullException(nameof(operand));
+            _leftOperand = operand;
         }
 
         public override string ToString()
