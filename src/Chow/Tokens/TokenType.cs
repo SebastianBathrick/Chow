@@ -6,164 +6,164 @@ namespace Chow.Interpreter
     enum TokenType
     {
         /// <summary>Opening parenthesis: <c>(</c>.</summary>
-        LeftParenthesis,
+        SymbolLeftParen,
 
         /// <summary>Closing parenthesis: <c>)</c>.</summary>
-        RightParenthesis,
+        SymbolRightParen,
 
         /// <summary>Opening square bracket: <c>[</c>.</summary>
-        LeftBracket,
+        SymbolLeftBracket,
 
         /// <summary>Closing square bracket: <c>]</c>.</summary>
-        RightBracket,
+        SymbolRightBracket,
 
         /// <summary>Opening curly brace: <c>{</c>.</summary>
-        LeftCurlyBrace,
+        SymbolLeftCurly,
 
         /// <summary>Closing curly brace: <c>}</c>.</summary>
-        RightCurlyBrace,
+        SymbolRightCurly,
 
         /// <summary>Comma separator: <c>,</c>.</summary>
-        Comma,
+        SymbolComma,
 
         /// <summary>Dot punctuation: <c>.</c>.</summary>
-        Dot,
+        SymbolDot,
 
         /// <summary>Colon punctuation, commonly used before an indented block: <c>:</c>.</summary>
-        Colon,
+        SymbolBlockColon,
 
         /// <summary>Addition operator: <c>+</c>.</summary>
-        Plus,
+        SymbolPlus,
 
         /// <summary>Subtraction or unary negation operator: <c>-</c>.</summary>
-        Minus,
+        SymbolMinus,
 
         /// <summary>Multiplication operator: <c>*</c>.</summary>
-        Star,
+        SymbolMultiply,
 
         /// <summary>Exponentiation operator: <c>**</c>.</summary>
-        StarStar,
+        SymbolExponent,
 
         /// <summary>Division operator: <c>/</c>.</summary>
-        Slash,
+        SymbolDivide,
 
         /// <summary>Floor division operator: <c>//</c>.</summary>
-        SlashSlash,
+        SymbolFloorDivide,
 
         /// <summary>Modulo operator: <c>%</c>.</summary>
-        Percent,
+        SymbolPercent,
 
         /// <summary>Assignment operator: <c>=</c>.</summary>
-        Equal,
+        SymbolAssign,
 
         /// <summary>Equality comparison operator: <c>==</c>.</summary>
-        EqualEqual,
+        SymbolEqualTo,
 
         /// <summary>Inequality comparison operator: <c>!=</c>.</summary>
-        BangEqual,
+        SymbolNotEqual,
 
         /// <summary>Greater-than comparison operator: <c>&gt;</c>.</summary>
-        Greater,
+        SymbolGreater,
 
         /// <summary>Greater-than-or-equal comparison operator: <c>&gt;=</c>.</summary>
-        GreaterEqual,
+        SymbolGreaterEqual,
 
         /// <summary>Less-than comparison operator: <c>&lt;</c>.</summary>
-        Less,
+        SymbolLess,
 
         /// <summary>Less-than-or-equal comparison operator: <c>&lt;=</c>.</summary>
-        LessEqual,
+        SymbolLessEqual,
 
         /// <summary>User-defined name or non-keyword identifier.</summary>
         Identifier,
 
         /// <summary>Keyword: <c>True</c>.</summary>
-        True,
+        KeywordTrue,
 
         /// <summary>Keyword: <c>False</c>.</summary>
-        False,
+        KeywordFalse,
 
         /// <summary>Keyword: <c>None</c>.</summary>
-        None,
+        KeywordNone,
 
         /// <summary>Keyword: <c>and</c>.</summary>
-        And,
+        KeywordAnd,
 
         /// <summary>Keyword: <c>or</c>.</summary>
-        Or,
+        KeywordOr,
 
         /// <summary>Keyword: <c>not</c>.</summary>
-        Not,
+        KeywordNot,
 
         /// <summary>Keyword: <c>is</c>.</summary>
-        Is,
+        KeywordIs,
 
         /// <summary>Keyword: <c>in</c>.</summary>
-        In,
+        KeywordIn,
 
         /// <summary>Keyword: <c>def</c>.</summary>
-        Def,
+        KeywordDef,
 
         /// <summary>Keyword: <c>return</c>.</summary>
-        Return,
+        KeywordReturn,
 
         /// <summary>Keyword: <c>class</c>.</summary>
-        Class,
+        KeywordClass,
 
         /// <summary>Keyword: <c>with</c>.</summary>
-        With,
+        KeywordWith,
 
         /// <summary>Keyword: <c>as</c>.</summary>
-        As,
+        KeywordAs,
 
         /// <summary>Keyword: <c>global</c>.</summary>
-        Global,
+        KeywordGlobal,
 
         /// <summary>Keyword: <c>if</c>.</summary>
-        If,
+        KeywordIf,
 
         /// <summary>Keyword: <c>else</c>.</summary>
-        Else,
+        KeywordElse,
 
         /// <summary>Keyword: <c>elif</c>.</summary>
-        Elif,
+        KeywordElif,
 
         /// <summary>Keyword: <c>for</c>.</summary>
-        For,
+        KeywordFor,
 
         /// <summary>Keyword: <c>while</c>.</summary>
-        While,
+        KeywordWhile,
 
         /// <summary>Keyword: <c>break</c>.</summary>
-        Break,
+        KeywordBreak,
 
         /// <summary>Keyword: <c>continue</c>.</summary>
-        Continue,
+        KeywordContinue,
 
         /// <summary>Keyword: <c>pass</c>.</summary>
-        Pass,
+        KeywordPass,
 
         /// <summary>Keyword: <c>try</c>.</summary>
-        Try,
+        KeywordTry,
 
         /// <summary>Keyword: <c>except</c>.</summary>
-        Except,
+        KeywordExcept,
 
         /// <summary>Keyword: <c>finally</c>.</summary>
-        Finally,
+        KeywordFinally,
 
         /// <summary>Keyword: <c>raise</c>.</summary>
-        Raise,
+        KeywordRaise,
 
         /// <summary>Keyword: <c>assert</c>.</summary>
-        Assert,
+        KeywordAssert,
 
         /// <summary>String literal.</summary>
-        String,
+        KeywordLiteralStr,
 
-        Integer,
+        LiteralInt,
 
-        Float,
+        LiteralFloat,
 
         /// <summary>Significant logical line break.</summary>
         Newline,

@@ -12,33 +12,33 @@ namespace Chow.Interpreter.Tokens
 
         private static readonly IReadOnlyDictionary<string, TokenType> _keywords = new Dictionary<string, TokenType>
         {
-            { "True", TokenType.True },
-            { "False", TokenType.False },
-            { "None", TokenType.None },
-            { "and", TokenType.And },
-            { "or", TokenType.Or },
-            { "not", TokenType.Not },
-            { "is", TokenType.Is },
-            { "in", TokenType.In },
-            { "def", TokenType.Def },
-            { "return", TokenType.Return },
-            { "class", TokenType.Class },
-            { "with", TokenType.With },
-            { "as", TokenType.As },
-            { "global", TokenType.Global },
-            { "if", TokenType.If },
-            { "else", TokenType.Else },
-            { "elif", TokenType.Elif },
-            { "for", TokenType.For },
-            { "while", TokenType.While },
-            { "break", TokenType.Break },
-            { "continue", TokenType.Continue },
-            { "pass", TokenType.Pass },
-            { "try", TokenType.Try },
-            { "except", TokenType.Except },
-            { "finally", TokenType.Finally },
-            { "raise", TokenType.Raise },
-            { "assert", TokenType.Assert },
+            { "True", TokenType.KeywordTrue },
+            { "False", TokenType.KeywordFalse },
+            { "None", TokenType.KeywordNone },
+            { "and", TokenType.KeywordAnd },
+            { "or", TokenType.KeywordOr },
+            { "not", TokenType.KeywordNot },
+            { "is", TokenType.KeywordIs },
+            { "in", TokenType.KeywordIn },
+            { "def", TokenType.KeywordDef },
+            { "return", TokenType.KeywordReturn },
+            { "class", TokenType.KeywordClass },
+            { "with", TokenType.KeywordWith },
+            { "as", TokenType.KeywordAs },
+            { "global", TokenType.KeywordGlobal },
+            { "if", TokenType.KeywordIf },
+            { "else", TokenType.KeywordElse },
+            { "elif", TokenType.KeywordElif },
+            { "for", TokenType.KeywordFor },
+            { "while", TokenType.KeywordWhile },
+            { "break", TokenType.KeywordBreak },
+            { "continue", TokenType.KeywordContinue },
+            { "pass", TokenType.KeywordPass },
+            { "try", TokenType.KeywordTry },
+            { "except", TokenType.KeywordExcept },
+            { "finally", TokenType.KeywordFinally },
+            { "raise", TokenType.KeywordRaise },
+            { "assert", TokenType.KeywordAssert },
         };
 
         readonly List<Token> _tokens;
@@ -275,93 +275,93 @@ namespace Chow.Interpreter.Tokens
             switch (CurrentChar)
             {
                 case '(':
-                    tokenType = TokenType.LeftParenthesis;
+                    tokenType = TokenType.SymbolLeftParen;
                     break;
 
                 case ')':
-                    tokenType = TokenType.RightParenthesis;
+                    tokenType = TokenType.SymbolRightParen;
                     break;
 
                 case ',':
-                    tokenType = TokenType.Comma;
+                    tokenType = TokenType.SymbolComma;
                     break;
 
                 case '.':
-                    tokenType = TokenType.Dot;
+                    tokenType = TokenType.SymbolDot;
                     break;
 
                 case ':':
-                    tokenType = TokenType.Colon;
+                    tokenType = TokenType.SymbolBlockColon;
                     break;
 
                 case '+':
-                    tokenType = TokenType.Plus;
+                    tokenType = TokenType.SymbolPlus;
                     break;
 
                 case '-':
-                    tokenType = TokenType.Minus;
+                    tokenType = TokenType.SymbolMinus;
                     break;
 
                 case '*':
-                    if (TryScanCompoundOp('*', TokenType.StarStar, "**"))
+                    if (TryScanCompoundOp('*', TokenType.SymbolExponent, "**"))
                     {
                         return true;
                     }
 
-                    tokenType = TokenType.Star;
+                    tokenType = TokenType.SymbolMultiply;
                     break;
 
                 case '/':
-                    if (TryScanCompoundOp('/', TokenType.SlashSlash, "//"))
+                    if (TryScanCompoundOp('/', TokenType.SymbolFloorDivide, "//"))
                     {
                         return true;
                     }
 
-                    tokenType = TokenType.Slash;
+                    tokenType = TokenType.SymbolDivide;
                     break;
 
                 case '%':
-                    tokenType = TokenType.Percent;
+                    tokenType = TokenType.SymbolPercent;
                     break;
 
                 case '!':
-                    return TryScanCompoundOp('=', TokenType.BangEqual, "!=");
+                    return TryScanCompoundOp('=', TokenType.SymbolNotEqual, "!=");
 
                 case '=':
-                    if (TryScanCompoundOp('=', TokenType.EqualEqual, "=="))
+                    if (TryScanCompoundOp('=', TokenType.SymbolEqualTo, "=="))
                     {
                         return true;
                     }
 
-                    tokenType = TokenType.Equal;
+                    tokenType = TokenType.SymbolAssign;
                     break;
 
                 case '>':
-                    if (TryScanCompoundOp('=', TokenType.GreaterEqual, ">="))
+                    if (TryScanCompoundOp('=', TokenType.SymbolGreaterEqual, ">="))
                     {
                         return true;
                     }
 
-                    tokenType = TokenType.Greater;
+                    tokenType = TokenType.SymbolGreater;
                     break;
 
                 case '<':
-                    if (TryScanCompoundOp('=', TokenType.LessEqual, "<="))
+                    if (TryScanCompoundOp('=', TokenType.SymbolLessEqual, "<="))
                     {
                         return true;
                     }
 
-                    tokenType = TokenType.Less;
+                    tokenType = TokenType.SymbolLess;
                     break;
 
                 // Indentation and line-break rules are not enforced (for lists and dictionary declarations)
                 case '[':
-                    tokenType = TokenType.LeftBracket;
+                    tokenType = TokenType.SymbolLeftBracket;
                     _openBracketStack.Push('[');
                     break;
 
                 case ']':
-                    tokenType = TokenType.RightBracket;
+                    tokenType = TokenType.SymbolRightBracket;
 
                     if (_openBracketStack.Count == 0 || _openBracketStack.Pop() != '[')
                     {
@@ -370,12 +370,12 @@ namespace Chow.Interpreter.Tokens
                     break;
 
                 case '{':
-                    tokenType = TokenType.LeftCurlyBrace;
+                    tokenType = TokenType.SymbolLeftCurly;
                     _openBracketStack.Push('{');
                     break;
 
                 case '}':
-                    tokenType = TokenType.RightCurlyBrace;
+                    tokenType = TokenType.SymbolRightCurly;
 
                     if (_openBracketStack.Count == 0 || _openBracketStack.Pop() != '{')
                     {
@@ -433,7 +433,7 @@ namespace Chow.Interpreter.Tokens
 
             int length = _scanCharIndex - startIndex;
             string lexeme = _srcCode.Substring(startIndex, length);
-            TokenType numTokenType = isFloat ? TokenType.Float : TokenType.Integer;
+            TokenType numTokenType = isFloat ? TokenType.LiteralFloat : TokenType.LiteralInt;
             object literal;
 
             try

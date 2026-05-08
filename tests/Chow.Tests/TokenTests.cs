@@ -9,7 +9,7 @@ namespace Chow.Tests
         [Test]
         public void ToString_FloatToken_ReturnsLabeledFields()
         {
-            var token = new Token(TokenType.Float, "3.0", 2, 3.0f);
+            var token = new Token(TokenType.LiteralFloat, "3.0", 2, 3.0f);
 
             Assert.That(token.ToString(), Is.EqualTo("Token(type=Float, lexeme=\"3.0\", literal=3, line=2)"));
         }
@@ -33,7 +33,7 @@ namespace Chow.Tests
         [Test]
         public void ToString_StringLiteral_EscapesLiteralText()
         {
-            var token = new Token(TokenType.String, "\"quoted\"\n", 4, "\"quoted\"\n");
+            var token = new Token(TokenType.KeywordLiteralStr, "\"quoted\"\n", 4, "\"quoted\"\n");
 
             Assert.That(token.ToString(), Is.EqualTo("Token(type=String, lexeme=\"\\\"quoted\\\"\\n\", literal=\"\\\"quoted\\\"\\n\", line=4)"));
         }
