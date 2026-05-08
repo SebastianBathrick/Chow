@@ -180,8 +180,13 @@ namespace Chow.Interpreter.Tokens
 
         void ScanNewlineToken()
         {
-            // Use a newline for the lexeme for clean debug information
-            AddNewToken(TokenType.Newline, "\n", _currLineNumber);
+            // Newlines are ignored when inside brackets
+            if (_openBracketStack.Count == 0)
+            {
+                // Use a newline for the lexeme for clean debug information
+                AddNewToken(TokenType.Newline, "\n", _currLineNumber);
+            }
+
             MovePastNewline();
         }
 
@@ -274,14 +279,6 @@ namespace Chow.Interpreter.Tokens
 
             switch (CurrentChar)
             {
-                case '(':
-                    tokenType = TokenType.SymbolLeftParen;
-                    break;
-
-                case ')':
-                    tokenType = TokenType.SymbolRightParen;
-                    break;
-
                 case ',':
                     tokenType = TokenType.SymbolComma;
                     break;
@@ -360,6 +357,7 @@ namespace Chow.Interpreter.Tokens
                     _openBracketStack.Push('[');
                     break;
 
+                // TODO: Refactor to reduce repeated closing bracket logic
                 case ']':
                     tokenType = TokenType.SymbolRightBracket;
 
@@ -381,6 +379,21 @@ namespace Chow.Interpreter.Tokens
                     {
                         throw new ScannerException("Unexpected '}'", _currLineNumber);
                     }
+                    break;
+
+                case '(':
+                    tokenType = TokenType.SymbolLeftParen;
+                    _openBracketStack.Push('(');
+                    break;
+
+                case ')':
+                    tokenType = TokenType.SymbolRightParen;
+
+                    if (_openBracketStack.Count == 0 || _openBracketStack.Pop() != '(')
+                    {
+                        throw new ScannerException("Unexpected ')'", _currLineNumber);
+                    }
+
                     break;
 
                 default:
@@ -551,8 +564,8 @@ namespace Chow.Interpreter.Tokens
                     break;
             }
 
-            _currLineNumber++;
             _isAtStartOfLine = true;
+            _currLineNumber++;
         }
 
         private void SkipToCodeStart()
