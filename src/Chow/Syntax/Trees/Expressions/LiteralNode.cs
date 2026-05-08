@@ -13,9 +13,10 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
         public LiteralNode(object value, int lineNumber) : base(lineNumber)
         {
             if (value == null)
-                throw new ArgumentNullException(nameof(value));
-
-            if (value is int)
+            {
+                _type = LiteralDataType.None;
+            }
+            else if (value is int)
             {
                 _type = LiteralDataType.Integer;
             }
@@ -26,10 +27,6 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
             else if (value is bool)
             {
                 _type = LiteralDataType.Boolean;
-            }
-            else if (value is null)
-            {
-                _type = LiteralDataType.None;
             }
             else
             {
