@@ -10,7 +10,6 @@ namespace Chow.Interpreter.Compilation
     {
         Chunk _chunk;
         Node _syntaxTreeRoot;
-        bool _isDirty = false;
 
         public Compiler(Node syntaxTreeRoot)
         {
@@ -25,12 +24,6 @@ namespace Chow.Interpreter.Compilation
 
         public Chunk CompileSyntaxTreeRoot()
         {
-            if (_isDirty)
-            {
-                throw new InvalidOperationException("This Compiler instance can only be used once");
-            }
-
-            _isDirty = true;
             CompileTargetNode(_syntaxTreeRoot);
 
             return _chunk;
@@ -131,14 +124,14 @@ namespace Chow.Interpreter.Compilation
             // If a variable with the same name already exists in the chunk, the index of the existing variable will be returned.
             // Otherwise, the new variable will be added to the chunk and its new index will be returned.
             int varNameOperand = _chunk.RegisterVariableName(varAssignNode.Name);
-            _chunk.PushOperation(OperationCode.AssignOrDeclareVariable, varAssignNode.LineNumber, varNameOperand);
+            _chunk.AddInstruction(OperationCode.AssignOrDeclareVariable, varAssignNode.LineNumber, varNameOperand);
         }
 
         void CompileVariableFactor(IdentifierNode varFactorNode)
         {
             // Register to have its own constant in case the variable with this name is declared in a previous environment
             int varNameOperand = _chunk.RegisterVariableName(varFactorNode.Name);
-            _chunk.PushOperation(OperationCode.PushVariableValue, varFactorNode.LineNumber, varNameOperand);
+            _chunk.AddInstruction(OperationCode.PushVariableValue, varFactorNode.LineNumber, varNameOperand);
         }
 
         void CompileReturn(ReturnNode returnNode)
@@ -148,13 +141,13 @@ namespace Chow.Interpreter.Compilation
                 CompileTargetNode(returnNode.Expression);
             }
 
-            _chunk.PushOperation(operationType: OperationCode.ReturnValue, returnNode.LineNumber);
+            _chunk.AddInstruction(code: OperationCode.ReturnValue, returnNode.LineNumber);
         }
 
         void CompileExpressionStatement(ExprStatementNode exprStmtNode)
         {
             CompileTargetNode(exprStmtNode.Expression);
-            _chunk.PushOperation(OperationCode.PopExprStmntResult, exprStmtNode.LineNumber);
+            _chunk.AddInstruction(OperationCode.PopExprStmntResult, exprStmtNode.LineNumber);
         }
 
         #endregion
@@ -175,7 +168,7 @@ namespace Chow.Interpreter.Compilation
             CompileTargetNode(exprNode.Right);
 
             OperationCode opCode = GetExpressionOperationCode(exprNode);
-            _chunk.PushOperation(opCode, exprNode.LineNumber);
+            _chunk.AddInstruction(opCode, exprNode.LineNumber);
         }
 
         void CompileShortCircuit(ExprNode node)
@@ -187,13 +180,13 @@ namespace Chow.Interpreter.Compilation
                 : OperationCode.JumpIfTrueOrPop;
 
             // Emit jump with placeholder operand; the real target is unknown until the right side is compiled
-            _chunk.PushOperation(jumpCode, node.LineNumber);
+            _chunk.AddInstruction(jumpCode, node.LineNumber);
             int patchIndex = _chunk.Count - 1;
 
             CompileTargetNode(node.Right);
 
             // Land just past the right-hand bytecode
-            _chunk.PatchOperationOperand(patchIndex, _chunk.Count);
+            _chunk.PatchInstructionOperand(patchIndex, _chunk.Count);
         }
 
         private static OperationCode GetExpressionOperationCode(ExprNode node)
@@ -314,7 +307,7 @@ namespace Chow.Interpreter.Compilation
             // If a constant of the same value already exists in the chunk, the operand of the existing constant will be returned.
             // Otherwise, the new constant will be added to the chunk and its new operand will be returned.
             int constIndex = _chunk.RegisterConstant(constUnion);
-            _chunk.PushOperation(OperationCode.PushConstant, literalNode.LineNumber, constIndex);
+            _chunk.AddInstruction(OperationCode.PushConstant, literalNode.LineNumber, constIndex);
         }
 
         #endregion
