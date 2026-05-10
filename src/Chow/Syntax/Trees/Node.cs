@@ -6,14 +6,11 @@ namespace Chow.Interpreter.Syntax.Trees
     {
         readonly int _lineNumber;
 
-        public int LineNumber => _lineNumber;
+        public int LineNum => _lineNumber;
 
-        protected Node(int lineNumber)
+        protected Node(int line)
         {
-            if (lineNumber < 1)
-                throw new ArgumentOutOfRangeException(nameof(lineNumber));
-
-            _lineNumber = lineNumber;
+            _lineNumber = line;
         }
 
         public abstract override string ToString();

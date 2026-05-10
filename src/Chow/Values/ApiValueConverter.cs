@@ -2,7 +2,7 @@
 
 namespace Chow.Interpreter.Values
 {
-    internal static class ChowValueConverter
+    internal static class ApiValueConverter
     {
         public static TaggedUnion ToTaggedUnion(ChowValue value)
         {
@@ -21,9 +21,9 @@ namespace Chow.Interpreter.Values
                 return new TaggedUnion(value.BoolValue);
             }
 
-            if (value.IsIntegerValue)
+            if (value.IsIntValue)
             {
-                return new TaggedUnion(value.IntegerValue);
+                return new TaggedUnion(value.IntValue);
             }
 
             if (value.IsFloatValue)

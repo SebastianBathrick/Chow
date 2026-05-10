@@ -10,9 +10,9 @@ namespace Chow.Interpreter.Syntax.Trees.Statements
 
         public Node Expression => _expr;
 
-        public ExprStatementNode(Node expression, int lineNumber) : base(lineNumber)
+        public ExprStatementNode(Node expr, int line) : base(line)
         {
-            _expr = expression;
+            _expr = expr;
         }
 
         public override string ToString()

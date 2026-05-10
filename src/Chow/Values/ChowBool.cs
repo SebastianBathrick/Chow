@@ -5,21 +5,21 @@ namespace Chow.Interpreter.Values
         private const string TRUE_STRING = "True";
         private const string FALSE_STRING = "False";
 
-        private bool _boolValue;
+        private bool _val;
 
-        public override int IntegerValue { get => _boolValue ? 1 : 0; }
-        public override float FloatValue { get => _boolValue ? 1f : 0f; }
-        public override bool BoolValue { get => _boolValue; }
+        public override int IntValue { get => _val ? 1 : 0; }
+        public override float FloatValue { get => _val ? 1f : 0f; }
+        public override bool BoolValue { get => _val; }
 
-        public override bool IsIntegerValue { get => false; }
+        public override bool IsIntValue { get => false; }
         public override bool IsFloatValue { get => false; }
         public override bool IsBoolValue { get => true; }
 
-        public ChowBool(bool boolValue)
+        public ChowBool(bool val)
         {
-            _boolValue = boolValue;
+            _val = val;
         }
 
-        public override string ToString() => _boolValue ? TRUE_STRING : FALSE_STRING;
+        public override string ToString() => _val ? TRUE_STRING : FALSE_STRING;
     }
 }

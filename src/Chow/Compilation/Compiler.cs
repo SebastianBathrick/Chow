@@ -9,22 +9,17 @@ namespace Chow.Interpreter.Compilation
     class Compiler
     {
         Chunk _chunk;
-        Node _syntaxTreeRoot;
+        Node _root;
 
-        public Compiler(Node syntaxTreeRoot)
+        public Compiler(Node root)
         {
-            if (syntaxTreeRoot == null)
-            {
-                throw new ArgumentNullException(nameof(syntaxTreeRoot));
-            }
-
             _chunk = new Chunk();
-            _syntaxTreeRoot = syntaxTreeRoot;
+            _root = root;
         }
 
         public Chunk CompileSyntaxTreeRoot()
         {
-            CompileTargetNode(_syntaxTreeRoot);
+            CompileTargetNode(_root);
 
             return _chunk;
         }
@@ -39,10 +34,11 @@ namespace Chow.Interpreter.Compilation
 
             switch (targetNode)
             {
+                // TODO: Remove EmptyNode
                 case EmptyNode _:
                     break;
 
-                case SyntaxTreeRoot root:
+                case RootNode root:
                     CompileSyntaxTreeRoot(root);
                     break;
 
@@ -62,7 +58,7 @@ namespace Chow.Interpreter.Compilation
                     CompileVariableAssign(varAssignNode);
                     break;
 
-                case IdentifierNode varFactorNode:
+                case NameNode varFactorNode:
                     CompileVariableFactor(varFactorNode);
                     break;
 
@@ -80,9 +76,9 @@ namespace Chow.Interpreter.Compilation
             }
         }
 
-        void CompileSyntaxTreeRoot(SyntaxTreeRoot root)
+        void CompileSyntaxTreeRoot(RootNode root)
         {
-            CompileTargetNode(root.ModuleNode);
+            CompileTargetNode(root.Module);
         }
 
         void CompileBlockNode(BlockNode blockNode)
@@ -124,14 +120,14 @@ namespace Chow.Interpreter.Compilation
             // If a variable with the same name already exists in the chunk, the index of the existing variable will be returned.
             // Otherwise, the new variable will be added to the chunk and its new index will be returned.
             int varNameOperand = _chunk.RegisterVariableName(varAssignNode.Name);
-            _chunk.AddInstruction(OperationCode.AssignOrDeclareVariable, varAssignNode.LineNumber, varNameOperand);
+            _chunk.AddInstruction(OperationCode.AssignOrDeclareVariable, varAssignNode.LineNum, varNameOperand);
         }
 
-        void CompileVariableFactor(IdentifierNode varFactorNode)
+        void CompileVariableFactor(NameNode varFactorNode)
         {
             // Register to have its own constant in case the variable with this name is declared in a previous environment
             int varNameOperand = _chunk.RegisterVariableName(varFactorNode.Name);
-            _chunk.AddInstruction(OperationCode.PushVariableValue, varFactorNode.LineNumber, varNameOperand);
+            _chunk.AddInstruction(OperationCode.PushVariableValue, varFactorNode.LineNum, varNameOperand);
         }
 
         void CompileReturn(ReturnNode returnNode)
@@ -141,13 +137,13 @@ namespace Chow.Interpreter.Compilation
                 CompileTargetNode(returnNode.Expression);
             }
 
-            _chunk.AddInstruction(code: OperationCode.ReturnValue, returnNode.LineNumber);
+            _chunk.AddInstruction(code: OperationCode.ReturnValue, returnNode.LineNum);
         }
 
         void CompileExpressionStatement(ExprStatementNode exprStmtNode)
         {
             CompileTargetNode(exprStmtNode.Expression);
-            _chunk.AddInstruction(OperationCode.PopExprStmntResult, exprStmtNode.LineNumber);
+            _chunk.AddInstruction(OperationCode.PopExprStmntResult, exprStmtNode.LineNum);
         }
 
         #endregion
@@ -157,7 +153,7 @@ namespace Chow.Interpreter.Compilation
         void CompileExpression(ExprNode exprNode)
         {
             // `and`/`or` short-circuit, so they cannot use the eager postfix layout used by all other binary operators
-            if (exprNode.Operator == ExpressionOperator.And || exprNode.Operator == ExpressionOperator.Or)
+            if (exprNode.Operator == ExprOperator.And || exprNode.Operator == ExprOperator.Or)
             {
                 CompileShortCircuit(exprNode);
                 return;
@@ -168,25 +164,32 @@ namespace Chow.Interpreter.Compilation
             CompileTargetNode(exprNode.Right);
 
             OperationCode opCode = GetExpressionOperationCode(exprNode);
-            _chunk.AddInstruction(opCode, exprNode.LineNumber);
+            _chunk.AddInstruction(opCode, exprNode.LineNum);
         }
 
         void CompileShortCircuit(ExprNode node)
         {
             CompileTargetNode(node.Left);
 
-            OperationCode jumpCode = node.Operator == ExpressionOperator.And
-                ? OperationCode.JumpIfFalseOrPop
-                : OperationCode.JumpIfTrueOrPop;
+            OperationCode jumpCode; 
+
+            if (node.Operator == ExprOperator.And)
+            {
+                jumpCode = OperationCode.JumpIfFalseOrPop;
+            }
+            else
+            {
+                jumpCode = OperationCode.JumpIfTrueOrPop;
+            }
 
             // Emit jump with placeholder operand; the real target is unknown until the right side is compiled
-            _chunk.AddInstruction(jumpCode, node.LineNumber);
-            int patchIndex = _chunk.Count - 1;
+            _chunk.AddInstruction(jumpCode, node.LineNum);
+            int patchIdx = _chunk.Count - 1;
 
             CompileTargetNode(node.Right);
 
             // Land just past the right-hand bytecode
-            _chunk.PatchInstructionOperand(patchIndex, _chunk.Count);
+            _chunk.PatchInstructionOperand(patchIdx, _chunk.Count);
         }
 
         private static OperationCode GetExpressionOperationCode(ExprNode node)
@@ -194,68 +197,68 @@ namespace Chow.Interpreter.Compilation
             OperationCode opCode;
             switch (node.Operator)
             {
-                case ExpressionOperator.Add:
+                case ExprOperator.Add:
                     opCode = OperationCode.Add;
                     break;
 
-                case ExpressionOperator.Subtract:
+                case ExprOperator.Subtract:
                     opCode = OperationCode.Subtract;
                     break;
 
-                case ExpressionOperator.Multiply:
+                case ExprOperator.Multiply:
                     opCode = OperationCode.Multiply;
                     break;
 
-                case ExpressionOperator.Divide:
+                case ExprOperator.Divide:
                     opCode = OperationCode.Divide;
                     break;
 
-                case ExpressionOperator.Modulus:
+                case ExprOperator.Modulus:
                     opCode = OperationCode.Modulus;
                     break;
 
-                case ExpressionOperator.Exponentiate:
+                case ExprOperator.Exponentiate:
                     opCode = OperationCode.Exponentiate;
                     break;
 
-                case ExpressionOperator.FloorDivide:
+                case ExprOperator.FloorDivide:
                     opCode = OperationCode.FloorDivide;
                     break;
 
-                case ExpressionOperator.Negate:
+                case ExprOperator.Negate:
                     opCode = OperationCode.Negate;
                     break;
 
-                case ExpressionOperator.Equal:
+                case ExprOperator.Equal:
                     opCode = OperationCode.Equal;
                     break;
 
-                case ExpressionOperator.NotEqual:
+                case ExprOperator.NotEqual:
                     opCode = OperationCode.NotEqual;
                     break;
 
-                case ExpressionOperator.Less:
+                case ExprOperator.Less:
                     opCode = OperationCode.Less;
                     break;
 
-                case ExpressionOperator.Greater:
+                case ExprOperator.Greater:
                     opCode = OperationCode.Greater;
                     break;
 
-                case ExpressionOperator.LessEqual:
+                case ExprOperator.LessEqual:
                     opCode = OperationCode.LessEqual;
                     break;
 
-                case ExpressionOperator.GreaterEqual:
+                case ExprOperator.GreaterEqual:
                     opCode = OperationCode.GreaterEqual;
                     break;
 
-                case ExpressionOperator.Not:
+                case ExprOperator.Not:
                     opCode = OperationCode.Not;
                     break;
 
                 default:
-                    throw new NotImplementedException($"Compilation of operator type {node.Operator} is not implemented.");
+                    throw new NotImplementedException(nameof(node.Operator));
             }
 
             return opCode;
@@ -306,8 +309,8 @@ namespace Chow.Interpreter.Compilation
 
             // If a constant of the same value already exists in the chunk, the operand of the existing constant will be returned.
             // Otherwise, the new constant will be added to the chunk and its new operand will be returned.
-            int constIndex = _chunk.RegisterConstant(constUnion);
-            _chunk.AddInstruction(OperationCode.PushConstant, literalNode.LineNumber, constIndex);
+            int constIdx = _chunk.RegisterConstant(constUnion);
+            _chunk.AddInstruction(OperationCode.PushConstant, literalNode.LineNum, constIdx);
         }
 
         #endregion

@@ -5,26 +5,26 @@ namespace Chow.Interpreter.Tokens
     /// </summary>
     readonly struct Token
     {
-        internal TokenType Type { get; }
+        public readonly TokenType type;
 
-        internal string Lexeme { get; }
+        public readonly string lexeme;
 
-        internal int LineNum { get; }
+        public readonly int lineNum;
 
         // Can  be null
-        internal object Literal { get; }
+        public readonly object literal;
 
         public Token(TokenType type, string lexeme, int lineNum, object literal)
         {
-            Type = type;
-            Lexeme = lexeme;
-            LineNum = lineNum;
-            Literal = literal;
+            this.type = type;
+            this.lexeme = lexeme;
+            this.lineNum = lineNum;
+            this.literal = literal;
         }
 
         public override string ToString()
         {
-            return $"Token(type={Type}, lexeme=\"{FormatLexeme(Lexeme)}\", literal={FormatLiteral(Literal)}, line={LineNum})";
+            return $"Token(type={type}, lexeme=\"{FormatLexeme(lexeme)}\", literal={FormatLiteral(literal)}, line={lineNum})";
         }
 
         static string FormatLexeme(string lexeme)
@@ -45,9 +45,9 @@ namespace Chow.Interpreter.Tokens
                 return "null";
             }
 
-            if (literal is string stringLiteral)
+            if (literal is string strLiteral)
             {
-                return $"\"{FormatLexeme(stringLiteral)}\"";
+                return $"\"{FormatLexeme(strLiteral)}\"";
             }
 
             return literal.ToString();

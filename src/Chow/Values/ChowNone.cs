@@ -16,33 +16,26 @@ namespace Chow.Interpreter.Values
         // Only one instance of ChowNone should exist
         private ChowNone()
         {
-            if (_instance != null)
+            if (_instance == null)
             {
-                throw new InvalidOperationException("Only one instance of ChowNone should exist.");
+                return;
             }
+
+            throw new InvalidOperationException("Only one instance of ChowNone should exist.");
         }
 
         // Throw ChowConversionException
-        public override int IntegerValue { get => throw new InvalidCastException(GetType(), typeof(int), this); }
+        public override int IntValue => throw new InvalidCastException(GetType(), typeof(int), this);
 
-        public override float FloatValue { get => throw new InvalidCastException(GetType(), typeof(float), this); }
+        public override float FloatValue => throw new InvalidCastException(GetType(), typeof(float), this);
 
-        public override bool BoolValue { get => throw new InvalidCastException(GetType(), typeof(bool), this); }
+        public override bool BoolValue => throw new InvalidCastException(GetType(), typeof(bool), this);
 
-        public override bool IsIntegerValue
-        {
-            get { return false; }
-        }
+        public override bool IsIntValue => false;
 
-        public override bool IsFloatValue
-        {
-            get { return false; }
-        }
+        public override bool IsFloatValue => false;
 
-        public override bool IsBoolValue
-        {
-            get { return false; }
-        }
+        public override bool IsBoolValue => false;
 
         public override string ToString() => NONE_STRING;
     }

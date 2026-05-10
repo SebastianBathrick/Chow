@@ -11,7 +11,7 @@ namespace Chow.Interpreter
     public class ChowModule
     {
         List<IExecutionHook> _hooks = new List<IExecutionHook>();
-        ChowEnvironment _enviro;
+        ChowEnviro _enviro;
 
         public void Execute(string sourceCode)
         {
@@ -21,7 +21,7 @@ namespace Chow.Interpreter
             List<Token> tokens = scanner.ScanTokens();
 
             Parser parser = new Parser(tokens);
-            Node syntaxTreeRoot = parser.BuildSyntaxTree();
+            Node syntaxTreeRoot = parser.BuildTree();
 
             Compiler compiler = new Compiler(syntaxTreeRoot);
             Chunk chunk = compiler.CompileSyntaxTreeRoot();

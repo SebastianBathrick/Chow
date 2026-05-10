@@ -3,69 +3,69 @@ using System.Collections.Generic;
 
 namespace Chow.Interpreter.Evaluation
 {
-    internal class ChowEnvironment
+    internal class ChowEnviro
     {
         const string SCOPE_BOUNDARY_ELEMENT = "<SCOPE_BOUNDARY>";
         const int TOP_LVL_SCOPE_DEPTH = 0;
 
-        private Stack<string> _varNameStack;
-        private Dictionary<string, TaggedUnion> _varValMap;
-        private int _scopeDepthLvl;
+        private Stack<string> _varNames;
+        private Dictionary<string, TaggedUnion> _varMap;
+        private int _scopeDepth;
 
-        public bool IsTopLevelScope => _scopeDepthLvl == TOP_LVL_SCOPE_DEPTH;
+        public bool IsCurrentlyTopLevel => _scopeDepth == TOP_LVL_SCOPE_DEPTH;
 
-        public ChowEnvironment()
+        public ChowEnviro()
         {
-            _varValMap = new Dictionary<string, TaggedUnion>();
-            _scopeDepthLvl = TOP_LVL_SCOPE_DEPTH;
+            _varMap = new Dictionary<string, TaggedUnion>();
+            _scopeDepth = TOP_LVL_SCOPE_DEPTH;
 
             // The bottom of the stack represents the top-level scope (which will never be popped)
-            _varNameStack = new Stack<string>();
-            _varNameStack.Push(SCOPE_BOUNDARY_ELEMENT);
+            _varNames = new Stack<string>();
+            _varNames.Push(SCOPE_BOUNDARY_ELEMENT);
         }
 
         public bool IsVariableDefined(string name)
         {
-            return _varValMap.ContainsKey(name);
+            return _varMap.ContainsKey(name);
         }
 
         public void DeclareVariable(string name)
         {
-            _varNameStack.Push(name);
+            _varNames.Push(name);
         }
 
         public void EnterScope()
         {
-            _scopeDepthLvl++;
-            _varNameStack.Push(SCOPE_BOUNDARY_ELEMENT);
+            _scopeDepth++;
+            _varNames.Push(SCOPE_BOUNDARY_ELEMENT);
         }
 
         public void ExitScope()
         {
             // Pop the name of the variable declared last OR the boundary element if no variables were declared in the current scope
-            string poppedName = _varNameStack.Pop();
+            string popName = _varNames.Pop();
 
             // Pop until the boundary element has been popped (either popped or is below the name of the first variable in the scope)
-            while (poppedName != SCOPE_BOUNDARY_ELEMENT)
+            while (popName != SCOPE_BOUNDARY_ELEMENT)
             {
                 // Remove variable name and its assigned value from the map
-                _varValMap.Remove(poppedName);
+                _varMap.Remove(popName);
 
                 // Pop another variable name OR the scope boundary element if there's no more variables left in the scope
-                poppedName = _varNameStack.Pop();
+                popName = _varNames.Pop();
             }
 
-            _scopeDepthLvl--;
+            _scopeDepth--;
         }
 
         public void AssignVariableValue(string name, TaggedUnion value)
         {
-            _varValMap[name] = value;
+            _varMap[name] = value;
         }
 
         public TaggedUnion GetVariableValue(string name)
         {
-            return _varValMap[name];
+            return _varMap[name];
         }
     }
 }

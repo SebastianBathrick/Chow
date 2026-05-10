@@ -4,11 +4,11 @@ namespace Chow.Interpreter.Values
     {
         private float _floatValue;
 
-        public override int IntegerValue { get => (int)_floatValue; }
+        public override int IntValue { get => (int)_floatValue; }
         public override float FloatValue { get => _floatValue; }
         public override bool BoolValue { get => _floatValue != 0f; }
 
-        public override bool IsIntegerValue { get => false; }
+        public override bool IsIntValue { get => false; }
         public override bool IsFloatValue { get => true; }
         public override bool IsBoolValue { get => false; }
 

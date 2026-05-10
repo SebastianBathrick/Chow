@@ -4,37 +4,21 @@ namespace Chow.Interpreter.Syntax.Trees.Statements
 {
     internal class VariableAssignNode : Node
     {
-        string _identifier;
-        Node _expression;
+        string _name;
+        Node _expr;
 
-        public string Name => _identifier;
-        public Node Expression => _expression;
+        public string Name => _name;
+        public Node Expression => _expr;
 
-        public VariableAssignNode(string identifier, Node expression, int lineNumber)
-            : base(lineNumber)
+        public VariableAssignNode(string name, Node expr, int line) : base(line)
         {
-            if (identifier == null)
-            {
-                throw new ArgumentNullException(nameof(identifier));
-            }
-
-            if (identifier.Length == 0)
-            {
-                throw new ArgumentException("Identifier name cannot be empty.", nameof(identifier));
-            }
-
-            if (expression == null)
-            {
-                throw new ArgumentNullException(nameof(expression));
-            }
-
-            _identifier = identifier;
-            _expression = expression;
+            _name = name;
+            _expr = expr;
         }
 
         public override string ToString()
         {
-            return $"VariableAssignment({_identifier}, {_expression}) line={LineNumber}";
+            return $"VariableAssignment({_name}, {_expr}) line={LineNum}";
         }
     }
 }

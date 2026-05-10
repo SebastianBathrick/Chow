@@ -41,83 +41,70 @@ namespace Chow.Interpreter.Tokens
             { "assert", TokenType.KeywordAssert },
         };
 
-        readonly List<Token> _tokens;
-        readonly Stack<int> _indentLevels;
-        readonly Stack<char> _openBracketStack;
+        readonly List<Token> _tkns;
+        readonly Stack<int> _indentLvls;
+        readonly Stack<char> _brackets;
 
-        readonly string _srcCode;
-        int _scanCharIndex;
-        int _currLineNumber;
+        readonly string _src;
+        int _charIdx;
+        int _lineNum;
 
-        bool _isAtStartOfLine;
-        bool _isDirty;
+        bool _isLineBegin;
 
-        private char CurrentChar => _srcCode[_scanCharIndex];
+        private char CurrChar => _src[_charIdx];
 
         #endregion
 
         #region Constructor & Primary Methods
 
-        public Scanner(string srcCode)
+        public Scanner(string src)
         {
-            _srcCode = srcCode;
-            _tokens = new List<Token>();
-            _scanCharIndex = 0;
-            _currLineNumber = 1;
-            _indentLevels = new Stack<int>();
-            _openBracketStack = new Stack<char>();
-            _isAtStartOfLine = true;
-            _indentLevels.Push(0);
+            _src = src;
+            _tkns = new List<Token>();
+            _charIdx = 0;
+            _lineNum = 1;
+            _indentLvls = new Stack<int>();
+            _brackets = new Stack<char>();
+            _isLineBegin = true;
+            _indentLvls.Push(0);
         }
 
         public List<Token> ScanTokens()
         {
-            ValidateIsNotDirty();
-
             // If source code is null, emit end of code token, so it can be treated as if it were an empty string or whitespace
-            if (_srcCode == null)
+            if (_src == null)
             {
-                AddEndOfCodeToken();
-                return _tokens;
+                AddEndOfCodeTkn();
+                return _tkns;
             }
 
             // Skip to the first line that does not start with whitespace, a comment, or newline character
-            SkipToCodeStart();
+            SkipToFirstLexeme();
 
             while (IsCharToScan())
             {
                 RunScanIteration();
             }
 
-            if (_openBracketStack.Count > 0)
+            if (_brackets.Count > 0)
             {
-                throw new ScannerException("Bracket(s) never closed in source code", _currLineNumber);
+                throw new ScannerEx("Bracket(s) never closed in source code", _lineNum);
             }
 
             // Add dedent tokens for each block nested within the top-level to mark their end
-            AddRemainingDedentTokens();
-            AddEndOfCodeToken();
+            AddLastDedentsTkns();
+            AddEndOfCodeTkn();
 
-            return _tokens;
-        }
-
-        private void ValidateIsNotDirty()
-        {
-            if (_isDirty)
-            {
-                throw new InvalidOperationException("This Scanner instance can only be used once.");
-            }
-
-            _isDirty = true;
+            return _tkns;
         }
 
         void RunScanIteration()
         {
-            if (_isAtStartOfLine)
+            if (_isLineBegin)
             {
                 if (IsLineAndIndentLogicEnabled())
                 {
-                    ScanLineStartIndentation();
+                    ScanIndentTkn();
                 }
 
                 if (!IsCharToScan())
@@ -126,29 +113,29 @@ namespace Chow.Interpreter.Tokens
                 }
             }
 
-            if (IsNameLeadingChar(CurrentChar))
+            if (IsNameLeadingChar(CurrChar))
             {
-                ScanNameToken();
+                ScanNameTkn();
             }
-            else if (IsNewlineChar(CurrentChar))
+            else if (IsNewlineChar(CurrChar))
             {
-                ScanNewlineToken();
+                ScanNewlineTkn();
             }
-            else if (IsDigitChar(CurrentChar))
+            else if (IsDigitChar(CurrChar))
             {
                 ScanNumericToken();
             }
-            else if (IsIndentChar(CurrentChar))
+            else if (IsIndentChar(CurrChar))
             {
                 MoveToNextChar();
             }
-            else if (IsCommentPrefix(CurrentChar))
+            else if (IsCommentPrefix(CurrChar))
             {
                 SkipRemainingLineChars();
             }
-            else if (!TryScanSymbolToken())
+            else if (!TryScanSymbolTkn())
             {
-                throw new ScannerException($"Unexpected character '{CurrentChar}'.", _currLineNumber);
+                throw new ScannerEx($"Unexpected character '{CurrChar}'.", _lineNum);
             }
         }
 
@@ -157,64 +144,64 @@ namespace Chow.Interpreter.Tokens
 
         #region Newline & Indentation Token Scan Methods
 
-        void ScanNameToken()
+        void ScanNameTkn()
         {
-            int startIndex = _scanCharIndex;
+            int startIdx = _charIdx;
 
-            while (IsCharToScan() && IsNameTrailChar(CurrentChar))
+            while (IsCharToScan() && IsNameTrailChar(CurrChar))
             {
                 MoveToNextChar();
             }
 
-            string lexeme = _srcCode.Substring(startIndex, _scanCharIndex - startIndex);
-            TokenType tokenType;
+            string lexeme = _src.Substring(startIdx, _charIdx - startIdx);
+            TokenType tknType;
 
-            if (_keywords.TryGetValue(lexeme, out tokenType))
+            if (_keywords.TryGetValue(lexeme, out tknType))
             {
-                AddNewToken(tokenType, lexeme, _currLineNumber);
+                AddNewToken(tknType, lexeme, _lineNum);
                 return;
             }
 
-            AddNewToken(TokenType.Identifier, lexeme, _currLineNumber);
+            AddNewToken(TokenType.Identifier, lexeme, _lineNum);
         }
 
-        void ScanNewlineToken()
+        void ScanNewlineTkn()
         {
             // Newlines are ignored when inside brackets
-            if (_openBracketStack.Count == 0)
+            if (_brackets.Count == 0)
             {
                 // Use a newline for the lexeme for clean debug information
-                AddNewToken(TokenType.Newline, "\n", _currLineNumber);
+                AddNewToken(TokenType.Newline, "\n", _lineNum);
             }
 
             MovePastNewline();
         }
 
-        void ScanLineStartIndentation()
+        void ScanIndentTkn()
         {
             int indentColumn = ScanIndentColumn();
 
-            if (!IsCharToScan() || IsNewlineChar(CurrentChar) || IsCommentPrefix(CurrentChar))
+            if (!IsCharToScan() || IsNewlineChar(CurrChar) || IsCommentPrefix(CurrChar))
             {
                 return;
             }
 
-            EmitIndentationTokens(indentColumn);
-            _isAtStartOfLine = false;
+            CreateIndentTkns(indentColumn);
+            _isLineBegin = false;
         }
 
         int ScanIndentColumn()
         {
             int indentColumn = 0;
 
-            while (IsCharToScan() && IsFormFeedChar(CurrentChar))
+            while (IsCharToScan() && IsFormFeedChar(CurrChar))
             {
                 MoveToNextChar();
             }
 
-            while (IsCharToScan() && IsIndentChar(CurrentChar))
+            while (IsCharToScan() && IsIndentChar(CurrChar))
             {
-                if (CurrentChar == '\t')
+                if (CurrChar == '\t')
                 {
                     // Tab rounds column up to the next multiple of TAB_SIZE (Python rule)
                     indentColumn = ((indentColumn / TAB_SIZE) + 1) * TAB_SIZE;
@@ -230,42 +217,40 @@ namespace Chow.Interpreter.Tokens
             return indentColumn;
         }
 
-        void EmitIndentationTokens(int indentColumn)
+        void CreateIndentTkns(int indentLvl)
         {
-            int previousIndentColumn = _indentLevels.Peek();
+            int prevIndentLvl = _indentLvls.Peek();
 
-            if (indentColumn > previousIndentColumn)
+            if (indentLvl > prevIndentLvl)
             {
-                _indentLevels.Push(indentColumn);
-                AddNewToken(TokenType.Indent, " ", _currLineNumber);
+                _indentLvls.Push(indentLvl);
+                AddNewToken(TokenType.Indent, " ", _lineNum);
                 return;
             }
 
-            if (indentColumn == previousIndentColumn)
-            {
-                return;
-            }
-
-            while (_indentLevels.Peek() > indentColumn)
-            {
-                _indentLevels.Pop();
-                AddNewToken(TokenType.Dedent, string.Empty, _currLineNumber);
-            }
-
-            if (_indentLevels.Peek() == indentColumn)
+            if (indentLvl == prevIndentLvl)
             {
                 return;
             }
 
-            throw new ScannerException("Inconsistent dedent.", _currLineNumber);
+            while (_indentLvls.Peek() > indentLvl)
+            {
+                _indentLvls.Pop();
+                AddNewToken(TokenType.Dedent, string.Empty, _lineNum);
+            }
+
+            if (_indentLvls.Peek() != indentLvl)
+            {
+                throw new ScannerEx("Inconsistent dedent.", _lineNum);
+            }
         }
 
-        void AddRemainingDedentTokens()
+        void AddLastDedentsTkns()
         {
-            while (_indentLevels.Count > 1)
+            while (_indentLvls.Count > 1)
             {
-                _indentLevels.Pop();
-                AddNewToken(TokenType.Dedent, string.Empty, _currLineNumber);
+                _indentLvls.Pop();
+                AddNewToken(TokenType.Dedent, string.Empty, _lineNum);
             }
         }
 
@@ -273,136 +258,174 @@ namespace Chow.Interpreter.Tokens
 
         #region Lexeme-Dependent Token Scan Methods
 
-        bool TryScanSymbolToken()
+        // TODO: Refactor all project switches to use curly braces
+        bool TryScanSymbolTkn()
         {
-            TokenType tokenType;
+            TokenType tknType;
 
-            switch (CurrentChar)
+            switch (CurrChar)
             {
                 case ',':
-                    tokenType = TokenType.SymbolComma;
+                {
+                    tknType = TokenType.SymbolComma;
                     break;
+                }
+
 
                 case '.':
-                    tokenType = TokenType.SymbolDot;
+                {
+                    tknType = TokenType.SymbolDot;
                     break;
+                }
 
                 case ':':
-                    tokenType = TokenType.SymbolBlockColon;
+                {
+                    tknType = TokenType.SymbolBlockColon;
                     break;
+                }
 
                 case '+':
-                    tokenType = TokenType.SymbolPlus;
+                {
+                    tknType = TokenType.SymbolPlus;
                     break;
+                }
 
                 case '-':
-                    tokenType = TokenType.SymbolMinus;
+                {
+                    tknType = TokenType.SymbolMinus;
                     break;
+                }
 
                 case '*':
+                {
                     if (TryScanCompoundOp('*', TokenType.SymbolExponent, "**"))
                     {
                         return true;
                     }
 
-                    tokenType = TokenType.SymbolMultiply;
+                    tknType = TokenType.SymbolMultiply;
                     break;
-
+                }
+                
                 case '/':
+                {
                     if (TryScanCompoundOp('/', TokenType.SymbolFloorDivide, "//"))
                     {
                         return true;
                     }
 
-                    tokenType = TokenType.SymbolDivide;
+                    tknType = TokenType.SymbolDivide;
                     break;
+                }
 
                 case '%':
-                    tokenType = TokenType.SymbolPercent;
+                {
+                    tknType = TokenType.SymbolPercent;
                     break;
+                }
 
                 case '!':
+                {
                     return TryScanCompoundOp('=', TokenType.SymbolNotEqual, "!=");
+                }
 
                 case '=':
+                {
                     if (TryScanCompoundOp('=', TokenType.SymbolEqualTo, "=="))
                     {
                         return true;
                     }
 
-                    tokenType = TokenType.SymbolAssign;
+                    tknType = TokenType.SymbolAssign;
                     break;
+                }
 
                 case '>':
+                {
                     if (TryScanCompoundOp('=', TokenType.SymbolGreaterEqual, ">="))
                     {
                         return true;
                     }
 
-                    tokenType = TokenType.SymbolGreater;
+                    tknType = TokenType.SymbolGreater;
                     break;
-
+                }
                 case '<':
+                {
                     if (TryScanCompoundOp('=', TokenType.SymbolLessEqual, "<="))
                     {
                         return true;
                     }
 
-                    tokenType = TokenType.SymbolLess;
+                    tknType = TokenType.SymbolLess;
                     break;
+                }
 
                 // Indentation and line-break rules are not enforced (for lists and dictionary declarations)
                 case '[':
-                    tokenType = TokenType.SymbolLeftBracket;
-                    _openBracketStack.Push('[');
+                {
+                    tknType = TokenType.SymbolLeftBracket;
+                    _brackets.Push('[');
                     break;
-
+                }
+                
                 // TODO: Refactor to reduce repeated closing bracket logic
                 case ']':
-                    tokenType = TokenType.SymbolRightBracket;
+                {
+                    tknType = TokenType.SymbolRightBracket;
 
-                    if (_openBracketStack.Count == 0 || _openBracketStack.Pop() != '[')
+                    if (_brackets.Count == 0 || _brackets.Pop() != '[')
                     {
-                        throw new ScannerException("Unexpected ']'", _currLineNumber);
+                        throw new ScannerEx("Unexpected ']'", _lineNum);
                     }
                     break;
-
+                }
+                
                 case '{':
-                    tokenType = TokenType.SymbolLeftCurly;
-                    _openBracketStack.Push('{');
+                {
+                    tknType = TokenType.SymbolLeftCurly;
+                    _brackets.Push('{');
                     break;
-
+                }
+                
                 case '}':
-                    tokenType = TokenType.SymbolRightCurly;
+                {
+                    tknType = TokenType.SymbolRightCurly;
 
-                    if (_openBracketStack.Count == 0 || _openBracketStack.Pop() != '{')
+                    if (_brackets.Count == 0 || _brackets.Pop() != '{')
                     {
-                        throw new ScannerException("Unexpected '}'", _currLineNumber);
+                        throw new ScannerEx("Unexpected '}'", _lineNum);
                     }
                     break;
-
+                }
+                
                 case '(':
-                    tokenType = TokenType.SymbolLeftParen;
-                    _openBracketStack.Push('(');
+                {
+                    tknType = TokenType.SymbolLeftParen;
+                    _brackets.Push('(');
                     break;
-
+                }
+                
                 case ')':
-                    tokenType = TokenType.SymbolRightParen;
+                {
+                    tknType = TokenType.SymbolRightParen;
 
-                    if (_openBracketStack.Count == 0 || _openBracketStack.Pop() != '(')
+                    if (_brackets.Count == 0 || _brackets.Pop() != '(')
                     {
-                        throw new ScannerException("Unexpected ')'", _currLineNumber);
+                        throw new ScannerEx("Unexpected ')'", _lineNum);
                     }
-
                     break;
-
+                }
+                
                 default:
+                {
                     return false;
+                }
             }
 
-            string lexeme = CurrentChar.ToString();
+            string lexeme = CurrChar.ToString();
             MoveToNextChar();
-            AddNewToken(tokenType, lexeme, _currLineNumber);
+            AddNewToken(tknType, lexeme, _lineNum);
             return true;
         }
 
@@ -415,45 +438,45 @@ namespace Chow.Interpreter.Tokens
 
             MoveToNextChar();
             MoveToNextChar();
-            AddNewToken(compoundType, compoundStrRep, _currLineNumber);
+            AddNewToken(compoundType, compoundStrRep, _lineNum);
             return true;
         }
 
         void ScanNumericToken()
         {
-            int startIndex = _scanCharIndex;
+            int startIdx = _charIdx;
 
             // Move past digits before any decimal point (if any)
             MoveToNextChar();
 
-            while (IsCharToScan() && IsDigitChar(CurrentChar))
+            while (IsCharToScan() && IsDigitChar(CurrChar))
             {
                 MoveToNextChar();
             }
 
             // If there is a decimal point, move past it and any following digits
-            bool isFloat = IsCharToScan() && CurrentChar == '.';
+            bool isFloat = IsCharToScan() && CurrChar == '.';
 
             if (isFloat)
             {
                 MoveToNextChar();
 
-                while (IsCharToScan() && IsDigitChar(CurrentChar))
+                while (IsCharToScan() && IsDigitChar(CurrChar))
                 {
                     MoveToNextChar();
                 }
             }
 
-            int length = _scanCharIndex - startIndex;
-            string lexeme = _srcCode.Substring(startIndex, length);
-            TokenType numTokenType = isFloat ? TokenType.LiteralFloat : TokenType.LiteralInt;
+            int len = _charIdx - startIdx;
+            string lexeme = _src.Substring(startIdx, len);
+            TokenType numTknType = isFloat ? TokenType.LiteralFloat : TokenType.LiteralInt;
             object literal;
 
             try
             {
                 if (isFloat)
                 {
-                    literal = (object)float.Parse(lexeme, CultureInfo.InvariantCulture);
+                    literal = float.Parse(lexeme, CultureInfo.InvariantCulture);
                 }
                 else
                 {
@@ -462,7 +485,7 @@ namespace Chow.Interpreter.Tokens
             }
             catch (OverflowException)
             {
-                throw new OverflowException($"{numTokenType} literal value out of range & parsing failed. Literal Value: {lexeme}");
+                throw new OverflowException($"{numTknType} literal value out of range & parsing failed. Literal Value: {lexeme}");
             }
             catch (FormatException)
             {
@@ -470,7 +493,7 @@ namespace Chow.Interpreter.Tokens
                 throw new InvalidOperationException();
             }
 
-            AddNewToken(numTokenType, lexeme, _currLineNumber, literal);
+            AddNewToken(numTknType, lexeme, _lineNum, literal);
         }
 
         #endregion
@@ -479,19 +502,19 @@ namespace Chow.Interpreter.Tokens
 
         bool IsCharToScan()
         {
-            return _scanCharIndex < _srcCode.Length;
+            return _charIdx < _src.Length;
         }
 
         void MoveToNextChar()
         {
-            _scanCharIndex++;
-            _isAtStartOfLine = false;
+            _charIdx++;
+            _isLineBegin = false;
         }
 
         char PeekNextChar()
         {
-            int nextIndex = _scanCharIndex + 1;
-            return nextIndex < _srcCode.Length ? _srcCode[nextIndex] : '\0';
+            int nextIndex = _charIdx + 1;
+            return nextIndex < _src.Length ? _src[nextIndex] : '\0';
         }
 
         #endregion
@@ -544,7 +567,7 @@ namespace Chow.Interpreter.Tokens
 
         private void MovePastNewline()
         {
-            switch (CurrentChar)
+            switch (CurrChar)
             {
                 case '\n':
                     // Unix/Linux/macOS newline
@@ -555,7 +578,7 @@ namespace Chow.Interpreter.Tokens
                     // Older Mac newline (if not followed by \n)
                     MoveToNextChar();
 
-                    if (IsCharToScan() && CurrentChar == '\n')
+                    if (IsCharToScan() && CurrChar == '\n')
                     {
                         // Windows/MS-DOS newline
                         MoveToNextChar();
@@ -564,58 +587,58 @@ namespace Chow.Interpreter.Tokens
                     break;
             }
 
-            _isAtStartOfLine = true;
-            _currLineNumber++;
+            _isLineBegin = true;
+            _lineNum++;
         }
 
-        private void SkipToCodeStart()
+        private void SkipToFirstLexeme()
         {
             while (IsCharToScan())
             {
-                if (IsIndentChar(CurrentChar))
+                if (IsIndentChar(CurrChar))
                 {
                     MoveToNextChar();
                 }
-                else if (IsNewlineChar(CurrentChar))
+                else if (IsNewlineChar(CurrChar))
                 {
                     MovePastNewline();
                 }
-                else if (IsCommentPrefix(CurrentChar))
+                else if (IsCommentPrefix(CurrChar))
                 {
                     SkipRemainingLineChars();
                 }
-                else if (_isAtStartOfLine)
+                else if (_isLineBegin)
                 {
                     return;
                 }
                 else
                 {
-                    throw new ScannerException($"Unexpected indentation.", _currLineNumber);
+                    throw new ScannerEx($"Unexpected indentation.", _lineNum);
                 }
             }
         }
 
         private void SkipRemainingLineChars()
         {
-            while (IsCharToScan() && !IsNewlineChar(CurrentChar))
+            while (IsCharToScan() && !IsNewlineChar(CurrChar))
             {
                 MoveToNextChar();
             }
         }
 
-        private void AddEndOfCodeToken()
+        private void AddEndOfCodeTkn()
         {
-            AddNewToken(TokenType.EndOfCode, string.Empty, _currLineNumber);
+            AddNewToken(TokenType.EndOfCode, string.Empty, _lineNum);
         }
 
         bool IsLineAndIndentLogicEnabled()
         {
-            return _openBracketStack.Count == 0;
+            return _brackets.Count == 0;
         }
 
         void AddNewToken(TokenType type, string lexeme, int lineNum, object literal = null)
         {
-            _tokens.Add(new Token(type, lexeme, lineNum, literal));
+            _tkns.Add(new Token(type, lexeme, lineNum, literal));
         }
 
         #endregion

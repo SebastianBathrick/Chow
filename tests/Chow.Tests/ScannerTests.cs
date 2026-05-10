@@ -12,7 +12,7 @@ namespace Chow.Tests
 
         static List<Token> Tokenize(string source) => new Scanner(source).ScanTokens();
 
-        static List<TokenType> TokenTypes(string source) => Tokenize(source).Select(token => token.Type).ToList();
+        static List<TokenType> TokenTypes(string source) => Tokenize(source).Select(token => token.type).ToList();
 
         static void AssertToken(
             Token token,
@@ -23,10 +23,10 @@ namespace Chow.Tests
         {
             Assert.Multiple(() =>
             {
-                Assert.That(token.Type, Is.EqualTo(expectedType));
-                Assert.That(token.Lexeme, Is.EqualTo(expectedLexeme));
-                Assert.That(token.LineNum, Is.EqualTo(expectedLineNum));
-                Assert.That(token.Literal, Is.EqualTo(expectedLiteral));
+                Assert.That(token.type, Is.EqualTo(expectedType));
+                Assert.That(token.lexeme, Is.EqualTo(expectedLexeme));
+                Assert.That(token.lineNum, Is.EqualTo(expectedLineNum));
+                Assert.That(token.literal, Is.EqualTo(expectedLiteral));
             });
         }
 
@@ -38,7 +38,7 @@ namespace Chow.Tests
         public void ScanTokens_EmptySource_ReturnsEndOfCode()
         {
             var tokens = new Scanner("").ScanTokens();
-            Assert.That(tokens.Select(t => t.Type), Is.EqualTo(new[] { TokenType.EndOfCode }));
+            Assert.That(tokens.Select(t => t.type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
 
         // ============================================================================================================
@@ -96,8 +96,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("1" + newline);
 
-            var nlToken = tokens.First(t => t.Type == TokenType.Newline);
-            Assert.That(nlToken.Lexeme, Is.EqualTo("\n"));
+            var nlToken = tokens.First(t => t.type == TokenType.Newline);
+            Assert.That(nlToken.lexeme, Is.EqualTo("\n"));
         }
 
         // ============================================================================================================
@@ -159,11 +159,11 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("1\n2\n3\n");
 
-            var integers = tokens.Where(t => t.Type == TokenType.LiteralInt).ToList();
+            var integers = tokens.Where(t => t.type == TokenType.LiteralInt).ToList();
             Assert.That(integers, Has.Count.EqualTo(3));
-            Assert.That(integers[0].LineNum, Is.EqualTo(1));
-            Assert.That(integers[1].LineNum, Is.EqualTo(2));
-            Assert.That(integers[2].LineNum, Is.EqualTo(3));
+            Assert.That(integers[0].lineNum, Is.EqualTo(1));
+            Assert.That(integers[1].lineNum, Is.EqualTo(2));
+            Assert.That(integers[2].lineNum, Is.EqualTo(3));
         }
 
         [Test]
@@ -171,7 +171,7 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("42");
 
-            Assert.That(tokens[0].Literal, Is.TypeOf<int>());
+            Assert.That(tokens[0].literal, Is.TypeOf<int>());
         }
 
         // ============================================================================================================
@@ -209,8 +209,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("\n3.14\n");
 
-            var floatToken = tokens.First(t => t.Type == TokenType.LiteralFloat);
-            Assert.That(floatToken.LineNum, Is.EqualTo(2));
+            var floatToken = tokens.First(t => t.type == TokenType.LiteralFloat);
+            Assert.That(floatToken.lineNum, Is.EqualTo(2));
         }
 
         [Test]
@@ -218,7 +218,7 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("3.14");
 
-            Assert.That(tokens[0].Literal, Is.TypeOf<float>());
+            Assert.That(tokens[0].literal, Is.TypeOf<float>());
         }
 
         [Test]
@@ -227,8 +227,8 @@ namespace Chow.Tests
             var intTokens = Tokenize("42");
             var floatTokens = Tokenize("42.0");
 
-            Assert.That(intTokens[0].Type, Is.EqualTo(TokenType.LiteralInt));
-            Assert.That(floatTokens[0].Type, Is.EqualTo(TokenType.LiteralFloat));
+            Assert.That(intTokens[0].type, Is.EqualTo(TokenType.LiteralInt));
+            Assert.That(floatTokens[0].type, Is.EqualTo(TokenType.LiteralFloat));
         }
 
         // ============================================================================================================
@@ -276,7 +276,7 @@ namespace Chow.Tests
         [TestCase("}")]
         public void ScanTokens_UnmatchedClosingDelimiter_ThrowsScannerException(string source)
         {
-            Assert.That(() => Tokenize(source), Throws.TypeOf<ScannerException>());
+            Assert.That(() => Tokenize(source), Throws.TypeOf<ScannerEx>());
         }
 
         [Test]
@@ -344,8 +344,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("* *");
 
-            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.SymbolMultiply));
-            Assert.That(tokens[1].Type, Is.EqualTo(TokenType.SymbolMultiply));
+            Assert.That(tokens[0].type, Is.EqualTo(TokenType.SymbolMultiply));
+            Assert.That(tokens[1].type, Is.EqualTo(TokenType.SymbolMultiply));
         }
 
         [Test]
@@ -353,8 +353,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("/ /");
 
-            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.SymbolDivide));
-            Assert.That(tokens[1].Type, Is.EqualTo(TokenType.SymbolDivide));
+            Assert.That(tokens[0].type, Is.EqualTo(TokenType.SymbolDivide));
+            Assert.That(tokens[1].type, Is.EqualTo(TokenType.SymbolDivide));
         }
 
         // ============================================================================================================
@@ -366,8 +366,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("1\n    2\n");
 
-            Assert.That(tokens.Count(t => t.Type == TokenType.Indent), Is.EqualTo(1));
-            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(1));
+            Assert.That(tokens.Count(t => t.type == TokenType.Indent), Is.EqualTo(1));
+            Assert.That(tokens.Count(t => t.type == TokenType.Dedent), Is.EqualTo(1));
         }
 
         [Test]
@@ -375,8 +375,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("1\n    2\n3\n");
 
-            Assert.That(tokens.Count(t => t.Type == TokenType.Indent), Is.EqualTo(1));
-            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(1));
+            Assert.That(tokens.Count(t => t.type == TokenType.Indent), Is.EqualTo(1));
+            Assert.That(tokens.Count(t => t.type == TokenType.Dedent), Is.EqualTo(1));
         }
 
         [Test]
@@ -384,8 +384,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("1\n    2\n    3\n");
 
-            Assert.That(tokens.Count(t => t.Type == TokenType.Indent), Is.EqualTo(1));
-            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(1));
+            Assert.That(tokens.Count(t => t.type == TokenType.Indent), Is.EqualTo(1));
+            Assert.That(tokens.Count(t => t.type == TokenType.Dedent), Is.EqualTo(1));
         }
 
         [Test]
@@ -393,8 +393,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("1\n    2\n        3\n1\n");
 
-            Assert.That(tokens.Count(t => t.Type == TokenType.Indent), Is.EqualTo(2));
-            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(2));
+            Assert.That(tokens.Count(t => t.type == TokenType.Indent), Is.EqualTo(2));
+            Assert.That(tokens.Count(t => t.type == TokenType.Dedent), Is.EqualTo(2));
         }
 
         [Test]
@@ -443,7 +443,7 @@ namespace Chow.Tests
         [Test]
         public void ScanTokens_DedentToUnmatchedIndentLevel_ThrowsScannerException()
         {
-            Assert.That(() => Tokenize("1\n    2\n  3\n"), Throws.TypeOf<ScannerException>());
+            Assert.That(() => Tokenize("1\n    2\n  3\n"), Throws.TypeOf<ScannerEx>());
         }
 
         [Test]
@@ -469,8 +469,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("1\n    2\n");
 
-            var indent = tokens.First(t => t.Type == TokenType.Indent);
-            Assert.That(indent.Lexeme, Is.EqualTo(" "));
+            var indent = tokens.First(t => t.type == TokenType.Indent);
+            Assert.That(indent.lexeme, Is.EqualTo(" "));
         }
 
         [Test]
@@ -478,8 +478,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("1\n    2\n3\n");
 
-            var dedent = tokens.First(t => t.Type == TokenType.Dedent);
-            Assert.That(dedent.Lexeme, Is.EqualTo(string.Empty));
+            var dedent = tokens.First(t => t.type == TokenType.Dedent);
+            Assert.That(dedent.lexeme, Is.EqualTo(string.Empty));
         }
 
         [Test]
@@ -487,10 +487,10 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("1\n    2\n3\n");
 
-            var indent = tokens.First(t => t.Type == TokenType.Indent);
-            var dedent = tokens.First(t => t.Type == TokenType.Dedent);
-            Assert.That(indent.Literal, Is.Null);
-            Assert.That(dedent.Literal, Is.Null);
+            var indent = tokens.First(t => t.type == TokenType.Indent);
+            var dedent = tokens.First(t => t.type == TokenType.Dedent);
+            Assert.That(indent.literal, Is.Null);
+            Assert.That(dedent.literal, Is.Null);
         }
 
         [Test]
@@ -498,8 +498,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("1\n    2\n");
 
-            var indent = tokens.First(t => t.Type == TokenType.Indent);
-            Assert.That(indent.LineNum, Is.EqualTo(2));
+            var indent = tokens.First(t => t.type == TokenType.Indent);
+            Assert.That(indent.lineNum, Is.EqualTo(2));
         }
 
         [Test]
@@ -508,10 +508,10 @@ namespace Chow.Tests
             var tabbed = Tokenize("1\n\t2\n");
             var spaced = Tokenize("1\n        2\n");
 
-            Assert.That(tabbed.Count(t => t.Type == TokenType.Indent),
-                Is.EqualTo(spaced.Count(t => t.Type == TokenType.Indent)));
-            Assert.That(tabbed.Count(t => t.Type == TokenType.Dedent),
-                Is.EqualTo(spaced.Count(t => t.Type == TokenType.Dedent)));
+            Assert.That(tabbed.Count(t => t.type == TokenType.Indent),
+                Is.EqualTo(spaced.Count(t => t.type == TokenType.Indent)));
+            Assert.That(tabbed.Count(t => t.type == TokenType.Dedent),
+                Is.EqualTo(spaced.Count(t => t.type == TokenType.Dedent)));
         }
 
         [Test]
@@ -521,8 +521,8 @@ namespace Chow.Tests
             var tokens = Tokenize("1\n    2\n    \t3\n");
 
             // Two distinct indent levels established -> two Indent tokens.
-            Assert.That(tokens.Count(t => t.Type == TokenType.Indent), Is.EqualTo(2));
-            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(2));
+            Assert.That(tokens.Count(t => t.type == TokenType.Indent), Is.EqualTo(2));
+            Assert.That(tokens.Count(t => t.type == TokenType.Dedent), Is.EqualTo(2));
         }
 
         [Test]
@@ -530,8 +530,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("1\n    2\n\n    3\n");
 
-            Assert.That(tokens.Count(t => t.Type == TokenType.Indent), Is.EqualTo(1));
-            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(1));
+            Assert.That(tokens.Count(t => t.type == TokenType.Indent), Is.EqualTo(1));
+            Assert.That(tokens.Count(t => t.type == TokenType.Dedent), Is.EqualTo(1));
         }
 
         [Test]
@@ -539,8 +539,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("1\n    2\n        \n    3\n");
 
-            Assert.That(tokens.Count(t => t.Type == TokenType.Indent), Is.EqualTo(1));
-            Assert.That(tokens.Count(t => t.Type == TokenType.Dedent), Is.EqualTo(1));
+            Assert.That(tokens.Count(t => t.type == TokenType.Indent), Is.EqualTo(1));
+            Assert.That(tokens.Count(t => t.type == TokenType.Dedent), Is.EqualTo(1));
         }
 
         [Test]
@@ -568,7 +568,7 @@ namespace Chow.Tests
         {
             var tokens = Tokenize(source);
 
-            Assert.That(tokens[^1].Type, Is.EqualTo(TokenType.EndOfCode));
+            Assert.That(tokens[^1].type, Is.EqualTo(TokenType.EndOfCode));
         }
 
         [TestCase("42")]
@@ -578,7 +578,7 @@ namespace Chow.Tests
         {
             var tokens = Tokenize(source);
 
-            Assert.That(tokens.Count(t => t.Type == TokenType.EndOfCode), Is.EqualTo(1));
+            Assert.That(tokens.Count(t => t.type == TokenType.EndOfCode), Is.EqualTo(1));
         }
 
         [TestCase("42", 1)]
@@ -587,8 +587,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize(source);
 
-            var eoc = tokens.Single(t => t.Type == TokenType.EndOfCode);
-            Assert.That(eoc.LineNum, Is.EqualTo(expectedLine));
+            var eoc = tokens.Single(t => t.type == TokenType.EndOfCode);
+            Assert.That(eoc.lineNum, Is.EqualTo(expectedLine));
         }
 
         [Test]
@@ -596,9 +596,9 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("42");
 
-            var eoc = tokens.Single(t => t.Type == TokenType.EndOfCode);
-            Assert.That(eoc.Lexeme, Is.EqualTo(string.Empty));
-            Assert.That(eoc.Literal, Is.Null);
+            var eoc = tokens.Single(t => t.type == TokenType.EndOfCode);
+            Assert.That(eoc.lexeme, Is.EqualTo(string.Empty));
+            Assert.That(eoc.literal, Is.Null);
         }
 
         // ============================================================================================================
@@ -610,8 +610,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("42\n");
 
-            var newline = tokens.Single(t => t.Type == TokenType.Newline);
-            Assert.That(newline.LineNum, Is.EqualTo(1));
+            var newline = tokens.Single(t => t.type == TokenType.Newline);
+            Assert.That(newline.lineNum, Is.EqualTo(1));
         }
 
         [Test]
@@ -619,8 +619,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("\n\n\n\n42\n");
 
-            var integer = tokens.Single(t => t.Type == TokenType.LiteralInt);
-            Assert.That(integer.LineNum, Is.EqualTo(5));
+            var integer = tokens.Single(t => t.type == TokenType.LiteralInt);
+            Assert.That(integer.lineNum, Is.EqualTo(5));
         }
 
         [Test]
@@ -628,8 +628,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("1\n2\n    3\n");
 
-            var indent = tokens.Single(t => t.Type == TokenType.Indent);
-            Assert.That(indent.LineNum, Is.EqualTo(3));
+            var indent = tokens.Single(t => t.type == TokenType.Indent);
+            Assert.That(indent.lineNum, Is.EqualTo(3));
         }
 
         // ============================================================================================================
@@ -673,7 +673,7 @@ namespace Chow.Tests
         {
             var scanner = new Scanner("@");
 
-            Assert.That(() => scanner.ScanTokens(), Throws.TypeOf<ScannerException>());
+            Assert.That(() => scanner.ScanTokens(), Throws.TypeOf<ScannerEx>());
             Assert.That(() => scanner.ScanTokens(), Throws.TypeOf<InvalidOperationException>());
         }
 
@@ -684,13 +684,13 @@ namespace Chow.Tests
         [Test]
         public void ScanTokens_LeadingSpacesOnFirstLine_ThrowsScannerException()
         {
-            Assert.That(() => TokenTypes("    42\n"), Throws.TypeOf<ScannerException>());
+            Assert.That(() => TokenTypes("    42\n"), Throws.TypeOf<ScannerEx>());
         }
 
         [Test]
         public void ScanTokens_LeadingTabOnFirstLine_ThrowsScannerException()
         {
-            Assert.That(() => TokenTypes("\t42\n"), Throws.TypeOf<ScannerException>());
+            Assert.That(() => TokenTypes("\t42\n"), Throws.TypeOf<ScannerEx>());
         }
 
         [Test]
@@ -723,7 +723,7 @@ namespace Chow.Tests
         public void ScanTokens_NewlinesOnlySource_ReturnsEndOfCode()
         {
             var tokens = new Scanner("\n\n\n").ScanTokens();
-            Assert.That(tokens.Select(t => t.Type), Is.EqualTo(new[] { TokenType.EndOfCode }));
+            Assert.That(tokens.Select(t => t.type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
 
         // ============================================================================================================
@@ -734,7 +734,7 @@ namespace Chow.Tests
         public void ScanTokens_NullSource_ReturnsEndOfCode()
         {
             var tokens = new Scanner(null!).ScanTokens();
-            Assert.That(tokens.Select(t => t.Type), Is.EqualTo(new[] { TokenType.EndOfCode }));
+            Assert.That(tokens.Select(t => t.type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
 
         // ============================================================================================================
@@ -759,7 +759,7 @@ namespace Chow.Tests
         {
             var tokens = new Scanner("# only a comment").ScanTokens();
 
-            Assert.That(tokens.Select(t => t.Type), Is.EqualTo(new[] { TokenType.EndOfCode }));
+            Assert.That(tokens.Select(t => t.type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
 
         [Test]
@@ -783,9 +783,9 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("1\n# comment\n2\n");
 
-            var integers = tokens.Where(t => t.Type == TokenType.LiteralInt).ToList();
-            Assert.That(integers[0].LineNum, Is.EqualTo(1));
-            Assert.That(integers[1].LineNum, Is.EqualTo(3));
+            var integers = tokens.Where(t => t.type == TokenType.LiteralInt).ToList();
+            Assert.That(integers[0].lineNum, Is.EqualTo(1));
+            Assert.That(integers[1].lineNum, Is.EqualTo(3));
         }
 
         // ============================================================================================================
@@ -800,8 +800,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize(source);
 
-            var integer = tokens.Single(t => t.Type == TokenType.LiteralInt);
-            Assert.That(integer.Lexeme, Is.EqualTo(source));
+            var integer = tokens.Single(t => t.type == TokenType.LiteralInt);
+            Assert.That(integer.lexeme, Is.EqualTo(source));
         }
 
         [TestCase("0.0")]
@@ -811,8 +811,8 @@ namespace Chow.Tests
         {
             var tokens = Tokenize(source);
 
-            var floatToken = tokens.Single(t => t.Type == TokenType.LiteralFloat);
-            Assert.That(floatToken.Lexeme, Is.EqualTo(source));
+            var floatToken = tokens.Single(t => t.type == TokenType.LiteralFloat);
+            Assert.That(floatToken.lexeme, Is.EqualTo(source));
         }
     }
 }

@@ -2,23 +2,23 @@
 {
     internal class ReturnNode : Node
     {
-        Node _expression;
+        Node _expr;
 
         /// <summary>
         /// Node representing the expression to be evaluated and returned by the return statement or null.
         /// </summary>
-        public Node Expression => _expression;
+        public Node Expression => _expr;
 
-        /// <param name="expression">Node representing the expression to be evaluated and returned by the return statement or null.</param>
-        /// <param name="lineNumber">The line number of the return statement.</param>
-        public ReturnNode(Node expression, int lineNumber) : base(lineNumber)
+        /// <param name="expr">Node representing the expression to be evaluated and returned by the return statement or null.</param>
+        /// <param name="line">The line number of the return statement.</param>
+        public ReturnNode(Node expr, int line) : base(line)
         {
-            _expression = expression;
+            _expr = expr;
         }
 
         public override string ToString()
         {
-            return $"return {_expression}";
+            return $"return {_expr}";
         }
     }
 }
