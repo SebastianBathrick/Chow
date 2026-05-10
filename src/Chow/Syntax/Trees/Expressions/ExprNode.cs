@@ -1,5 +1,3 @@
-using System;
-
 namespace Chow.Interpreter.Syntax.Trees.Expressions
 {
     internal class ExprNode : Node

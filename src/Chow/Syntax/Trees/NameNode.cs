@@ -1,5 +1,3 @@
-using System;
-
 namespace Chow.Interpreter.Syntax.Trees
 {
     internal class NameNode : Node

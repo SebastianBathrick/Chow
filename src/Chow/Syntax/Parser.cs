@@ -349,7 +349,7 @@ namespace Chow.Interpreter.Syntax
         #endregion
 
         #region Helper Methods
-        
+
         bool IsCurrPrimaryTkn()
         {
             TokenType type = CurrTkn.type;

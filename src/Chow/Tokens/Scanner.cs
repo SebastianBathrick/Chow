@@ -266,161 +266,161 @@ namespace Chow.Interpreter.Tokens
             switch (CurrChar)
             {
                 case ',':
-                {
-                    tknType = TokenType.SymbolComma;
-                    break;
-                }
+                    {
+                        tknType = TokenType.SymbolComma;
+                        break;
+                    }
 
 
                 case '.':
-                {
-                    tknType = TokenType.SymbolDot;
-                    break;
-                }
+                    {
+                        tknType = TokenType.SymbolDot;
+                        break;
+                    }
 
                 case ':':
-                {
-                    tknType = TokenType.SymbolBlockColon;
-                    break;
-                }
+                    {
+                        tknType = TokenType.SymbolBlockColon;
+                        break;
+                    }
 
                 case '+':
-                {
-                    tknType = TokenType.SymbolPlus;
-                    break;
-                }
+                    {
+                        tknType = TokenType.SymbolPlus;
+                        break;
+                    }
 
                 case '-':
-                {
-                    tknType = TokenType.SymbolMinus;
-                    break;
-                }
+                    {
+                        tknType = TokenType.SymbolMinus;
+                        break;
+                    }
 
                 case '*':
-                {
-                    if (TryScanCompoundOp('*', TokenType.SymbolExponent, "**"))
                     {
-                        return true;
+                        if (TryScanCompoundOp('*', TokenType.SymbolExponent, "**"))
+                        {
+                            return true;
+                        }
+
+                        tknType = TokenType.SymbolMultiply;
+                        break;
                     }
 
-                    tknType = TokenType.SymbolMultiply;
-                    break;
-                }
-                
                 case '/':
-                {
-                    if (TryScanCompoundOp('/', TokenType.SymbolFloorDivide, "//"))
                     {
-                        return true;
-                    }
+                        if (TryScanCompoundOp('/', TokenType.SymbolFloorDivide, "//"))
+                        {
+                            return true;
+                        }
 
-                    tknType = TokenType.SymbolDivide;
-                    break;
-                }
+                        tknType = TokenType.SymbolDivide;
+                        break;
+                    }
 
                 case '%':
-                {
-                    tknType = TokenType.SymbolPercent;
-                    break;
-                }
+                    {
+                        tknType = TokenType.SymbolPercent;
+                        break;
+                    }
 
                 case '!':
-                {
-                    return TryScanCompoundOp('=', TokenType.SymbolNotEqual, "!=");
-                }
+                    {
+                        return TryScanCompoundOp('=', TokenType.SymbolNotEqual, "!=");
+                    }
 
                 case '=':
-                {
-                    if (TryScanCompoundOp('=', TokenType.SymbolEqualTo, "=="))
                     {
-                        return true;
-                    }
+                        if (TryScanCompoundOp('=', TokenType.SymbolEqualTo, "=="))
+                        {
+                            return true;
+                        }
 
-                    tknType = TokenType.SymbolAssign;
-                    break;
-                }
+                        tknType = TokenType.SymbolAssign;
+                        break;
+                    }
 
                 case '>':
-                {
-                    if (TryScanCompoundOp('=', TokenType.SymbolGreaterEqual, ">="))
                     {
-                        return true;
-                    }
+                        if (TryScanCompoundOp('=', TokenType.SymbolGreaterEqual, ">="))
+                        {
+                            return true;
+                        }
 
-                    tknType = TokenType.SymbolGreater;
-                    break;
-                }
+                        tknType = TokenType.SymbolGreater;
+                        break;
+                    }
                 case '<':
-                {
-                    if (TryScanCompoundOp('=', TokenType.SymbolLessEqual, "<="))
                     {
-                        return true;
-                    }
+                        if (TryScanCompoundOp('=', TokenType.SymbolLessEqual, "<="))
+                        {
+                            return true;
+                        }
 
-                    tknType = TokenType.SymbolLess;
-                    break;
-                }
+                        tknType = TokenType.SymbolLess;
+                        break;
+                    }
 
                 // Indentation and line-break rules are not enforced (for lists and dictionary declarations)
                 case '[':
-                {
-                    tknType = TokenType.SymbolLeftBracket;
-                    _brackets.Push('[');
-                    break;
-                }
-                
+                    {
+                        tknType = TokenType.SymbolLeftBracket;
+                        _brackets.Push('[');
+                        break;
+                    }
+
                 // TODO: Refactor to reduce repeated closing bracket logic
                 case ']':
-                {
-                    tknType = TokenType.SymbolRightBracket;
-
-                    if (_brackets.Count == 0 || _brackets.Pop() != '[')
                     {
-                        throw new ScannerEx("Unexpected ']'", _lineNum);
+                        tknType = TokenType.SymbolRightBracket;
+
+                        if (_brackets.Count == 0 || _brackets.Pop() != '[')
+                        {
+                            throw new ScannerEx("Unexpected ']'", _lineNum);
+                        }
+                        break;
                     }
-                    break;
-                }
-                
+
                 case '{':
-                {
-                    tknType = TokenType.SymbolLeftCurly;
-                    _brackets.Push('{');
-                    break;
-                }
-                
+                    {
+                        tknType = TokenType.SymbolLeftCurly;
+                        _brackets.Push('{');
+                        break;
+                    }
+
                 case '}':
-                {
-                    tknType = TokenType.SymbolRightCurly;
-
-                    if (_brackets.Count == 0 || _brackets.Pop() != '{')
                     {
-                        throw new ScannerEx("Unexpected '}'", _lineNum);
+                        tknType = TokenType.SymbolRightCurly;
+
+                        if (_brackets.Count == 0 || _brackets.Pop() != '{')
+                        {
+                            throw new ScannerEx("Unexpected '}'", _lineNum);
+                        }
+                        break;
                     }
-                    break;
-                }
-                
+
                 case '(':
-                {
-                    tknType = TokenType.SymbolLeftParen;
-                    _brackets.Push('(');
-                    break;
-                }
-                
-                case ')':
-                {
-                    tknType = TokenType.SymbolRightParen;
-
-                    if (_brackets.Count == 0 || _brackets.Pop() != '(')
                     {
-                        throw new ScannerEx("Unexpected ')'", _lineNum);
+                        tknType = TokenType.SymbolLeftParen;
+                        _brackets.Push('(');
+                        break;
                     }
-                    break;
-                }
-                
+
+                case ')':
+                    {
+                        tknType = TokenType.SymbolRightParen;
+
+                        if (_brackets.Count == 0 || _brackets.Pop() != '(')
+                        {
+                            throw new ScannerEx("Unexpected ')'", _lineNum);
+                        }
+                        break;
+                    }
+
                 default:
-                {
-                    return false;
-                }
+                    {
+                        return false;
+                    }
             }
 
             string lexeme = CurrChar.ToString();

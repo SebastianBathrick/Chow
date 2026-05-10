@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Chow.Interpreter.Exceptions
+﻿namespace Chow.Interpreter.Exceptions
 {
-    internal class ChowNameErrorException : ChowRuntimeException
+    internal class NameErrorException : ChowRuntimeException
     {
         const string EXCEPTION_ALIAS = "NameError";
 
@@ -12,10 +8,10 @@ namespace Chow.Interpreter.Exceptions
 
         public string UndefinedName => _undefinedName;
 
-        public ChowNameErrorException(string undefinedName, int lineNumber)
+        public NameErrorException(string undefinedName, int lineNumber)
             : base(EXCEPTION_ALIAS, $"name '{undefinedName}' is not defined", lineNumber)
         {
             _undefinedName = undefinedName;
         }
-    }   
+    }
 }

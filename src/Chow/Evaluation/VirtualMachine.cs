@@ -1,9 +1,9 @@
 using Chow.Interpreter.Compilation;
 using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Values;
 using Chow.Interpreter.Hooks;
-using System.Collections.Generic;
+using Chow.Interpreter.Values;
 using System;
+using System.Collections.Generic;
 
 namespace Chow.Interpreter.Evaluation
 {
@@ -168,7 +168,7 @@ namespace Chow.Interpreter.Evaluation
             }
 
             int errorLineNum = GetCurrentLineNumber();
-            throw new ChowNameErrorException(varName, errorLineNum);
+            throw new NameErrorException(varName, errorLineNum);
         }
 
         private void AssignOrDeclareVariable()

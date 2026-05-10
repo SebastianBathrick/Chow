@@ -1,5 +1,3 @@
-using System;
-
 namespace Chow.Interpreter.Values
 {
     internal class ChowBool : ChowValue

@@ -171,7 +171,7 @@ namespace Chow.Interpreter.Compilation
         {
             CompileTargetNode(node.Left);
 
-            OperationCode jumpCode; 
+            OperationCode jumpCode;
 
             if (node.Operator == ExprOperator.And)
             {

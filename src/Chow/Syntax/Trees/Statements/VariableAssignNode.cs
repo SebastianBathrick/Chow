@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Chow.Interpreter.Syntax.Trees.Statements
+﻿namespace Chow.Interpreter.Syntax.Trees.Statements
 {
     internal class VariableAssignNode : Node
     {

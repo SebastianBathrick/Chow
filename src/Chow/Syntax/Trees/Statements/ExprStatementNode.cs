@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Chow.Interpreter.Syntax.Trees.Statements
+﻿namespace Chow.Interpreter.Syntax.Trees.Statements
 {
     internal class ExprStatementNode : Node
     {

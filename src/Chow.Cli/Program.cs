@@ -48,7 +48,7 @@ static List<string> GetLineList(string startIndicator, string trailingIndicator)
         // Do not display the key in the console window until after its evaluated
         keyInfo = Console.ReadKey(intercept: true);
 
-        switch(keyInfo.Key)
+        switch (keyInfo.Key)
         {
             case ConsoleKey.Enter:
                 cursorX = 0;
@@ -74,7 +74,7 @@ static List<string> GetLineList(string startIndicator, string trailingIndicator)
                 Console.Clear();
                 cursorY = currLine;
 
-                for(int i = 0; i < lines.Count; i++)
+                for (int i = 0; i < lines.Count; i++)
                 {
                     var redrawPrefix = i == 0 ? startIndicator : trailingIndicator;
                     RedrawLine(lines[i], i, redrawPrefix);
@@ -89,7 +89,7 @@ static List<string> GetLineList(string startIndicator, string trailingIndicator)
 
                 // Set to the intended position after the character is being deleted
                 cursorX--;
-                var backspacedLine = lines[currLine].Remove(cursorX , 1);
+                var backspacedLine = lines[currLine].Remove(cursorX, 1);
 
                 RedrawLine(backspacedLine, cursorY, currLine == 0 ? startIndicator : trailingIndicator);
 
