@@ -6,30 +6,34 @@ namespace Chow.Interpreter.Compilation
 {
     class Chunk
     {
-        List<Instruction> _opList = new List<Instruction>();
+        List<Instruction> _instructions = new List<Instruction>();
         List<TaggedUnion> _consts = new List<TaggedUnion>();
         List<string> _varNames = new List<string>();
         List<int> _opLineNums = new List<int>();
 
-        public int Count => _opList.Count;
+        public int Count => _instructions.Count;
 
-        public Instruction this[int index] => _opList[index];
+        public Instruction this[int index] => _instructions[index];
 
-        public void PushOperation(OperationCode operationType, int lineNumber, int operand = -1)
+        #region Instruction Methods
+
+        public void AddInstruction(OperationCode code, int lineNumber, int operand = -1)
         {
-            _opList.Add(new Instruction(operationType, operand));
+            _instructions.Add(new Instruction(code, operand));
             _opLineNums.Add(lineNumber);
         }
 
-        public void PatchOperationOperand(int index, int operand)
+        public void PatchInstructionOperand(int index, int operand)
         {
-            _opList[index] = new Instruction(_opList[index].Code, operand);
+            _instructions[index] = new Instruction(_instructions[index].Code, operand);
         }
 
-        public int GetOperationLineNumber(int operand)
+        public int GetInstructionLineNumber(int index)
         {
-            return _opLineNums[operand];
+            return _opLineNums[index];
         }
+
+        #endregion
 
         #region Constant Methods
 
@@ -119,9 +123,9 @@ namespace Chow.Interpreter.Compilation
             }
 
             sb.AppendLine("Operations:");
-            for (int i = 0; i < _opList.Count; i++)
+            for (int i = 0; i < _instructions.Count; i++)
             {
-                Instruction op = _opList[i];
+                Instruction op = _instructions[i];
 
                 sb.Append("  ");
                 sb.Append(i);
@@ -137,7 +141,7 @@ namespace Chow.Interpreter.Compilation
                     sb.Append(')');
                 }
 
-                if (i < _opList.Count - 1)
+                if (i < _instructions.Count - 1)
                 {
                     sb.AppendLine();
                 }

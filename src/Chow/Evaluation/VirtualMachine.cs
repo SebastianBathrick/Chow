@@ -10,24 +10,26 @@ namespace Chow.Interpreter.Evaluation
     sealed class VirtualMachine
     {
         readonly Chunk _chunk;
-        readonly ChowEnvironment _enviro;
+        readonly ChowEnviro _enviro;
 
         Stack<TaggedUnion> _valStack;
-        IExecutionHook _exprStmntHook;
-        int _opsListIndex;
+        IExecutionHook _exprHook;
+        int _instructIdk;
 
-        private Instruction CurrentOperation => _chunk[_opsListIndex];
+        private Instruction CurrentOperation => _chunk[_instructIdk];
 
-        public VirtualMachine(Chunk chunk, ChowEnvironment enviro, IExecutionHook exprStmntHook)
+        public TaggedUnion ValStackTop => _valStack.Count > 0 ? _valStack.Peek() : TaggedUnion.None;
+
+        public VirtualMachine(Chunk chunk, ChowEnviro enviro, IExecutionHook exprStmntHook)
         {
             _chunk = chunk;
-            _enviro = enviro == null ? new ChowEnvironment() : enviro;
+            _enviro = enviro == null ? new ChowEnviro() : enviro;
             _valStack = new Stack<TaggedUnion>();
-            _opsListIndex = 0;
-            _exprStmntHook = exprStmntHook;
+            _instructIdk = 0;
+            _exprHook = exprStmntHook;
         }
 
-        public ChowEnvironment ExecuteChunk()
+        public ChowEnviro ExecuteChunk()
         {
             while (IsRemainingOperation())
             {
@@ -101,7 +103,7 @@ namespace Chow.Interpreter.Evaluation
                         if (!_valStack.Peek().IsTruthy)
                         {
                             // Leave the falsy value on the stack as the result of the short-circuited `and`
-                            _opsListIndex = CurrentOperation.Operand;
+                            _instructIdk = CurrentOperation.Operand;
                             continue;
                         }
                         _valStack.Pop();
@@ -111,7 +113,7 @@ namespace Chow.Interpreter.Evaluation
                         if (_valStack.Peek().IsTruthy)
                         {
                             // Leave the truthy value on the stack as the result of the short-circuited `or`
-                            _opsListIndex = CurrentOperation.Operand;
+                            _instructIdk = CurrentOperation.Operand;
                             continue;
                         }
                         _valStack.Pop();
@@ -129,14 +131,14 @@ namespace Chow.Interpreter.Evaluation
 
                     case OperationCode.PopExprStmntResult:
                         // Pop the result of an expression statement and ignore it, but trigger the expression statement hook for debugging
-                        if (_exprStmntHook == null)
+                        if (_exprHook == null)
                         {
                             _valStack.Pop();
                             break;
                         }
 
                         TaggedUnion exprResult = _valStack.Pop();
-                        _exprStmntHook.Invoke(ChowValueConverter.ToChowValue(exprResult));
+                        _exprHook.Invoke(ApiValueConverter.ToChowValue(exprResult));
                         break;
 
                     case OperationCode.ReturnValue:
@@ -207,17 +209,17 @@ namespace Chow.Interpreter.Evaluation
 
         int GetCurrentLineNumber()
         {
-            return _chunk.GetOperationLineNumber(_opsListIndex);
+            return _chunk.GetInstructionLineNumber(_instructIdk);
         }
 
         void MoveToNextOperation()
         {
-            _opsListIndex++;
+            _instructIdk++;
         }
 
         public bool IsRemainingOperation()
         {
-            return _opsListIndex != _chunk.Count;
+            return _instructIdk != _chunk.Count;
         }
     }
 }
