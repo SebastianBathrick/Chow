@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Chow.Interpreter.Values
 {
@@ -24,18 +24,15 @@ namespace Chow.Interpreter.Values
             throw new InvalidOperationException("Only one instance of ChowNone should exist.");
         }
 
-        // Throw ChowConversionException
-        public override int IntValue => throw new InvalidCastException(GetType(), typeof(int), this);
+        public override DataType As<DataType>()
+        {
+            throw new InvalidCastException(GetType(), typeof(DataType), this);
+        }
 
-        public override float FloatValue => throw new InvalidCastException(GetType(), typeof(float), this);
-
-        public override bool BoolValue => throw new InvalidCastException(GetType(), typeof(bool), this);
-
-        public override bool IsIntValue => false;
-
-        public override bool IsFloatValue => false;
-
-        public override bool IsBoolValue => false;
+        public override bool IsTypeOf<DataType>()
+        {
+            return false;
+        }
 
         public override string ToString() => NONE_STRING;
     }

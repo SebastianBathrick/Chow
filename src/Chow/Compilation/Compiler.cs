@@ -72,7 +72,7 @@ namespace Chow.Interpreter.Compilation
                     break;
 
                 default:
-                    throw new NotImplementedException($"Compilation of {targetNode.GetType().Name} is not implemented.");
+                    throw new InvalidOperationException();
             }
         }
 

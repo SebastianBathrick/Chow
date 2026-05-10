@@ -1,22 +1,41 @@
+using System;
+
 namespace Chow.Interpreter.Values
 {
     internal class ChowInteger : ChowValue
     {
-        private int _integerValue;
+        private int _val;
 
-        public override int IntValue { get => _integerValue; }
-        public override float FloatValue { get => (float)_integerValue; }
-        public override bool BoolValue { get => _integerValue != 0; }
-
-        public override bool IsIntValue { get => true; }
-        public override bool IsFloatValue { get => false; }
-        public override bool IsBoolValue { get => false; }
-
-        public ChowInteger(int integerValue)
+        public ChowInteger(int val)
         {
-            _integerValue = integerValue;
+            _val = val;
         }
 
-        public override string ToString() => _integerValue.ToString();
+        public override DataType As<DataType>()
+        {
+            if (typeof(DataType) == typeof(int))
+            {
+                return (DataType)(object)_val;
+            }
+
+            if (typeof(DataType) == typeof(float))
+            {
+                return (DataType)(object)(float)_val;
+            }
+
+            if (typeof(DataType) == typeof(bool))
+            {
+                return (DataType)(object)(_val != 0);
+            }
+
+            throw new InvalidCastException(GetType(), typeof(DataType), this);
+        }
+
+        public override bool ContainsType<DataType>()
+        {
+            return typeof(DataType) == typeof(int);
+        }
+
+        public override string ToString() => _val.ToString();
     }
 }

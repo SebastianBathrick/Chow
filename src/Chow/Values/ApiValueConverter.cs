@@ -16,19 +16,19 @@ namespace Chow.Interpreter.Values
                 return TaggedUnion.None;
             }
 
-            if (value.IsBoolValue)
+            if (value.IsTypeOf<bool>())
             {
-                return new TaggedUnion(value.BoolValue);
+                return new TaggedUnion(value.As<bool>());
             }
 
-            if (value.IsIntValue)
+            if (value.IsTypeOf<int>())
             {
-                return new TaggedUnion(value.IntValue);
+                return new TaggedUnion(value.As<int>());
             }
 
-            if (value.IsFloatValue)
+            if (value.IsTypeOf<float>())
             {
-                return new TaggedUnion(value.FloatValue);
+                return new TaggedUnion(value.As<float>());
             }
 
             throw new NotImplementedException();
