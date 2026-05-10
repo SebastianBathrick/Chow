@@ -55,6 +55,26 @@ namespace Chow.Interpreter.Syntax
             return new ModuleNode(stmnts);
         }
 
+        Node ParseBlock()
+        {
+            ConsumeCurrTkn(TokenType.SymbolBlockColon, "Expected ':' after block header.");
+            ConsumeCurrTkn(TokenType.Newline, "Expected newline after ':'.");
+            Token indentTkn = ConsumeCurrTkn(TokenType.Indent, "Expected indented block body.");
+
+            List<Node> stmnts = new List<Node>();
+            stmnts.Add(ParseStmnts());
+            IsCurrTknType(TokenType.Newline);
+
+            while (!CurrTknType(TokenType.Dedent))
+            {
+                stmnts.Add(ParseStmnts());
+                IsCurrTknType(TokenType.Newline);
+            }
+
+            ConsumeCurrTkn(TokenType.Dedent, "Expected dedent to close block.");
+            return new BlockNode(stmnts, indentTkn.lineNum);
+        }
+
         #endregion
 
         #region Statement Methods
@@ -64,7 +84,7 @@ namespace Chow.Interpreter.Syntax
             switch (CurrTkn.type)
             {
                 case TokenType.Identifier:
-                    if (NextTknType(TokenType.SymbolAssign))
+                    if (PeekTknType(TokenType.SymbolAssign))
                     {
                         return ParseVarAssignment();
                     }
@@ -74,6 +94,9 @@ namespace Chow.Interpreter.Syntax
 
                 case TokenType.KeywordReturn:
                     return ParseReturn();
+
+                case TokenType.KeywordIf:
+                    return ParseIf();
             }
 
             if (IsCurrPrimaryTkn())
@@ -85,12 +108,48 @@ namespace Chow.Interpreter.Syntax
             throw new ParserEx("Expected statement.", CurrTkn.lineNum);
         }
 
+        Node ParseIf()
+        {
+            int lineNum = CurrTkn.lineNum;
+            ConsumeCurrTkn(TokenType.KeywordIf, "Expected 'if' keyword.");
+            Node expr = ParseExpr();
+            Node block = ParseBlock();
+            Node branch = ParseBranch();
+            return new IfNode(expr, block, branch, lineNum);
+        }
+
+        Node ParseBranch()
+        {
+            if (CurrTknType(TokenType.KeywordElif))
+            {
+                int lineNum = CurrTkn.lineNum;
+                MoveNextTkn();
+                
+                Node expr = ParseExpr();
+                Node block = ParseBlock();
+                Node branch = ParseBranch();
+
+                return new BranchStmntNode(expr, block, branch, lineNum);
+            }
+
+            if (CurrTknType(TokenType.KeywordElse))
+            {
+                int lineNum = CurrTkn.lineNum;
+                MoveNextTkn();
+                
+                Node block = ParseBlock();
+                return new BranchStmntNode(null, block, null, lineNum);
+            }
+
+            return null;
+        }
+
         Node ParseVarAssignment()
         {
-            Token identifierToken = ConsumeCurrTkn(TokenType.Identifier, "Expected variable name.");
+            Token nameTkn = ConsumeCurrTkn(TokenType.Identifier, "Expected variable name.");
             ConsumeCurrTkn(TokenType.SymbolAssign, "Expected '=' after variable name.");
             Node expression = ParseExpr();
-            return new VariableAssignNode(identifierToken.lexeme, expression, identifierToken.lineNum);
+            return new VariableAssignNode(nameTkn.lexeme, expression, nameTkn.lineNum);
         }
 
         Node ParseReturn()
@@ -310,9 +369,9 @@ namespace Chow.Interpreter.Syntax
             return CurrTkn.type == type;
         }
 
-        bool NextTknType(TokenType type)
+        bool PeekTknType(TokenType type, int offset = 1)
         {
-            int nextIndex = _tknIdx + 1;
+            int nextIndex = _tknIdx + offset;
 
             // This method will never be called when the current token is EndOfCode, so we don't need to check for out-of-range.
             return _tkns[nextIndex].type == type;

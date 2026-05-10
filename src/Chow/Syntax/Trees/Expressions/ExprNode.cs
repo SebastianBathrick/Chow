@@ -2,17 +2,17 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
 {
     internal class ExprNode : Node
     {
-        ExprOperator _opType;
+        ExprOperator _operator;
         Node _l;
         Node _r;
 
-        public ExprOperator Operator => _opType;
+        public ExprOperator Operator => _operator;
         public Node Left => _l;
         public Node Right => _r;
 
         public ExprNode(ExprOperator opType, Node l, Node r, int line) : base(line)
         {
-            _opType = opType;
+            _operator = opType;
             _l = l;
             _r = r;
         }
@@ -22,7 +22,7 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
         /// </summary>
         public ExprNode(ExprOperator opType, Node l, int line) : base(line)
         {
-            _opType = opType;
+            _operator = opType;
             _l = l;
             _r = null;
         }
@@ -33,11 +33,11 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
 
             if (_r == null)
             {
-                return $"[{_opType} line={LineNum}\n{indentedLeft}\n]";
+                return $"[{_operator} line={LineNum}\n{indentedLeft}\n]";
             }
 
             string indentedRight = IndentChildren(_r.ToString());
-            return $"[{_opType} line={LineNum}\n{indentedLeft}\n{indentedRight}\n]";
+            return $"[{_operator} line={LineNum}\n{indentedLeft}\n{indentedRight}\n]";
         }
 
         static string IndentChildren(string nodeString)
