@@ -1,13 +1,21 @@
 # Chow
 
 ## Current Features
-- Float, integer, and None types
-- Arithmetic operations
+- Floating-point data type
+- Integer data type
+- Boolean data type
+- Arithmetic Expressions
+- Comparison Expressions
+- Logic Expressions
 - Nested expressions
 - Top-level statements
-- Variable declarations
-- Variable assignments
-- Top-level return statements
+- Expression statements
+- Variable declaration statements
+- Variable assignment statements
+
+## Tests
+REPL tests:
+147/163 passing unit tests
 
 ## Small TODOs
 - Get rid of "is dirty" flags in major classes (redundant)

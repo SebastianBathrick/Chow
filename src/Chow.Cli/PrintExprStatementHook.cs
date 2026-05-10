@@ -3,7 +3,7 @@ using Chow.Interpreter.Values;
 
 namespace Chow.Repl
 {
-    internal sealed class PrintExpressionStatementHook : IExpressionStatementHook
+    internal sealed class PrintExprStatementHook : IExprStatementHook
     {
         public void Invoke(ChowValue value)
         {

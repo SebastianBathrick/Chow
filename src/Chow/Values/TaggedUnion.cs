@@ -11,12 +11,12 @@ namespace Chow.Interpreter.Values
 
         // TODO: Test whether using explicit struct layouts meaningly affects performance
         Tag _type;
-        int _intValue;
-        float _floatValue;
-        bool _boolValue;
+        int _int;
+        float _float;
+        bool _bool;
 
         // TODO: Add an object type and use it for strings instead of a separate field, to save space.
-        string _stringValue;
+        string _str;
 
         public static TaggedUnion Empty = new TaggedUnion(Tag.Empty);
         public static TaggedUnion None = new TaggedUnion(Tag.None);
@@ -25,7 +25,7 @@ namespace Chow.Interpreter.Values
 
         public bool IsEmpty => _type == Tag.Empty;
         public bool IsNone => _type == Tag.None;
-        public bool IsInteger => _type == Tag.Integer;
+        public bool IsInt => _type == Tag.Int;
         public bool IsFloat => _type == Tag.Float;
         public bool IsString => _type == Tag.String;
         public bool IsBoolean => _type == Tag.Boolean;
@@ -37,11 +37,11 @@ namespace Chow.Interpreter.Values
                 switch (_type)
                 {
                     case Tag.Boolean:
-                        return _boolValue;
-                    case Tag.Integer:
-                        return _intValue != 0;
+                        return _bool;
+                    case Tag.Int:
+                        return _int != 0;
                     case Tag.Float:
-                        return _floatValue != 0f;
+                        return _float != 0f;
                     default:
                         return false;
                 }
@@ -52,13 +52,13 @@ namespace Chow.Interpreter.Values
         {
             get
             {
-                ValidateTaggedUnionType(Tag.Integer);
-                return _intValue;
+                ValidateTaggedUnionType(Tag.Int);
+                return _int;
             }
             set
             {
-                ValidateTaggedUnionType(Tag.Integer);
-                _intValue = value;
+                ValidateTaggedUnionType(Tag.Int);
+                _int = value;
             }
         }
 
@@ -67,12 +67,12 @@ namespace Chow.Interpreter.Values
             get
             {
                 ValidateTaggedUnionType(Tag.Float);
-                return _floatValue;
+                return _float;
             }
             set
             {
                 ValidateTaggedUnionType(Tag.Float);
-                _floatValue = value;
+                _float = value;
             }
         }
 
@@ -81,12 +81,12 @@ namespace Chow.Interpreter.Values
             get
             {
                 ValidateTaggedUnionType(Tag.String);
-                return _stringValue;
+                return _str;
             }
             set
             {
                 ValidateTaggedUnionType(Tag.String);
-                _stringValue = value;
+                _str = value;
             }
         }
 
@@ -95,58 +95,58 @@ namespace Chow.Interpreter.Values
             get
             {
                 ValidateTaggedUnionType(Tag.Boolean);
-                return _boolValue;
+                return _bool;
             }
             set
             {
                 ValidateTaggedUnionType(Tag.Boolean);
-                _boolValue = value;
+                _bool = value;
             }
         }
 
         private TaggedUnion(Tag type)
         {
             _type = type;
-            _intValue = DEFAULT_INT_VALUE;
-            _floatValue = DEFAULT_FLOAT_VALUE;
-            _stringValue = DEFAULT_STRING_VALUE;
-            _boolValue = DEFAULT_BOOL_VALUE;
+            _int = DEFAULT_INT_VALUE;
+            _float = DEFAULT_FLOAT_VALUE;
+            _str = DEFAULT_STRING_VALUE;
+            _bool = DEFAULT_BOOL_VALUE;
         }
 
         public TaggedUnion(float value)
         {
-            _floatValue = value;
+            _float = value;
             _type = Tag.Float;
-            _intValue = DEFAULT_INT_VALUE;
-            _stringValue = DEFAULT_STRING_VALUE;
-            _boolValue = DEFAULT_BOOL_VALUE;
+            _int = DEFAULT_INT_VALUE;
+            _str = DEFAULT_STRING_VALUE;
+            _bool = DEFAULT_BOOL_VALUE;
         }
 
         public TaggedUnion(int value)
         {
-            _intValue = value;
-            _type = Tag.Integer;
-            _floatValue = DEFAULT_FLOAT_VALUE;
-            _stringValue = DEFAULT_STRING_VALUE;
-            _boolValue = DEFAULT_BOOL_VALUE;
+            _int = value;
+            _type = Tag.Int;
+            _float = DEFAULT_FLOAT_VALUE;
+            _str = DEFAULT_STRING_VALUE;
+            _bool = DEFAULT_BOOL_VALUE;
         }
 
         public TaggedUnion(string value)
         {
-            _stringValue = value;
+            _str = value;
             _type = Tag.String;
-            _intValue = DEFAULT_INT_VALUE;
-            _floatValue = DEFAULT_FLOAT_VALUE;
-            _boolValue = DEFAULT_BOOL_VALUE;
+            _int = DEFAULT_INT_VALUE;
+            _float = DEFAULT_FLOAT_VALUE;
+            _bool = DEFAULT_BOOL_VALUE;
         }
 
         public TaggedUnion(bool value)
         {
-            _boolValue = value;
+            _bool = value;
             _type = Tag.Boolean;
-            _intValue = DEFAULT_INT_VALUE;
-            _floatValue = DEFAULT_FLOAT_VALUE;
-            _stringValue = DEFAULT_STRING_VALUE;
+            _int = DEFAULT_INT_VALUE;
+            _float = DEFAULT_FLOAT_VALUE;
+            _str = DEFAULT_STRING_VALUE;
         }
 
         // TODO: Refactor operator overloads to create less new TaggedUnions by using helper functions that only use the
@@ -303,14 +303,14 @@ namespace Chow.Interpreter.Values
 
             switch (left._type)
             {
-                case Tag.Integer:
-                    return left._intValue == right._intValue;
+                case Tag.Int:
+                    return left._int == right._int;
                 case Tag.Float:
-                    return left._floatValue == right._floatValue;
+                    return left._float == right._float;
                 case Tag.String:
-                    return left._stringValue == right._stringValue;
+                    return left._str == right._str;
                 case Tag.Boolean:
-                    return left._boolValue == right._boolValue;
+                    return left._bool == right._bool;
                 default:
                     return true;
             }
@@ -418,7 +418,7 @@ namespace Chow.Interpreter.Values
                 return;
             }
 
-            bool otherIsNumeric = leftBool ? (right.IsInteger || right.IsFloat) : (left.IsInteger || left.IsFloat);
+            bool otherIsNumeric = leftBool ? (right.IsInt || right.IsFloat) : (left.IsInt || left.IsFloat);
             if (otherIsNumeric)
             {
                 throw new NotImplementedException("Mixed boolean and numeric operands are not yet implemented.");
@@ -444,14 +444,14 @@ namespace Chow.Interpreter.Values
         {
             switch (_type)
             {
-                case Tag.Integer:
-                    return _intValue.GetHashCode();
+                case Tag.Int:
+                    return _int.GetHashCode();
                 case Tag.Float:
-                    return _floatValue.GetHashCode();
+                    return _float.GetHashCode();
                 case Tag.String:
-                    return _stringValue?.GetHashCode() ?? 0;
+                    return _str?.GetHashCode() ?? 0;
                 case Tag.Boolean:
-                    return _boolValue.GetHashCode();
+                    return _bool.GetHashCode();
                 default:
                     return _type.GetHashCode();
             }
@@ -466,20 +466,20 @@ namespace Chow.Interpreter.Values
 
             if (IsFloat)
             {
-                return $"TaggedUnion(type={_type}, value={_floatValue})";
+                return $"TaggedUnion(type={_type}, value={_float})";
             }
 
             if (IsString)
             {
-                return $"TaggedUnion(type={_type}, value={_stringValue})";
+                return $"TaggedUnion(type={_type}, value={_str})";
             }
 
             if (IsBoolean)
             {
-                return $"TaggedUnion(type={_type}, value={_boolValue})";
+                return $"TaggedUnion(type={_type}, value={_bool})";
             }
 
-            return $"TaggedUnion(type={_type}, value={_intValue})";
+            return $"TaggedUnion(type={_type}, value={_int})";
         }
 
         void ValidateTaggedUnionType(Tag desiredType)
@@ -490,20 +490,18 @@ namespace Chow.Interpreter.Values
             }
 
             // TODO: Replace this branch with actual coercion (bool<->int<->float) once implemented.
-            if (IsPythonCoercibleNumeric(desiredType) && IsPythonCoercibleNumeric(_type))
+            if (IsCoercibleNumeric(desiredType) && IsCoercibleNumeric(_type))
             {
-                throw new NotImplementedException($"{desiredType} access on union of type {_type} requires Python coercion that is not yet implemented.");
+                throw new NotImplementedException($"{desiredType} access on union of type {_type} requires coercion that is not yet implemented.");
             }
 
             throw new InvalidOperationException($"{desiredType} access attempt but union's type is {_type}");
         }
 
         // TODO: Temporary helper used only by the coercion-not-implemented guard. Remove with that guard.
-        static bool IsPythonCoercibleNumeric(Tag type)
+        static bool IsCoercibleNumeric(Tag type)
         {
-            return type == Tag.Boolean
-                || type == Tag.Integer
-                || type == Tag.Float;
+            return type == Tag.Boolean || type == Tag.Int || type == Tag.Float;
         }
     }
 }

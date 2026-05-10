@@ -27,7 +27,7 @@ namespace Chow.Interpreter
             Chunk chunk = compiler.CompileSyntaxTreeRoot();
 
             // Get hook for expression statements, if it exists, to pass to the virtual machine for execution
-            IExecutionHook exprStmtHook = _hooks.Find(h => h is IExpressionStatementHook);
+            IExecutionHook exprStmtHook = _hooks.Find(h => h is IExprStatementHook);
 
             // Executes the chunk with the provided environment, or if null, a new environment
             VirtualMachine vm = new VirtualMachine(chunk, _enviro, exprStmtHook);

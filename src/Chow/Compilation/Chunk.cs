@@ -152,7 +152,7 @@ namespace Chow.Interpreter.Compilation
 
         static void AppendConstant(StringBuilder sb, TaggedUnion constant)
         {
-            if (constant.IsInteger)
+            if (constant.IsInt)
             {
                 sb.Append("Int=");
                 sb.Append(constant.IntegerValue);

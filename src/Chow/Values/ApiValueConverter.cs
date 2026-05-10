@@ -40,8 +40,8 @@ namespace Chow.Interpreter.Values
             {
                 case Tag.None:
                     return ChowValue.None;
-                case Tag.Integer:
-                    return new ChowInteger(taggedUnion.IntegerValue);
+                case Tag.Int:
+                    return new ChowInt(taggedUnion.IntegerValue);
                 case Tag.Float:
                     return new ChowFloat(taggedUnion.FloatValue);
                 case Tag.Boolean:

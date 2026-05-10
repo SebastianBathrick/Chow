@@ -1,10 +1,10 @@
 namespace Chow.Interpreter.Values
 {
-    internal class ChowInteger : ChowValue
+    internal class ChowInt : ChowValue
     {
         private int _val;
 
-        public ChowInteger(int val)
+        public ChowInt(int val)
         {
             _val = val;
         }
@@ -29,7 +29,7 @@ namespace Chow.Interpreter.Values
             throw new InvalidCastException(GetType(), typeof(DataType), this);
         }
 
-        public override bool ContainsType<DataType>()
+        public override bool IsTypeOf<DataType>()
         {
             return typeof(DataType) == typeof(int);
         }

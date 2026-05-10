@@ -43,7 +43,7 @@ namespace Chow.Tests
         {
             Assert.Multiple(() =>
             {
-                Assert.That(result.IsInteger, Is.True);
+                Assert.That(result.IsInt, Is.True);
                 Assert.That(result.IntegerValue, Is.EqualTo(expected));
             });
         }

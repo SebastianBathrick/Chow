@@ -14,19 +14,19 @@ namespace Chow.Interpreter.Evaluation
 
         Stack<TaggedUnion> _valStack;
         IExecutionHook _exprHook;
-        int _instructIdk;
+        int _instructIdx;
 
-        private Instruction CurrentOperation => _chunk[_instructIdk];
+        private Instruction CurrentOperation => _chunk[_instructIdx];
 
         public TaggedUnion ValStackTop => _valStack.Count > 0 ? _valStack.Peek() : TaggedUnion.None;
 
-        public VirtualMachine(Chunk chunk, ChowEnviro enviro, IExecutionHook exprStmntHook)
+        public VirtualMachine(Chunk chunk, ChowEnviro enviro, IExecutionHook exprHook)
         {
             _chunk = chunk;
             _enviro = enviro == null ? new ChowEnviro() : enviro;
             _valStack = new Stack<TaggedUnion>();
-            _instructIdk = 0;
-            _exprHook = exprStmntHook;
+            _instructIdx = 0;
+            _exprHook = exprHook;
         }
 
         public ChowEnviro ExecuteChunk()
@@ -103,7 +103,7 @@ namespace Chow.Interpreter.Evaluation
                         if (!_valStack.Peek().IsTruthy)
                         {
                             // Leave the falsy value on the stack as the result of the short-circuited `and`
-                            _instructIdk = CurrentOperation.Operand;
+                            _instructIdx = CurrentOperation.Operand;
                             continue;
                         }
                         _valStack.Pop();
@@ -113,7 +113,7 @@ namespace Chow.Interpreter.Evaluation
                         if (_valStack.Peek().IsTruthy)
                         {
                             // Leave the truthy value on the stack as the result of the short-circuited `or`
-                            _instructIdk = CurrentOperation.Operand;
+                            _instructIdx = CurrentOperation.Operand;
                             continue;
                         }
                         _valStack.Pop();
@@ -209,17 +209,17 @@ namespace Chow.Interpreter.Evaluation
 
         int GetCurrentLineNumber()
         {
-            return _chunk.GetInstructionLineNumber(_instructIdk);
+            return _chunk.GetInstructionLineNumber(_instructIdx);
         }
 
         void MoveToNextOperation()
         {
-            _instructIdk++;
+            _instructIdx++;
         }
 
         public bool IsRemainingOperation()
         {
-            return _instructIdk != _chunk.Count;
+            return _instructIdx != _chunk.Count;
         }
     }
 }

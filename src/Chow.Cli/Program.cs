@@ -6,7 +6,7 @@ const string START_INDICATOR = ">>> ";
 const string TRAILING_INDICATOR = "... ";
 
 ChowModule module = new ChowModule();
-module.AddHook(new PrintExpressionStatementHook());
+module.AddHook(new PrintExprStatementHook());
 
 while (true)
 {

@@ -4,7 +4,7 @@ namespace Chow.Interpreter.Values
     {
         Empty,
         None,
-        Integer,
+        Int,
         Float,
         String,
         Boolean

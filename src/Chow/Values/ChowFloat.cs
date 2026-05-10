@@ -29,7 +29,7 @@ namespace Chow.Interpreter.Values
             throw new InvalidCastException(GetType(), typeof(DataType), this);
         }
 
-        public override bool ContainsType<DataType>()
+        public override bool IsTypeOf<DataType>()
         {
             return typeof(DataType) == typeof(float);
         }
