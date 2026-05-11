@@ -8,6 +8,7 @@ namespace Chow.Interpreter.Compilation
     {
         List<Instruction> _instructions = new List<Instruction>();
         List<TaggedUnion> _consts = new List<TaggedUnion>();
+
         List<string> _varNames = new List<string>();
         List<int> _opLineNums = new List<int>();
 

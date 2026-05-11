@@ -8,12 +8,14 @@ namespace Chow.Interpreter.Values
         const int DEFAULT_INT_VALUE = 0;
         const string DEFAULT_STRING_VALUE = null;
         const bool DEFAULT_BOOL_VALUE = false;
+        const object DEFAULT_NULL_VALUE = null;
 
         // TODO: Test whether using explicit struct layouts meaningly affects performance
         Tag _type;
         int _int;
         float _float;
         bool _bool;
+        object _obj;
 
         // TODO: Add an object type and use it for strings instead of a separate field, to save space.
         string _str;
@@ -24,7 +26,6 @@ namespace Chow.Interpreter.Values
         public Tag Tag => _type;
 
         public bool IsEmpty => _type == Tag.Empty;
-        public bool IsNone => _type == Tag.None;
         public bool IsInt => _type == Tag.Int;
         public bool IsFloat => _type == Tag.Float;
         public bool IsString => _type == Tag.String;
@@ -42,6 +43,8 @@ namespace Chow.Interpreter.Values
                         return _int != 0;
                     case Tag.Float:
                         return _float != 0f;
+                    case Tag.Object:
+                        return false;
                     default:
                         return false;
                 }
@@ -111,15 +114,18 @@ namespace Chow.Interpreter.Values
             _float = DEFAULT_FLOAT_VALUE;
             _str = DEFAULT_STRING_VALUE;
             _bool = DEFAULT_BOOL_VALUE;
+            _obj = DEFAULT_NULL_VALUE;
         }
 
         public TaggedUnion(float value)
         {
             _float = value;
             _type = Tag.Float;
-            _int = DEFAULT_INT_VALUE;
+            _float = DEFAULT_FLOAT_VALUE;
             _str = DEFAULT_STRING_VALUE;
             _bool = DEFAULT_BOOL_VALUE;
+            _obj = DEFAULT_NULL_VALUE;
+            _int = DEFAULT_INT_VALUE;
         }
 
         public TaggedUnion(int value)
@@ -129,6 +135,7 @@ namespace Chow.Interpreter.Values
             _float = DEFAULT_FLOAT_VALUE;
             _str = DEFAULT_STRING_VALUE;
             _bool = DEFAULT_BOOL_VALUE;
+            _obj = DEFAULT_NULL_VALUE;
         }
 
         public TaggedUnion(string value)
@@ -138,6 +145,7 @@ namespace Chow.Interpreter.Values
             _int = DEFAULT_INT_VALUE;
             _float = DEFAULT_FLOAT_VALUE;
             _bool = DEFAULT_BOOL_VALUE;
+            _obj = DEFAULT_NULL_VALUE;
         }
 
         public TaggedUnion(bool value)
@@ -147,6 +155,17 @@ namespace Chow.Interpreter.Values
             _int = DEFAULT_INT_VALUE;
             _float = DEFAULT_FLOAT_VALUE;
             _str = DEFAULT_STRING_VALUE;
+            _obj = DEFAULT_NULL_VALUE;
+        }
+
+        public TaggedUnion(object value)
+        {
+            _obj = value;
+            _type = Tag.Object;
+            _int = DEFAULT_INT_VALUE;
+            _float = DEFAULT_FLOAT_VALUE;
+            _str = DEFAULT_STRING_VALUE;
+            _bool = DEFAULT_BOOL_VALUE;
         }
 
         // TODO: Refactor operator overloads to create less new TaggedUnions by using helper functions that only use the

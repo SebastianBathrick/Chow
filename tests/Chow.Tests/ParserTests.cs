@@ -30,8 +30,8 @@ namespace Chow.Tests
 
         static Node UnwrapAssignmentExpression(Node root)
         {
-            Node statement = ((RootNode)root).Stmnts[0];
-            return ((VariableAssignNode)statement).Expression;
+            Node statement = ((TreeRootNode)root).Stmnts[0];
+            return ((VarAssignNode)statement).Expression;
         }
 
         static Token Token(TokenType type, string lexeme, int lineNumber, object literal = null!) =>

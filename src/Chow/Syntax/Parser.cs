@@ -10,6 +10,8 @@ namespace Chow.Interpreter.Syntax
     class Parser
     {
         List<Token> _tkns;
+        List<Node> _funcs;
+
         int _tknIdx;
 
         private Token CurrTkn => _tkns[_tknIdx];
@@ -41,7 +43,7 @@ namespace Chow.Interpreter.Syntax
             }
 
             ConsumeCurrTkn(TokenType.EndOfCode, "Expected end of code.");
-            return new RootNode(stmnts);
+            return new TreeRootNode(stmnts);
         }
 
         Node ParseBlock()
@@ -86,6 +88,9 @@ namespace Chow.Interpreter.Syntax
 
                 case TokenType.KeywordIf:
                     return ParseIf();
+
+                case TokenType.KeywordDef:
+                    return ParseFunction();
             }
 
             if (IsCurrPrimaryTkn())
@@ -95,6 +100,34 @@ namespace Chow.Interpreter.Syntax
             }
 
             throw new ParserEx("Expected statement.", CurrTkn.lineNum);
+        }
+
+        Node ParseFunction()
+        {
+            int lineNum = CurrTkn.lineNum;
+
+            ConsumeCurrTkn(TokenType.KeywordDef, "Expected 'def' keyword.");
+            Token nameTkn = ConsumeCurrTkn(TokenType.Identifier, "Expected function name.");
+            ConsumeCurrTkn(TokenType.SymbolLeftParen, "Expected '(' after function name.");
+
+            List<Node> paramList = new List<Node>();
+
+            if (!CurrTknType(TokenType.SymbolRightParen))
+            {
+                Token paramTkn = ConsumeCurrTkn(TokenType.Identifier, "Expected parameter name.");
+                paramList.Add(new NameNode(paramTkn.lexeme, paramTkn.lineNum));
+
+                while (IsCurrTknType(TokenType.SymbolComma))
+                {
+                    paramTkn = ConsumeCurrTkn(TokenType.Identifier, "Expected parameter name after ','.");
+                    paramList.Add(new NameNode(paramTkn.lexeme, paramTkn.lineNum));
+                }
+            }
+
+            ConsumeCurrTkn(TokenType.SymbolRightParen, "Expected ')' after parameter list.");
+
+            Node body = ParseBlock();
+            return new FunctionNode(nameTkn.lexeme, paramList, body, lineNum);
         }
 
         Node ParseIf()
@@ -138,7 +171,7 @@ namespace Chow.Interpreter.Syntax
             Token nameTkn = ConsumeCurrTkn(TokenType.Identifier, "Expected variable name.");
             ConsumeCurrTkn(TokenType.SymbolAssign, "Expected '=' after variable name.");
             Node expression = ParseExpr();
-            return new VariableAssignNode(nameTkn.lexeme, expression, nameTkn.lineNum);
+            return new VarAssignNode(nameTkn.lexeme, expression, nameTkn.lineNum);
         }
 
         Node ParseReturn()
@@ -300,6 +333,24 @@ namespace Chow.Interpreter.Syntax
             return l;
         }
 
+        Node ParseCallArgs(Token nameTkn)
+        {
+            List<Node> args = new List<Node>();
+
+            if (!CurrTknType(TokenType.SymbolRightParen))
+            {
+                args.Add(ParseExpr());
+
+                while (IsCurrTknType(TokenType.SymbolComma))
+                {
+                    args.Add(ParseExpr());
+                }
+            }
+
+            ConsumeCurrTkn(TokenType.SymbolRightParen, "Expected ')' after argument list.");
+            return new CallNode(nameTkn.lexeme, args, nameTkn.lineNum);
+        }
+
         Node ParsePrimary()
         {
             // Note: After adding a new primary token type, remember to update IsPrimaryTokenType() as well. Not doing
@@ -310,6 +361,12 @@ namespace Chow.Interpreter.Syntax
                 case TokenType.Identifier:
                     Token idTkn = CurrTkn;
                     MoveNextTkn();
+
+                    if (IsCurrTknType(TokenType.SymbolLeftParen))
+                    {
+                        return ParseCallArgs(idTkn);
+                    }
+
                     return new NameNode(idTkn.lexeme, idTkn.lineNum);
 
                 case TokenType.LiteralInt:

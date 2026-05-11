@@ -1,3 +1,4 @@
+using Chow.Interpreter.Evaluation;
 using Chow.Interpreter.Syntax.Trees;
 using Chow.Interpreter.Syntax.Trees.Expressions;
 using Chow.Interpreter.Syntax.Trees.Statements;
@@ -10,24 +11,56 @@ namespace Chow.Interpreter.Compilation
     class Compiler
     {
         Chunk _chunk;
-        RootNode _root;
+        Node _root;
         List<int> _pendingEndJumps;
 
         public Compiler(Node root)
         {
             _chunk = new Chunk();
-            _root = root as RootNode;
+            _root = root as TreeRootNode;
             _pendingEndJumps = new List<int>();
         }
 
         public Chunk CompileRoot()
         {
-            foreach (Node statement in _root.Stmnts)
+            TreeRootNode treeRoot = _root as TreeRootNode;
+
+            foreach (Node stmnt in treeRoot.Stmnts)
             {
-                CompileTargetNode(statement);
+                CompileTargetNode(stmnt);
             }
 
             return _chunk;
+        }
+
+        TaggedUnion CompileFuncBody()
+        {
+            // The function does not need to declare its name as callable because it will have access to the variable of its parent scope
+            FunctionNode funcNode = _root as FunctionNode;
+
+            foreach (Node param in funcNode.Params)
+            {
+                CompileTargetNode(param);
+            }
+
+            // Compile its nested block
+            CompileTargetNode(funcNode.Body);
+            
+            // This will be returned to a caller inside a different compiler instance
+            return new TaggedUnion(_chunk);
+        }
+
+        void CompileFuncDeclaration(FunctionNode funcNode)
+        {
+            Compiler funcCompiler = new Compiler(funcNode);
+            TaggedUnion funcConst = funcCompiler.CompileFuncBody();
+
+            int funcConstIdx = _chunk.RegisterConstant(funcConst);
+
+            _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNum, funcConstIdx);
+
+            int nameIdx = _chunk.RegisterConstant(new TaggedUnion(funcNode.Name));
+            _chunk.AddInstruction(OperationCode.AssignOrDeclareVariable, funcNode.LineNum, nameIdx);
         }
 
         void CompileTargetNode(Node targetNode)
@@ -52,12 +85,12 @@ namespace Chow.Interpreter.Compilation
                     CompileExpression(expressionNode);
                     break;
 
-                case VariableAssignNode varAssignNode:
-                    CompileVariableAssign(varAssignNode);
+                case VarAssignNode varAssignNode:
+                    CompileVarAssign(varAssignNode);
                     break;
 
                 case NameNode varFactorNode:
-                    CompileVariableFactor(varFactorNode);
+                    CompileVarFactor(varFactorNode);
                     break;
 
                 case ReturnNode returnNode:
@@ -66,11 +99,11 @@ namespace Chow.Interpreter.Compilation
                     break;
 
                 case ExprStatementNode exprStmtNode:
-                    CompileExpressionStatement(exprStmtNode);
+                    CompileExprStmnt(exprStmtNode);
                     break;
 
                 case IfNode ifNode:
-                    CompileIfStatement(ifNode);
+                    CompileIfStmnt(ifNode);
                     break;
                 
                 case BranchStmntNode branchNode:
@@ -97,7 +130,7 @@ namespace Chow.Interpreter.Compilation
 
         #region Statement Compilation
 
-        void CompileVariableAssign(VariableAssignNode varAssignNode)
+        void CompileVarAssign(VarAssignNode varAssignNode)
         {
             /* [NOTE]
              * 
@@ -129,7 +162,7 @@ namespace Chow.Interpreter.Compilation
             _chunk.AddInstruction(OperationCode.AssignOrDeclareVariable, varAssignNode.LineNum, varNameOperand);
         }
 
-        void CompileVariableFactor(NameNode varFactorNode)
+        void CompileVarFactor(NameNode varFactorNode)
         {
             // Register to have its own constant in case the variable with this name is declared in a previous environment
             int varNameOperand = _chunk.RegisterVariableName(varFactorNode.Name);
@@ -146,13 +179,13 @@ namespace Chow.Interpreter.Compilation
             _chunk.AddInstruction(code: OperationCode.ReturnValue, returnNode.LineNum);
         }
 
-        void CompileExpressionStatement(ExprStatementNode exprStmtNode)
+        void CompileExprStmnt(ExprStatementNode exprStmtNode)
         {
             CompileTargetNode(exprStmtNode.Expression);
             _chunk.AddInstruction(OperationCode.PopExprStmntResult, exprStmtNode.LineNum);
         }
 
-        void CompileIfStatement(IfNode ifNode)
+        void CompileIfStmnt(IfNode ifNode)
         {
             // Save outer chain's pending end-jumps so nested ifs don't corrupt it
             List<int> saved = _pendingEndJumps;

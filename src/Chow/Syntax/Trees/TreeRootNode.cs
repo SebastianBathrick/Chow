@@ -2,14 +2,14 @@ using System.Collections.Generic;
 
 namespace Chow.Interpreter.Syntax.Trees
 {
-    internal class RootNode : Node
+    internal class TreeRootNode : Node
     {
         const int ROOT_NODE_LINE = 1;
 
         List<Node> _stmnts;
 
         public List<Node> Stmnts => _stmnts;
-        public RootNode(List<Node> stmnts) : base(ROOT_NODE_LINE)
+        public TreeRootNode(List<Node> stmnts) : base(ROOT_NODE_LINE)
         {
             _stmnts = stmnts;
         }
