@@ -1,10 +1,14 @@
 # Chow
 
 ## Current Features
+- Pythonic Syntax
+- REPL csproj
 - Floating-point data type
 - Integer data type
 - Boolean data type
 - String data type
+- Function data type (defined in source code)
+- Object data type (allows for interop objects)
 - Arithmetic Expressions
 - Comparison Expressions
 - Logic Expressions
@@ -15,12 +19,13 @@
 - Variable assignment statements
 - If, elif, and else statements
 - Interop variable/function API
-- Callable interop functions
+- Callable interop/non-interop functions
+- Closures (functions can be declared in any block)
 
 
 ## Tests
 REPL tests:
-220/220 passing unit tests
+302/302 passing tests
 
 ## Small TODOs
 - Get rid of "is dirty" flags in major classes (redundant)
@@ -28,6 +33,7 @@ REPL tests:
 - Add ChowSyntaxErrorException and use it for top-level return statements
 - Add float literals starting with decimals
 - Have the output on the REPL start at cursor positon 0 instead of 3
+- Ensure negated primaries starting with "-" and "not" are flagged as such
 
 ## Behavior to Investigate
 REPL output:

@@ -33,9 +33,8 @@ namespace Chow.Interpreter.Compilation
             return _chunk;
         }
 
-        TaggedUnion CompileFuncBody()
+        Chunk CompileFuncBody()
         {
-            // The function does not need to declare its name as callable because it will have access to the variable of its parent scope
             FunctionNode funcNode = _root as FunctionNode;
 
             // Caller pushes args left-to-right; bind in reverse so positional order matches when popping
@@ -46,21 +45,27 @@ namespace Chow.Interpreter.Compilation
                 _chunk.AddInstr(OperationCode.AssignOrDeclareVariable, param.LineNum, paramOperand);
             }
 
-            // Compile its nested block
             CompileTargetNode(funcNode.Body);
-            
-            // This will be returned to a caller inside a different compiler instance
-            return new TaggedUnion(_chunk);
+
+            // Implicit `return None` for funcs that fall off the end of the body
+            int noneIdx = _chunk.RegisterConstant(TaggedUnion.None);
+            _chunk.AddInstr(OperationCode.PushConstant, funcNode.LineNum, noneIdx);
+            _chunk.AddInstr(OperationCode.ReturnValue, funcNode.LineNum);
+
+            return _chunk;
         }
 
         void CompileFuncDeclaration(FunctionNode funcNode)
         {
             Compiler funcCompiler = new Compiler(funcNode);
-            TaggedUnion funcConst = funcCompiler.CompileFuncBody();
+            Chunk funcChunk = funcCompiler.CompileFuncBody();
 
-            int funcConstIdx = _chunk.RegisterConstant(funcConst);
+            ClosureTemplate template = new ClosureTemplate(funcChunk, funcNode.Name, funcNode.Params.Count);
+            int templateIdx = _chunk.RegisterConstant(new TaggedUnion((object)template));
 
-            _chunk.AddInstr(OperationCode.PushConstant, funcNode.LineNum, funcConstIdx);
+            // Push template, then runtime MakeClosure captures the active scope and wraps it as a Closure.
+            _chunk.AddInstr(OperationCode.PushConstant, funcNode.LineNum, templateIdx);
+            _chunk.AddInstr(OperationCode.MakeClosure, funcNode.LineNum);
 
             int nameIdx = _chunk.RegisterVariableName(funcNode.Name);
             _chunk.AddInstr(OperationCode.AssignOrDeclareVariable, funcNode.LineNum, nameIdx);
@@ -198,6 +203,12 @@ namespace Chow.Interpreter.Compilation
             if (returnNode.Expression != null)
             {
                 CompileTargetNode(returnNode.Expression);
+            }
+            else
+            {
+                // Bare `return` returns None; ReturnValue always pops exactly one value off the stack.
+                int noneIdx = _chunk.RegisterConstant(TaggedUnion.None);
+                _chunk.AddInstr(OperationCode.PushConstant, returnNode.LineNum, noneIdx);
             }
 
             _chunk.AddInstr(code: OperationCode.ReturnValue, returnNode.LineNum);

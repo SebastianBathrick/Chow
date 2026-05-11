@@ -29,6 +29,6 @@ namespace Chow.Interpreter.Compilation
         IncScopeDepth,
         DecScopeDepth,
         Call,
-
+        MakeClosure,
     }
 }

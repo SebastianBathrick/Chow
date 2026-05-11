@@ -18,6 +18,18 @@ namespace Chow.Interpreter.Evaluation
         /// <summary>The chunk currently being executed (function chunk if inside a call, module chunk otherwise).</summary>
         public Chunk CurrentChunk => CurrFrame.Chunk;
 
+        /// <summary>The instruction at the current frame's pointer.</summary>
+        public Instruction CurrentInstr => CurrFrame.CurrentInstr;
+
+        /// <summary>True while the current frame has instructions remaining.</summary>
+        public bool IsInstrToRun => CurrFrame.IsInstrToRun;
+
+        /// <summary>The current frame's scope. Captured by <c>MakeClosure</c> at runtime.</summary>
+        public Scope CurrentScope => CurrFrame.Scope;
+
+        /// <summary>Source line number associated with the current frame's pointer.</summary>
+        public int CurrentLineNum => CurrFrame.CurrentLineNum;
+
         /// <summary>True when no function call is active and execution is in the module frame.</summary>
         public bool IsModuleLevel => _callFrames.Count == 0;
 
@@ -90,6 +102,18 @@ namespace Chow.Interpreter.Evaluation
             // Contract violation: callers must check IsVariableDefined first.
             // KeyNotFoundException here surfaces the bug; NameError translation belongs to the VM.
             return CurrFrame.Scope.GetVariableValue(name);
+        }
+
+        /// <summary>Advances the current frame's instruction pointer by one.</summary>
+        public void MoveToNextInstr()
+        {
+            CurrFrame.MoveToNextInstr();
+        }
+
+        /// <summary>Sets the current frame's instruction pointer.</summary>
+        public void JumpToInstr(int instrIdx)
+        {
+            CurrFrame.JumpToInstr(instrIdx);
         }
 
         /// <summary>Enters a nested block within the current frame's scope.</summary>

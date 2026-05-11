@@ -30,6 +30,9 @@ namespace Chow.Interpreter.Evaluation
         /// <summary>True while the instruction pointer has not reached the end of the chunk.</summary>
         public bool IsInstrToRun => _chunk.Count != _instrIdx;
 
+        /// <summary>Source line number associated with the current instruction.</summary>
+        public int CurrentLineNum => _chunk.GetInstrLineNum(_instrIdx);
+
         /// <summary>Creates a frame positioned at the first instruction.</summary>
         public StackFrame(Chunk chunk, Scope scope)
         {

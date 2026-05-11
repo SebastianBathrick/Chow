@@ -32,7 +32,7 @@ namespace Chow.Interpreter.Values
             throw new InvalidCastException(GetType(), typeof(DataType), this);
         }
 
-        public override bool IsTypeOf<DataType>()
+        public override bool Is<DataType>()
         {
             return typeof(DataType) == typeof(bool);
         }

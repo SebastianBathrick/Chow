@@ -1,3 +1,5 @@
+using System;
+using System.Text.RegularExpressions;
 using Chow.Interpreter;
 using Chow.Interpreter.Values;
 using Chow.Repl;
@@ -5,6 +7,8 @@ using Chow.Repl;
 const char NEWLINE_CHAR = '\n';
 const string START_INDICATOR = ">>> ";
 const string TRAILING_INDICATOR = "... ";
+const string FILE_PATH_PATTERN = @"^(?:(?:[A-Za-z]:[\\/])|(?:\\\\[^\\/:*?""<>|\r\n]+\\[^\\/:*?""<>|\r\n]+[\\/]?)|[\\/])?(?:[^\\/:*?""<>|\r\n]+[\\/])*[^\\/:*?""<>|\r\n]+$";
+const string REQUIRED_EXTENSION = ".chw";
 
 ChowModule module = new ChowModule();
 
@@ -26,7 +30,198 @@ module["input"] = new ChowDynamic(() =>
     return new ChowStr(input);
 });
 
-module.AddHook(new PrintExprStatementHook());
+module["float"] = new ChowDynamic((ChowValue val) =>
+{
+    if (val.Is<float>())
+    {
+        return new ChowFloat(val.As<float>());
+    }
+    if (val.Is<int>())
+    {
+        return new ChowFloat((float)val.As<int>());
+    }
+    if (val.Is<bool>())
+    {
+        return new ChowFloat(val.As<float>());
+    }
+    if (val is ChowStr s)
+    {
+        if (float.TryParse(s.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float parsed))
+        {
+            return new ChowFloat(parsed);
+        }
+        throw new InvalidOperationException($"could not convert string to float: '{s.Value}'");
+    }
+    throw new InvalidOperationException($"float() argument must be a string or a number, not '{ChowTypeName(val)}'");
+});
+
+module["str"] = new ChowDynamic((ChowValue val) =>
+{
+    return new ChowStr(val.ToString());
+});
+
+module["int"] = new ChowDynamic((ChowValue val) =>
+{
+    if (val.Is<int>())
+    {
+        return new ChowInt(val.As<int>());
+    }
+    if (val.Is<float>())
+    {
+        return new ChowInt((int)val.As<float>());
+    }
+    if (val.Is<bool>())
+    {
+        return new ChowInt(val.As<int>());
+    }
+    if (val is ChowStr s)
+    {
+        if (int.TryParse(s.Value, out int parsed))
+        {
+            return new ChowInt(parsed);
+        }
+        throw new InvalidOperationException($"invalid literal for int() with base 10: '{s.Value}'");
+    }
+    throw new InvalidOperationException($"int() argument must be a string, a bytes-like object or a real number, not '{ChowTypeName(val)}'");
+});
+
+module["bool"] = new ChowDynamic((ChowValue val) =>
+{
+    if (val.IsNone)
+    {
+        return new ChowBool(false);
+    }
+    if (val.Is<bool>())
+    {
+        return new ChowBool(val.As<bool>());
+    }
+    if (val.Is<int>())
+    {
+        return new ChowBool(val.As<int>() != 0);
+    }
+    if (val.Is<float>())
+    {
+        return new ChowBool(val.As<float>() != 0f);
+    }
+    if (val is ChowStr s)
+    {
+        return new ChowBool(s.Value.Length != 0);
+    }
+    throw new InvalidOperationException($"bool() argument not supported for type '{ChowTypeName(val)}'");
+});
+
+module["len"] = new ChowDynamic((ChowValue val) =>
+{
+    if (val is ChowStr s)
+    {
+        return new ChowInt(s.Value.Length);
+    }
+    throw new InvalidOperationException($"object of type '{ChowTypeName(val)}' has no len()");
+});
+
+module["type"] = new ChowDynamic((ChowValue val) =>
+{
+    return new ChowStr(ChowTypeName(val));
+});
+
+module["abs"] = new ChowDynamic((ChowValue val) =>
+{
+    if (val.Is<int>())
+    {
+        return (ChowValue)new ChowInt(Math.Abs(val.As<int>()));
+    }
+    if (val.Is<float>())
+    {
+        return (ChowValue)new ChowFloat(Math.Abs(val.As<float>()));
+    }
+    if (val.Is<bool>())
+    {
+        return (ChowValue)new ChowInt(val.As<int>());
+    }
+    throw new InvalidOperationException($"bad operand type for abs(): '{ChowTypeName(val)}'");
+});
+
+module["round"] = new ChowDynamic((ChowValue val) =>
+{
+    if (val.Is<int>())
+    {
+        return new ChowInt(val.As<int>());
+    }
+    if (val.Is<float>())
+    {
+        return new ChowInt((int)Math.Round((double)val.As<float>(), MidpointRounding.ToEven));
+    }
+    if (val.Is<bool>())
+    {
+        return new ChowInt(val.As<int>());
+    }
+    throw new InvalidOperationException($"type {ChowTypeName(val)} doesn't define __round__ method");
+});
+
+module["min"] = new ChowDynamic((ChowValue[] args) =>
+{
+    if (args.Length != 2)
+    {
+        throw new InvalidOperationException($"min() expected 2 arguments, got {args.Length}");
+    }
+    if (!ChowIsNumeric(args[0]) || !ChowIsNumeric(args[1]))
+    {
+        throw new InvalidOperationException("min() arguments must be numbers");
+    }
+    return ChowAsDouble(args[0]) <= ChowAsDouble(args[1]) ? args[0] : args[1];
+});
+
+module["max"] = new ChowDynamic((ChowValue[] args) =>
+{
+    if (args.Length != 2)
+    {
+        throw new InvalidOperationException($"max() expected 2 arguments, got {args.Length}");
+    }
+    if (!ChowIsNumeric(args[0]) || !ChowIsNumeric(args[1]))
+    {
+        throw new InvalidOperationException("max() arguments must be numbers");
+    }
+    return ChowAsDouble(args[0]) >= ChowAsDouble(args[1]) ? args[0] : args[1];
+});
+
+if (args.Length > 0)
+{
+    string arg = args[0];
+
+    if (Regex.IsMatch(arg, FILE_PATH_PATTERN))
+    {
+        if (!arg.EndsWith(REQUIRED_EXTENSION, StringComparison.OrdinalIgnoreCase))
+        {
+            Console.Error.WriteLine($"Error: file must have '{REQUIRED_EXTENSION}' extension.");
+            return;
+        }
+
+        try
+        {
+            string src = File.ReadAllText(arg);
+            module.Execute(src);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex);
+        }
+
+        return;
+    }
+
+    module.AddHook(new PrintExprStatementHook());
+
+    try
+    {
+        module.Execute(arg);
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine(ex);
+    }
+
+    return;
+}
 
 while (true)
 {
@@ -173,6 +368,57 @@ static List<string> GetLineList(string startIndicator, string trailingIndicator)
     while (!isSubmitting);
 
     return lines;
+}
+
+static string ChowTypeName(ChowValue val)
+{
+    if (val.IsNone)
+    {
+        return "NoneType";
+    }
+    if (val.Is<bool>())
+    {
+        return "bool";
+    }
+    if (val.Is<int>())
+    {
+        return "int";
+    }
+    if (val.Is<float>())
+    {
+        return "float";
+    }
+    if (val is ChowStr)
+    {
+        return "str";
+    }
+    if (val is ChowDynamic d && d.Value != null)
+    {
+        return d.Value.GetType().Name;
+    }
+    return "object";
+}
+
+static bool ChowIsNumeric(ChowValue val)
+{
+    return val.Is<int>() || val.Is<float>() || val.Is<bool>();
+}
+
+static double ChowAsDouble(ChowValue val)
+{
+    if (val.Is<int>())
+    {
+        return val.As<int>();
+    }
+    if (val.Is<float>())
+    {
+        return val.As<float>();
+    }
+    if (val.Is<bool>())
+    {
+        return val.As<int>();
+    }
+    throw new InvalidOperationException("Value is not numeric");
 }
 
 static void RedrawLine(string line, int cursorY, string prefix)

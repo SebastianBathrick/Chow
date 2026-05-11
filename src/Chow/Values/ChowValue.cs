@@ -1,3 +1,5 @@
+using System;
+
 namespace Chow.Interpreter.Values
 {
     public abstract class ChowValue
@@ -8,7 +10,8 @@ namespace Chow.Interpreter.Values
 
         public abstract DataType As<DataType>() where DataType : struct;
 
-        public abstract bool IsTypeOf<DataType>() where DataType : struct;
+        public abstract bool Is<DataType>() where DataType : struct;
+
 
         public abstract override string ToString();
     }

@@ -10,34 +10,32 @@ namespace Chow.Interpreter.Evaluation
 {
     sealed class VirtualMachine
     {
-        readonly Chunk _chunk;
-        readonly ModuleScope _enviro;
+        readonly ModuleScope _moduleScope;
+        readonly CallStack _callStack;
 
         Stack<TaggedUnion> _valStack;
         IExecutionHook _exprHook;
-        int _instructIdx;
 
-        private Instruction CurrentOperation => _chunk[_instructIdx];
+        Instruction CurrentOperation => _callStack.CurrentInstr;
 
         public TaggedUnion ValStackTop => _valStack.Count > 0 ? _valStack.Peek() : TaggedUnion.None;
 
-        public VirtualMachine(Chunk chunk, ModuleScope enviro, IExecutionHook exprHook)
+        public VirtualMachine(Chunk chunk, ModuleScope moduleScope, IExecutionHook exprHook)
         {
-            _chunk = chunk;
-            _enviro = enviro == null ? new ModuleScope() : enviro;
+            _moduleScope = moduleScope == null ? new ModuleScope() : moduleScope;
+            _callStack = new CallStack(chunk, _moduleScope);
             _valStack = new Stack<TaggedUnion>();
-            _instructIdx = 0;
             _exprHook = exprHook;
         }
 
         public ModuleScope ExecuteChunk()
         {
-            while (IsRemainingOperation())
+            while (_callStack.IsInstrToRun)
             {
                 switch (CurrentOperation.Code)
                 {
                     case OperationCode.PushConstant:
-                        _valStack.Push(_chunk.ReadConstant(CurrentOperation.Operand));
+                        _valStack.Push(_callStack.CurrentChunk.ReadConstant(CurrentOperation.Operand));
                         break;
 
                     case OperationCode.Add:
@@ -104,7 +102,7 @@ namespace Chow.Interpreter.Evaluation
                         if (!_valStack.Peek().IsTruthy)
                         {
                             // Leave the falsy value on the stack as the result of the short-circuited `and`
-                            _instructIdx = CurrentOperation.Operand;
+                            _callStack.JumpToInstr(CurrentOperation.Operand);
                             continue;
                         }
                         _valStack.Pop();
@@ -114,7 +112,7 @@ namespace Chow.Interpreter.Evaluation
                         if (_valStack.Peek().IsTruthy)
                         {
                             // Leave the truthy value on the stack as the result of the short-circuited `or`
-                            _instructIdx = CurrentOperation.Operand;
+                            _callStack.JumpToInstr(CurrentOperation.Operand);
                             continue;
                         }
                         _valStack.Pop();
@@ -124,22 +122,22 @@ namespace Chow.Interpreter.Evaluation
                         // Always pops; jumps past the branch body when the condition is false
                         if (!_valStack.Pop().IsTruthy)
                         {
-                            _instructIdx = CurrentOperation.Operand;
+                            _callStack.JumpToInstr(CurrentOperation.Operand);
                             continue;
                         }
                         break;
 
                     case OperationCode.JumpPastBranches:
                         // Unconditional jump emitted at the end of a taken if/elif body to skip remaining branches
-                        _instructIdx = CurrentOperation.Operand;
+                        _callStack.JumpToInstr(CurrentOperation.Operand);
                         continue;
 
                     case OperationCode.IncScopeDepth:
-                        _enviro.EnterNestedScope();
+                        _callStack.EnterNestedScope();
                         break;
 
                     case OperationCode.DecScopeDepth:
-                        _enviro.ExitNestedScope();
+                        _callStack.ExitNestedScope();
                         break;
 
                     // Statements
@@ -164,32 +162,58 @@ namespace Chow.Interpreter.Evaluation
                         _exprHook.Invoke(ApiValueConverter.ToApiClassObj(exprResult));
                         break;
 
+                    case OperationCode.MakeClosure:
+                        ExecuteMakeClosure();
+                        break;
+
                     case OperationCode.Call:
-                        ExecuteCall(CurrentOperation.Operand);
+                        if (ExecuteCall(CurrentOperation.Operand))
+                        {
+                            // A Closure was entered; caller's IP was already advanced and a new frame is active.
+                            continue;
+                        }
                         break;
 
                     case OperationCode.ReturnValue:
-                        throw new NotImplementedException();
+                        ExecuteReturnValue();
+                        // Caller's IP was advanced before the call; resume the caller without auto-advancing the freshly-restored frame.
+                        continue;
 
                     default:
                         throw new NotImplementedException($"Execution of {CurrentOperation.Code} is not implemented.");
                 }
 
-                MoveToNextOperation();
+                _callStack.MoveToNextInstr();
             }
 
-            return _enviro;
+            return _moduleScope;
+        }
+
+        void ExecuteMakeClosure()
+        {
+            TaggedUnion templateUnion = _valStack.Pop();
+            ClosureTemplate template = (ClosureTemplate)templateUnion.ObjectValue;
+            Scope captured = _callStack.CurrentScope;
+            Closure closure = new Closure(template.Chunk, captured, template.Name, template.ParamCount);
+            _valStack.Push(new TaggedUnion((object)closure));
+        }
+
+        void ExecuteReturnValue()
+        {
+            TaggedUnion result = _valStack.Pop();
+            _callStack.ExitFunctionCall();
+            _valStack.Push(result);
         }
 
         private void PushVariableValue()
         {
             // Operand -> name via Chunk. Semantic analysis is responsible for ensuring the
             // name exists before this op runs; KeyNotFoundException here is a contract violation.
-            string varName = _chunk.ReadVariableName(CurrentOperation.Operand);
+            string varName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
 
-            if (_enviro.IsVariableDefined(varName))
+            if (_callStack.IsVariableDefined(varName))
             {
-                TaggedUnion varValue = _enviro.GetVariableValue(varName);
+                TaggedUnion varValue = _callStack.GetVariableValue(varName);
                 _valStack.Push(varValue);
                 return;
             }
@@ -200,39 +224,60 @@ namespace Chow.Interpreter.Evaluation
 
         private void AssignOrDeclareVariable()
         {
-            // Operand -> name via Chunk; AssignVariableValue handles first-time declaration internally.
-            string name = _chunk.ReadVariableName(CurrentOperation.Operand);
+            // Operand -> name via Chunk; CallStack routes the assign to the current frame's scope.
+            string name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
             TaggedUnion assignVal = _valStack.Pop();
-            _enviro.AssignVariableValue(name, assignVal);
+            _callStack.AssignVariableValue(name, assignVal);
         }
 
-        void ExecuteCall(int argCount)
+        // Returns true when a Chow Closure was entered (frame pushed, caller IP already advanced).
+        // Returns false for the synchronous interop path, where the result is already on the value stack.
+        bool ExecuteCall(int argCount)
         {
-            TaggedUnion result;
+            TaggedUnion[] args = new TaggedUnion[argCount];
+            for (int i = argCount - 1; i >= 0; i--)
+            {
+                args[i] = _valStack.Pop();
+            }
+            TaggedUnion calleeUnion = _valStack.Pop();
 
+            if (calleeUnion.Tag == Tag.Object && calleeUnion.ObjectValue is Closure closure)
+            {
+                if (argCount != closure.ParamCount)
+                {
+                    throw new TypeErrorException(
+                        $"{closure.Name}() takes {closure.ParamCount} positional arguments but {argCount} were given");
+                }
+
+                // Re-push args; function body's first ops are param-bind AssignOrDeclareVariable's, popping right-to-left.
+                for (int i = 0; i < argCount; i++)
+                {
+                    _valStack.Push(args[i]);
+                }
+
+                // Advance caller's IP BEFORE pushing the frame so ReturnValue lands at the next caller instruction.
+                _callStack.MoveToNextInstr();
+                _callStack.EnterFunctionCall(closure);
+                return true;
+            }
+
+            // Interop dispatch with already-popped values.
+            TaggedUnion result;
             if (argCount == 0)
             {
-                TaggedUnion callee = _valStack.Pop();
-                result = callee.MakeInteropCall(null, null);
+                result = calleeUnion.MakeInteropCall(null, null);
             }
             else if (argCount == 1)
             {
-                TaggedUnion singleArg = _valStack.Pop();
-                TaggedUnion callee = _valStack.Pop();
-                result = callee.MakeInteropCall(singleArg, null);
+                result = calleeUnion.MakeInteropCall(args[0], null);
             }
             else
             {
-                TaggedUnion[] args = new TaggedUnion[argCount];
-                for (int i = argCount - 1; i >= 0; i--)
-                {
-                    args[i] = _valStack.Pop();
-                }
-                TaggedUnion callee = _valStack.Pop();
-                result = callee.MakeInteropCall(null, args);
+                result = calleeUnion.MakeInteropCall(null, args);
             }
 
             _valStack.Push(result);
+            return false;
         }
 
         void ExecuteBinaryOperation(Func<TaggedUnion, TaggedUnion, TaggedUnion> operation)
@@ -264,17 +309,7 @@ namespace Chow.Interpreter.Evaluation
 
         int GetCurrentLineNumber()
         {
-            return _chunk.GetInstrLineNum(_instructIdx);
-        }
-
-        void MoveToNextOperation()
-        {
-            _instructIdx++;
-        }
-
-        public bool IsRemainingOperation()
-        {
-            return _instructIdx != _chunk.Count;
+            return _callStack.CurrentLineNum;
         }
     }
 }

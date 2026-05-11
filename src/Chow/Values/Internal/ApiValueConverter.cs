@@ -26,17 +26,17 @@ namespace Chow.Interpreter.Values.Internal
                 return new TaggedUnion(dynamicValue.Value);
             }
 
-            if (value.IsTypeOf<bool>())
+            if (value.Is<bool>())
             {
                 return new TaggedUnion(value.As<bool>());
             }
 
-            if (value.IsTypeOf<int>())
+            if (value.Is<int>())
             {
                 return new TaggedUnion(value.As<int>());
             }
 
-            if (value.IsTypeOf<float>())
+            if (value.Is<float>())
             {
                 return new TaggedUnion(value.As<float>());
             }

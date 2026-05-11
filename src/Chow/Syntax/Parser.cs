@@ -80,6 +80,12 @@ namespace Chow.Interpreter.Syntax
 
             while (!CurrTknType(TokenType.Dedent))
             {
+                if (CurrTknType(TokenType.Newline))
+                {
+                    MoveNextTkn();
+                    continue;
+                }
+
                 stmnts.Add(ParseStmnts());
                 IsCurrTknType(TokenType.Newline);
             }

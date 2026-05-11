@@ -1,11 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System;
 
 namespace Chow.Interpreter.Exceptions
 {
     internal class TypeErrorException : Exception
     {
-        
+        public TypeErrorException()
+        {
+        }
+
+        public TypeErrorException(string message) : base(message)
+        {
+        }
     }
 }
