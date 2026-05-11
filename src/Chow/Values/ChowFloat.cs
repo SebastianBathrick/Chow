@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.Values
 {
-    internal class ChowFloat : ChowValue
+    public class ChowFloat : ChowValue
     {
         private float _val;
 

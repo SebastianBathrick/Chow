@@ -159,7 +159,7 @@ namespace Chow.Interpreter
         KeywordAssert,
 
         /// <summary>String literal.</summary>
-        KeywordLiteralStr,
+        LiteralStr,
 
         LiteralInt,
 

@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.Values
 {
-    internal class ChowBool : ChowValue
+    public class ChowBool : ChowValue
     {
         private const string TRUE_STRING = "True";
         private const string FALSE_STRING = "False";

@@ -387,5 +387,65 @@ namespace Chow.Tests
 
             AssertIntegerResult(result, 3);
         }
+
+        // ============================================================================================================
+        // String literals
+        // ============================================================================================================
+
+        [Test]
+        public void ExecuteChunk_PushStringConstant_LeavesStringOnStack()
+        {
+            var chunk = BuildChunk(c =>
+            {
+                int idx = c.RegisterConstant(new TaggedUnion("hello"));
+                c.AddInstruction(OperationCode.PushConstant, LINE, idx);
+            });
+
+            TaggedUnion result = Execute(chunk);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.IsString, Is.True);
+                Assert.That(result.StringValue, Is.EqualTo("hello"));
+            });
+        }
+
+        [Test]
+        public void ExecuteChunk_RegisterSameStringTwice_DeduplicatesConstant()
+        {
+            var chunk = new Chunk();
+            int firstIdx = chunk.RegisterConstant(new TaggedUnion("dup"));
+            int secondIdx = chunk.RegisterConstant(new TaggedUnion("dup"));
+
+            Assert.That(secondIdx, Is.EqualTo(firstIdx));
+        }
+
+        [TestCase("", false)]
+        [TestCase("x", true)]
+        [TestCase("hello world", true)]
+        public void StringValue_IsTruthy_FollowsPythonRule(string value, bool expectedTruthy)
+        {
+            var union = new TaggedUnion(value);
+
+            Assert.That(union.IsTruthy, Is.EqualTo(expectedTruthy));
+        }
+
+        [Test]
+        public void StringEquality_SameValue_ReturnsTrue()
+        {
+            var left = new TaggedUnion("abc");
+            var right = new TaggedUnion("abc");
+
+            Assert.That(left == right, Is.True);
+        }
+
+        [Test]
+        public void StringEquality_DifferentValue_ReturnsFalse()
+        {
+            var left = new TaggedUnion("abc");
+            var right = new TaggedUnion("xyz");
+
+            Assert.That(left == right, Is.False);
+        }
     }
 }

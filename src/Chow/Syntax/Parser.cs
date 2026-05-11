@@ -27,25 +27,34 @@ namespace Chow.Interpreter.Syntax
         public Node BuildTree()
         {
             List<Node> stmnts = new List<Node>();
+            bool isComplete = CurrTknType(TokenType.EndOfCode);
 
             // Even code contains no statements, it is still vali
-            while (!CurrTknType(TokenType.EndOfCode))
+            while (!isComplete)
             {
                 // The only valid lines start with a newline or the start of a statement
                 if (CurrTknType(TokenType.Newline))
                 {
                     MoveNextTkn();
+                    isComplete = CurrTknType(TokenType.EndOfCode);
                     continue;
                 }
 
                 // This will throw an exception if the current token is not the start of a statement
                 stmnts.Add(ParseStmnts());
+
+                isComplete = CurrTknType(TokenType.EndOfCode);
+
+                // The last statement does not need an new line
+                if (!isComplete)
+                {
+                    ConsumeCurrTkn(TokenType.Newline, "Expected newline after statement.");
+                }
             }
 
             ConsumeCurrTkn(TokenType.EndOfCode, "Expected end of code.");
             return new TreeRootNode(stmnts);
         }
-
         Node ParseBlock()
         {
             ConsumeCurrTkn(TokenType.SymbolBlockColon, "Expected ':' after block header.");
@@ -371,6 +380,7 @@ namespace Chow.Interpreter.Syntax
 
                 case TokenType.LiteralInt:
                 case TokenType.LiteralFloat:
+                case TokenType.LiteralStr:
                     Token numTkn = CurrTkn;
                     MoveNextTkn();
                     return new LiteralNode(numTkn.literal, numTkn.lineNum);
@@ -461,6 +471,7 @@ namespace Chow.Interpreter.Syntax
             return type == TokenType.Identifier ||
                    type == TokenType.LiteralInt ||
                    type == TokenType.LiteralFloat ||
+                   type == TokenType.LiteralStr ||
                    type == TokenType.KeywordNone ||
                    type == TokenType.KeywordTrue ||
                    type == TokenType.KeywordFalse ||

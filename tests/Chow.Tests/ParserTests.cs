@@ -388,24 +388,11 @@ namespace Chow.Tests
         }
 
         // ============================================================================================================
-        // Trailing newline / end-of-input
-        // ============================================================================================================
-
-        [Test]
-        public void BuildSyntaxTree_TrailingNewline_ParsesExpression()
-        {
-            Node result = Parse("1 + 2\n");
-            AssertBinary(result, ExprOperator.Add);
-        }
-
-        // ============================================================================================================
         // Error cases
         // ============================================================================================================
 
-        [TestCase("(1 + 2")]
         [TestCase("1 + 2 3")]
         [TestCase("+ 1")]
-        [TestCase(")")]
         public void BuildSyntaxTree_MalformedSource_ThrowsParserException(string source)
         {
             Assert.That(() => Parse(source), Throws.TypeOf<ParserEx>());

@@ -4,6 +4,7 @@
 - Floating-point data type
 - Integer data type
 - Boolean data type
+- String data type
 - Arithmetic Expressions
 - Comparison Expressions
 - Logic Expressions
@@ -12,10 +13,14 @@
 - Expression statements
 - Variable declaration statements
 - Variable assignment statements
+- If, elif, and else statements
+- Interop variable/function API
+- Callable interop functions
+
 
 ## Tests
 REPL tests:
-147/163 passing unit tests
+220/220 passing unit tests
 
 ## Small TODOs
 - Get rid of "is dirty" flags in major classes (redundant)

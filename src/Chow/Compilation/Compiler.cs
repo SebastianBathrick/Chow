@@ -420,6 +420,13 @@ namespace Chow.Interpreter.Compilation
                     constUnion = TaggedUnion.None;
                     break;
 
+                case LiteralDataType.String:
+                    if (literalNode.Value is string strVal)
+                    {
+                        constUnion = new TaggedUnion(strVal);
+                    }
+                    break;
+
                 default:
                     throw new NotImplementedException($"Compilation of literal type {literalNode.Type} is not implemented.");
             }

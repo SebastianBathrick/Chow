@@ -125,6 +125,10 @@ namespace Chow.Interpreter.Tokens
             {
                 ScanNumericToken();
             }
+            else if (IsQuoteChar(CurrChar))
+            {
+                ScanStringTkn();
+            }
             else if (IsIndentChar(CurrChar))
             {
                 MoveToNextChar();
@@ -496,6 +500,38 @@ namespace Chow.Interpreter.Tokens
             AddNewToken(numTknType, lexeme, _lineNum, literal);
         }
 
+        void ScanStringTkn()
+        {
+            char quoteChar = CurrChar;
+            int startIdx = _charIdx;
+            MoveToNextChar();
+
+            int contentStartIdx = _charIdx;
+
+            while (IsCharToScan() && CurrChar != quoteChar)
+            {
+                if (IsNewlineChar(CurrChar))
+                {
+                    throw new ScannerEx("Unterminated string literal", _lineNum);
+                }
+
+                MoveToNextChar();
+            }
+
+            if (!IsCharToScan())
+            {
+                throw new ScannerEx("Unterminated string literal", _lineNum);
+            }
+
+            int contentEndIdx = _charIdx;
+            MoveToNextChar();
+
+            string lexeme = _src.Substring(startIdx, _charIdx - startIdx);
+            string literal = _src.Substring(contentStartIdx, contentEndIdx - contentStartIdx);
+
+            AddNewToken(TokenType.LiteralStr, lexeme, _lineNum, literal);
+        }
+
         #endregion
 
         #region Char Pointer Methods
@@ -549,6 +585,11 @@ namespace Chow.Interpreter.Tokens
         static bool IsCommentPrefix(char checkChar)
         {
             return checkChar == '#';
+        }
+
+        static bool IsQuoteChar(char checkChar)
+        {
+            return checkChar == '\'' || checkChar == '"';
         }
 
         static bool IsNameLeadingChar(char checkChar)

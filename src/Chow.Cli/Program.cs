@@ -14,6 +14,18 @@ module["print"] = new ChowDynamic((ChowValue val) =>
     return ChowValue.None;
 });
 
+module["input"] = new ChowDynamic(() =>
+{
+    string? input = Console.ReadLine();
+
+    if (input == null)
+    {
+        input = string.Empty;
+    }
+
+    return new ChowStr(input);
+});
+
 module.AddHook(new PrintExprStatementHook());
 
 while (true)

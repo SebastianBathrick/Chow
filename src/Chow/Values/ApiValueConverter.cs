@@ -62,8 +62,6 @@ namespace Chow.Interpreter.Values
                         return new ChowStr(s);
                     }
                     return new ChowDynamic(taggedUnion.ObjectValue);
-                case Tag.String:
-                    throw new NotImplementedException();
                 default:
                     throw new InvalidOperationException();
             }

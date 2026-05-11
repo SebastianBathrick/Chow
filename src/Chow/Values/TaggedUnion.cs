@@ -6,7 +6,6 @@ namespace Chow.Interpreter.Values
     {
         const float DEFAULT_FLOAT_VALUE = 0.0f;
         const int DEFAULT_INT_VALUE = 0;
-        const string DEFAULT_STRING_VALUE = null;
         const bool DEFAULT_BOOL_VALUE = false;
         const object DEFAULT_NULL_VALUE = null;
 
@@ -17,9 +16,6 @@ namespace Chow.Interpreter.Values
         bool _bool;
         object _obj;
 
-        // TODO: Add an object type and use it for strings instead of a separate field, to save space.
-        string _str;
-
         public static TaggedUnion Empty = new TaggedUnion(Tag.Empty);
         public static TaggedUnion None = new TaggedUnion(Tag.None);
 
@@ -28,7 +24,7 @@ namespace Chow.Interpreter.Values
         public bool IsEmpty => _type == Tag.Empty;
         public bool IsInt => _type == Tag.Int;
         public bool IsFloat => _type == Tag.Float;
-        public bool IsString => _type == Tag.String;
+        public bool IsString => _type == Tag.Object && _obj is string;
         public bool IsBoolean => _type == Tag.Boolean;
         public bool IsObject => _type == Tag.Object;
 
@@ -45,7 +41,7 @@ namespace Chow.Interpreter.Values
                     case Tag.Float:
                         return _float != 0f;
                     case Tag.Object:
-                        return false;
+                        return _obj is string s ? s.Length > 0 : false;
                     default:
                         return false;
                 }
@@ -84,13 +80,11 @@ namespace Chow.Interpreter.Values
         {
             get
             {
-                ValidateTaggedUnionType(Tag.String);
-                return _str;
-            }
-            set
-            {
-                ValidateTaggedUnionType(Tag.String);
-                _str = value;
+                if (!IsString)
+                {
+                    throw new InvalidOperationException($"String access attempt but union's type is {_type}");
+                }
+                return (string)_obj;
             }
         }
 
@@ -127,7 +121,6 @@ namespace Chow.Interpreter.Values
             _type = type;
             _int = DEFAULT_INT_VALUE;
             _float = DEFAULT_FLOAT_VALUE;
-            _str = DEFAULT_STRING_VALUE;
             _bool = DEFAULT_BOOL_VALUE;
             _obj = DEFAULT_NULL_VALUE;
         }
@@ -136,7 +129,6 @@ namespace Chow.Interpreter.Values
         {
             _float = value;
             _type = Tag.Float;
-            _str = DEFAULT_STRING_VALUE;
             _bool = DEFAULT_BOOL_VALUE;
             _obj = DEFAULT_NULL_VALUE;
             _int = DEFAULT_INT_VALUE;
@@ -147,19 +139,12 @@ namespace Chow.Interpreter.Values
             _int = value;
             _type = Tag.Int;
             _float = DEFAULT_FLOAT_VALUE;
-            _str = DEFAULT_STRING_VALUE;
             _bool = DEFAULT_BOOL_VALUE;
             _obj = DEFAULT_NULL_VALUE;
         }
 
-        public TaggedUnion(string value)
+        public TaggedUnion(string value) : this((object)value)
         {
-            _str = value;
-            _type = Tag.String;
-            _int = DEFAULT_INT_VALUE;
-            _float = DEFAULT_FLOAT_VALUE;
-            _bool = DEFAULT_BOOL_VALUE;
-            _obj = DEFAULT_NULL_VALUE;
         }
 
         public TaggedUnion(bool value)
@@ -168,7 +153,6 @@ namespace Chow.Interpreter.Values
             _type = Tag.Boolean;
             _int = DEFAULT_INT_VALUE;
             _float = DEFAULT_FLOAT_VALUE;
-            _str = DEFAULT_STRING_VALUE;
             _obj = DEFAULT_NULL_VALUE;
         }
 
@@ -178,7 +162,6 @@ namespace Chow.Interpreter.Values
             _type = Tag.Object;
             _int = DEFAULT_INT_VALUE;
             _float = DEFAULT_FLOAT_VALUE;
-            _str = DEFAULT_STRING_VALUE;
             _bool = DEFAULT_BOOL_VALUE;
         }
 
@@ -248,7 +231,7 @@ namespace Chow.Interpreter.Values
         //   int|bool % 0, int|bool // 0   -> DivideByZeroException [low-priority: value-level]
         public static TaggedUnion operator +(TaggedUnion left, TaggedUnion right)
         {
-            ThrowIfStringOperands(left, right);
+            ThrowIfObjectOperands(left, right);
             // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
             ThrowIfMixedBoolNumeric(left, right);
             if (BothAreBoolean(left, right))
@@ -265,7 +248,7 @@ namespace Chow.Interpreter.Values
 
         public static TaggedUnion operator -(TaggedUnion left, TaggedUnion right)
         {
-            ThrowIfStringOperands(left, right);
+            ThrowIfObjectOperands(left, right);
             // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
             ThrowIfMixedBoolNumeric(left, right);
             if (BothAreBoolean(left, right))
@@ -282,7 +265,7 @@ namespace Chow.Interpreter.Values
 
         public static TaggedUnion operator *(TaggedUnion left, TaggedUnion right)
         {
-            ThrowIfStringOperands(left, right);
+            ThrowIfObjectOperands(left, right);
             // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
             ThrowIfMixedBoolNumeric(left, right);
             if (BothAreBoolean(left, right))
@@ -299,7 +282,7 @@ namespace Chow.Interpreter.Values
 
         public static TaggedUnion operator /(TaggedUnion left, TaggedUnion right)
         {
-            ThrowIfStringOperands(left, right);
+            ThrowIfObjectOperands(left, right);
             // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
             ThrowIfMixedBoolNumeric(left, right);
             // Python semantics: `/` always produces a float, even for int / int.
@@ -312,7 +295,7 @@ namespace Chow.Interpreter.Values
 
         public static TaggedUnion operator %(TaggedUnion left, TaggedUnion right)
         {
-            ThrowIfStringOperands(left, right);
+            ThrowIfObjectOperands(left, right);
             // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
             ThrowIfMixedBoolNumeric(left, right);
             // Python semantics: result has the sign of the divisor.
@@ -336,7 +319,7 @@ namespace Chow.Interpreter.Values
 
         public static TaggedUnion FloorDivide(TaggedUnion left, TaggedUnion right)
         {
-            ThrowIfStringOperands(left, right);
+            ThrowIfObjectOperands(left, right);
             // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
             ThrowIfMixedBoolNumeric(left, right);
             // Python semantics: floors toward negative infinity.
@@ -354,7 +337,7 @@ namespace Chow.Interpreter.Values
 
         public static TaggedUnion Power(TaggedUnion left, TaggedUnion right)
         {
-            ThrowIfStringOperands(left, right);
+            ThrowIfObjectOperands(left, right);
             // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
             ThrowIfMixedBoolNumeric(left, right);
             // Python semantics: float if either operand is float, or if exponent is negative.
@@ -389,10 +372,14 @@ namespace Chow.Interpreter.Values
                     return left._int == right._int;
                 case Tag.Float:
                     return left._float == right._float;
-                case Tag.String:
-                    return left._str == right._str;
                 case Tag.Boolean:
                     return left._bool == right._bool;
+                case Tag.Object:
+                    if (left._obj is string ls && right._obj is string rs)
+                    {
+                        return ls == rs;
+                    }
+                    return ReferenceEquals(left._obj, right._obj);
                 default:
                     return true;
             }
@@ -405,7 +392,7 @@ namespace Chow.Interpreter.Values
 
         public static bool operator <(TaggedUnion left, TaggedUnion right)
         {
-            ThrowIfStringOperands(left, right);
+            ThrowIfObjectOperands(left, right);
             ThrowIfMixedBoolNumeric(left, right);
             if (BothAreBoolean(left, right))
             {
@@ -421,7 +408,7 @@ namespace Chow.Interpreter.Values
 
         public static bool operator >(TaggedUnion left, TaggedUnion right)
         {
-            ThrowIfStringOperands(left, right);
+            ThrowIfObjectOperands(left, right);
             ThrowIfMixedBoolNumeric(left, right);
             if (BothAreBoolean(left, right))
             {
@@ -437,7 +424,7 @@ namespace Chow.Interpreter.Values
 
         public static bool operator <=(TaggedUnion left, TaggedUnion right)
         {
-            ThrowIfStringOperands(left, right);
+            ThrowIfObjectOperands(left, right);
             ThrowIfMixedBoolNumeric(left, right);
             if (BothAreBoolean(left, right))
             {
@@ -453,7 +440,7 @@ namespace Chow.Interpreter.Values
 
         public static bool operator >=(TaggedUnion left, TaggedUnion right)
         {
-            ThrowIfStringOperands(left, right);
+            ThrowIfObjectOperands(left, right);
             ThrowIfMixedBoolNumeric(left, right);
             if (BothAreBoolean(left, right))
             {
@@ -482,11 +469,11 @@ namespace Chow.Interpreter.Values
             return union.BooleanValue ? 1 : 0;
         }
 
-        static void ThrowIfStringOperands(TaggedUnion left, TaggedUnion right)
+        static void ThrowIfObjectOperands(TaggedUnion left, TaggedUnion right)
         {
-            if (left.IsString || right.IsString)
+            if (left.IsObject || right.IsObject)
             {
-                throw new InvalidOperationException("String operands are not supported for this operation.");
+                throw new InvalidOperationException("Object operands are not supported for this operation.");
             }
         }
 
@@ -530,10 +517,10 @@ namespace Chow.Interpreter.Values
                     return _int.GetHashCode();
                 case Tag.Float:
                     return _float.GetHashCode();
-                case Tag.String:
-                    return _str?.GetHashCode() ?? 0;
                 case Tag.Boolean:
                     return _bool.GetHashCode();
+                case Tag.Object:
+                    return _obj?.GetHashCode() ?? 0;
                 default:
                     return _type.GetHashCode();
             }
@@ -549,11 +536,6 @@ namespace Chow.Interpreter.Values
             if (IsFloat)
             {
                 return $"TaggedUnion(type={_type}, value={_float})";
-            }
-
-            if (IsString)
-            {
-                return $"TaggedUnion(type={_type}, value={_str})";
             }
 
             if (IsBoolean)

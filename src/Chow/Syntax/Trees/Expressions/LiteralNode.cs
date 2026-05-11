@@ -28,6 +28,10 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
             {
                 _type = LiteralDataType.Boolean;
             }
+            else if (value is string)
+            {
+                _type = LiteralDataType.String;
+            }
             else
             {
                 throw new ArgumentException($"Unsupported literal type: {value.GetType().Name}", nameof(value));

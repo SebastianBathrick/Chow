@@ -6,7 +6,6 @@ namespace Chow.Interpreter.Values
         None,
         Int,
         Float,
-        String,
         Boolean,
         Object
     }

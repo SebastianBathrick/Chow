@@ -33,9 +33,9 @@ namespace Chow.Tests
         [Test]
         public void ToString_StringLiteral_EscapesLiteralText()
         {
-            var token = new Token(TokenType.KeywordLiteralStr, "\"quoted\"\n", 4, "\"quoted\"\n");
+            var token = new Token(TokenType.LiteralStr, "\"quoted\"\n", 4, "\"quoted\"\n");
 
-            Assert.That(token.ToString(), Is.EqualTo("Token(type=KeywordLiteralStr, lexeme=\"\\\"quoted\\\"\\n\", literal=\"\\\"quoted\\\"\\n\", line=4)"));
+            Assert.That(token.ToString(), Is.EqualTo("Token(type=LiteralStr, lexeme=\"\\\"quoted\\\"\\n\", literal=\"\\\"quoted\\\"\\n\", line=4)"));
         }
     }
 }

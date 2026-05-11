@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.Values
 {
-    internal class ChowInt : ChowValue
+    public class ChowInt : ChowValue
     {
         private int _val;
 

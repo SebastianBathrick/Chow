@@ -235,8 +235,6 @@ namespace Chow.Tests
         // E. Single-character lexemes
         // ============================================================================================================
 
-        [TestCase("(", TokenType.SymbolLeftParen)]
-        [TestCase(")", TokenType.SymbolRightParen)]
         [TestCase(",", TokenType.SymbolComma)]
         [TestCase(".", TokenType.SymbolDot)]
         [TestCase(":", TokenType.SymbolBlockColon)]
@@ -257,6 +255,7 @@ namespace Chow.Tests
             AssertToken(tokens[1], TokenType.EndOfCode, string.Empty, 1, null);
         }
 
+        [TestCase("()", TokenType.SymbolLeftParen, TokenType.SymbolRightParen)]
         [TestCase("[]", TokenType.SymbolLeftBracket, TokenType.SymbolRightBracket)]
         [TestCase("{}", TokenType.SymbolLeftCurly, TokenType.SymbolRightCurly)]
         public void ScanTokens_MatchedClosingDelimiter_ProducesExpectedTokens(
@@ -687,6 +686,18 @@ namespace Chow.Tests
         }
 
         [Test]
+        public void ScanTokens_UnclosedLeftParen_ThrowsScannerException()
+        {
+            Assert.That(() => Tokenize("(1 + 2"), Throws.TypeOf<ScannerEx>());
+        }
+
+        [Test]
+        public void ScanTokens_UnmatchedRightParen_ThrowsScannerException()
+        {
+            Assert.That(() => Tokenize(")"), Throws.TypeOf<ScannerEx>());
+        }
+
+        [Test]
         public void ScanTokens_LeadingTabOnFirstLine_ThrowsScannerException()
         {
             Assert.That(() => TokenTypes("\t42\n"), Throws.TypeOf<ScannerEx>());
@@ -812,6 +823,81 @@ namespace Chow.Tests
 
             var floatToken = tokens.Single(t => t.type == TokenType.LiteralFloat);
             Assert.That(floatToken.lexeme, Is.EqualTo(source));
+        }
+
+        // ============================================================================================================
+        // N. String literals
+        // ============================================================================================================
+
+        [Test]
+        public void ScanTokens_SingleQuotedString_ProducesLiteralStrToken()
+        {
+            var tokens = Tokenize("'hello'");
+
+            Assert.That(tokens, Has.Count.EqualTo(2));
+            AssertToken(tokens[0], TokenType.LiteralStr, "'hello'", 1, "hello");
+            AssertToken(tokens[1], TokenType.EndOfCode, "", 1, null);
+        }
+
+        [Test]
+        public void ScanTokens_DoubleQuotedString_ProducesLiteralStrToken()
+        {
+            var tokens = Tokenize("\"hello\"");
+
+            Assert.That(tokens, Has.Count.EqualTo(2));
+            AssertToken(tokens[0], TokenType.LiteralStr, "\"hello\"", 1, "hello");
+            AssertToken(tokens[1], TokenType.EndOfCode, "", 1, null);
+        }
+
+        [TestCase("''")]
+        [TestCase("\"\"")]
+        public void ScanTokens_EmptyString_ProducesLiteralStrTokenWithEmptyLiteral(string source)
+        {
+            var tokens = Tokenize(source);
+
+            AssertToken(tokens[0], TokenType.LiteralStr, source, 1, "");
+        }
+
+        [Test]
+        public void ScanTokens_SingleQuoteInsideDoubleQuotedString_KeptVerbatim()
+        {
+            var tokens = Tokenize("\"it's\"");
+
+            AssertToken(tokens[0], TokenType.LiteralStr, "\"it's\"", 1, "it's");
+        }
+
+        [Test]
+        public void ScanTokens_DoubleQuoteInsideSingleQuotedString_KeptVerbatim()
+        {
+            var tokens = Tokenize("'say \"hi\"'");
+
+            AssertToken(tokens[0], TokenType.LiteralStr, "'say \"hi\"'", 1, "say \"hi\"");
+        }
+
+        [Test]
+        public void ScanTokens_StringFollowedByNewline_EmitsStringThenNewline()
+        {
+            var tokens = Tokenize("'x'\n");
+
+            Assert.That(tokens, Has.Count.EqualTo(3));
+            AssertToken(tokens[0], TokenType.LiteralStr, "'x'", 1, "x");
+            AssertToken(tokens[1], TokenType.Newline, "\n", 1, null);
+            AssertToken(tokens[2], TokenType.EndOfCode, "", 2, null);
+        }
+
+        [TestCase("'abc")]
+        [TestCase("\"abc")]
+        [TestCase("'")]
+        public void ScanTokens_UnterminatedStringAtEof_ThrowsScannerException(string source)
+        {
+            Assert.That(() => Tokenize(source), Throws.TypeOf<ScannerEx>());
+        }
+
+        [TestCase("'abc\n'")]
+        [TestCase("\"abc\nxyz\"")]
+        public void ScanTokens_NewlineInsideString_ThrowsScannerException(string source)
+        {
+            Assert.That(() => Tokenize(source), Throws.TypeOf<ScannerEx>());
         }
     }
 }

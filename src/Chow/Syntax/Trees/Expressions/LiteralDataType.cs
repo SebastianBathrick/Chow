@@ -6,5 +6,6 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
         Float,
         None,
         Boolean,
+        String,
     }
 }
