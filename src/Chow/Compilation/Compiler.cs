@@ -3,7 +3,7 @@ using Chow.Interpreter.Syntax.Trees.Expressions;
 using Chow.Interpreter.Syntax.Trees.Statements;
 using Chow.Interpreter.Values;
 using System;
-using System.Xml.Linq;
+using System.Collections.Generic;
 
 namespace Chow.Interpreter.Compilation
 {
@@ -11,11 +11,13 @@ namespace Chow.Interpreter.Compilation
     {
         Chunk _chunk;
         RootNode _root;
+        List<int> _pendingEndJumps;
 
         public Compiler(Node root)
         {
             _chunk = new Chunk();
             _root = root as RootNode;
+            _pendingEndJumps = new List<int>();
         }
 
         public Chunk CompileRoot()
@@ -72,7 +74,8 @@ namespace Chow.Interpreter.Compilation
                     break;
                 
                 case BranchStmntNode branchNode:
-                    //
+                    CompileBranchStmnt(branchNode);
+                    break;
 
                 default:
                     throw new InvalidOperationException();
@@ -151,23 +154,62 @@ namespace Chow.Interpreter.Compilation
 
         void CompileIfStatement(IfNode ifNode)
         {
-            // 1. Pop value
-            // 2. Jump if false to else or statements adjacent to if statement
-            // 3. Increase scope depth (if 2 was true)
-            // 4. Evaluate block
-            // 5. Decrease scope depth
-            // 6. Jump past branches to statements adjacent to if statement
+            // Save outer chain's pending end-jumps so nested ifs don't corrupt it
+            List<int> saved = _pendingEndJumps;
+            _pendingEndJumps = new List<int>();
 
-            // Compile condition
             CompileTargetNode(ifNode.Expr);
 
-            int ifIdx = _chunk.Count - 1;
+            _chunk.AddInstruction(OperationCode.JumpIfFalse, ifNode.LineNum);
+            int jumpFalseIdx = _chunk.Count - 1;
 
-
-            // If the condition result is true, then the VM won't skip any instructions and will evaluate its block
             CompileTargetNode(ifNode.Block);
 
+            // Only emit a jump-past-branches if there's actually a branch to skip
+            if (ifNode.Branch != null)
+            {
+                _chunk.AddInstruction(OperationCode.JumpPastBranches, ifNode.LineNum);
+                _pendingEndJumps.Add(_chunk.Count - 1);
+            }
 
+            // JumpIfFalse lands at the start of the next branch (or END if no branch)
+            _chunk.PatchInstructionOperand(jumpFalseIdx, _chunk.Count);
+
+            CompileTargetNode(ifNode.Branch);
+
+            // Patch every JumpPastBranches in this chain to land at END (current count)
+            foreach (int idx in _pendingEndJumps)
+            {
+                _chunk.PatchInstructionOperand(idx, _chunk.Count);
+            }
+
+            _pendingEndJumps = saved;
+        }
+
+        void CompileBranchStmnt(BranchStmntNode node)
+        {
+            if (node.IsElse)
+            {
+                CompileTargetNode(node.Block);
+                return;
+            }
+
+            CompileTargetNode(node.Expr);
+
+            _chunk.AddInstruction(OperationCode.JumpIfFalse, node.LineNum);
+            int jumpFalseIdx = _chunk.Count - 1;
+
+            CompileTargetNode(node.Block);
+
+            if (node.Branch != null)
+            {
+                _chunk.AddInstruction(OperationCode.JumpPastBranches, node.LineNum);
+                _pendingEndJumps.Add(_chunk.Count - 1);
+            }
+
+            _chunk.PatchInstructionOperand(jumpFalseIdx, _chunk.Count);
+
+            CompileTargetNode(node.Branch);
         }
 
         #endregion
