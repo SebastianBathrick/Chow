@@ -136,7 +136,6 @@ namespace Chow.Interpreter.Values
         {
             _float = value;
             _type = Tag.Float;
-            _float = DEFAULT_FLOAT_VALUE;
             _str = DEFAULT_STRING_VALUE;
             _bool = DEFAULT_BOOL_VALUE;
             _obj = DEFAULT_NULL_VALUE;

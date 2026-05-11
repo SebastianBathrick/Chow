@@ -164,6 +164,10 @@ namespace Chow.Interpreter.Evaluation
                         _exprHook.Invoke(ApiValueConverter.ToApiClassObj(exprResult));
                         break;
 
+                    case OperationCode.Call:
+                        ExecuteCall(CurrentOperation.Operand);
+                        break;
+
                     case OperationCode.ReturnValue:
                         throw new NotImplementedException();
 
@@ -200,6 +204,33 @@ namespace Chow.Interpreter.Evaluation
             string name = _chunk.ReadVariableName(CurrentOperation.Operand);
             TaggedUnion assignVal = _valStack.Pop();
             _enviro.AssignVariableValue(name, assignVal);
+        }
+
+        void ExecuteCall(int argCount)
+        {
+            TaggedUnion[] args = new TaggedUnion[argCount];
+            for (int i = argCount - 1; i >= 0; i--)
+            {
+                args[i] = _valStack.Pop();
+            }
+
+            TaggedUnion callee = _valStack.Pop();
+
+            TaggedUnion result;
+            if (argCount == 0)
+            {
+                result = callee.MakeInteropCall(null, null);
+            }
+            else if (argCount == 1)
+            {
+                result = callee.MakeInteropCall(args[0], null);
+            }
+            else
+            {
+                result = callee.MakeInteropCall(null, args);
+            }
+
+            _valStack.Push(result);
         }
 
         void ExecuteBinaryOperation(Func<TaggedUnion, TaggedUnion, TaggedUnion> operation)

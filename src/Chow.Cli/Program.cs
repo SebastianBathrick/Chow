@@ -7,6 +7,7 @@ const string START_INDICATOR = ">>> ";
 const string TRAILING_INDICATOR = "... ";
 
 ChowModule module = new ChowModule();
+
 module["print"] = new ChowDynamic((ChowValue val) =>
 {
     Console.WriteLine(val);
