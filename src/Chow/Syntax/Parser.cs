@@ -41,12 +41,25 @@ namespace Chow.Interpreter.Syntax
                 }
 
                 // This will throw an exception if the current token is not the start of a statement
-                stmnts.Add(ParseStmnts());
+                Node stmnt = ParseStmnts();
+                stmnts.Add(stmnt);
 
                 isComplete = CurrTknType(TokenType.EndOfCode);
 
-                // The last statement does not need an new line
-                if (!isComplete)
+                // The last statement does not need a newline. Block statements (def/if) end with a
+                // Dedent that already terminates them, so a trailing Newline after them is optional.
+                if (isComplete)
+                {
+                    continue;
+                }
+
+                bool isBlockStmnt = stmnt is FunctionNode || stmnt is IfNode;
+
+                if (isBlockStmnt)
+                {
+                    IsCurrTknType(TokenType.Newline);
+                }
+                else
                 {
                     ConsumeCurrTkn(TokenType.Newline, "Expected newline after statement.");
                 }
