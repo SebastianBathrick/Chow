@@ -30,7 +30,7 @@ namespace Chow.Tests
 
         static Node UnwrapAssignmentExpression(Node root)
         {
-            Node statement = ((BlockNode)((RootNode)root).Module).Statements[0];
+            Node statement = ((RootNode)root).Stmnts[0];
             return ((VariableAssignNode)statement).Expression;
         }
 
