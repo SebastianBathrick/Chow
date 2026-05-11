@@ -74,6 +74,9 @@ namespace Chow.Interpreter
         /// <summary>Less-than-or-equal comparison operator: <c>&lt;=</c>.</summary>
         SymbolLessEqual,
 
+        /// <summary>Pipe operator, used for dictionary merge: <c>|</c>.</summary>
+        SymbolPipe,
+
         /// <summary>User-defined name or non-keyword identifier.</summary>
         Identifier,
 

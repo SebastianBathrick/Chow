@@ -26,6 +26,11 @@ namespace Chow.Interpreter.Values.Internal
                 return new TaggedUnion(listValue.Internal);
             }
 
+            if (value is ChowDict dictValue)
+            {
+                return new TaggedUnion(dictValue.Internal);
+            }
+
             if (value is ChowDynamic dynamicValue)
             {
                 return new TaggedUnion(dynamicValue.Value);
@@ -65,6 +70,8 @@ namespace Chow.Interpreter.Values.Internal
                     return new ChowStr(taggedUnion.StringValue);
                 case Tag.List:
                     return new ChowList(taggedUnion.ListValue);
+                case Tag.Dict:
+                    return new ChowDict(taggedUnion.DictValue);
                 case Tag.Object:
                     return new ChowDynamic(taggedUnion.ObjectValue);
                 default:

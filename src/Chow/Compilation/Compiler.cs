@@ -155,6 +155,10 @@ namespace Chow.Interpreter.Compilation
                     CompileListLiteral(listLiteralNode);
                     break;
 
+                case DictLiteralNode dictLiteralNode:
+                    CompileDictLiteral(dictLiteralNode);
+                    break;
+
                 case SubscriptNode subscriptNode:
                     CompileSubscript(subscriptNode);
                     break;
@@ -183,6 +187,16 @@ namespace Chow.Interpreter.Compilation
                 CompileTargetNode(element);
             }
             _chunk.AddInstruction(OperationCode.BuildList, node.LineNum, node.Elements.Count);
+        }
+
+        void CompileDictLiteral(DictLiteralNode node)
+        {
+            for (int i = 0; i < node.Keys.Count; i++)
+            {
+                CompileTargetNode(node.Keys[i]);
+                CompileTargetNode(node.Values[i]);
+            }
+            _chunk.AddInstruction(OperationCode.BuildDict, node.LineNum, node.Keys.Count);
         }
 
         void CompileSubscript(SubscriptNode node)
@@ -574,6 +588,18 @@ namespace Chow.Interpreter.Compilation
 
                 case ExprOperator.Not:
                     opCode = OperationCode.Not;
+                    break;
+
+                case ExprOperator.BinaryOr:
+                    opCode = OperationCode.BinaryOr;
+                    break;
+
+                case ExprOperator.In:
+                    opCode = OperationCode.In;
+                    break;
+
+                case ExprOperator.NotIn:
+                    opCode = OperationCode.NotIn;
                     break;
 
                 default:

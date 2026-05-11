@@ -319,20 +319,40 @@ namespace Chow.Interpreter.Syntax
 
         Node ParseComparison()
         {
-            Node l = ParseAdd();
+            Node l = ParseBitOr();
             Node result = null;
 
-            while (TryConsumeType(
-                TokenType.SymbolEqualTo,
-                TokenType.SymbolNotEqual,
-                TokenType.SymbolLess,
-                TokenType.SymbolGreater,
-                TokenType.SymbolLessEqual,
-                TokenType.SymbolGreaterEqual))
+            while (true)
             {
-                Token opTkn = PrevTkn;
-                Node r = ParseAdd();
-                Node comparison = new ExprNode(MapBinary(opTkn.type), l, r, opTkn.lineNum);
+                ExprOperator op;
+                int opLine;
+
+                if (TryConsumeType(
+                    TokenType.SymbolEqualTo,
+                    TokenType.SymbolNotEqual,
+                    TokenType.SymbolLess,
+                    TokenType.SymbolGreater,
+                    TokenType.SymbolLessEqual,
+                    TokenType.SymbolGreaterEqual,
+                    TokenType.KeywordIn))
+                {
+                    op = MapBinary(PrevTkn.type);
+                    opLine = PrevTkn.lineNum;
+                }
+                else if (IsTokenType(TokenType.KeywordNot) && PeekTokenType(TokenType.KeywordIn))
+                {
+                    opLine = CurrToken.lineNum;
+                    ConsumeToken();
+                    ConsumeToken();
+                    op = ExprOperator.NotIn;
+                }
+                else
+                {
+                    break;
+                }
+
+                Node r = ParseBitOr();
+                Node comparison = new ExprNode(op, l, r, opLine);
 
                 if (result == null)
                 {
@@ -340,13 +360,27 @@ namespace Chow.Interpreter.Syntax
                 }
                 else
                 {
-                    result = new ExprNode(ExprOperator.And, result, comparison, opTkn.lineNum);
+                    result = new ExprNode(ExprOperator.And, result, comparison, opLine);
                 }
 
                 l = r;
             }
 
             return result ?? l;
+        }
+
+        Node ParseBitOr()
+        {
+            Node l = ParseAdd();
+
+            while (TryConsumeType(TokenType.SymbolPipe))
+            {
+                Token opTkn = PrevTkn;
+                Node r = ParseAdd();
+                l = new ExprNode(ExprOperator.BinaryOr, l, r, opTkn.lineNum);
+            }
+
+            return l;
         }
 
         Node ParseAdd()
@@ -524,6 +558,35 @@ namespace Chow.Interpreter.Syntax
             return new ListLiteralNode(elems, leftBr.lineNum);
         }
 
+        Node ParseDictLiteral()
+        {
+            Token leftCurly = ConsumeToken(TokenType.SymbolLeftCurly, "Expected '{'.");
+            List<Node> keys = new List<Node>();
+            List<Node> values = new List<Node>();
+
+            if (!IsTokenType(TokenType.SymbolRightCurly))
+            {
+                ParseDictEntry(keys, values);
+
+                while (TryConsumeType(TokenType.SymbolComma) && !IsTokenType(TokenType.SymbolRightCurly))
+                {
+                    ParseDictEntry(keys, values);
+                }
+            }
+
+            ConsumeToken(TokenType.SymbolRightCurly, "Expected '}' to close dict literal.");
+            return new DictLiteralNode(keys, values, leftCurly.lineNum);
+        }
+
+        void ParseDictEntry(List<Node> keys, List<Node> values)
+        {
+            Node key = ParseExpr();
+            ConsumeToken(TokenType.SymbolColon, "Expected ':' between dict key and value.");
+            Node value = ParseExpr();
+            keys.Add(key);
+            values.Add(value);
+        }
+
         Node ParsePrimary()
         {
             // Note: After adding a new primary token type, remember to update IsPrimaryTokenType() as well. Not doing
@@ -563,6 +626,9 @@ namespace Chow.Interpreter.Syntax
 
                 case TokenType.SymbolLeftBracket:
                     return ParseListLiteral();
+
+                case TokenType.SymbolLeftCurly:
+                    return ParseDictLiteral();
 
                 default:
                     throw new ParserEx("Expected expression.", CurrToken.lineNum);
@@ -634,7 +700,8 @@ namespace Chow.Interpreter.Syntax
                    type == TokenType.KeywordFalse ||
                    type == TokenType.KeywordNot ||
                    type == TokenType.SymbolLeftParen ||
-                   type == TokenType.SymbolLeftBracket;
+                   type == TokenType.SymbolLeftBracket ||
+                   type == TokenType.SymbolLeftCurly;
         }
 
         #endregion
@@ -691,6 +758,12 @@ namespace Chow.Interpreter.Syntax
 
                 case TokenType.KeywordOr:
                     return ExprOperator.Or;
+
+                case TokenType.SymbolPipe:
+                    return ExprOperator.BinaryOr;
+
+                case TokenType.KeywordIn:
+                    return ExprOperator.In;
 
                 default:
                     throw new InvalidOperationException();

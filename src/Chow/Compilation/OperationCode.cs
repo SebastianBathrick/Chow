@@ -37,5 +37,9 @@ namespace Chow.Interpreter.Compilation
         SubscriptSet,
         GetAttr,
         SetAttr,
+        BuildDict,
+        BinaryOr,
+        In,
+        NotIn,
     }
 }

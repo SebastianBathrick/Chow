@@ -212,6 +212,22 @@ namespace Chow.Interpreter.Evaluation
                         ExecuteSetAttr();
                         break;
 
+                    case OperationCode.BuildDict:
+                        ExecuteBuildDict(CurrentOperation.Operand);
+                        break;
+
+                    case OperationCode.BinaryOr:
+                        ExecuteBinaryOperation((l, r) => l | r);
+                        break;
+
+                    case OperationCode.In:
+                        ExecuteIn(negate: false);
+                        break;
+
+                    case OperationCode.NotIn:
+                        ExecuteIn(negate: true);
+                        break;
+
                     default:
                         throw new NotImplementedException($"Execution of {CurrentOperation.Code} is not implemented.");
                 }
@@ -369,12 +385,77 @@ namespace Chow.Interpreter.Evaluation
             _valStack.Push(new TaggedUnion(list));
         }
 
+        void ExecuteBuildDict(int pairCount)
+        {
+            // Pop 2N values (value, key, value, key, ...); rebuild source order before insertion.
+            TaggedUnion[] keys = new TaggedUnion[pairCount];
+            TaggedUnion[] values = new TaggedUnion[pairCount];
+
+            for (int i = pairCount - 1; i >= 0; i--)
+            {
+                values[i] = _valStack.Pop();
+                keys[i] = _valStack.Pop();
+            }
+
+            InternalDict dict = new InternalDict();
+
+            for (int i = 0; i < pairCount; i++)
+            {
+                dict.Add(keys[i], values[i]);
+            }
+
+            _valStack.Push(new TaggedUnion(dict));
+        }
+
+        void ExecuteIn(bool negate)
+        {
+            TaggedUnion container = _valStack.Pop();
+            TaggedUnion needle = _valStack.Pop();
+
+            bool found;
+            switch (container.Tag)
+            {
+                case Tag.Dict:
+                    found = container.DictValue.ContainsKey(needle);
+                    break;
+                case Tag.List:
+                    found = false;
+                    InternalList list = container.ListValue;
+                    for (int i = 0; i < list.Count; i++)
+                    {
+                        if (list[i] == needle)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    break;
+                default:
+                    throw new ChowTypeErrorException($"argument of type '{container.Tag}' is not iterable");
+            }
+
+            _valStack.Push(new TaggedUnion(negate ? !found : found));
+        }
+
         void ExecuteSubscript()
         {
             TaggedUnion index = _valStack.Pop();
             TaggedUnion target = _valStack.Pop();
 
-            // FUTURE: strings/dicts add tag branches here.
+            // FUTURE: strings add a tag branch here.
+            if (target.Tag == Tag.Dict)
+            {
+                try
+                {
+                    _valStack.Push(target.DictValue[index]);
+                }
+                catch (ChowKeyErrorException ex)
+                {
+                    throw new ChowKeyErrorException(ex.KeyRepr, GetCurrentLineNumber());
+                }
+                return;
+            }
+
             if (target.Tag != Tag.List)
             {
                 throw new ChowTypeErrorException($"'{target.Tag}' object is not subscriptable");
@@ -410,7 +491,12 @@ namespace Chow.Interpreter.Evaluation
             TaggedUnion index = _valStack.Pop();
             TaggedUnion target = _valStack.Pop();
 
-            // FUTURE: dicts add a key-set branch.
+            if (target.Tag == Tag.Dict)
+            {
+                target.DictValue[index] = value;
+                return;
+            }
+
             if (target.Tag != Tag.List)
             {
                 throw new ChowTypeErrorException($"'{target.Tag}' object does not support item assignment");
@@ -430,19 +516,33 @@ namespace Chow.Interpreter.Evaluation
             TaggedUnion target = _valStack.Pop();
 
             // FUTURE: class instances add a branch that consults the instance attribute table, then the class method table.
-            if (target.Tag != Tag.List)
+            if (target.Tag == Tag.List)
             {
-                throw new ChowAttributeErrorException(target.Tag.ToString().ToLowerInvariant(), attrName, GetCurrentLineNumber());
+                InternalList list = target.ListValue;
+
+                if (!list.HasMethod(attrName))
+                {
+                    throw new ChowAttributeErrorException("list", attrName, GetCurrentLineNumber());
+                }
+
+                _valStack.Push(list[attrName]);
+                return;
             }
 
-            InternalList list = target.ListValue;
-
-            if (!list.HasMethod(attrName))
+            if (target.Tag == Tag.Dict)
             {
-                throw new ChowAttributeErrorException("list", attrName, GetCurrentLineNumber());
+                InternalDict dict = target.DictValue;
+
+                if (!dict.HasMethod(attrName))
+                {
+                    throw new ChowAttributeErrorException("dict", attrName, GetCurrentLineNumber());
+                }
+
+                _valStack.Push(dict[attrName]);
+                return;
             }
 
-            _valStack.Push(list[attrName]);
+            throw new ChowAttributeErrorException(target.Tag.ToString().ToLowerInvariant(), attrName, GetCurrentLineNumber());
         }
 
         void ExecuteSetAttr()
@@ -453,7 +553,19 @@ namespace Chow.Interpreter.Evaluation
             TaggedUnion target = _valStack.Pop();
 
             // FUTURE: class instances assign here.
-            string typeName = target.Tag == Tag.List ? "list" : target.Tag.ToString().ToLowerInvariant();
+            string typeName;
+            switch (target.Tag)
+            {
+                case Tag.List:
+                    typeName = "list";
+                    break;
+                case Tag.Dict:
+                    typeName = "dict";
+                    break;
+                default:
+                    typeName = target.Tag.ToString().ToLowerInvariant();
+                    break;
+            }
 
             throw new ChowAttributeErrorException(typeName, attrName, GetCurrentLineNumber());
         }

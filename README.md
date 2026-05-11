@@ -24,7 +24,7 @@
 
 
 ## Tests
-390/390 passing tests
+399/399 passing tests
 
 ## Small TODOs
 - Get rid of "is dirty" flags in major classes (redundant)

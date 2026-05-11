@@ -18,6 +18,9 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
         GreaterEqual,
         And,
         Or,
-        Not
+        Not,
+        BinaryOr,
+        In,
+        NotIn,
     }
 }

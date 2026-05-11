@@ -28,6 +28,7 @@ namespace Chow.Interpreter.Values.Internal
         public bool IsBoolean => _type == Tag.Boolean;
         public bool IsObject => _type == Tag.Object;
         public bool IsList => _type == Tag.List;
+        public bool IsDict => _type == Tag.Dict;
 
         public bool IsTruthy
         {
@@ -45,6 +46,8 @@ namespace Chow.Interpreter.Values.Internal
                         return ((string)_obj).Length > 0;
                     case Tag.List:
                         return ((InternalList)_obj).Count > 0;
+                    case Tag.Dict:
+                        return ((InternalDict)_obj).Count > 0;
                     default:
                         return false;
                 }
@@ -131,6 +134,18 @@ namespace Chow.Interpreter.Values.Internal
             }
         }
 
+        public InternalDict DictValue
+        {
+            get
+            {
+                if (!IsDict)
+                {
+                    throw new InvalidOperationException($"Dict access attempt but union's type is {_type}");
+                }
+                return (InternalDict)_obj;
+            }
+        }
+
         private TaggedUnion(Tag type)
         {
             _type = type;
@@ -189,6 +204,15 @@ namespace Chow.Interpreter.Values.Internal
         {
             _obj = list;
             _type = Tag.List;
+            _int = DEFAULT_INT_VALUE;
+            _float = DEFAULT_FLOAT_VALUE;
+            _bool = DEFAULT_BOOL_VALUE;
+        }
+
+        public TaggedUnion(InternalDict dict)
+        {
+            _obj = dict;
+            _type = Tag.Dict;
             _int = DEFAULT_INT_VALUE;
             _float = DEFAULT_FLOAT_VALUE;
             _bool = DEFAULT_BOOL_VALUE;
@@ -415,6 +439,15 @@ namespace Chow.Interpreter.Values.Internal
             return new TaggedUnion((int)Math.Pow(left.IntegerValue, exp));
         }
 
+        public static TaggedUnion operator |(TaggedUnion left, TaggedUnion right)
+        {
+            if (left.IsDict && right.IsDict)
+            {
+                return new TaggedUnion(InternalDict.Merge((InternalDict)left._obj, (InternalDict)right._obj));
+            }
+            throw new InvalidOperationException($"unsupported operand type(s) for |: '{left._type}' and '{right._type}'");
+        }
+
         public static bool operator ==(TaggedUnion left, TaggedUnion right)
         {
             if (left._type != right._type)
@@ -434,6 +467,8 @@ namespace Chow.Interpreter.Values.Internal
                     return (string)left._obj == (string)right._obj;
                 case Tag.List:
                     return InternalList.ElementsEqual((InternalList)left._obj, (InternalList)right._obj);
+                case Tag.Dict:
+                    return InternalDict.ElementsEqual((InternalDict)left._obj, (InternalDict)right._obj);
                 case Tag.Object:
                     return ReferenceEquals(left._obj, right._obj);
                 default:
@@ -527,7 +562,7 @@ namespace Chow.Interpreter.Values.Internal
 
         static void ThrowIfObjectOperands(TaggedUnion left, TaggedUnion right)
         {
-            if (left.IsObject || right.IsObject || left.IsString || right.IsString || left.IsList || right.IsList)
+            if (left.IsObject || right.IsObject || left.IsString || right.IsString || left.IsList || right.IsList || left.IsDict || right.IsDict)
             {
                 throw new InvalidOperationException("Object operands are not supported for this operation.");
             }

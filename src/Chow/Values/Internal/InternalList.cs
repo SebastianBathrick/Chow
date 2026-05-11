@@ -407,6 +407,9 @@ namespace Chow.Interpreter.Values.Internal
                 case Tag.List:
                     sb.Append(value.ListValue.ToString());
                     return;
+                case Tag.Dict:
+                    sb.Append(value.DictValue.ToString());
+                    return;
                 default:
                     sb.Append(value.ToString());
                     return;

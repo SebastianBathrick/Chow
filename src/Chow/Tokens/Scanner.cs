@@ -328,6 +328,12 @@ namespace Chow.Interpreter.Tokens
                         break;
                     }
 
+                case '|':
+                    {
+                        tknType = TokenType.SymbolPipe;
+                        break;
+                    }
+
                 case '!':
                     {
                         return TryScanCompoundOp('=', TokenType.SymbolNotEqual, "!=");

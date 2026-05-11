@@ -10,5 +10,6 @@ namespace Chow.Interpreter.Values.Internal
         Str,
         Object,
         List,
+        Dict,
     }
 }
