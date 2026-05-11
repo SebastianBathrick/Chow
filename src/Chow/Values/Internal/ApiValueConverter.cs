@@ -18,7 +18,12 @@ namespace Chow.Interpreter.Values.Internal
 
             if (value is ChowStr strValue)
             {
-                return new TaggedUnion((object)strValue.Value);
+                return new TaggedUnion(strValue.Value);
+            }
+
+            if (value is ChowList listValue)
+            {
+                return new TaggedUnion(listValue.Internal);
             }
 
             if (value is ChowDynamic dynamicValue)
@@ -56,11 +61,11 @@ namespace Chow.Interpreter.Values.Internal
                     return new ChowFloat(taggedUnion.FloatValue);
                 case Tag.Boolean:
                     return new ChowBool(taggedUnion.BooleanValue);
+                case Tag.Str:
+                    return new ChowStr(taggedUnion.StringValue);
+                case Tag.List:
+                    return new ChowList(taggedUnion.ListValue);
                 case Tag.Object:
-                    if (taggedUnion.ObjectValue is string s)
-                    {
-                        return new ChowStr(s);
-                    }
                     return new ChowDynamic(taggedUnion.ObjectValue);
                 default:
                     throw new InvalidOperationException();

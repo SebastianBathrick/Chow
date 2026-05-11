@@ -1,6 +1,6 @@
 ﻿namespace Chow.Interpreter.Exceptions
 {
-    internal class NameErrorException : ChowRuntimeException
+    internal class ChowNameErrorException : ChowRuntimeException
     {
         const string EXCEPTION_ALIAS = "NameError";
 
@@ -8,7 +8,7 @@
 
         public string UndefinedName => _undefinedName;
 
-        public NameErrorException(string undefinedName, int lineNumber) : base(EXCEPTION_ALIAS, $"name '{undefinedName}' is not defined", lineNumber)
+        public ChowNameErrorException(string undefinedName, int lineNumber) : base(EXCEPTION_ALIAS, $"name '{undefinedName}' is not defined", lineNumber)
         {
             _undefinedName = undefinedName;
         }

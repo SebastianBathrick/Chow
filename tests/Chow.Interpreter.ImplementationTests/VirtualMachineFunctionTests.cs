@@ -106,7 +106,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             Chunk chunk = Compile("def myFunc(a):\n    return a\nmyFunc(1, 2)");
 
-            TypeErrorException ex = Assert.Throws<TypeErrorException>(() => Execute(chunk));
+            ChowTypeErrorException ex = Assert.Throws<ChowTypeErrorException>(() => Execute(chunk));
 
             Assert.That(ex.Message, Does.Contain("myFunc"));
         }
@@ -116,7 +116,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             Chunk chunk = Compile("def f(a, b):\n    return a\nf(1)");
 
-            Assert.Throws<TypeErrorException>(() => Execute(chunk));
+            Assert.Throws<ChowTypeErrorException>(() => Execute(chunk));
         }
 
         // ============================================================================================================

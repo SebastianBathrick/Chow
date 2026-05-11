@@ -209,7 +209,6 @@ if (args.Length > 0)
         return;
     }
 
-    module.AddHook(new PrintExprStatementHook());
 
     try
     {
@@ -222,6 +221,8 @@ if (args.Length > 0)
 
     return;
 }
+
+module.AddHook(new PrintExprStatementHook());
 
 while (true)
 {

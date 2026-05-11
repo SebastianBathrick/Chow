@@ -26,7 +26,7 @@ namespace Chow.Interpreter
                     return ApiValueConverter.ToApiClassObj(varUnion);
                 }
 
-                throw new ApiNameErrorException(name);
+                throw new ChowApiNameErrorException(name);
             }
 
             set

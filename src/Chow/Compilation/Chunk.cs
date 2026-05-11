@@ -210,6 +210,11 @@ namespace Chow.Interpreter.Compilation
                 sb.Append("Bool=");
                 sb.Append(constant.BooleanValue);
             }
+            else if (constant.IsList)
+            {
+                sb.Append("List=");
+                sb.Append(constant.ListValue.ToString());
+            }
         }
 
         void AppendOperandTarget(StringBuilder sb, Instruction op)

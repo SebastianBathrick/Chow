@@ -30,5 +30,11 @@ namespace Chow.Interpreter.Compilation
         DecScopeDepth,
         Call,
         MakeClosure,
+        BuildList,
+        Subscript,
+        SubscriptSlice,
+        SubscriptSet,
+        GetAttr,
+        SetAttr,
     }
 }

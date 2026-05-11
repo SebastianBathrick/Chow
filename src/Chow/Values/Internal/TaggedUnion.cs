@@ -27,6 +27,7 @@ namespace Chow.Interpreter.Values.Internal
         public bool IsString => _type == Tag.Str;
         public bool IsBoolean => _type == Tag.Boolean;
         public bool IsObject => _type == Tag.Object;
+        public bool IsList => _type == Tag.List;
 
         public bool IsTruthy
         {
@@ -42,6 +43,8 @@ namespace Chow.Interpreter.Values.Internal
                         return _float != 0f;
                     case Tag.Str:
                         return ((string)_obj).Length > 0;
+                    case Tag.List:
+                        return ((InternalList)_obj).Count > 0;
                     default:
                         return false;
                 }
@@ -116,6 +119,18 @@ namespace Chow.Interpreter.Values.Internal
             }
         }
 
+        public InternalList ListValue
+        {
+            get
+            {
+                if (!IsList)
+                {
+                    throw new InvalidOperationException($"List access attempt but union's type is {_type}");
+                }
+                return (InternalList)_obj;
+            }
+        }
+
         private TaggedUnion(Tag type)
         {
             _type = type;
@@ -170,6 +185,15 @@ namespace Chow.Interpreter.Values.Internal
             _bool = DEFAULT_BOOL_VALUE;
         }
 
+        public TaggedUnion(InternalList list)
+        {
+            _obj = list;
+            _type = Tag.List;
+            _int = DEFAULT_INT_VALUE;
+            _float = DEFAULT_FLOAT_VALUE;
+            _bool = DEFAULT_BOOL_VALUE;
+        }
+
         /// <summary>
         ///  Makes call to a value that is not a function declared in Chow source code, but instead a client-provided 
         ///  delegate types that optionally accept <see cref="ChowValue"/> parameters and can return a <see cref="ChowValue"/>.
@@ -189,6 +213,19 @@ namespace Chow.Interpreter.Values.Internal
 
             switch (_obj)
             {
+                // FUTURE: this delegate case also serves class-bound methods (closure pre-binding `self`).
+                case Func<TaggedUnion[], TaggedUnion> methodDelegate:
+                    TaggedUnion[] allArgs;
+                    if (singleArg.HasValue)
+                    {
+                        allArgs = new[] { singleArg.Value };
+                    }
+                    else
+                    {
+                        allArgs = args ?? Array.Empty<TaggedUnion>();
+                    }
+                    return methodDelegate(allArgs);
+
                 case Func<ChowValue> funcNoArg:
                     return ApiValueConverter.ToTaggedUnion(funcNoArg());
                 case Func<ChowValue, ChowValue> funcOneArg:
@@ -236,6 +273,11 @@ namespace Chow.Interpreter.Values.Internal
         //   int|bool % 0, int|bool // 0   -> DivideByZeroException [low-priority: value-level]
         public static TaggedUnion operator +(TaggedUnion left, TaggedUnion right)
         {
+            // FUTURE: list-specific carve-out. Future container types (e.g. tuples, future immutable seqs) add their own carve-outs.
+            if (left.IsList && right.IsList)
+            {
+                return new TaggedUnion(InternalList.Concat((InternalList)left._obj, (InternalList)right._obj));
+            }
             ThrowIfObjectOperands(left, right);
             // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
             ThrowIfMixedBoolNumeric(left, right);
@@ -270,6 +312,15 @@ namespace Chow.Interpreter.Values.Internal
 
         public static TaggedUnion operator *(TaggedUnion left, TaggedUnion right)
         {
+            // FUTURE: list-specific carve-out. Future container types add their own carve-outs.
+            if (left.IsList && right.IsInt)
+            {
+                return new TaggedUnion(InternalList.Repeat((InternalList)left._obj, right.IntegerValue));
+            }
+            if (left.IsInt && right.IsList)
+            {
+                return new TaggedUnion(InternalList.Repeat((InternalList)right._obj, left.IntegerValue));
+            }
             ThrowIfObjectOperands(left, right);
             // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
             ThrowIfMixedBoolNumeric(left, right);
@@ -381,6 +432,8 @@ namespace Chow.Interpreter.Values.Internal
                     return left._bool == right._bool;
                 case Tag.Str:
                     return (string)left._obj == (string)right._obj;
+                case Tag.List:
+                    return InternalList.ElementsEqual((InternalList)left._obj, (InternalList)right._obj);
                 case Tag.Object:
                     return ReferenceEquals(left._obj, right._obj);
                 default:
@@ -474,7 +527,7 @@ namespace Chow.Interpreter.Values.Internal
 
         static void ThrowIfObjectOperands(TaggedUnion left, TaggedUnion right)
         {
-            if (left.IsObject || right.IsObject || left.IsString || right.IsString)
+            if (left.IsObject || right.IsObject || left.IsString || right.IsString || left.IsList || right.IsList)
             {
                 throw new InvalidOperationException("Object operands are not supported for this operation.");
             }

@@ -66,7 +66,7 @@ namespace Chow.Tests
         {
             (ChowModule module, CaptureExprHook _) = NewModule();
 
-            Assert.Throws<ApiNameErrorException>(() => { ChowValue _ = module["missing"]; });
+            Assert.Throws<ChowApiNameErrorException>(() => { ChowValue _ = module["missing"]; });
         }
 
         [Test]
@@ -75,7 +75,7 @@ namespace Chow.Tests
             (ChowModule module, CaptureExprHook _) = NewModule();
             module.Execute("x = 1");
 
-            Assert.Throws<ApiNameErrorException>(() => { ChowValue _ = module["missing"]; });
+            Assert.Throws<ChowApiNameErrorException>(() => { ChowValue _ = module["missing"]; });
         }
 
         // ============================================================================================================

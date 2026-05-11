@@ -74,14 +74,14 @@ namespace Chow.Tests
         }
 
         [Test]
-        public void ToTaggedUnion_ChowStr_ReturnsObjectTaggedUnionWrappingString()
+        public void ToTaggedUnion_ChowStr_ReturnsStrTaggedUnion()
         {
             var result = ApiValueConverter.ToTaggedUnion(new ChowStr("hello"));
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.IsObject, Is.True);
-                Assert.That(result.ObjectValue, Is.EqualTo("hello"));
+                Assert.That(result.IsString, Is.True);
+                Assert.That(result.StringValue, Is.EqualTo("hello"));
             });
         }
 
@@ -160,9 +160,9 @@ namespace Chow.Tests
         }
 
         [Test]
-        public void ToApiClassObj_ObjectTagWithString_ReturnsChowStr()
+        public void ToApiClassObj_StrTag_ReturnsChowStr()
         {
-            var result = ApiValueConverter.ToApiClassObj(new TaggedUnion((object)"hello"));
+            var result = ApiValueConverter.ToApiClassObj(new TaggedUnion("hello"));
 
             Assert.Multiple(() =>
             {

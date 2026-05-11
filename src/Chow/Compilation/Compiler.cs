@@ -138,9 +138,94 @@ namespace Chow.Interpreter.Compilation
                     CompileCall(callNode);
                     break;
 
+                case ListLiteralNode listLiteralNode:
+                    CompileListLiteral(listLiteralNode);
+                    break;
+
+                case SubscriptNode subscriptNode:
+                    CompileSubscript(subscriptNode);
+                    break;
+
+                case AttrAccessNode attrAccessNode:
+                    CompileAttrAccess(attrAccessNode);
+                    break;
+
+                case SubscriptAssignNode subscriptAssignNode:
+                    CompileSubscriptAssign(subscriptAssignNode);
+                    break;
+
+                case AttrAssignNode attrAssignNode:
+                    CompileAttrAssign(attrAssignNode);
+                    break;
+
                 default:
                     throw new InvalidOperationException();
             }
+        }
+
+        void CompileListLiteral(ListLiteralNode node)
+        {
+            foreach (Node element in node.Elements)
+            {
+                CompileTargetNode(element);
+            }
+            _chunk.AddInstr(OperationCode.BuildList, node.LineNum, node.Elements.Count);
+        }
+
+        void CompileSubscript(SubscriptNode node)
+        {
+            CompileTargetNode(node.Target);
+
+            if (node.Index is SliceNode sliceNode)
+            {
+                CompileSliceArg(sliceNode.Start, sliceNode.LineNum);
+                CompileSliceArg(sliceNode.Stop, sliceNode.LineNum);
+                CompileSliceArg(sliceNode.Step, sliceNode.LineNum);
+                _chunk.AddInstr(OperationCode.SubscriptSlice, node.LineNum);
+                return;
+            }
+
+            CompileTargetNode(node.Index);
+            _chunk.AddInstr(OperationCode.Subscript, node.LineNum);
+        }
+
+        void CompileSliceArg(Node argOrNull, int sliceLineNum)
+        {
+            if (argOrNull == null)
+            {
+                int noneIdx = _chunk.RegisterConstant(TaggedUnion.None);
+                _chunk.AddInstr(OperationCode.PushConstant, sliceLineNum, noneIdx);
+                return;
+            }
+            CompileTargetNode(argOrNull);
+        }
+
+        void CompileAttrAccess(AttrAccessNode node)
+        {
+            CompileTargetNode(node.Target);
+            int nameOperand = _chunk.RegisterVariableName(node.AttrName);
+            _chunk.AddInstr(OperationCode.GetAttr, node.LineNum, nameOperand);
+        }
+
+        void CompileSubscriptAssign(SubscriptAssignNode node)
+        {
+            if (node.Index is SliceNode)
+            {
+                throw new NotImplementedException("slice assignment is not implemented");
+            }
+
+            CompileTargetNode(node.Target);
+            CompileTargetNode(node.Index);
+            CompileTargetNode(node.Expression);
+            _chunk.AddInstr(OperationCode.SubscriptSet, node.LineNum);
+        }
+
+        void CompileAttrAssign(AttrAssignNode node)
+        {
+            CompileTargetNode(node.Target);
+            CompileTargetNode(node.Expression);
+            int nameOperand = _chunk.RegisterVariableName(node.AttrName);
+            _chunk.AddInstr(OperationCode.SetAttr, node.LineNum, nameOperand);
         }
 
         void CompileBlockNode(BlockNode blockNode)

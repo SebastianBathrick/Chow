@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.Exceptions
 {
-    internal class ApiNameErrorException : ChowRuntimeException
+    internal class ChowApiNameErrorException : ChowRuntimeException
     {
         const string EXCEPTION_ALIAS = "NameError";
 
@@ -8,7 +8,7 @@ namespace Chow.Interpreter.Exceptions
 
         public string UndefinedName => _undefinedName;
 
-        public ApiNameErrorException(string undefinedName) : base(EXCEPTION_ALIAS, $"name '{undefinedName}' is not defined")
+        public ChowApiNameErrorException(string undefinedName) : base(EXCEPTION_ALIAS, $"name '{undefinedName}' is not defined")
         {
             _undefinedName = undefinedName;
         }
