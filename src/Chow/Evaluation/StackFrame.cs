@@ -1,6 +1,4 @@
 using Chow.Interpreter.Compilation;
-using Chow.Interpreter.Values;
-using System.Collections.Generic;
 
 namespace Chow.Interpreter.Evaluation
 {
@@ -28,10 +26,10 @@ namespace Chow.Interpreter.Evaluation
         public Instruction CurrentInstr => _chunk[_instrIdx];
 
         /// <summary>True while the instruction pointer has not reached the end of the chunk.</summary>
-        public bool IsInstrToRun => _chunk.Count != _instrIdx;
+        public bool IsInstrToRun => _chunk.InstructionCount != _instrIdx;
 
         /// <summary>Source line number associated with the current instruction.</summary>
-        public int CurrentLineNum => _chunk.GetInstrLineNum(_instrIdx);
+        public int CurrentLineNum => _chunk.GetInstructionLine(_instrIdx);
 
         /// <summary>Creates a frame positioned at the first instruction.</summary>
         public StackFrame(Chunk chunk, Scope scope)

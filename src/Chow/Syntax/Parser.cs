@@ -10,11 +10,10 @@ namespace Chow.Interpreter.Syntax
     class Parser
     {
         List<Token> _tkns;
-
         int _tknIdx;
 
-        private Token CurrToken => _tkns[_tknIdx];
-        private Token PrevTkn => _tkns[_tknIdx - 1];
+        Token CurrToken => _tkns[_tknIdx];
+        Token PrevTkn => _tkns[_tknIdx - 1];
 
         public Parser(List<Token> tkns)
         {
@@ -40,7 +39,7 @@ namespace Chow.Interpreter.Syntax
                 }
 
                 // This will throw an exception if the current token is not the start of a statement
-                Node stmnt = ParseStmnts();
+                Node stmnt = ParseStmnt();
                 stmnts.Add(stmnt);
 
                 isComplete = IsTokenType(TokenType.EndOfCode);
@@ -52,16 +51,15 @@ namespace Chow.Interpreter.Syntax
                     continue;
                 }
 
-                bool isBlockStmnt = stmnt is FunctionNode || stmnt is IfNode || stmnt is WhileNode;
+                bool isStmntWithBlock = stmnt is FunctionNode || stmnt is IfNode || stmnt is WhileNode;
 
-                if (isBlockStmnt)
+                if (isStmntWithBlock)
                 {
                     TryConsumeType(TokenType.Newline);
+                    continue;
                 }
-                else
-                {
-                    ConsumeToken(TokenType.Newline, "Expected newline after statement.");
-                }
+
+                ConsumeToken(TokenType.Newline, "Expected newline after statement.");
             }
 
             ConsumeToken(TokenType.EndOfCode, "Expected end of code.");
@@ -71,10 +69,11 @@ namespace Chow.Interpreter.Syntax
         {
             ConsumeToken(TokenType.SymbolColon, "Expected ':' after block header.");
             ConsumeToken(TokenType.Newline, "Expected newline after ':'.");
-            Token indentTkn = ConsumeToken(TokenType.Indent, "Expected indented block body.");
 
+            Token indentTkn = ConsumeToken(TokenType.Indent, "Expected indented block body.");
             List<Node> stmnts = new List<Node>();
-            stmnts.Add(ParseStmnts());
+            stmnts.Add(ParseStmnt());
+
             TryConsumeType(TokenType.Newline);
 
             while (!IsTokenType(TokenType.Dedent))
@@ -82,11 +81,12 @@ namespace Chow.Interpreter.Syntax
                 if (IsTokenType(TokenType.Newline))
                 {
                     ConsumeToken();
-                    continue;
                 }
-
-                stmnts.Add(ParseStmnts());
-                TryConsumeType(TokenType.Newline);
+                else
+                {
+                    stmnts.Add(ParseStmnt());
+                    TryConsumeType(TokenType.Newline);
+                }
             }
 
             ConsumeToken(TokenType.Dedent, "Expected dedent to close block.");
@@ -97,7 +97,7 @@ namespace Chow.Interpreter.Syntax
 
         #region Statement Methods
 
-        Node ParseStmnts()
+        Node ParseStmnt()
         {
             switch (CurrToken.type)
             {
@@ -120,24 +120,24 @@ namespace Chow.Interpreter.Syntax
                     return ParseContinue();
             }
 
-            if (IsPrimaryToken())
+            if (!IsPrimaryToken())
             {
-                // Parse expression first; if an '=' follows, convert the LHS into the appropriate assignment node.
-                // Otherwise this is a standalone expression statement (result discarded or routed to hook).
-                int startLine = CurrToken.lineNum;
-                Node lhs = ParseExpr();
+                throw new ParserEx("Expected statement.", CurrToken.lineNum);
+            }
 
-                if (TryConsumeType(TokenType.SymbolAssign))
-                {
-                    int eqLine = PrevTkn.lineNum;
-                    Node rhs = ParseExpr();
-                    return MakeAssignFromTarget(lhs, rhs, eqLine);
-                }
+            // Parse expression first; if an '=' follows, convert the LHS into the appropriate assignment node.
+            // Otherwise this is a standalone expression statement (result discarded or routed to hook).
+            int startLine = CurrToken.lineNum;
+            Node lhs = ParseExpr();
 
+            if (!TryConsumeType(TokenType.SymbolAssign))
+            {
                 return new ExprStatementNode(lhs, startLine);
             }
 
-            throw new ParserEx("Expected statement.", CurrToken.lineNum);
+            int eqLine = PrevTkn.lineNum;
+            Node rhs = ParseExpr();
+            return MakeAssignFromTarget(lhs, rhs, eqLine);
         }
 
         Node MakeAssignFromTarget(Node target, Node value, int line)
@@ -160,11 +160,12 @@ namespace Chow.Interpreter.Syntax
 
         Node ParseFunction()
         {
-            int lineNum = CurrToken.lineNum;
+            int line = CurrToken.lineNum;
 
             ConsumeToken(TokenType.KeywordDef, "Expected 'def' keyword.");
 
             Token nameTkn = ConsumeToken(TokenType.Identifier, "Expected function name.");
+
             ConsumeToken(TokenType.SymbolLeftParen, "Expected '(' after function name.");
 
             List<Node> paramList = new List<Node>();
@@ -182,44 +183,44 @@ namespace Chow.Interpreter.Syntax
             }
 
             ConsumeToken(TokenType.SymbolRightParen, "Expected ')' after parameter list.");
-
             Node body = ParseBlock();
-            return new FunctionNode(nameTkn.lexeme, paramList, body, lineNum);
+
+            return new FunctionNode(nameTkn.lexeme, paramList, body, line);
         }
 
         Node ParseIf()
         {
-            int lineNum = CurrToken.lineNum;
+            int line = CurrToken.lineNum;
             ConsumeToken(TokenType.KeywordIf, "Expected 'if' keyword.");
 
             Node expr = ParseExpr();
             Node block = ParseBlock();
             Node branch = ParseBranch();
-            
-            return new IfNode(expr, block, branch, lineNum);
+
+            return new IfNode(expr, block, branch, line);
         }
 
         Node ParseBranch()
         {
             if (IsTokenType(TokenType.KeywordElif))
             {
-                int lineNum = CurrToken.lineNum;
+                int line = CurrToken.lineNum;
                 ConsumeToken();
-                
+
                 Node expr = ParseExpr();
                 Node block = ParseBlock();
                 Node branch = ParseBranch();
 
-                return new BranchStmntNode(expr, block, branch, lineNum);
+                return new BranchStmntNode(expr, block, branch, line);
             }
 
             if (IsTokenType(TokenType.KeywordElse))
             {
-                int lineNum = CurrToken.lineNum;
+                int line = CurrToken.lineNum;
                 ConsumeToken();
-                
+
                 Node block = ParseBlock();
-                return new BranchStmntNode(null, block, null, lineNum);
+                return new BranchStmntNode(null, block, null, line);
             }
 
             return null;
@@ -227,54 +228,45 @@ namespace Chow.Interpreter.Syntax
 
         Node ParseWhile()
         {
-            int lineNum = CurrToken.lineNum;
+            int line = CurrToken.lineNum;
             ConsumeToken(TokenType.KeywordWhile, "Expected 'while' keyword.");
 
             Node expr = ParseExpr();
             Node block = ParseBlock();
 
-            return new WhileNode(expr, block, lineNum);
+            return new WhileNode(expr, block, line);
         }
 
         Node ParseBreak()
         {
-            int lineNum = CurrToken.lineNum;
+            int line = CurrToken.lineNum;
             ConsumeToken(TokenType.KeywordBreak, "Expected 'break' keyword.");
-            return new BreakNode(lineNum);
+            return new BreakNode(line);
         }
 
         Node ParseContinue()
         {
-            int lineNum = CurrToken.lineNum;
+            int line = CurrToken.lineNum;
             ConsumeToken(TokenType.KeywordContinue, "Expected 'continue' keyword.");
-            return new ContinueNode(lineNum);
+            return new ContinueNode(line);
         }
 
         Node ParseReturn()
         {
-            int lineNumber = CurrToken.lineNum;
+            int line = CurrToken.lineNum;
             ConsumeToken(TokenType.KeywordReturn, "Expected 'return' keyword.");
-            
-            Node expression;
 
-            if (IsPrimaryToken())
-            {
-                expression = ParseExpr();
-            }
-            else
-            {
-                // Void functions always return None, and their calls inside expressions will not cause an error
-                expression = null;
-            }
+            // Void functions always return None, and their calls inside expressions will not cause an error
+            Node expr = IsPrimaryToken() ? ParseExpr() : null;
 
-            return new ReturnNode(expression, lineNumber);
+            return new ReturnNode(expr, line);
         }
 
         Node ParseExprStmnt()
         {
-            int lineNum = CurrToken.lineNum;
-            Node expression = ParseExpr();
-            return new ExprStatementNode(expression, lineNum);
+            int line = CurrToken.lineNum;
+            Node expr = ParseExpr();
+            return new ExprStatementNode(expr, line);
         }
 
         #endregion
@@ -453,7 +445,7 @@ namespace Chow.Interpreter.Syntax
             Node idx = ParseSubscriptBody();
 
             ConsumeToken(TokenType.SymbolRightBracket, "Expected ']' to close subscript.");
-            
+
             return new SubscriptNode(targ, idx, leftBr.lineNum);
         }
 

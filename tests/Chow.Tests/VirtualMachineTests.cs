@@ -30,13 +30,13 @@ namespace Chow.Tests
         static void PushIntegerConstant(Chunk chunk, int value)
         {
             int index = chunk.RegisterConstant(new TaggedUnion(value));
-            chunk.AddInstr(OperationCode.PushConstant, LINE, index);
+            chunk.AddInstruction(OperationCode.PushConstant, LINE, index);
         }
 
         static void PushFloatConstant(Chunk chunk, float value)
         {
             int index = chunk.RegisterConstant(new TaggedUnion(value));
-            chunk.AddInstr(OperationCode.PushConstant, LINE, index);
+            chunk.AddInstruction(OperationCode.PushConstant, LINE, index);
         }
 
         static void AssertIntegerResult(TaggedUnion result, int expected)
@@ -92,7 +92,7 @@ namespace Chow.Tests
             {
                 PushIntegerConstant(c, left);
                 PushIntegerConstant(c, right);
-                c.AddInstr((OperationCode)opCode, LINE);
+                c.AddInstruction((OperationCode)opCode, LINE);
             });
 
             TaggedUnion result = Execute(chunk);
@@ -111,7 +111,7 @@ namespace Chow.Tests
             {
                 PushFloatConstant(c, left);
                 PushFloatConstant(c, right);
-                c.AddInstr((OperationCode)opCode, LINE);
+                c.AddInstruction((OperationCode)opCode, LINE);
             });
 
             TaggedUnion result = Execute(chunk);
@@ -130,7 +130,7 @@ namespace Chow.Tests
             {
                 PushIntegerConstant(c, 5);
                 PushFloatConstant(c, 1.5f);
-                c.AddInstr(OperationCode.Subtract, LINE);
+                c.AddInstruction(OperationCode.Subtract, LINE);
             });
 
             TaggedUnion result = Execute(chunk);
@@ -145,7 +145,7 @@ namespace Chow.Tests
             {
                 PushFloatConstant(c, 5.5f);
                 PushIntegerConstant(c, 2);
-                c.AddInstr(OperationCode.Subtract, LINE);
+                c.AddInstruction(OperationCode.Subtract, LINE);
             });
 
             TaggedUnion result = Execute(chunk);
@@ -161,7 +161,7 @@ namespace Chow.Tests
             {
                 PushIntegerConstant(c, 10);
                 PushIntegerConstant(c, 4);
-                c.AddInstr(OperationCode.Divide, LINE);
+                c.AddInstruction(OperationCode.Divide, LINE);
             });
 
             TaggedUnion result = Execute(chunk);
@@ -177,7 +177,7 @@ namespace Chow.Tests
             {
                 PushIntegerConstant(c, -7);
                 PushIntegerConstant(c, 2);
-                c.AddInstr(OperationCode.Modulus, LINE);
+                c.AddInstruction(OperationCode.Modulus, LINE);
             });
 
             TaggedUnion result = Execute(chunk);
@@ -193,7 +193,7 @@ namespace Chow.Tests
             {
                 PushIntegerConstant(c, -7);
                 PushIntegerConstant(c, 2);
-                c.AddInstr(OperationCode.FloorDivide, LINE);
+                c.AddInstruction(OperationCode.FloorDivide, LINE);
             });
 
             TaggedUnion result = Execute(chunk);
@@ -209,7 +209,7 @@ namespace Chow.Tests
             {
                 PushIntegerConstant(c, 2);
                 PushIntegerConstant(c, -1);
-                c.AddInstr(OperationCode.Exponentiate, LINE);
+                c.AddInstruction(OperationCode.Exponentiate, LINE);
             });
 
             TaggedUnion result = Execute(chunk);
@@ -224,7 +224,7 @@ namespace Chow.Tests
             {
                 PushFloatConstant(c, 2.0f);
                 PushIntegerConstant(c, 3);
-                c.AddInstr(OperationCode.Exponentiate, LINE);
+                c.AddInstruction(OperationCode.Exponentiate, LINE);
             });
 
             TaggedUnion result = Execute(chunk);
@@ -239,7 +239,7 @@ namespace Chow.Tests
             {
                 PushFloatConstant(c, 7.0f);
                 PushIntegerConstant(c, 2);
-                c.AddInstr(OperationCode.FloorDivide, LINE);
+                c.AddInstruction(OperationCode.FloorDivide, LINE);
             });
 
             TaggedUnion result = Execute(chunk);
@@ -257,7 +257,7 @@ namespace Chow.Tests
             var chunk = BuildChunk(c =>
             {
                 PushIntegerConstant(c, 7);
-                c.AddInstr(OperationCode.Negate, LINE);
+                c.AddInstruction(OperationCode.Negate, LINE);
             });
 
             TaggedUnion result = Execute(chunk);
@@ -271,7 +271,7 @@ namespace Chow.Tests
             var chunk = BuildChunk(c =>
             {
                 PushFloatConstant(c, 2.5f);
-                c.AddInstr(OperationCode.Negate, LINE);
+                c.AddInstruction(OperationCode.Negate, LINE);
             });
 
             TaggedUnion result = Execute(chunk);
@@ -291,9 +291,9 @@ namespace Chow.Tests
             {
                 PushIntegerConstant(c, 10);
                 PushIntegerConstant(c, 4);
-                c.AddInstr(OperationCode.Subtract, LINE);
+                c.AddInstruction(OperationCode.Subtract, LINE);
                 PushIntegerConstant(c, 2);
-                c.AddInstr(OperationCode.Subtract, LINE);
+                c.AddInstruction(OperationCode.Subtract, LINE);
             });
 
             TaggedUnion result = Execute(chunk);
@@ -309,9 +309,9 @@ namespace Chow.Tests
             {
                 PushIntegerConstant(c, 10);
                 PushIntegerConstant(c, 4);
-                c.AddInstr(OperationCode.Subtract, LINE);
+                c.AddInstruction(OperationCode.Subtract, LINE);
                 PushIntegerConstant(c, 2);
-                c.AddInstr(OperationCode.Divide, LINE);
+                c.AddInstruction(OperationCode.Divide, LINE);
             });
 
             TaggedUnion result = Execute(chunk);
@@ -327,13 +327,13 @@ namespace Chow.Tests
         {
             PushIntegerConstant(chunk, value);
             int operand = chunk.RegisterVariableName(name);
-            chunk.AddInstr(OperationCode.AssignOrDeclareVariable, LINE, operand);
+            chunk.AddInstruction(OperationCode.AssignOrDeclareVariable, LINE, operand);
         }
 
         static void EmitLoad(Chunk chunk, string name)
         {
             int operand = chunk.FindVariableName(name);
-            chunk.AddInstr(OperationCode.PushVariableValue, LINE, operand);
+            chunk.AddInstruction(OperationCode.PushVariableValue, LINE, operand);
         }
 
         [Test]
@@ -378,7 +378,7 @@ namespace Chow.Tests
                 EmitAssignInteger(c, "b", 2);
                 EmitLoad(c, "a");
                 EmitLoad(c, "b");
-                c.AddInstr(OperationCode.Add, LINE);
+                c.AddInstruction(OperationCode.Add, LINE);
             });
 
             var vm = new VirtualMachine(chunk, new ModuleScope(), null!);
@@ -398,7 +398,7 @@ namespace Chow.Tests
             var chunk = BuildChunk(c =>
             {
                 int idx = c.RegisterConstant(new TaggedUnion("hello"));
-                c.AddInstr(OperationCode.PushConstant, LINE, idx);
+                c.AddInstruction(OperationCode.PushConstant, LINE, idx);
             });
 
             TaggedUnion result = Execute(chunk);

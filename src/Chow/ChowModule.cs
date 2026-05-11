@@ -1,13 +1,13 @@
 using Chow.Interpreter.Compilation;
 using Chow.Interpreter.Evaluation;
+using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Hooks;
 using Chow.Interpreter.Syntax;
 using Chow.Interpreter.Syntax.Trees;
 using Chow.Interpreter.Tokens;
 using Chow.Interpreter.Values;
-using Chow.Interpreter.Exceptions;
-using System.Collections.Generic;
 using Chow.Interpreter.Values.Internal;
+using System.Collections.Generic;
 
 namespace Chow.Interpreter
 {

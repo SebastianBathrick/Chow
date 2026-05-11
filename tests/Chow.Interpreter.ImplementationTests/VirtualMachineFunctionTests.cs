@@ -51,8 +51,8 @@ namespace Chow.Interpreter.ImplementationTests
             Chunk module = new Chunk();
             ClosureTemplate template = new ClosureTemplate(new Chunk(), "f", 0);
             int idx = module.RegisterConstant(new TaggedUnion((object)template));
-            module.AddInstr(OperationCode.PushConstant, LINE, idx);
-            module.AddInstr(OperationCode.MakeClosure, LINE);
+            module.AddInstruction(OperationCode.PushConstant, LINE, idx);
+            module.AddInstruction(OperationCode.MakeClosure, LINE);
 
             ModuleScope scope = new ModuleScope();
             VirtualMachine vm = new VirtualMachine(module, scope, null!);

@@ -73,14 +73,14 @@ namespace Chow.Interpreter.Values.Internal
         TaggedUnion Insert(TaggedUnion[] args)
         {
             ValidateArguments(args, 2);
-            
+
             if (args[0].Tag != Tag.Int)
             {
                 throw new ArgumentException($"Argument 0 must be of type {Tag.Int}, but was {args[0].Tag}");
             }
-           
+
             int idx = args[0].IntegerValue;
-            
+
             if (idx < 0)
             {
                 idx = Math.Max(0, _elements.Count + idx);
@@ -89,7 +89,7 @@ namespace Chow.Interpreter.Values.Internal
             {
                 idx = _elements.Count;
             }
-            
+
             _elements.Insert(idx, args[1]);
             return TaggedUnion.None;
         }

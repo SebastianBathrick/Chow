@@ -1,5 +1,3 @@
-using System;
-
 namespace Chow.Interpreter.Values
 {
     public abstract class ChowValue

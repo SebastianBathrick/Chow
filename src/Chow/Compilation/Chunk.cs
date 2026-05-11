@@ -6,8 +6,7 @@ namespace Chow.Interpreter.Compilation
 {
     class Chunk
     {
-        static int _nextIdCounter = 0;
-        static object _nextIdCounterLock = new object();
+        const int NO_OPERAND = -1;
 
         int _id = 0;
 
@@ -15,55 +14,74 @@ namespace Chow.Interpreter.Compilation
         List<TaggedUnion> _consts;
 
         List<string> _varNames;
-        List<int> _instrLineNums;
+        List<int> _instrLines;
 
-        public int Id => _id;
+        /// <summary>
+        /// The total number of bytecode instructions stored in this Chunk.
+        /// </summary>
+        public int InstructionCount => _instrs.Count;
 
-        public int Count => _instrs.Count;
-
+        /// <summary>
+        /// Returns the instruction stored in this Chunk at the provided index.
+        /// </summary>
+        /// <param name="index">The index of the instruction to retrieve.</param>
+        /// <returns>The instruction at the specified index.</returns>
         public Instruction this[int index] => _instrs[index];
 
+        /// <summary>
+        /// Initializes a new Chunk without any instructions, constants,  or variable names.
+        /// </summary>
         public Chunk()
         {
             _instrs = new List<Instruction>();
             _consts = new List<TaggedUnion>();
             _varNames = new List<string>();
-            _instrLineNums = new List<int>();
-
-            lock(_nextIdCounterLock)
-            {
-                _id = _nextIdCounter;
-                ++_nextIdCounter;
-            }
-        }
-
-        public static bool AreSameChunks(Chunk c1, Chunk c2)
-        {
-            return c1._id == c2._id;
+            _instrLines = new List<int>();
         }
 
         #region Instruction Methods
 
-        public void AddInstr(OperationCode code, int lineNumber, int operand = -1)
+        /// <summary>
+        /// Creates and adds a new <see cref="Instruction"/> with the provided operation code, operand, and line number 
+        /// </summary>
+        /// <param name="code">Operation code associated with the instruction's logic in the <see cref="Chow.Interpreter.Evaluation.VirtualMachine"/></param>
+        /// <param name="line">The line number in the source code associated with this instruction.</param>
+        /// <param name="operand">Optional operand for the instruction, default is -1.</param>
+        public void AddInstruction(OperationCode code, int line, int operand = NO_OPERAND)
         {
             _instrs.Add(new Instruction(code, operand));
-            _instrLineNums.Add(lineNumber);
+            _instrLines.Add(line);
         }
 
-        public void PatchInstrOperand(int idx, int operand)
+        /// <summary>
+        /// Replaces the operand of the <see cref="Instruction"/> at the provided index, preserving its operation code.
+        /// </summary>
+        /// <param name="idx">The index of the instruction to patch.</param>
+        /// <param name="operand">The new operand value to assign to the instruction.</param>
+        public void PatchInstruction(int idx, int operand)
         {
             _instrs[idx] = new Instruction(_instrs[idx].Code, operand);
         }
 
-        public int GetInstrLineNum(int instrIdx)
+        /// <summary>
+        /// Returns the source code line number associated with the instruction at the provided index.
+        /// </summary>
+        /// <param name="instrIdx">The index of the instruction whose line number is to be retrieved.</param>
+        /// <returns>The line number in the source code associated with the specified instruction.</returns>
+        public int GetInstructionLine(int instrIdx)
         {
-            return _instrLineNums[instrIdx];
+            return _instrLines[instrIdx];
         }
 
         #endregion
 
         #region Constant Methods
 
+        /// <summary>
+        /// Returns the constant value stored at the provided operand index in the constant pool.
+        /// </summary>
+        /// <param name="operand">The operand index of the constant to retrieve.</param>
+        /// <returns>The <see cref="TaggedUnion"/> constant at the specified operand index.</returns>
         public TaggedUnion ReadConstant(int operand) => _consts[operand];
 
         /// <summary>
@@ -75,7 +93,7 @@ namespace Chow.Interpreter.Compilation
         /// that existing constant will be returned. Otherwise, the new constant is stored and a new operand is returned</remarks>
         public int RegisterConstant(TaggedUnion newConst)
         {
-            int constIndex = FindConstantIndex(newConst);
+            int constIndex = _consts.IndexOf(newConst);
 
             if (constIndex >= 0)
             {
@@ -87,23 +105,35 @@ namespace Chow.Interpreter.Compilation
             return constIndex;
         }
 
-        // The constant list's index is only to be refered to as "operand" in the public API to hide interal functionality
-        int FindConstantIndex(TaggedUnion constant) => _consts.IndexOf(constant);
-
         #endregion
 
         #region Variable Name Methods
 
+        /// <summary>
+        /// Determines whether the provided name has been registered as a variable name in this Chunk.
+        /// </summary>
+        /// <param name="name">The variable name to check for.</param>
+        /// <returns><c>true</c> if the name is registered; otherwise, <c>false</c>.</returns>
         public bool IsVariableName(string name)
         {
             return _varNames.Contains(name);
         }
 
+        /// <summary>
+        /// Returns the variable name stored at the provided operand index.
+        /// </summary>
+        /// <param name="operand">The operand index of the variable name to retrieve.</param>
+        /// <returns>The variable name at the specified operand index.</returns>
         public string ReadVariableName(int operand)
         {
             return _varNames[operand];
         }
 
+        /// <summary>
+        /// Returns the operand index associated with the provided variable name.
+        /// </summary>
+        /// <param name="name">The variable name to look up.</param>
+        /// <returns>The operand index of the variable name, or -1 if the name is not registered.</returns>
         public int FindVariableName(string name)
         {
             return _varNames.IndexOf(name);

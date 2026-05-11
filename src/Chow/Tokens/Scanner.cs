@@ -10,7 +10,7 @@ namespace Chow.Interpreter.Tokens
 
         const int TAB_SIZE = 4;
 
-        private static readonly IReadOnlyDictionary<string, TokenType> _keywords = new Dictionary<string, TokenType>
+        static readonly IReadOnlyDictionary<string, TokenType> _keywords = new Dictionary<string, TokenType>
         {
             { "True", TokenType.KeywordTrue },
             { "False", TokenType.KeywordFalse },
@@ -51,7 +51,7 @@ namespace Chow.Interpreter.Tokens
 
         bool _isLineBegin;
 
-        private char CurrChar => _src[_charIdx];
+        char CurrChar => _src[_charIdx];
 
         #endregion
 
@@ -606,7 +606,7 @@ namespace Chow.Interpreter.Tokens
 
         #region Helper Methods
 
-        private void MovePastNewline()
+        void MovePastNewline()
         {
             switch (CurrChar)
             {
@@ -632,7 +632,7 @@ namespace Chow.Interpreter.Tokens
             _lineNum++;
         }
 
-        private void SkipToFirstLexeme()
+        void SkipToFirstLexeme()
         {
             while (IsCharToScan())
             {
@@ -659,7 +659,7 @@ namespace Chow.Interpreter.Tokens
             }
         }
 
-        private void SkipRemainingLineChars()
+        void SkipRemainingLineChars()
         {
             while (IsCharToScan() && !IsNewlineChar(CurrChar))
             {
@@ -667,7 +667,7 @@ namespace Chow.Interpreter.Tokens
             }
         }
 
-        private void AddEndOfCodeTkn()
+        void AddEndOfCodeTkn()
         {
             AddNewToken(TokenType.EndOfCode, string.Empty, _lineNum);
         }
@@ -676,7 +676,6 @@ namespace Chow.Interpreter.Tokens
         {
             return _brackets.Count == 0;
         }
-
         void AddNewToken(TokenType type, string lexeme, int lineNum, object literal = null)
         {
             _tkns.Add(new Token(type, lexeme, lineNum, literal));

@@ -28,7 +28,7 @@ namespace Chow.Interpreter.ImplementationTests
         static List<Instruction> Instructions(Chunk chunk)
         {
             List<Instruction> result = new List<Instruction>();
-            for (int i = 0; i < chunk.Count; i++)
+            for (int i = 0; i < chunk.InstructionCount; i++)
             {
                 result.Add(chunk[i]);
             }
@@ -37,7 +37,7 @@ namespace Chow.Interpreter.ImplementationTests
 
         static ClosureTemplate FindFirstTemplate(Chunk chunk)
         {
-            for (int i = 0; i < chunk.Count; i++)
+            for (int i = 0; i < chunk.InstructionCount; i++)
             {
                 Instruction op = chunk[i];
                 if (op.Code != OperationCode.PushConstant)
