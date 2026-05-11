@@ -183,6 +183,55 @@ namespace Chow.Interpreter.Values
             _bool = DEFAULT_BOOL_VALUE;
         }
 
+        /// <summary>
+        ///  Makes call to a value that is not a function declared in Chow source code, but instead a client-provided 
+        ///  delegate types that optionally accept <see cref="ChowValue"/> parameters and can return a <see cref="ChowValue"/>.
+        /// </summary>
+        /// <param name="singleArg">The first argument used for the call or null.</param>
+        /// <param name="args">An array of additional arguments for the call or null.</param>
+        /// <returns>The TaggedUnion result of the call. If the interop function returns void, the result is a None value.</returns>
+        /// <exception cref="InvalidOperationException">If the object is not callable.</exception>
+        /// <remarks><paramref name="singleArg"/> is its own parameter so that a new array does not have to be created for a single element.</remarks>
+        public TaggedUnion MakeInteropCall(TaggedUnion? singleArg, TaggedUnion[] args)
+        {
+            if (!IsObject)
+            {
+                // TODO: Replace with TypeErrorException once implemented
+                throw new InvalidOperationException($"'{_type}' object is not callable");
+            }
+
+            switch (_obj)
+            {
+                case Func<ChowValue> funcNoArg:
+                    return ApiValueConverter.ToTaggedUnion(funcNoArg());
+                case Func<ChowValue, ChowValue> funcOneArg:
+                    return ApiValueConverter.ToTaggedUnion(funcOneArg(ApiValueConverter.ToApiClassObj(singleArg.Value)));
+                case Func<ChowValue[], ChowValue> funcManyArgs:
+                    return ApiValueConverter.ToTaggedUnion(funcManyArgs(BuildArgArray(args)));
+                case Action action:
+                    action();
+                    return TaggedUnion.None;
+                case Action<ChowValue> actionOneArg:
+                    actionOneArg(ApiValueConverter.ToApiClassObj(singleArg.Value));
+                    return TaggedUnion.None;
+                case Action<ChowValue[]> actionManyArgs:
+                    actionManyArgs(BuildArgArray(args));
+                    return TaggedUnion.None;
+                default:
+                    throw new InvalidOperationException($"Object of type '{_obj.GetType().Name}' is not callable");
+            }
+        }
+
+        static ChowValue[] BuildArgArray(TaggedUnion[] args)
+        {
+            ChowValue[] result = new ChowValue[args.Length];
+            for (int i = 0; i < args.Length; i++)
+            {
+                result[i] = ApiValueConverter.ToApiClassObj(args[i]);
+            }
+            return result;
+        }
+
         // TODO: Refactor operator overloads to create less new TaggedUnions by using helper functions that only use the
         // values for the type being mutated
 

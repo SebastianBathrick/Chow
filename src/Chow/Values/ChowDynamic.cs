@@ -1,17 +1,15 @@
 namespace Chow.Interpreter.Values
 {
-    internal class ChowDynamic : ChowValue
+    public class ChowDynamic : ChowValue
     {
         private object _val;
+
+        public object Value => _val;
+
 
         public ChowDynamic(object val)
         {
             _val = val;
-        }
-
-        internal object Value
-        {
-            get { return _val; }
         }
 
         public override DataType As<DataType>()

@@ -161,7 +161,7 @@ namespace Chow.Interpreter.Evaluation
                         }
 
                         TaggedUnion exprResult = _valStack.Pop();
-                        _exprHook.Invoke(ApiValueConverter.ToChowValue(exprResult));
+                        _exprHook.Invoke(ApiValueConverter.ToApiClassObj(exprResult));
                         break;
 
                     case OperationCode.ReturnValue:

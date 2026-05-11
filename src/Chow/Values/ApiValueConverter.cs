@@ -39,7 +39,7 @@ namespace Chow.Interpreter.Values
             throw new NotImplementedException();
         }
 
-        public static ChowValue ToChowValue(TaggedUnion taggedUnion)
+        public static ChowValue ToApiClassObj(TaggedUnion taggedUnion)
         {
             switch (taggedUnion.Tag)
             {

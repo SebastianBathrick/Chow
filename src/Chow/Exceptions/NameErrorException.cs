@@ -8,8 +8,7 @@
 
         public string UndefinedName => _undefinedName;
 
-        public NameErrorException(string undefinedName, int lineNumber)
-            : base(EXCEPTION_ALIAS, $"name '{undefinedName}' is not defined", lineNumber)
+        public NameErrorException(string undefinedName, int lineNumber) : base(EXCEPTION_ALIAS, $"name '{undefinedName}' is not defined", lineNumber)
         {
             _undefinedName = undefinedName;
         }

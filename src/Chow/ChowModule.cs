@@ -4,6 +4,8 @@ using Chow.Interpreter.Hooks;
 using Chow.Interpreter.Syntax;
 using Chow.Interpreter.Syntax.Trees;
 using Chow.Interpreter.Tokens;
+using Chow.Interpreter.Values;
+using Chow.Interpreter.Exceptions;
 using System.Collections.Generic;
 
 namespace Chow.Interpreter
@@ -12,6 +14,31 @@ namespace Chow.Interpreter
     {
         List<IExecutionHook> _hooks = new List<IExecutionHook>();
         ChowEnviro _enviro;
+
+        public ChowValue this[string name]
+        {
+            get
+            {
+                if (_enviro != null && _enviro.IsVariableDefined(name))
+                {
+                    TaggedUnion varUnion = _enviro.GetVariableValue(name);
+                    return ApiValueConverter.ToApiClassObj(varUnion);
+                }
+
+                throw new ApiNameErrorException(name);
+            }
+
+            set
+            {
+                if (_enviro == null)
+                {
+                    _enviro = new ChowEnviro();
+                }
+
+                TaggedUnion varUnion = ApiValueConverter.ToTaggedUnion(value);
+                _enviro.AssignVariableValue(name, varUnion);
+            }
+        }
 
         public void Execute(string sourceCode)
         {

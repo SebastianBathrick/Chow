@@ -1,4 +1,5 @@
 using Chow.Interpreter;
+using Chow.Interpreter.Values;
 using Chow.Repl;
 
 const char NEWLINE_CHAR = '\n';
@@ -6,6 +7,12 @@ const string START_INDICATOR = ">>> ";
 const string TRAILING_INDICATOR = "... ";
 
 ChowModule module = new ChowModule();
+module["print"] = new ChowDynamic((ChowValue val) =>
+{
+    Console.WriteLine(val);
+    return ChowValue.None;
+});
+
 module.AddHook(new PrintExprStatementHook());
 
 while (true)
