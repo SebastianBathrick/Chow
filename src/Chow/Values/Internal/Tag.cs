@@ -7,6 +7,8 @@ namespace Chow.Interpreter.Values.Internal
         Int,
         Float,
         Boolean,
-        Object
+        Str,
+        Object,
+        List,
     }
 }

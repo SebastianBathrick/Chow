@@ -24,7 +24,7 @@ namespace Chow.Interpreter.Values.Internal
         public bool IsEmpty => _type == Tag.Empty;
         public bool IsInt => _type == Tag.Int;
         public bool IsFloat => _type == Tag.Float;
-        public bool IsString => _type == Tag.Object && _obj is string;
+        public bool IsString => _type == Tag.Str;
         public bool IsBoolean => _type == Tag.Boolean;
         public bool IsObject => _type == Tag.Object;
 
@@ -40,8 +40,8 @@ namespace Chow.Interpreter.Values.Internal
                         return _int != 0;
                     case Tag.Float:
                         return _float != 0f;
-                    case Tag.Object:
-                        return _obj is string s ? s.Length > 0 : false;
+                    case Tag.Str:
+                        return ((string)_obj).Length > 0;
                     default:
                         return false;
                 }
@@ -143,8 +143,13 @@ namespace Chow.Interpreter.Values.Internal
             _obj = DEFAULT_NULL_VALUE;
         }
 
-        public TaggedUnion(string value) : this((object)value)
+        public TaggedUnion(string value)
         {
+            _obj = value;
+            _type = Tag.Str;
+            _int = DEFAULT_INT_VALUE;
+            _float = DEFAULT_FLOAT_VALUE;
+            _bool = DEFAULT_BOOL_VALUE;
         }
 
         public TaggedUnion(bool value)
@@ -374,11 +379,9 @@ namespace Chow.Interpreter.Values.Internal
                     return left._float == right._float;
                 case Tag.Boolean:
                     return left._bool == right._bool;
+                case Tag.Str:
+                    return (string)left._obj == (string)right._obj;
                 case Tag.Object:
-                    if (left._obj is string ls && right._obj is string rs)
-                    {
-                        return ls == rs;
-                    }
                     return ReferenceEquals(left._obj, right._obj);
                 default:
                     return true;
@@ -471,7 +474,7 @@ namespace Chow.Interpreter.Values.Internal
 
         static void ThrowIfObjectOperands(TaggedUnion left, TaggedUnion right)
         {
-            if (left.IsObject || right.IsObject)
+            if (left.IsObject || right.IsObject || left.IsString || right.IsString)
             {
                 throw new InvalidOperationException("Object operands are not supported for this operation.");
             }
@@ -519,6 +522,7 @@ namespace Chow.Interpreter.Values.Internal
                     return _float.GetHashCode();
                 case Tag.Boolean:
                     return _bool.GetHashCode();
+                case Tag.Str:
                 case Tag.Object:
                     return _obj?.GetHashCode() ?? 0;
                 default:
@@ -543,7 +547,7 @@ namespace Chow.Interpreter.Values.Internal
                 return $"TaggedUnion(type={_type}, value={_bool})";
             }
 
-            if (IsObject)
+            if (IsObject || IsString)
             {
                 return $"TaggedUnion(type={_type}, value={_obj})";
             }
