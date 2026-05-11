@@ -1,0 +1,33 @@
+namespace Chow.Interpreter.Syntax.Trees.Expressions
+{
+    internal class SliceNode : Node
+    {
+        Node _start;
+        Node _stop;
+        Node _step;
+
+        public Node Start => _start;
+        public Node Stop => _stop;
+        public Node Step => _step;
+
+        public SliceNode(Node start, Node stop, Node step, int line) : base(line)
+        {
+            _start = start;
+            _stop = stop;
+            _step = step;
+        }
+
+        public override string ToString()
+        {
+            string startStr = _start == null ? "None" : _start.ToString();
+            string stopStr = _stop == null ? "None" : _stop.ToString();
+            string stepStr = _step == null ? "None" : _step.ToString();
+            return $"[Slice line={LineNum}\n  start={IndentChildren(startStr)}\n  stop={IndentChildren(stopStr)}\n  step={IndentChildren(stepStr)}\n]";
+        }
+
+        static string IndentChildren(string nodeString)
+        {
+            return nodeString.Replace("\n", "\n  ");
+        }
+    }
+}

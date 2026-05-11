@@ -10,11 +10,10 @@ namespace Chow.Interpreter.Syntax
     class Parser
     {
         List<Token> _tkns;
-        List<Node> _funcs;
 
         int _tknIdx;
 
-        private Token CurrTkn => _tkns[_tknIdx];
+        private Token CurrToken => _tkns[_tknIdx];
         private Token PrevTkn => _tkns[_tknIdx - 1];
 
         public Parser(List<Token> tkns)
@@ -27,16 +26,16 @@ namespace Chow.Interpreter.Syntax
         public Node BuildTree()
         {
             List<Node> stmnts = new List<Node>();
-            bool isComplete = CurrTknType(TokenType.EndOfCode);
+            bool isComplete = IsTokenType(TokenType.EndOfCode);
 
             // Even code contains no statements, it is still vali
             while (!isComplete)
             {
                 // The only valid lines start with a newline or the start of a statement
-                if (CurrTknType(TokenType.Newline))
+                if (IsTokenType(TokenType.Newline))
                 {
-                    MoveNextTkn();
-                    isComplete = CurrTknType(TokenType.EndOfCode);
+                    ConsumeToken();
+                    isComplete = IsTokenType(TokenType.EndOfCode);
                     continue;
                 }
 
@@ -44,7 +43,7 @@ namespace Chow.Interpreter.Syntax
                 Node stmnt = ParseStmnts();
                 stmnts.Add(stmnt);
 
-                isComplete = CurrTknType(TokenType.EndOfCode);
+                isComplete = IsTokenType(TokenType.EndOfCode);
 
                 // The last statement does not need a newline. Block statements (def/if) end with a
                 // Dedent that already terminates them, so a trailing Newline after them is optional.
@@ -57,40 +56,40 @@ namespace Chow.Interpreter.Syntax
 
                 if (isBlockStmnt)
                 {
-                    IsCurrTknType(TokenType.Newline);
+                    TryConsumeType(TokenType.Newline);
                 }
                 else
                 {
-                    ConsumeCurrTkn(TokenType.Newline, "Expected newline after statement.");
+                    ConsumeToken(TokenType.Newline, "Expected newline after statement.");
                 }
             }
 
-            ConsumeCurrTkn(TokenType.EndOfCode, "Expected end of code.");
+            ConsumeToken(TokenType.EndOfCode, "Expected end of code.");
             return new TreeRootNode(stmnts);
         }
         Node ParseBlock()
         {
-            ConsumeCurrTkn(TokenType.SymbolBlockColon, "Expected ':' after block header.");
-            ConsumeCurrTkn(TokenType.Newline, "Expected newline after ':'.");
-            Token indentTkn = ConsumeCurrTkn(TokenType.Indent, "Expected indented block body.");
+            ConsumeToken(TokenType.SymbolColon, "Expected ':' after block header.");
+            ConsumeToken(TokenType.Newline, "Expected newline after ':'.");
+            Token indentTkn = ConsumeToken(TokenType.Indent, "Expected indented block body.");
 
             List<Node> stmnts = new List<Node>();
             stmnts.Add(ParseStmnts());
-            IsCurrTknType(TokenType.Newline);
+            TryConsumeType(TokenType.Newline);
 
-            while (!CurrTknType(TokenType.Dedent))
+            while (!IsTokenType(TokenType.Dedent))
             {
-                if (CurrTknType(TokenType.Newline))
+                if (IsTokenType(TokenType.Newline))
                 {
-                    MoveNextTkn();
+                    ConsumeToken();
                     continue;
                 }
 
                 stmnts.Add(ParseStmnts());
-                IsCurrTknType(TokenType.Newline);
+                TryConsumeType(TokenType.Newline);
             }
 
-            ConsumeCurrTkn(TokenType.Dedent, "Expected dedent to close block.");
+            ConsumeToken(TokenType.Dedent, "Expected dedent to close block.");
             return new BlockNode(stmnts, indentTkn.lineNum);
         }
 
@@ -100,17 +99,8 @@ namespace Chow.Interpreter.Syntax
 
         Node ParseStmnts()
         {
-            switch (CurrTkn.type)
+            switch (CurrToken.type)
             {
-                case TokenType.Identifier:
-                    if (PeekTknType(TokenType.SymbolAssign))
-                    {
-                        return ParseVarAssignment();
-                    }
-
-                    // If no assignment operator is after the, then assume the identifier is a primary in an expression
-                    break;
-
                 case TokenType.KeywordReturn:
                     return ParseReturn();
 
@@ -121,38 +111,68 @@ namespace Chow.Interpreter.Syntax
                     return ParseFunction();
             }
 
-            if (IsCurrPrimaryTkn())
+            if (IsPrimaryToken())
             {
-                // These standalone expressions and their result will be discarded OR be sent to a special execution hook
-                return ParseExprStmnt();
+                // Parse expression first; if an '=' follows, convert the LHS into the appropriate assignment node.
+                // Otherwise this is a standalone expression statement (result discarded or routed to hook).
+                int startLine = CurrToken.lineNum;
+                Node lhs = ParseExpr();
+
+                if (TryConsumeType(TokenType.SymbolAssign))
+                {
+                    int eqLine = PrevTkn.lineNum;
+                    Node rhs = ParseExpr();
+                    return MakeAssignFromTarget(lhs, rhs, eqLine);
+                }
+
+                return new ExprStatementNode(lhs, startLine);
             }
 
-            throw new ParserEx("Expected statement.", CurrTkn.lineNum);
+            throw new ParserEx("Expected statement.", CurrToken.lineNum);
+        }
+
+        Node MakeAssignFromTarget(Node target, Node value, int line)
+        {
+            switch (target)
+            {
+                case NameNode nameNode:
+                    return new VarAssignNode(nameNode.Name, value, line);
+
+                case SubscriptNode subscrNode:
+                    return new SubscriptAssignNode(subscrNode.Target, subscrNode.Index, value, line);
+
+                case AttrAccessNode attrNode:
+                    return new AttrAssignNode(attrNode.Target, attrNode.AttrName, value, line);
+
+                default:
+                    throw new ParserEx("Invalid assignment target.", line);
+            }
         }
 
         Node ParseFunction()
         {
-            int lineNum = CurrTkn.lineNum;
+            int lineNum = CurrToken.lineNum;
 
-            ConsumeCurrTkn(TokenType.KeywordDef, "Expected 'def' keyword.");
-            Token nameTkn = ConsumeCurrTkn(TokenType.Identifier, "Expected function name.");
-            ConsumeCurrTkn(TokenType.SymbolLeftParen, "Expected '(' after function name.");
+            ConsumeToken(TokenType.KeywordDef, "Expected 'def' keyword.");
+
+            Token nameTkn = ConsumeToken(TokenType.Identifier, "Expected function name.");
+            ConsumeToken(TokenType.SymbolLeftParen, "Expected '(' after function name.");
 
             List<Node> paramList = new List<Node>();
 
-            if (!CurrTknType(TokenType.SymbolRightParen))
+            if (!IsTokenType(TokenType.SymbolRightParen))
             {
-                Token paramTkn = ConsumeCurrTkn(TokenType.Identifier, "Expected parameter name.");
+                Token paramTkn = ConsumeToken(TokenType.Identifier, "Expected parameter name.");
                 paramList.Add(new NameNode(paramTkn.lexeme, paramTkn.lineNum));
 
-                while (IsCurrTknType(TokenType.SymbolComma))
+                while (TryConsumeType(TokenType.SymbolComma))
                 {
-                    paramTkn = ConsumeCurrTkn(TokenType.Identifier, "Expected parameter name after ','.");
+                    paramTkn = ConsumeToken(TokenType.Identifier, "Expected parameter name after ','.");
                     paramList.Add(new NameNode(paramTkn.lexeme, paramTkn.lineNum));
                 }
             }
 
-            ConsumeCurrTkn(TokenType.SymbolRightParen, "Expected ')' after parameter list.");
+            ConsumeToken(TokenType.SymbolRightParen, "Expected ')' after parameter list.");
 
             Node body = ParseBlock();
             return new FunctionNode(nameTkn.lexeme, paramList, body, lineNum);
@@ -160,20 +180,22 @@ namespace Chow.Interpreter.Syntax
 
         Node ParseIf()
         {
-            int lineNum = CurrTkn.lineNum;
-            ConsumeCurrTkn(TokenType.KeywordIf, "Expected 'if' keyword.");
+            int lineNum = CurrToken.lineNum;
+            ConsumeToken(TokenType.KeywordIf, "Expected 'if' keyword.");
+
             Node expr = ParseExpr();
             Node block = ParseBlock();
             Node branch = ParseBranch();
+            
             return new IfNode(expr, block, branch, lineNum);
         }
 
         Node ParseBranch()
         {
-            if (CurrTknType(TokenType.KeywordElif))
+            if (IsTokenType(TokenType.KeywordElif))
             {
-                int lineNum = CurrTkn.lineNum;
-                MoveNextTkn();
+                int lineNum = CurrToken.lineNum;
+                ConsumeToken();
                 
                 Node expr = ParseExpr();
                 Node block = ParseBlock();
@@ -182,10 +204,10 @@ namespace Chow.Interpreter.Syntax
                 return new BranchStmntNode(expr, block, branch, lineNum);
             }
 
-            if (CurrTknType(TokenType.KeywordElse))
+            if (IsTokenType(TokenType.KeywordElse))
             {
-                int lineNum = CurrTkn.lineNum;
-                MoveNextTkn();
+                int lineNum = CurrToken.lineNum;
+                ConsumeToken();
                 
                 Node block = ParseBlock();
                 return new BranchStmntNode(null, block, null, lineNum);
@@ -194,21 +216,14 @@ namespace Chow.Interpreter.Syntax
             return null;
         }
 
-        Node ParseVarAssignment()
-        {
-            Token nameTkn = ConsumeCurrTkn(TokenType.Identifier, "Expected variable name.");
-            ConsumeCurrTkn(TokenType.SymbolAssign, "Expected '=' after variable name.");
-            Node expression = ParseExpr();
-            return new VarAssignNode(nameTkn.lexeme, expression, nameTkn.lineNum);
-        }
-
         Node ParseReturn()
         {
-            int lineNumber = CurrTkn.lineNum;
-            ConsumeCurrTkn(TokenType.KeywordReturn, "Expected 'return' keyword.");
+            int lineNumber = CurrToken.lineNum;
+            ConsumeToken(TokenType.KeywordReturn, "Expected 'return' keyword.");
+            
             Node expression;
 
-            if (IsCurrPrimaryTkn())
+            if (IsPrimaryToken())
             {
                 expression = ParseExpr();
             }
@@ -223,7 +238,7 @@ namespace Chow.Interpreter.Syntax
 
         Node ParseExprStmnt()
         {
-            int lineNum = CurrTkn.lineNum;
+            int lineNum = CurrToken.lineNum;
             Node expression = ParseExpr();
             return new ExprStatementNode(expression, lineNum);
         }
@@ -241,7 +256,7 @@ namespace Chow.Interpreter.Syntax
         {
             Node l = ParseAnd();
 
-            while (IsCurrTknType(TokenType.KeywordOr))
+            while (TryConsumeType(TokenType.KeywordOr))
             {
                 Token opTkn = PrevTkn;
                 Node r = ParseAnd();
@@ -255,7 +270,7 @@ namespace Chow.Interpreter.Syntax
         {
             Node l = ParseNot();
 
-            while (IsCurrTknType(TokenType.KeywordAnd))
+            while (TryConsumeType(TokenType.KeywordAnd))
             {
                 Token opTkn = PrevTkn;
                 Node r = ParseNot();
@@ -267,7 +282,7 @@ namespace Chow.Interpreter.Syntax
 
         Node ParseNot()
         {
-            if (IsCurrTknType(TokenType.KeywordNot))
+            if (TryConsumeType(TokenType.KeywordNot))
             {
                 Token opTkn = PrevTkn;
                 return new ExprNode(ExprOperator.Not, ParseNot(), opTkn.lineNum);
@@ -281,7 +296,7 @@ namespace Chow.Interpreter.Syntax
             Node l = ParseAdd();
             Node result = null;
 
-            while (IsCurrTknType(
+            while (TryConsumeType(
                 TokenType.SymbolEqualTo,
                 TokenType.SymbolNotEqual,
                 TokenType.SymbolLess,
@@ -312,7 +327,7 @@ namespace Chow.Interpreter.Syntax
         {
             Node l = ParseTerm();
 
-            while (IsCurrTknType(TokenType.SymbolPlus, TokenType.SymbolMinus))
+            while (TryConsumeType(TokenType.SymbolPlus, TokenType.SymbolMinus))
             {
                 Token opTkn = PrevTkn;
                 Node r = ParseTerm();
@@ -326,7 +341,7 @@ namespace Chow.Interpreter.Syntax
         {
             Node l = ParseFactor();
 
-            while (IsCurrTknType(TokenType.SymbolMultiply, TokenType.SymbolDivide, TokenType.SymbolFloorDivide, TokenType.SymbolPercent))
+            while (TryConsumeType(TokenType.SymbolMultiply, TokenType.SymbolDivide, TokenType.SymbolFloorDivide, TokenType.SymbolPercent))
             {
                 Token opTkn = PrevTkn;
                 Node r = ParseFactor();
@@ -338,7 +353,7 @@ namespace Chow.Interpreter.Syntax
 
         Node ParseFactor()
         {
-            if (IsCurrTknType(TokenType.SymbolMinus))
+            if (TryConsumeType(TokenType.SymbolMinus))
             {
                 Token opTkn = PrevTkn;
                 return new ExprNode(ExprOperator.Negate, ParseFactor(), opTkn.lineNum);
@@ -349,9 +364,9 @@ namespace Chow.Interpreter.Syntax
 
         Node ParseExponent()
         {
-            Node l = ParsePrimary();
+            Node l = ParsePostfix();
 
-            if (IsCurrTknType(TokenType.SymbolExponent))
+            if (TryConsumeType(TokenType.SymbolExponent))
             {
                 Token opTkn = PrevTkn;
                 Node r = ParseFactor();
@@ -361,22 +376,126 @@ namespace Chow.Interpreter.Syntax
             return l;
         }
 
-        Node ParseCallArgs(Token nameTkn)
+        Node ParsePostfix()
         {
+            // Accounts for dot notation, indexers, and function calls (e.g. parenthesis, arguments, etc.)
+            Node node = ParsePrimary();
+            bool isDone = false;
+
+            do
+            {
+                switch (CurrToken.type)
+                {
+                    case TokenType.SymbolDot:
+                        node = ParseAttrAccessTail(node);
+                        break;
+                    case TokenType.SymbolLeftBracket:
+                        node = ParseSubscriptTail(node);
+                        break;
+                    case TokenType.SymbolLeftParen:
+                        node = ParseInvokeTail(node);
+                        break;
+                    default:
+                        isDone = true;
+                        break;
+                }
+            }
+            while (!isDone);
+
+            return node;
+        }
+
+        Node ParseAttrAccessTail(Node targ)
+        {
+            Token dotTkn = ConsumeToken(TokenType.SymbolDot, "Expected '.'.");
+            Token nameTkn = ConsumeToken(TokenType.Identifier, "Expected attribute name after '.'.");
+
+            return new AttrAccessNode(targ, nameTkn.lexeme, dotTkn.lineNum);
+        }
+
+        Node ParseSubscriptTail(Node targ)
+        {
+            Token leftBr = ConsumeToken(TokenType.SymbolLeftBracket, "Expected '['.");
+            Node idx = ParseSubscriptBody();
+
+            ConsumeToken(TokenType.SymbolRightBracket, "Expected ']' to close subscript.");
+            
+            return new SubscriptNode(targ, idx, leftBr.lineNum);
+        }
+
+        Node ParseSubscriptBody()
+        {
+            Node start = null;
+            Node stop = null;
+            Node step = null;
+
+            if (!IsTokenType(TokenType.SymbolColon))
+            {
+                Node first = ParseExpr();
+
+                if (!IsTokenType(TokenType.SymbolColon))
+                {
+                    // Plain index a[i]
+                    return first;
+                }
+
+                start = first;
+            }
+
+            // Positioned on first ':'
+            int sliceLine = CurrToken.lineNum;
+            ConsumeToken();
+
+            if (!IsTokenType(TokenType.SymbolColon) && !IsTokenType(TokenType.SymbolRightBracket))
+            {
+                stop = ParseExpr();
+            }
+
+            if (TryConsumeType(TokenType.SymbolColon) && !IsTokenType(TokenType.SymbolRightBracket))
+            {
+                step = ParseExpr();
+            }
+
+            return new SliceNode(start, stop, step, sliceLine);
+        }
+
+        Node ParseInvokeTail(Node callNameNode)
+        {
+            Token leftParen = ConsumeToken(TokenType.SymbolLeftParen, "Expected '('.");
             List<Node> args = new List<Node>();
 
-            if (!CurrTknType(TokenType.SymbolRightParen))
+            if (!IsTokenType(TokenType.SymbolRightParen))
             {
                 args.Add(ParseExpr());
 
-                while (IsCurrTknType(TokenType.SymbolComma))
+                while (TryConsumeType(TokenType.SymbolComma))
                 {
                     args.Add(ParseExpr());
                 }
             }
 
-            ConsumeCurrTkn(TokenType.SymbolRightParen, "Expected ')' after argument list.");
-            return new CallNode(nameTkn.lexeme, args, nameTkn.lineNum);
+            ConsumeToken(TokenType.SymbolRightParen, "Expected ')' after argument list.");
+            return new CallNode(callNameNode, args, leftParen.lineNum);
+        }
+
+        Node ParseListLiteral()
+        {
+            Token leftBr = ConsumeToken(TokenType.SymbolLeftBracket, "Expected '['.");
+            List<Node> elems = new List<Node>();
+
+            if (!IsTokenType(TokenType.SymbolRightBracket))
+            {
+                elems.Add(ParseExpr());
+
+                // Allow trailing comma: `[1, 2,]`
+                while (TryConsumeType(TokenType.SymbolComma) && !IsTokenType(TokenType.SymbolRightBracket))
+                {
+                    elems.Add(ParseExpr());
+                }
+            }
+
+            ConsumeToken(TokenType.SymbolRightBracket, "Expected ']' to close list literal.");
+            return new ListLiteralNode(elems, leftBr.lineNum);
         }
 
         Node ParsePrimary()
@@ -384,46 +503,43 @@ namespace Chow.Interpreter.Syntax
             // Note: After adding a new primary token type, remember to update IsPrimaryTokenType() as well. Not doing
             //       so will cause IsPrimaryTokenType() to return false for the new TokenType, which will break certain
             //       statements that behaviors rely on knowing whether an expression is present or not (e.g. return statements).
-            switch (CurrTkn.type)
+            switch (CurrToken.type)
             {
                 case TokenType.Identifier:
-                    Token idTkn = CurrTkn;
-                    MoveNextTkn();
-
-                    if (IsCurrTknType(TokenType.SymbolLeftParen))
-                    {
-                        return ParseCallArgs(idTkn);
-                    }
-
+                    Token idTkn = CurrToken;
+                    ConsumeToken();
                     return new NameNode(idTkn.lexeme, idTkn.lineNum);
 
                 case TokenType.LiteralInt:
                 case TokenType.LiteralFloat:
                 case TokenType.LiteralStr:
-                    Token numTkn = CurrTkn;
-                    MoveNextTkn();
+                    Token numTkn = CurrToken;
+                    ConsumeToken();
                     return new LiteralNode(numTkn.literal, numTkn.lineNum);
 
                 case TokenType.KeywordNone:
-                    ConsumeCurrTkn(TokenType.KeywordNone);
-                    return new LiteralNode(null, PrevTkn.lineNum);
+                    ConsumeToken(TokenType.KeywordNone);
+                    return new LiteralNode(value: null, PrevTkn.lineNum);
 
                 case TokenType.KeywordTrue:
-                    ConsumeCurrTkn(TokenType.KeywordTrue);
-                    return new LiteralNode(true, PrevTkn.lineNum);
+                    ConsumeToken(TokenType.KeywordTrue);
+                    return new LiteralNode(value: true, PrevTkn.lineNum);
 
                 case TokenType.KeywordFalse:
-                    ConsumeCurrTkn(TokenType.KeywordFalse);
-                    return new LiteralNode(false, PrevTkn.lineNum);
+                    ConsumeToken(TokenType.KeywordFalse);
+                    return new LiteralNode(value: false, PrevTkn.lineNum);
 
                 case TokenType.SymbolLeftParen:
-                    MoveNextTkn();
+                    ConsumeToken();
                     Node inner = ParseExpr();
-                    ConsumeCurrTkn(TokenType.SymbolRightParen);
+                    ConsumeToken(TokenType.SymbolRightParen);
                     return inner;
 
+                case TokenType.SymbolLeftBracket:
+                    return ParseListLiteral();
+
                 default:
-                    throw new ParserEx("Expected expression.", CurrTkn.lineNum);
+                    throw new ParserEx("Expected expression.", CurrToken.lineNum);
             }
         }
 
@@ -431,20 +547,20 @@ namespace Chow.Interpreter.Syntax
 
         #region Token Helpers
 
-        void MoveNextTkn()
+        void ConsumeToken()
         {
-            if (CurrTkn.type != TokenType.EndOfCode)
+            if (CurrToken.type != TokenType.EndOfCode)
             {
                 _tknIdx++;
             }
         }
 
-        bool CurrTknType(TokenType type)
+        bool IsTokenType(TokenType type)
         {
-            return CurrTkn.type == type;
+            return CurrToken.type == type;
         }
 
-        bool PeekTknType(TokenType type, int offset = 1)
+        bool PeekTokenType(TokenType type, int offset = 1)
         {
             int nextIndex = _tknIdx + offset;
 
@@ -452,41 +568,37 @@ namespace Chow.Interpreter.Syntax
             return _tkns[nextIndex].type == type;
         }
 
-        bool IsCurrTknType(params TokenType[] types)
+        bool TryConsumeType(params TokenType[] types)
         {
             foreach (TokenType type in types)
             {
-                if (!CurrTknType(type))
+                if (!IsTokenType(type))
                 {
                     continue;
                 }
 
-                MoveNextTkn();
+                ConsumeToken();
                 return true;
             }
 
             return false;
         }
 
-        Token ConsumeCurrTkn(TokenType type, string message = "")
+        Token ConsumeToken(TokenType type, string message = "")
         {
-            if (!CurrTknType(type))
+            if (!IsTokenType(type))
             {
-                throw new ParserEx(message, CurrTkn.lineNum);
+                throw new ParserEx(message, CurrToken.lineNum);
             }
 
-            Token token = CurrTkn;
-            MoveNextTkn();
+            Token token = CurrToken;
+            ConsumeToken();
             return token;
         }
 
-        #endregion
-
-        #region Helper Methods
-
-        bool IsCurrPrimaryTkn()
+        bool IsPrimaryToken()
         {
-            TokenType type = CurrTkn.type;
+            TokenType type = CurrToken.type;
             return type == TokenType.Identifier ||
                    type == TokenType.LiteralInt ||
                    type == TokenType.LiteralFloat ||
@@ -495,8 +607,15 @@ namespace Chow.Interpreter.Syntax
                    type == TokenType.KeywordTrue ||
                    type == TokenType.KeywordFalse ||
                    type == TokenType.KeywordNot ||
-                   type == TokenType.SymbolLeftParen;
+                   type == TokenType.SymbolLeftParen ||
+                   type == TokenType.SymbolLeftBracket;
         }
+
+        #endregion
+
+        #region Helper Methods
+
+
 
         static ExprOperator MapBinary(TokenType type)
         {

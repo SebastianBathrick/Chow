@@ -397,5 +397,581 @@ namespace Chow.Tests
         {
             Assert.That(() => Parse(source), Throws.TypeOf<ParserEx>());
         }
+
+        // ============================================================================================================
+        // List literals, subscript, slicing, attribute access, invoke, postfix chains, extended assignment
+        // ============================================================================================================
+
+        static Node ParseStmt(string source)
+        {
+            Node root = new Parser(new Scanner(source).ScanTokens()).BuildTree();
+            return ((TreeRootNode)root).Stmnts[0];
+        }
+
+        static ListLiteralNode AssertList(Node node, int expectedCount)
+        {
+            Assert.That(node, Is.InstanceOf<ListLiteralNode>());
+            ListLiteralNode list = (ListLiteralNode)node;
+            Assert.That(list.Elements.Count, Is.EqualTo(expectedCount));
+            return list;
+        }
+
+        static SubscriptNode AssertSubscript(Node node)
+        {
+            Assert.That(node, Is.InstanceOf<SubscriptNode>());
+            return (SubscriptNode)node;
+        }
+
+        static SliceNode AssertSlice(Node node)
+        {
+            Assert.That(node, Is.InstanceOf<SliceNode>());
+            return (SliceNode)node;
+        }
+
+        static AttrAccessNode AssertAttr(Node node, string expectedName)
+        {
+            Assert.That(node, Is.InstanceOf<AttrAccessNode>());
+            AttrAccessNode attr = (AttrAccessNode)node;
+            Assert.That(attr.AttrName, Is.EqualTo(expectedName));
+            return attr;
+        }
+
+        static CallNode AssertCall(Node node, int expectedArgCount)
+        {
+            Assert.That(node, Is.InstanceOf<CallNode>());
+            CallNode call = (CallNode)node;
+            Assert.That(call.Args.Count, Is.EqualTo(expectedArgCount));
+            return call;
+        }
+
+        static NameNode AssertName(Node node, string expectedName)
+        {
+            Assert.That(node, Is.InstanceOf<NameNode>());
+            NameNode name = (NameNode)node;
+            Assert.That(name.Name, Is.EqualTo(expectedName));
+            return name;
+        }
+
+        // ------------------------------------------------------------------------------------------------------------
+        // List literals
+        // ------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void BuildSyntaxTree_EmptyList_ReturnsListLiteralWithZeroElements()
+        {
+            Node result = Parse("[]");
+            AssertList(result, 0);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_SingleElementList_ReturnsListLiteral()
+        {
+            Node result = Parse("[1]");
+            ListLiteralNode list = AssertList(result, 1);
+            AssertLiteral(list.Elements[0], 1, LiteralDataType.Integer);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_MultiElementList_ReturnsListLiteralPreservingOrder()
+        {
+            Node result = Parse("[1, 2, 3]");
+            ListLiteralNode list = AssertList(result, 3);
+            AssertLiteral(list.Elements[0], 1, LiteralDataType.Integer);
+            AssertLiteral(list.Elements[1], 2, LiteralDataType.Integer);
+            AssertLiteral(list.Elements[2], 3, LiteralDataType.Integer);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_TrailingComma_IsAllowed()
+        {
+            Node result = Parse("[1, 2,]");
+            ListLiteralNode list = AssertList(result, 2);
+            AssertLiteral(list.Elements[0], 1, LiteralDataType.Integer);
+            AssertLiteral(list.Elements[1], 2, LiteralDataType.Integer);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_NestedList_ReturnsNestedListLiterals()
+        {
+            Node result = Parse("[[1, 2], [3]]");
+            ListLiteralNode outer = AssertList(result, 2);
+            ListLiteralNode inner0 = AssertList(outer.Elements[0], 2);
+            AssertLiteral(inner0.Elements[0], 1, LiteralDataType.Integer);
+            AssertLiteral(inner0.Elements[1], 2, LiteralDataType.Integer);
+            ListLiteralNode inner1 = AssertList(outer.Elements[1], 1);
+            AssertLiteral(inner1.Elements[0], 3, LiteralDataType.Integer);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_MultiLineList_ParsesAcrossNewlines()
+        {
+            Node result = Parse("[\n  1,\n  2\n]");
+            AssertList(result, 2);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_ListWithExpressionElements_ParsesEachAsFullExpression()
+        {
+            Node result = Parse("[1 + 2, a * b]");
+            ListLiteralNode list = AssertList(result, 2);
+            AssertBinary(list.Elements[0], ExprOperator.Add);
+            AssertBinary(list.Elements[1], ExprOperator.Multiply);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_List_AssignsLeftBracketLineNumber()
+        {
+            // Token stream: x = <newline> [ 1 ]  with `[` on line 3
+            Node result = ParseTokens(
+                Token(TokenType.SymbolLeftBracket, "[", 3),
+                Token(TokenType.LiteralInt, "1", 3, 1),
+                Token(TokenType.SymbolRightBracket, "]", 3),
+                Token(TokenType.EndOfCode, string.Empty, 3));
+            Assert.That(result.LineNum, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void BuildSyntaxTree_UnclosedList_ThrowsScannerException()
+        {
+            // Scanner enforces bracket balance at EOF before the parser runs.
+            Assert.That(() => Parse("[1, 2"), Throws.TypeOf<ScannerEx>());
+        }
+
+        [Test]
+        public void BuildSyntaxTree_LeadingCommaList_ThrowsParserException()
+        {
+            Assert.That(() => Parse("[,]"), Throws.TypeOf<ParserEx>());
+        }
+
+        // ------------------------------------------------------------------------------------------------------------
+        // Subscript (index form)
+        // ------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void BuildSyntaxTree_SimpleSubscript_ReturnsSubscriptNode()
+        {
+            Node result = Parse("a[0]");
+            SubscriptNode sub = AssertSubscript(result);
+            AssertName(sub.Target, "a");
+            AssertLiteral(sub.Index, 0, LiteralDataType.Integer);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_SubscriptWithExpressionIndex_ParsesIndexAsExpression()
+        {
+            Node result = Parse("a[i + 1]");
+            SubscriptNode sub = AssertSubscript(result);
+            AssertBinary(sub.Index, ExprOperator.Add);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_ChainedSubscript_NestsLeftAssociatively()
+        {
+            Node result = Parse("arr[0][1]");
+            SubscriptNode outer = AssertSubscript(result);
+            SubscriptNode inner = AssertSubscript(outer.Target);
+            AssertName(inner.Target, "arr");
+            AssertLiteral(inner.Index, 0, LiteralDataType.Integer);
+            AssertLiteral(outer.Index, 1, LiteralDataType.Integer);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_NestedIndex_ParsesInnerSubscriptAsIndex()
+        {
+            Node result = Parse("a[b[c]]");
+            SubscriptNode outer = AssertSubscript(result);
+            SubscriptNode inner = AssertSubscript(outer.Index);
+            AssertName(inner.Target, "b");
+            AssertName(inner.Index, "c");
+        }
+
+        [Test]
+        public void BuildSyntaxTree_UnclosedSubscript_ThrowsScannerException()
+        {
+            Assert.That(() => Parse("a[0"), Throws.TypeOf<ScannerEx>());
+        }
+
+        [Test]
+        public void BuildSyntaxTree_EmptySubscript_ThrowsParserException()
+        {
+            Assert.That(() => Parse("a[]"), Throws.TypeOf<ParserEx>());
+        }
+
+        // ------------------------------------------------------------------------------------------------------------
+        // Slicing
+        // ------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void BuildSyntaxTree_TwoPartSlice_PopulatesStartAndStop()
+        {
+            Node result = Parse("a[1:5]");
+            SubscriptNode sub = AssertSubscript(result);
+            SliceNode slice = AssertSlice(sub.Index);
+            AssertLiteral(slice.Start, 1, LiteralDataType.Integer);
+            AssertLiteral(slice.Stop, 5, LiteralDataType.Integer);
+            Assert.That(slice.Step, Is.Null);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_ThreePartSlice_PopulatesStartStopAndStep()
+        {
+            Node result = Parse("a[1:5:2]");
+            SubscriptNode sub = AssertSubscript(result);
+            SliceNode slice = AssertSlice(sub.Index);
+            AssertLiteral(slice.Start, 1, LiteralDataType.Integer);
+            AssertLiteral(slice.Stop, 5, LiteralDataType.Integer);
+            AssertLiteral(slice.Step, 2, LiteralDataType.Integer);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_SliceOmitStart_LeavesStartNull()
+        {
+            Node result = Parse("a[:5]");
+            SliceNode slice = AssertSlice(AssertSubscript(result).Index);
+            Assert.That(slice.Start, Is.Null);
+            AssertLiteral(slice.Stop, 5, LiteralDataType.Integer);
+            Assert.That(slice.Step, Is.Null);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_SliceOmitStop_LeavesStopNull()
+        {
+            Node result = Parse("a[1:]");
+            SliceNode slice = AssertSlice(AssertSubscript(result).Index);
+            AssertLiteral(slice.Start, 1, LiteralDataType.Integer);
+            Assert.That(slice.Stop, Is.Null);
+            Assert.That(slice.Step, Is.Null);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_SliceStepOnly_LeavesStartAndStopNull()
+        {
+            Node result = Parse("a[::2]");
+            SliceNode slice = AssertSlice(AssertSubscript(result).Index);
+            Assert.That(slice.Start, Is.Null);
+            Assert.That(slice.Stop, Is.Null);
+            AssertLiteral(slice.Step, 2, LiteralDataType.Integer);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_FullSliceColon_LeavesAllPartsNull()
+        {
+            Node result = Parse("a[:]");
+            SliceNode slice = AssertSlice(AssertSubscript(result).Index);
+            Assert.That(slice.Start, Is.Null);
+            Assert.That(slice.Stop, Is.Null);
+            Assert.That(slice.Step, Is.Null);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_SliceStartOnlyDoubleColon_LeavesStopAndStepNull()
+        {
+            Node result = Parse("a[1::]");
+            SliceNode slice = AssertSlice(AssertSubscript(result).Index);
+            AssertLiteral(slice.Start, 1, LiteralDataType.Integer);
+            Assert.That(slice.Stop, Is.Null);
+            Assert.That(slice.Step, Is.Null);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_DoubleColonNoParts_LeavesAllPartsNull()
+        {
+            Node result = Parse("a[::]");
+            SliceNode slice = AssertSlice(AssertSubscript(result).Index);
+            Assert.That(slice.Start, Is.Null);
+            Assert.That(slice.Stop, Is.Null);
+            Assert.That(slice.Step, Is.Null);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_SliceWithExpressionParts_ParsesEachAsExpression()
+        {
+            Node result = Parse("a[i + 1:j - 1:k * 2]");
+            SliceNode slice = AssertSlice(AssertSubscript(result).Index);
+            AssertBinary(slice.Start, ExprOperator.Add);
+            AssertBinary(slice.Stop, ExprOperator.Subtract);
+            AssertBinary(slice.Step, ExprOperator.Multiply);
+        }
+
+        // ------------------------------------------------------------------------------------------------------------
+        // Attribute access
+        // ------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void BuildSyntaxTree_SimpleAttribute_ReturnsAttrAccessNode()
+        {
+            Node result = Parse("a.b");
+            AttrAccessNode attr = AssertAttr(result, "b");
+            AssertName(attr.Target, "a");
+        }
+
+        [Test]
+        public void BuildSyntaxTree_ChainedAttribute_NestsLeftAssociatively()
+        {
+            Node result = Parse("a.b.c");
+            AttrAccessNode outer = AssertAttr(result, "c");
+            AttrAccessNode inner = AssertAttr(outer.Target, "b");
+            AssertName(inner.Target, "a");
+        }
+
+        [Test]
+        public void BuildSyntaxTree_AttributeOnParenthesizedExpression_TargetIsExpression()
+        {
+            Node result = Parse("(1 + 2).x");
+            AttrAccessNode attr = AssertAttr(result, "x");
+            AssertBinary(attr.Target, ExprOperator.Add);
+        }
+
+        [TestCase("a.")]
+        [TestCase("a.1")]
+        public void BuildSyntaxTree_MalformedAttribute_ThrowsParserException(string source)
+        {
+            Assert.That(() => Parse(source), Throws.TypeOf<ParserEx>());
+        }
+
+        // ------------------------------------------------------------------------------------------------------------
+        // Method calls and general invoke
+        // ------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void BuildSyntaxTree_MethodCallNoArgs_BuildsCallOverAttrAccess()
+        {
+            Node result = Parse("a.b()");
+            CallNode call = AssertCall(result, 0);
+            AttrAccessNode attr = AssertAttr(call.CallName, "b");
+            AssertName(attr.Target, "a");
+        }
+
+        [Test]
+        public void BuildSyntaxTree_MethodCallWithArgs_PreservesArgsInOrder()
+        {
+            Node result = Parse("a.b(1, 2)");
+            CallNode call = AssertCall(result, 2);
+            AssertLiteral(call.Args[0], 1, LiteralDataType.Integer);
+            AssertLiteral(call.Args[1], 2, LiteralDataType.Integer);
+        }
+
+        [Test]
+        public void BuildSyntaxTree_CallOnSubscript_CalleeIsSubscriptNode()
+        {
+            Node result = Parse("arr[0](x)");
+            CallNode call = AssertCall(result, 1);
+            SubscriptNode sub = AssertSubscript(call.CallName);
+            AssertName(sub.Target, "arr");
+        }
+
+        [Test]
+        public void BuildSyntaxTree_CallOnParenthesizedName_CalleeIsNameNode()
+        {
+            Node result = Parse("(f)()");
+            CallNode call = AssertCall(result, 0);
+            AssertName(call.CallName, "f");
+        }
+
+        [Test]
+        public void BuildSyntaxTree_BareIdentifierCall_CalleeIsNameNode()
+        {
+            Node result = Parse("f(x)");
+            CallNode call = AssertCall(result, 1);
+            AssertName(call.CallName, "f");
+        }
+
+        [Test]
+        public void BuildSyntaxTree_DoubleCall_OuterCalleeIsCallNode()
+        {
+            Node result = Parse("f(x)(y)");
+            CallNode outer = AssertCall(result, 1);
+            Assert.That(outer.CallName, Is.InstanceOf<CallNode>());
+        }
+
+        // ------------------------------------------------------------------------------------------------------------
+        // Mixed postfix chains
+        // ------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void BuildSyntaxTree_AttrThenSubscript_SubscriptWrapsAttrAccess()
+        {
+            Node result = Parse("a.b[0]");
+            SubscriptNode sub = AssertSubscript(result);
+            AttrAccessNode attr = AssertAttr(sub.Target, "b");
+            AssertName(attr.Target, "a");
+        }
+
+        [Test]
+        public void BuildSyntaxTree_SubscriptThenAttr_AttrAccessWrapsSubscript()
+        {
+            Node result = Parse("a[0].b");
+            AttrAccessNode attr = AssertAttr(result, "b");
+            SubscriptNode sub = AssertSubscript(attr.Target);
+            AssertName(sub.Target, "a");
+        }
+
+        [Test]
+        public void BuildSyntaxTree_DeepMixedChain_NestsInOrderEncountered()
+        {
+            // a.b[0].c(x)[1].d
+            Node result = Parse("a.b[0].c(x)[1].d");
+
+            AttrAccessNode level1 = AssertAttr(result, "d");
+            SubscriptNode level2 = AssertSubscript(level1.Target);
+            AssertLiteral(level2.Index, 1, LiteralDataType.Integer);
+            CallNode level3 = AssertCall(level2.Target, 1);
+            AttrAccessNode level4 = AssertAttr(level3.CallName, "c");
+            SubscriptNode level5 = AssertSubscript(level4.Target);
+            AssertLiteral(level5.Index, 0, LiteralDataType.Integer);
+            AttrAccessNode level6 = AssertAttr(level5.Target, "b");
+            AssertName(level6.Target, "a");
+        }
+
+        [Test]
+        public void BuildSyntaxTree_CallThenAttr_AttrAccessWrapsCallNode()
+        {
+            Node result = Parse("a().b");
+            AttrAccessNode attr = AssertAttr(result, "b");
+            Assert.That(attr.Target, Is.InstanceOf<CallNode>());
+        }
+
+        // ------------------------------------------------------------------------------------------------------------
+        // Extended assignment LHS
+        // ------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void ParseStmt_SimpleNameAssignment_StillProducesVarAssignNode()
+        {
+            Node stmt = ParseStmt("a = 1");
+            Assert.That(stmt, Is.InstanceOf<VarAssignNode>());
+            VarAssignNode var = (VarAssignNode)stmt;
+            Assert.That(var.Name, Is.EqualTo("a"));
+            AssertLiteral(var.Expression, 1, LiteralDataType.Integer);
+        }
+
+        [Test]
+        public void ParseStmt_SubscriptAssignment_ProducesSubscriptAssignNode()
+        {
+            Node stmt = ParseStmt("a[0] = x");
+            Assert.That(stmt, Is.InstanceOf<SubscriptAssignNode>());
+            SubscriptAssignNode assign = (SubscriptAssignNode)stmt;
+            AssertName(assign.Target, "a");
+            AssertLiteral(assign.Index, 0, LiteralDataType.Integer);
+            AssertName(assign.Expression, "x");
+        }
+
+        [Test]
+        public void ParseStmt_SliceAssignment_IndexIsSliceNode()
+        {
+            Node stmt = ParseStmt("a[1:5] = x");
+            Assert.That(stmt, Is.InstanceOf<SubscriptAssignNode>());
+            SubscriptAssignNode assign = (SubscriptAssignNode)stmt;
+            AssertSlice(assign.Index);
+        }
+
+        [Test]
+        public void ParseStmt_FullSliceAssignment_IndexIsEmptySliceNode()
+        {
+            Node stmt = ParseStmt("a[:] = x");
+            SubscriptAssignNode assign = (SubscriptAssignNode)stmt;
+            SliceNode slice = AssertSlice(assign.Index);
+            Assert.That(slice.Start, Is.Null);
+            Assert.That(slice.Stop, Is.Null);
+            Assert.That(slice.Step, Is.Null);
+        }
+
+        [Test]
+        public void ParseStmt_AttributeAssignment_ProducesAttrAssignNode()
+        {
+            Node stmt = ParseStmt("a.b = x");
+            Assert.That(stmt, Is.InstanceOf<AttrAssignNode>());
+            AttrAssignNode assign = (AttrAssignNode)stmt;
+            AssertName(assign.Target, "a");
+            Assert.That(assign.AttrName, Is.EqualTo("b"));
+            AssertName(assign.Expression, "x");
+        }
+
+        [Test]
+        public void ParseStmt_ChainedAttrThenSubscriptAssign_SubscriptAssignWrapsAttrAccess()
+        {
+            Node stmt = ParseStmt("a.b[0] = x");
+            SubscriptAssignNode assign = (SubscriptAssignNode)stmt;
+            AssertAttr(assign.Target, "b");
+        }
+
+        [Test]
+        public void ParseStmt_ChainedAttrAssign_AttrAssignWrapsAttrAccess()
+        {
+            Node stmt = ParseStmt("a.b.c = x");
+            AttrAssignNode assign = (AttrAssignNode)stmt;
+            Assert.That(assign.AttrName, Is.EqualTo("c"));
+            AssertAttr(assign.Target, "b");
+        }
+
+        [Test]
+        public void ParseStmt_SubscriptThenAttrAssign_AttrAssignWrapsSubscript()
+        {
+            Node stmt = ParseStmt("a[0].b = x");
+            AttrAssignNode assign = (AttrAssignNode)stmt;
+            Assert.That(assign.AttrName, Is.EqualTo("b"));
+            AssertSubscript(assign.Target);
+        }
+
+        [TestCase("1 = x")]
+        [TestCase("(a + b) = x")]
+        [TestCase("f() = x")]
+        [TestCase("a.b. = x")]
+        [TestCase("a[] = x")]
+        public void ParseStmt_InvalidAssignmentTarget_ThrowsParserException(string source)
+        {
+            Assert.That(() => ParseStmt(source), Throws.TypeOf<ParserEx>());
+        }
+
+        // ------------------------------------------------------------------------------------------------------------
+        // Standalone expression statements
+        // ------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void ParseStmt_StandaloneSubscript_WrapsInExprStatementNode()
+        {
+            Node stmt = ParseStmt("a[0]");
+            Assert.That(stmt, Is.InstanceOf<ExprStatementNode>());
+            ExprStatementNode exprStmt = (ExprStatementNode)stmt;
+            AssertSubscript(exprStmt.Expression);
+        }
+
+        [Test]
+        public void ParseStmt_StandaloneMethodCall_WrapsInvokeInExprStatementNode()
+        {
+            Node stmt = ParseStmt("a.b()");
+            Assert.That(stmt, Is.InstanceOf<ExprStatementNode>());
+            ExprStatementNode exprStmt = (ExprStatementNode)stmt;
+            AssertCall(exprStmt.Expression, 0);
+        }
+
+        // ------------------------------------------------------------------------------------------------------------
+        // ToString smoke
+        // ------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void ToString_NewNodes_IncludeLineNumber()
+        {
+            Node list = Parse("[1]");
+            Assert.That(list.ToString(), Does.Contain("line=1"));
+
+            Node sub = Parse("a[0]");
+            Assert.That(sub.ToString(), Does.Contain("Subscript"));
+
+            Node slice = Parse("a[1:5]");
+            Assert.That(slice.ToString(), Does.Contain("Slice"));
+
+            Node attr = Parse("a.b");
+            Assert.That(attr.ToString(), Does.Contain("AttrAccess"));
+
+            Node call = Parse("a.b()");
+            Assert.That(call.ToString(), Does.Contain("AttrAccess"));
+
+            Node subAssign = ParseStmt("a[0] = x");
+            Assert.That(subAssign.ToString(), Does.Contain("SubscriptAssign"));
+
+            Node attrAssign = ParseStmt("a.b = x");
+            Assert.That(attrAssign.ToString(), Does.Contain("AttrAssign"));
+        }
     }
 }

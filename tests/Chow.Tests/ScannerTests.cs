@@ -237,7 +237,7 @@ namespace Chow.Tests
 
         [TestCase(",", TokenType.SymbolComma)]
         [TestCase(".", TokenType.SymbolDot)]
-        [TestCase(":", TokenType.SymbolBlockColon)]
+        [TestCase(":", TokenType.SymbolColon)]
         [TestCase("+", TokenType.SymbolPlus)]
         [TestCase("-", TokenType.SymbolMinus)]
         [TestCase("*", TokenType.SymbolMultiply)]
@@ -293,7 +293,7 @@ namespace Chow.Tests
                 TokenType.SymbolRightCurly,
                 TokenType.SymbolComma,
                 TokenType.SymbolDot,
-                TokenType.SymbolBlockColon,
+                TokenType.SymbolColon,
                 TokenType.SymbolPlus,
                 TokenType.SymbolMinus,
                 TokenType.SymbolMultiply,

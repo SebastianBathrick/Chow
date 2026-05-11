@@ -284,7 +284,7 @@ namespace Chow.Interpreter.Tokens
 
                 case ':':
                     {
-                        tknType = TokenType.SymbolBlockColon;
+                        tknType = TokenType.SymbolColon;
                         break;
                     }
 

@@ -4,22 +4,22 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
 {
     internal class CallNode : Node
     {
-        string _name;
+        Node _callName;
         List<Node> _args;
 
-        public string Name => _name;
+        public Node CallName => _callName;
 
         public List<Node> Args => _args;
 
-        public CallNode(string name, List<Node> args, int line) : base(line)
+        public CallNode(Node callName, List<Node> args, int line) : base(line)
         {
-            _name = name;
+            _callName = callName;
             _args = args;
         }
 
         public override string ToString()
         {
-            return $"{_name}({string.Join(", ", _args)})";
+            return $"{_callName}({string.Join(", ", _args)})";
         }
     }
 }

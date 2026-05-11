@@ -30,7 +30,7 @@ namespace Chow.Interpreter
         SymbolDot,
 
         /// <summary>Colon punctuation, commonly used before an indented block: <c>:</c>.</summary>
-        SymbolBlockColon,
+        SymbolColon,
 
         /// <summary>Addition operator: <c>+</c>.</summary>
         SymbolPlus,

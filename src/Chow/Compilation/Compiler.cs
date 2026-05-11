@@ -73,8 +73,7 @@ namespace Chow.Interpreter.Compilation
 
         void CompileCall(CallNode callNode)
         {
-            int nameOperand = _chunk.RegisterVariableName(callNode.Name);
-            _chunk.AddInstr(OperationCode.PushVariableValue, callNode.LineNum, nameOperand);
+            CompileTargetNode(callNode.CallName);
 
             foreach (Node arg in callNode.Args)
             {
