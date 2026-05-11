@@ -391,7 +391,7 @@ namespace Chow.Interpreter.Values.Internal
                     return;
                 case Tag.Float:
                     // Python prints `1.0`, not `1`. C#'s default float.ToString() may drop the trailing zero.
-                    float f = value.FloatValue;
+                    double f = value.FloatValue;
                     string fs = f.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
                     if (fs.IndexOfAny(new[] { '.', 'e', 'E', 'n', 'N', 'i', 'I' }) < 0)
                     {

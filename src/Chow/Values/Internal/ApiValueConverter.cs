@@ -46,9 +46,9 @@ namespace Chow.Interpreter.Values.Internal
                 return new TaggedUnion(value.As<int>());
             }
 
-            if (value.Is<float>())
+            if (value.Is<double>())
             {
-                return new TaggedUnion(value.As<float>());
+                return new TaggedUnion(value.As<double>());
             }
 
             throw new NotImplementedException();

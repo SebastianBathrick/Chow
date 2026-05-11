@@ -16,9 +16,9 @@ namespace Chow.Interpreter.Values
                 return (DataType)(object)_val;
             }
 
-            if (typeof(DataType) == typeof(float))
+            if (typeof(DataType) == typeof(double))
             {
-                return (DataType)(object)(float)_val;
+                return (DataType)(object)(double)_val;
             }
 
             if (typeof(DataType) == typeof(bool))

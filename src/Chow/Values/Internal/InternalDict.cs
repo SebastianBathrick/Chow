@@ -253,7 +253,7 @@ namespace Chow.Interpreter.Values.Internal
                     sb.Append(value.IntegerValue);
                     return;
                 case Tag.Float:
-                    float f = value.FloatValue;
+                    double f = value.FloatValue;
                     string fs = f.ToString("R", CultureInfo.InvariantCulture);
                     if (fs.IndexOfAny(new[] { '.', 'e', 'E', 'n', 'N', 'i', 'I' }) < 0)
                     {

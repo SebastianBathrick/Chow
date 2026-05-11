@@ -184,7 +184,7 @@ namespace Chow.Tests
             var tokens = Tokenize("3.14");
 
             Assert.That(tokens, Has.Count.EqualTo(2));
-            AssertToken(tokens[0], TokenType.LiteralFloat, "3.14", 1, 3.14f);
+            AssertToken(tokens[0], TokenType.LiteralFloat, "3.14", 1, 3.14);
             AssertToken(tokens[1], TokenType.EndOfCode, "", 1, null);
         }
 
@@ -193,7 +193,7 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("0.0");
 
-            AssertToken(tokens[0], TokenType.LiteralFloat, "0.0", 1, 0.0f);
+            AssertToken(tokens[0], TokenType.LiteralFloat, "0.0", 1, 0.0);
         }
 
         [Test]
@@ -201,7 +201,7 @@ namespace Chow.Tests
         {
             var tokens = Tokenize("3.");
 
-            AssertToken(tokens[0], TokenType.LiteralFloat, "3.", 1, 3.0f);
+            AssertToken(tokens[0], TokenType.LiteralFloat, "3.", 1, 3.0);
         }
 
         [Test]
@@ -214,11 +214,11 @@ namespace Chow.Tests
         }
 
         [Test]
-        public void ScanTokens_FloatLiteralIsBoxedSingle()
+        public void ScanTokens_FloatLiteralIsBoxedDouble()
         {
             var tokens = Tokenize("3.14");
 
-            Assert.That(tokens[0].literal, Is.TypeOf<float>());
+            Assert.That(tokens[0].literal, Is.TypeOf<double>());
         }
 
         [Test]

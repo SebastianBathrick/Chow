@@ -131,7 +131,7 @@ namespace Chow.Tests
             Assert.Multiple(() =>
             {
                 Assert.That(result, Is.TypeOf<ChowFloat>());
-                Assert.That(result.As<float>(), Is.EqualTo(3.25f));
+                Assert.That(result.As<double>(), Is.EqualTo(3.25));
             });
         }
 
@@ -202,9 +202,9 @@ namespace Chow.Tests
         public void RoundTrip_Float_PreservesValue()
         {
             var roundTripped = ApiValueConverter.ToApiClassObj(
-                ApiValueConverter.ToTaggedUnion(new ChowFloat(2.5f)));
+                ApiValueConverter.ToTaggedUnion(new ChowFloat(2.5)));
 
-            Assert.That(roundTripped.As<float>(), Is.EqualTo(2.5f));
+            Assert.That(roundTripped.As<double>(), Is.EqualTo(2.5));
         }
 
         [Test]

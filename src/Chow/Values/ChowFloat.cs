@@ -2,16 +2,16 @@ namespace Chow.Interpreter.Values
 {
     public class ChowFloat : ChowValue
     {
-        private float _val;
+        private double _val;
 
-        public ChowFloat(float val)
+        public ChowFloat(double val)
         {
             _val = val;
         }
 
         public override DataType As<DataType>()
         {
-            if (typeof(DataType) == typeof(float))
+            if (typeof(DataType) == typeof(double))
             {
                 return (DataType)(object)_val;
             }
@@ -23,7 +23,7 @@ namespace Chow.Interpreter.Values
 
             if (typeof(DataType) == typeof(bool))
             {
-                return (DataType)(object)(_val != 0f);
+                return (DataType)(object)(_val != 0.0);
             }
 
             throw new InvalidCastException(GetType(), typeof(DataType), this);
@@ -31,7 +31,7 @@ namespace Chow.Interpreter.Values
 
         public override bool Is<DataType>()
         {
-            return typeof(DataType) == typeof(float);
+            return typeof(DataType) == typeof(double);
         }
 
         public override string ToString() => _val.ToString();

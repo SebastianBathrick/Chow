@@ -486,7 +486,7 @@ namespace Chow.Interpreter.Tokens
             {
                 if (isFloat)
                 {
-                    literal = float.Parse(lexeme, CultureInfo.InvariantCulture);
+                    literal = double.Parse(lexeme, CultureInfo.InvariantCulture);
                 }
                 else
                 {

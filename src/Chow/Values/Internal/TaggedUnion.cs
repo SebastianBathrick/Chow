@@ -4,7 +4,7 @@ namespace Chow.Interpreter.Values.Internal
 {
     struct TaggedUnion
     {
-        const float DEFAULT_FLOAT_VALUE = 0.0f;
+        const double DEFAULT_FLOAT_VALUE = 0.0;
         const int DEFAULT_INT_VALUE = 0;
         const bool DEFAULT_BOOL_VALUE = false;
         const object DEFAULT_NULL_VALUE = null;
@@ -12,7 +12,7 @@ namespace Chow.Interpreter.Values.Internal
         // TODO: Test whether using explicit struct layouts meaningly affects performance
         Tag _type;
         int _int;
-        float _float;
+        double _float;
         bool _bool;
         object _obj;
 
@@ -41,7 +41,7 @@ namespace Chow.Interpreter.Values.Internal
                     case Tag.Int:
                         return _int != 0;
                     case Tag.Float:
-                        return _float != 0f;
+                        return _float != 0.0;
                     case Tag.Str:
                         return ((string)_obj).Length > 0;
                     case Tag.List:
@@ -68,7 +68,7 @@ namespace Chow.Interpreter.Values.Internal
             }
         }
 
-        public float FloatValue
+        public double FloatValue
         {
             get
             {
@@ -155,7 +155,7 @@ namespace Chow.Interpreter.Values.Internal
             _obj = DEFAULT_NULL_VALUE;
         }
 
-        public TaggedUnion(float value)
+        public TaggedUnion(double value)
         {
             _float = value;
             _type = Tag.Float;
@@ -368,7 +368,7 @@ namespace Chow.Interpreter.Values.Internal
             // Python semantics: `/` always produces a float, even for int / int.
             if (BothAreBoolean(left, right))
             {
-                return new TaggedUnion((float)BoolAsInt(left) / BoolAsInt(right));
+                return new TaggedUnion((double)BoolAsInt(left) / BoolAsInt(right));
             }
             return new TaggedUnion(AsFloat(left) / AsFloat(right));
         }
@@ -387,8 +387,8 @@ namespace Chow.Interpreter.Values.Internal
             }
             if (EitherIsFloat(left, right))
             {
-                float l = AsFloat(left);
-                float r = AsFloat(right);
+                double l = AsFloat(left);
+                double r = AsFloat(right);
                 return new TaggedUnion(((l % r) + r) % r);
             }
 
@@ -409,7 +409,7 @@ namespace Chow.Interpreter.Values.Internal
             }
             if (EitherIsFloat(left, right))
             {
-                return new TaggedUnion((float)Math.Floor(AsFloat(left) / (double)AsFloat(right)));
+                return new TaggedUnion(Math.Floor(AsFloat(left) / AsFloat(right)));
             }
 
             return new TaggedUnion((int)Math.Floor(left.IntegerValue / (double)right.IntegerValue));
@@ -427,13 +427,13 @@ namespace Chow.Interpreter.Values.Internal
             }
             if (EitherIsFloat(left, right))
             {
-                return new TaggedUnion((float)Math.Pow(AsFloat(left), AsFloat(right)));
+                return new TaggedUnion(Math.Pow(AsFloat(left), AsFloat(right)));
             }
 
             int exp = right.IntegerValue;
             if (exp < 0)
             {
-                return new TaggedUnion((float)Math.Pow(left.IntegerValue, exp));
+                return new TaggedUnion(Math.Pow(left.IntegerValue, exp));
             }
 
             return new TaggedUnion((int)Math.Pow(left.IntegerValue, exp));
@@ -585,7 +585,7 @@ namespace Chow.Interpreter.Values.Internal
             }
         }
 
-        static float AsFloat(TaggedUnion union)
+        static double AsFloat(TaggedUnion union)
         {
             if (union.IsFloat)
             {

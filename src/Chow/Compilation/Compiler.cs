@@ -625,7 +625,7 @@ namespace Chow.Interpreter.Compilation
                     break;
 
                 case LiteralDataType.Float:
-                    if (literalNode.Value is float floatVal)
+                    if (literalNode.Value is double floatVal)
                     {
                         constUnion = new TaggedUnion(floatVal);
                     }

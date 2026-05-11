@@ -20,7 +20,7 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
             {
                 _type = LiteralDataType.Integer;
             }
-            else if (value is float)
+            else if (value is double)
             {
                 _type = LiteralDataType.Float;
             }

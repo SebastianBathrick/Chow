@@ -87,7 +87,7 @@ namespace Chow.Tests
         public void BuildSyntaxTree_FloatLiteral_ReturnsLiteralNodeWithFloatType()
         {
             Node result = Parse("3.14");
-            AssertLiteral(result, 3.14f, LiteralDataType.Float);
+            AssertLiteral(result, 3.14, LiteralDataType.Float);
         }
 
         [Test]

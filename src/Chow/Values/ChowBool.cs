@@ -24,9 +24,9 @@ namespace Chow.Interpreter.Values
                 return (DataType)(object)(_val ? 1 : 0);
             }
 
-            if (typeof(DataType) == typeof(float))
+            if (typeof(DataType) == typeof(double))
             {
-                return (DataType)(object)(_val ? 1f : 0f);
+                return (DataType)(object)(_val ? 1.0 : 0.0);
             }
 
             throw new InvalidCastException(GetType(), typeof(DataType), this);
