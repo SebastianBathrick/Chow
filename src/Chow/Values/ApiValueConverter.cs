@@ -16,6 +16,11 @@ namespace Chow.Interpreter.Values
                 return TaggedUnion.None;
             }
 
+            if (value is ChowStr strValue)
+            {
+                return new TaggedUnion((object)strValue.Value);
+            }
+
             if (value is ChowDynamic dynamicValue)
             {
                 return new TaggedUnion(dynamicValue.Value);
@@ -52,6 +57,10 @@ namespace Chow.Interpreter.Values
                 case Tag.Boolean:
                     return new ChowBool(taggedUnion.BooleanValue);
                 case Tag.Object:
+                    if (taggedUnion.ObjectValue is string s)
+                    {
+                        return new ChowStr(s);
+                    }
                     return new ChowDynamic(taggedUnion.ObjectValue);
                 case Tag.String:
                     throw new NotImplementedException();

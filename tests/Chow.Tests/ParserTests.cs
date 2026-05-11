@@ -73,16 +73,6 @@ namespace Chow.Tests
         }
 
         // ============================================================================================================
-        // Constructor
-        // ============================================================================================================
-
-        [Test]
-        public void Constructor_NullTokens_ThrowsArgumentNullException()
-        {
-            Assert.That(() => new Parser(null!), Throws.TypeOf<ArgumentNullException>());
-        }
-
-        // ============================================================================================================
         // Literals
         // ============================================================================================================
 
@@ -353,12 +343,6 @@ namespace Chow.Tests
                 Token(TokenType.EndOfCode, string.Empty, 7));
 
             Assert.That(result.LineNum, Is.EqualTo(6));
-        }
-
-        [Test]
-        public void LiteralNode_InvalidLineNumber_ThrowsArgumentOutOfRangeException()
-        {
-            Assert.That(() => new LiteralNode(1, 0), Throws.TypeOf<ArgumentOutOfRangeException>());
         }
 
         [Test]

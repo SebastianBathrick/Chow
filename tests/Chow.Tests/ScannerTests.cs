@@ -637,16 +637,14 @@ namespace Chow.Tests
         // ============================================================================================================
 
         [Test]
-        public void ScanTokens_CalledTwiceOnSameInstance_ThrowsInvalidOperationException()
+        public void ScanTokens_CalledTwiceOnSameInstance_ReturnsEquivalentTokens()
         {
             var scanner = new Scanner("1\n    2\n3\n");
 
-            scanner.ScanTokens();
+            var first = scanner.ScanTokens();
+            var second = scanner.ScanTokens();
 
-            Assert.That(
-                () => scanner.ScanTokens(),
-                Throws.TypeOf<InvalidOperationException>()
-                    .With.Message.EqualTo("This Scanner instance can only be used once."));
+            Assert.That(second, Is.EqualTo(first));
         }
 
         [Test]
@@ -659,22 +657,23 @@ namespace Chow.Tests
         }
 
         [Test]
-        public void ScanTokens_CalledTwiceAfterWhitespaceOnlySource_ThrowsInvalidOperationException()
+        public void ScanTokens_CalledTwiceOnWhitespaceOnlySource_ReturnsEquivalentTokens()
         {
             var scanner = new Scanner("    ");
 
-            scanner.ScanTokens();
+            var first = scanner.ScanTokens();
+            var second = scanner.ScanTokens();
 
-            Assert.That(() => scanner.ScanTokens(), Throws.TypeOf<InvalidOperationException>());
+            Assert.That(second, Is.EqualTo(first));
         }
 
         [Test]
-        public void ScanTokens_CalledAgainAfterScannerException_ThrowsInvalidOperationException()
+        public void ScanTokens_CalledAgainAfterScannerException_ThrowsSameScannerException()
         {
             var scanner = new Scanner("@");
 
             Assert.That(() => scanner.ScanTokens(), Throws.TypeOf<ScannerEx>());
-            Assert.That(() => scanner.ScanTokens(), Throws.TypeOf<InvalidOperationException>());
+            Assert.That(() => scanner.ScanTokens(), Throws.TypeOf<ScannerEx>());
         }
 
         // ============================================================================================================

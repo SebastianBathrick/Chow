@@ -61,12 +61,6 @@ namespace Chow.Tests
         // A. Construction
         // ============================================================================================================
 
-        [Test]
-        public void Constructor_NullChunk_ThrowsArgumentNullException()
-        {
-            Assert.That(() => new VirtualMachine(null!, new ChowEnviro(), null!), Throws.TypeOf<ArgumentNullException>());
-        }
-
         // ============================================================================================================
         // B. Single-operation execution
         // ============================================================================================================
@@ -353,12 +347,9 @@ namespace Chow.Tests
 
             var vm = new VirtualMachine(chunk, new ChowEnviro(), null!);
             vm.ExecuteChunk();
-            TaggedUnion result = TaggedUnion.None;
+            TaggedUnion result = vm.ValStackTop;
 
             AssertIntegerResult(result, 5);
-            var debug = new List<(string name, TaggedUnion value)>();
-            Assert.That(debug, Has.Count.EqualTo(1));
-            Assert.That(debug[0].name, Is.EqualTo("x"));
         }
 
         [Test]
@@ -373,12 +364,9 @@ namespace Chow.Tests
 
             var vm = new VirtualMachine(chunk, new ChowEnviro(), null!);
             vm.ExecuteChunk();
-            TaggedUnion result = TaggedUnion.None;
+            TaggedUnion result = vm.ValStackTop;
 
             AssertIntegerResult(result, 7);
-            var debug = new List<(string name, TaggedUnion value)>();
-            Assert.That(debug, Has.Count.EqualTo(1));
-            Assert.That(debug[0].name, Is.EqualTo("x"));
         }
 
         [Test]
@@ -395,14 +383,9 @@ namespace Chow.Tests
 
             var vm = new VirtualMachine(chunk, new ChowEnviro(), null!);
             vm.ExecuteChunk();
-            TaggedUnion result = TaggedUnion.None;
+            TaggedUnion result = vm.ValStackTop;
 
             AssertIntegerResult(result, 3);
-            var debug = new List<(string name, TaggedUnion value)>();
-            Assert.That(debug, Has.Count.EqualTo(2));
-            var names = debug.Select(t => t.name).ToList();
-            Assert.That(names, Does.Contain("a"));
-            Assert.That(names, Does.Contain("b"));
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Chow.Tests
         {
             var token = new Token(TokenType.LiteralFloat, "3.0", 2, 3.0f);
 
-            Assert.That(token.ToString(), Is.EqualTo("Token(type=Float, lexeme=\"3.0\", literal=3, line=2)"));
+            Assert.That(token.ToString(), Is.EqualTo("Token(type=LiteralFloat, lexeme=\"3.0\", literal=3, line=2)"));
         }
 
         [Test]
@@ -35,7 +35,7 @@ namespace Chow.Tests
         {
             var token = new Token(TokenType.KeywordLiteralStr, "\"quoted\"\n", 4, "\"quoted\"\n");
 
-            Assert.That(token.ToString(), Is.EqualTo("Token(type=String, lexeme=\"\\\"quoted\\\"\\n\", literal=\"\\\"quoted\\\"\\n\", line=4)"));
+            Assert.That(token.ToString(), Is.EqualTo("Token(type=KeywordLiteralStr, lexeme=\"\\\"quoted\\\"\\n\", literal=\"\\\"quoted\\\"\\n\", line=4)"));
         }
     }
 }

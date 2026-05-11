@@ -208,25 +208,27 @@ namespace Chow.Interpreter.Evaluation
 
         void ExecuteCall(int argCount)
         {
-            TaggedUnion[] args = new TaggedUnion[argCount];
-            for (int i = argCount - 1; i >= 0; i--)
-            {
-                args[i] = _valStack.Pop();
-            }
-
-            TaggedUnion callee = _valStack.Pop();
-
             TaggedUnion result;
+
             if (argCount == 0)
             {
+                TaggedUnion callee = _valStack.Pop();
                 result = callee.MakeInteropCall(null, null);
             }
             else if (argCount == 1)
             {
-                result = callee.MakeInteropCall(args[0], null);
+                TaggedUnion singleArg = _valStack.Pop();
+                TaggedUnion callee = _valStack.Pop();
+                result = callee.MakeInteropCall(singleArg, null);
             }
             else
             {
+                TaggedUnion[] args = new TaggedUnion[argCount];
+                for (int i = argCount - 1; i >= 0; i--)
+                {
+                    args[i] = _valStack.Pop();
+                }
+                TaggedUnion callee = _valStack.Pop();
                 result = callee.MakeInteropCall(null, args);
             }
 
