@@ -23,6 +23,11 @@ namespace Chow.Interpreter.Compilation
         AssignOrDeclareVariable,
         PushVariableValue,
         ReturnValue,
-        PopExprStmntResult
+        PopExprStmntResult,
+        JumpIfFalse,
+        JumpPastBranches,
+        IncScopeDepth,
+        DecScopeDepth,
+
     }
 }

@@ -24,7 +24,7 @@ namespace Chow.Interpreter
             Node syntaxTreeRoot = parser.BuildTree();
 
             Compiler compiler = new Compiler(syntaxTreeRoot);
-            Chunk chunk = compiler.CompileSyntaxTreeRoot();
+            Chunk chunk = compiler.CompileRoot();
 
             // Get hook for expression statements, if it exists, to pass to the virtual machine for execution
             IExecutionHook exprStmtHook = _hooks.Find(h => h is IExprStatementHook);

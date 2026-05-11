@@ -3,23 +3,27 @@ using Chow.Interpreter.Syntax.Trees.Expressions;
 using Chow.Interpreter.Syntax.Trees.Statements;
 using Chow.Interpreter.Values;
 using System;
+using System.Xml.Linq;
 
 namespace Chow.Interpreter.Compilation
 {
     class Compiler
     {
         Chunk _chunk;
-        Node _root;
+        RootNode _root;
 
         public Compiler(Node root)
         {
             _chunk = new Chunk();
-            _root = root;
+            _root = root as RootNode;
         }
 
-        public Chunk CompileSyntaxTreeRoot()
+        public Chunk CompileRoot()
         {
-            CompileTargetNode(_root);
+            foreach (Node statement in _root.Stmnts)
+            {
+                CompileTargetNode(statement);
+            }
 
             return _chunk;
         }
@@ -34,14 +38,6 @@ namespace Chow.Interpreter.Compilation
 
             switch (targetNode)
             {
-                // TODO: Remove EmptyNode
-                case EmptyNode _:
-                    break;
-
-                case RootNode root:
-                    CompileSyntaxTreeRoot(root);
-                    break;
-
                 case BlockNode blockNode:
                     CompileBlockNode(blockNode);
                     break;
@@ -71,22 +67,29 @@ namespace Chow.Interpreter.Compilation
                     CompileExpressionStatement(exprStmtNode);
                     break;
 
+                case IfNode ifNode:
+                    CompileIfStatement(ifNode);
+                    break;
+                
+                case BranchStmntNode branchNode:
+                    //
+
                 default:
                     throw new InvalidOperationException();
             }
         }
 
-        void CompileSyntaxTreeRoot(RootNode root)
-        {
-            CompileTargetNode(root.Module);
-        }
-
         void CompileBlockNode(BlockNode blockNode)
         {
+            // Indicate that the scope's depth increased and all variables that follow are nested in this block
+            _chunk.AddInstruction(OperationCode.IncScopeDepth, blockNode.LineNum);
+
             foreach (Node statement in blockNode.Statements)
             {
                 CompileTargetNode(statement);
             }
+
+            _chunk.AddInstruction(OperationCode.DecScopeDepth, blockNode.LineNum);
         }
 
         #region Statement Compilation
@@ -144,6 +147,27 @@ namespace Chow.Interpreter.Compilation
         {
             CompileTargetNode(exprStmtNode.Expression);
             _chunk.AddInstruction(OperationCode.PopExprStmntResult, exprStmtNode.LineNum);
+        }
+
+        void CompileIfStatement(IfNode ifNode)
+        {
+            // 1. Pop value
+            // 2. Jump if false to else or statements adjacent to if statement
+            // 3. Increase scope depth (if 2 was true)
+            // 4. Evaluate block
+            // 5. Decrease scope depth
+            // 6. Jump past branches to statements adjacent to if statement
+
+            // Compile condition
+            CompileTargetNode(ifNode.Expr);
+
+            int ifIdx = _chunk.Count - 1;
+
+
+            // If the condition result is true, then the VM won't skip any instructions and will evaluate its block
+            CompileTargetNode(ifNode.Block);
+
+
         }
 
         #endregion

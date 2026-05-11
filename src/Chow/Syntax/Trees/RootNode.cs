@@ -1,19 +1,23 @@
+using System.Collections.Generic;
+
 namespace Chow.Interpreter.Syntax.Trees
 {
     internal class RootNode : Node
     {
-        Node module;
+        const int ROOT_NODE_LINE = 1;
 
-        public Node Module => module;
+        List<Node> _stmnts;
 
-        public RootNode(Node module, int line) : base(line)
+        public List<Node> Stmnts => _stmnts;
+        public RootNode(List<Node> stmnts) : base(ROOT_NODE_LINE)
         {
-            this.module = module;
+            _stmnts = stmnts;
         }
 
         public override string ToString()
         {
-            return $"SyntaxTreeRoot line={LineNum}\n{module}";
+            // TODO: Write logic for this
+            return string.Empty;
         }
     }
 }

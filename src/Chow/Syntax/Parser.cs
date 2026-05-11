@@ -24,21 +24,9 @@ namespace Chow.Interpreter.Syntax
 
         public Node BuildTree()
         {
-            if (_tkns.Count == 0)
-            {
-                return new EmptyNode();
-            }
-
-            Node module = ParseModule();
-            ConsumeCurrTkn(TokenType.EndOfCode, "Expected end of code.");
-            return new RootNode(module, module.LineNum);
-        }
-
-        Node ParseModule()
-        {
             List<Node> stmnts = new List<Node>();
 
-            // Even when modules contain no statements, they are still valid, seeing as their top-level code
+            // Even code contains no statements, it is still vali
             while (!CurrTknType(TokenType.EndOfCode))
             {
                 // The only valid lines start with a newline or the start of a statement
@@ -52,7 +40,8 @@ namespace Chow.Interpreter.Syntax
                 stmnts.Add(ParseStmnts());
             }
 
-            return new ModuleNode(stmnts);
+            ConsumeCurrTkn(TokenType.EndOfCode, "Expected end of code.");
+            return new RootNode(stmnts);
         }
 
         Node ParseBlock()
