@@ -1,27 +1,37 @@
-﻿using Chow.Interpreter.Values;
+﻿using Chow.Interpreter.Values.Internal;
 using System.Collections.Generic;
 
 namespace Chow.Interpreter.Evaluation
 {
-    internal class ChowEnviro
+    // TODO: Might add back environment
+    internal class LocalScope
     {
+        // Note that no identifier can be named "<SCOPE_BOUNDARY_ELEMENT>", because identifiers cannot start with a "<"
         const string SCOPE_BOUNDARY_ELEMENT = "<SCOPE_BOUNDARY>";
-        const int TOP_LVL_SCOPE_DEPTH = 0;
+        const int OUTERMOST_SCOPE_DEPTH = 0;
 
         private Stack<string> _varNames;
         private Dictionary<string, TaggedUnion> _varMap;
         private int _scopeDepth;
 
-        public bool IsCurrentlyTopLevel => _scopeDepth == TOP_LVL_SCOPE_DEPTH;
+        public bool IsOutermostDepth => _scopeDepth == OUTERMOST_SCOPE_DEPTH;
 
-        public ChowEnviro()
+        public LocalScope()
         {
             _varMap = new Dictionary<string, TaggedUnion>();
-            _scopeDepth = TOP_LVL_SCOPE_DEPTH;
+            _scopeDepth = OUTERMOST_SCOPE_DEPTH;
 
-            // The bottom of the stack represents the top-level scope (which will never be popped)
+            // The bottom of the stack represents the outermost scope (which will never be popped)
             _varNames = new Stack<string>();
             _varNames.Push(SCOPE_BOUNDARY_ELEMENT);
+        }
+
+        public LocalScope(LocalScope orig)
+        {
+            _varMap = new Dictionary<string, TaggedUnion>(orig._varMap);
+            _scopeDepth = OUTERMOST_SCOPE_DEPTH;
+            // The bottom of the stack represents the outermost scope (which will never be popped)
+            _varNames = new Stack<string>(orig._varNames);
         }
 
         public bool IsVariableDefined(string name)
@@ -29,13 +39,13 @@ namespace Chow.Interpreter.Evaluation
             return _varMap.ContainsKey(name);
         }
 
-        public void EnterScope()
+        public void EnterNestedScope()
         {
             _scopeDepth++;
             _varNames.Push(SCOPE_BOUNDARY_ELEMENT);
         }
 
-        public void ExitScope()
+        public void ExitNestedScope()
         {
             // Pop the name of the variable declared last OR the boundary element if no variables were declared in the current scope
             string popName = _varNames.Pop();

@@ -7,13 +7,14 @@ using Chow.Interpreter.Tokens;
 using Chow.Interpreter.Values;
 using Chow.Interpreter.Exceptions;
 using System.Collections.Generic;
+using Chow.Interpreter.Values.Internal;
 
 namespace Chow.Interpreter
 {
     public class ChowModule
     {
         List<IExecutionHook> _hooks = new List<IExecutionHook>();
-        ChowEnviro _enviro;
+        LocalScope _enviro;
 
         public ChowValue this[string name]
         {
@@ -32,7 +33,7 @@ namespace Chow.Interpreter
             {
                 if (_enviro == null)
                 {
-                    _enviro = new ChowEnviro();
+                    _enviro = new LocalScope();
                 }
 
                 TaggedUnion varUnion = ApiValueConverter.ToTaggedUnion(value);

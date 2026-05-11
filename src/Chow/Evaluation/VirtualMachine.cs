@@ -1,7 +1,7 @@
 using Chow.Interpreter.Compilation;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Hooks;
-using Chow.Interpreter.Values;
+using Chow.Interpreter.Values.Internal;
 using System;
 using System.Collections.Generic;
 
@@ -11,7 +11,7 @@ namespace Chow.Interpreter.Evaluation
     sealed class VirtualMachine
     {
         readonly Chunk _chunk;
-        readonly ChowEnviro _enviro;
+        readonly LocalScope _enviro;
 
         Stack<TaggedUnion> _valStack;
         IExecutionHook _exprHook;
@@ -21,16 +21,16 @@ namespace Chow.Interpreter.Evaluation
 
         public TaggedUnion ValStackTop => _valStack.Count > 0 ? _valStack.Peek() : TaggedUnion.None;
 
-        public VirtualMachine(Chunk chunk, ChowEnviro enviro, IExecutionHook exprHook)
+        public VirtualMachine(Chunk chunk, LocalScope enviro, IExecutionHook exprHook)
         {
             _chunk = chunk;
-            _enviro = enviro == null ? new ChowEnviro() : enviro;
+            _enviro = enviro == null ? new LocalScope() : enviro;
             _valStack = new Stack<TaggedUnion>();
             _instructIdx = 0;
             _exprHook = exprHook;
         }
 
-        public ChowEnviro ExecuteChunk()
+        public LocalScope ExecuteChunk()
         {
             while (IsRemainingOperation())
             {
@@ -135,11 +135,11 @@ namespace Chow.Interpreter.Evaluation
                         continue;
 
                     case OperationCode.IncScopeDepth:
-                        _enviro.EnterScope();
+                        _enviro.EnterNestedScope();
                         break;
 
                     case OperationCode.DecScopeDepth:
-                        _enviro.ExitScope();
+                        _enviro.ExitNestedScope();
                         break;
 
                     // Statements
@@ -264,7 +264,7 @@ namespace Chow.Interpreter.Evaluation
 
         int GetCurrentLineNumber()
         {
-            return _chunk.GetInstructionLineNumber(_instructIdx);
+            return _chunk.GetInstrLineNum(_instructIdx);
         }
 
         void MoveToNextOperation()

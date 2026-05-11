@@ -1,5 +1,5 @@
 using Chow.Interpreter.Evaluation;
-using Chow.Interpreter.Values;
+using Chow.Interpreter.Values.Internal;
 
 namespace Chow.Tests
 {
@@ -10,7 +10,7 @@ namespace Chow.Tests
         // Helpers
         // ------------------------------------------------------------------------------------------------------------
 
-        static ChowEnviro NewEnviro() => new ChowEnviro();
+        static LocalScope NewEnviro() => new LocalScope();
 
         static TaggedUnion Int(int value) => new TaggedUnion(value);
 
@@ -23,7 +23,7 @@ namespace Chow.Tests
         {
             var env = NewEnviro();
 
-            Assert.That(env.IsCurrentlyTopLevel, Is.True);
+            Assert.That(env.IsOutermostDepth, Is.True);
         }
 
         [Test]
@@ -90,9 +90,9 @@ namespace Chow.Tests
         {
             var env = NewEnviro();
 
-            env.EnterScope();
+            env.EnterNestedScope();
 
-            Assert.That(env.IsCurrentlyTopLevel, Is.False);
+            Assert.That(env.IsOutermostDepth, Is.False);
         }
 
         [Test]
@@ -100,10 +100,10 @@ namespace Chow.Tests
         {
             var env = NewEnviro();
 
-            env.EnterScope();
-            env.ExitScope();
+            env.EnterNestedScope();
+            env.ExitNestedScope();
 
-            Assert.That(env.IsCurrentlyTopLevel, Is.True);
+            Assert.That(env.IsOutermostDepth, Is.True);
         }
 
         [Test]
@@ -111,9 +111,9 @@ namespace Chow.Tests
         {
             var env = NewEnviro();
 
-            env.EnterScope();
+            env.EnterNestedScope();
             env.AssignVariableValue("x", Int(1));
-            env.ExitScope();
+            env.ExitNestedScope();
 
             Assert.That(env.IsVariableDefined("x"), Is.False);
         }
@@ -124,9 +124,9 @@ namespace Chow.Tests
             var env = NewEnviro();
 
             env.AssignVariableValue("outer", Int(7));
-            env.EnterScope();
+            env.EnterNestedScope();
             env.AssignVariableValue("inner", Int(9));
-            env.ExitScope();
+            env.ExitNestedScope();
 
             Assert.Multiple(() =>
             {
@@ -141,11 +141,11 @@ namespace Chow.Tests
         {
             var env = NewEnviro();
 
-            env.EnterScope();
+            env.EnterNestedScope();
             env.AssignVariableValue("a", Int(1));
             env.AssignVariableValue("b", Int(2));
             env.AssignVariableValue("c", Int(3));
-            env.ExitScope();
+            env.ExitNestedScope();
 
             Assert.Multiple(() =>
             {
@@ -160,15 +160,15 @@ namespace Chow.Tests
         {
             var env = NewEnviro();
 
-            env.EnterScope();
-            env.EnterScope();
-            Assert.That(env.IsCurrentlyTopLevel, Is.False);
+            env.EnterNestedScope();
+            env.EnterNestedScope();
+            Assert.That(env.IsOutermostDepth, Is.False);
 
-            env.ExitScope();
-            Assert.That(env.IsCurrentlyTopLevel, Is.False);
+            env.ExitNestedScope();
+            Assert.That(env.IsOutermostDepth, Is.False);
 
-            env.ExitScope();
-            Assert.That(env.IsCurrentlyTopLevel, Is.True);
+            env.ExitNestedScope();
+            Assert.That(env.IsOutermostDepth, Is.True);
         }
 
         [Test]
@@ -176,11 +176,11 @@ namespace Chow.Tests
         {
             var env = NewEnviro();
 
-            env.EnterScope();
+            env.EnterNestedScope();
             env.AssignVariableValue("mid", Int(5));
-            env.EnterScope();
+            env.EnterNestedScope();
             env.AssignVariableValue("inner", Int(9));
-            env.ExitScope();
+            env.ExitNestedScope();
 
             Assert.Multiple(() =>
             {
@@ -200,7 +200,7 @@ namespace Chow.Tests
             var env = NewEnviro();
 
             env.AssignVariableValue("x", Int(1));
-            env.EnterScope();
+            env.EnterNestedScope();
             env.AssignVariableValue("x", Int(2));
 
             Assert.That(env.GetVariableValue("x"), Is.EqualTo(Int(2)));
@@ -213,9 +213,9 @@ namespace Chow.Tests
             var env = NewEnviro();
 
             env.AssignVariableValue("x", Int(1));
-            env.EnterScope();
+            env.EnterNestedScope();
             env.AssignVariableValue("x", Int(2));
-            env.ExitScope();
+            env.ExitNestedScope();
 
             Assert.Multiple(() =>
             {

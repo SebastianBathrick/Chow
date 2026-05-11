@@ -6,32 +6,58 @@ namespace Chow.Interpreter.Compilation
 {
     class Chunk
     {
-        List<Instruction> _instructions = new List<Instruction>();
-        List<TaggedUnion> _consts = new List<TaggedUnion>();
+        static int _nextIdCounter = 0;
+        static object _nextIdCounterLock = new object();
 
-        List<string> _varNames = new List<string>();
-        List<int> _opLineNums = new List<int>();
+        int _id = 0;
 
-        public int Count => _instructions.Count;
+        List<Instruction> _instrs;
+        List<TaggedUnion> _consts;
 
-        public Instruction this[int index] => _instructions[index];
+        List<string> _varNames;
+        List<int> _instrLineNums;
+
+        public int Id => _id;
+
+        public int Count => _instrs.Count;
+
+        public Instruction this[int index] => _instrs[index];
+
+        public Chunk()
+        {
+            _instrs = new List<Instruction>();
+            _consts = new List<TaggedUnion>();
+            _varNames = new List<string>();
+            _instrLineNums = new List<int>();
+
+            lock(_nextIdCounterLock)
+            {
+                _id = _nextIdCounter;
+                ++_nextIdCounter;
+            }
+        }
+
+        public static bool AreSameChunks(Chunk c1, Chunk c2)
+        {
+            return c1._id == c2._id;
+        }
 
         #region Instruction Methods
 
-        public void AddInstruction(OperationCode code, int lineNumber, int operand = -1)
+        public void AddInstr(OperationCode code, int lineNumber, int operand = -1)
         {
-            _instructions.Add(new Instruction(code, operand));
-            _opLineNums.Add(lineNumber);
+            _instrs.Add(new Instruction(code, operand));
+            _instrLineNums.Add(lineNumber);
         }
 
-        public void PatchInstructionOperand(int index, int operand)
+        public void PatchInstrOperand(int idx, int operand)
         {
-            _instructions[index] = new Instruction(_instructions[index].Code, operand);
+            _instrs[idx] = new Instruction(_instrs[idx].Code, operand);
         }
 
-        public int GetInstructionLineNumber(int index)
+        public int GetInstrLineNum(int instrIdx)
         {
-            return _opLineNums[index];
+            return _instrLineNums[instrIdx];
         }
 
         #endregion
@@ -68,9 +94,20 @@ namespace Chow.Interpreter.Compilation
 
         #region Variable Name Methods
 
-        public string ReadVariableName(int operand) => _varNames[operand];
+        public bool IsVariableName(string name)
+        {
+            return _varNames.Contains(name);
+        }
 
-        public int FindVariableName(string varName) => _varNames.IndexOf(varName);
+        public string ReadVariableName(int operand)
+        {
+            return _varNames[operand];
+        }
+
+        public int FindVariableName(string name)
+        {
+            return _varNames.IndexOf(name);
+        }
 
         /// <summary>
         /// Used to register a variable name compile-time and return an operand for use in <see cref="Instruction"/> instance(s)
@@ -124,9 +161,9 @@ namespace Chow.Interpreter.Compilation
             }
 
             sb.AppendLine("Operations:");
-            for (int i = 0; i < _instructions.Count; i++)
+            for (int i = 0; i < _instrs.Count; i++)
             {
-                Instruction op = _instructions[i];
+                Instruction op = _instrs[i];
 
                 sb.Append("  ");
                 sb.Append(i);
@@ -142,7 +179,7 @@ namespace Chow.Interpreter.Compilation
                     sb.Append(')');
                 }
 
-                if (i < _instructions.Count - 1)
+                if (i < _instrs.Count - 1)
                 {
                     sb.AppendLine();
                 }

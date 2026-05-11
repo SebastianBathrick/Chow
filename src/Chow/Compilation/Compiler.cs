@@ -43,7 +43,7 @@ namespace Chow.Interpreter.Compilation
             {
                 NameNode param = (NameNode)funcNode.Params[i];
                 int paramOperand = _chunk.RegisterVariableName(param.Name);
-                _chunk.AddInstruction(OperationCode.AssignOrDeclareVariable, param.LineNum, paramOperand);
+                _chunk.AddInstr(OperationCode.AssignOrDeclareVariable, param.LineNum, paramOperand);
             }
 
             // Compile its nested block
@@ -60,23 +60,23 @@ namespace Chow.Interpreter.Compilation
 
             int funcConstIdx = _chunk.RegisterConstant(funcConst);
 
-            _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNum, funcConstIdx);
+            _chunk.AddInstr(OperationCode.PushConstant, funcNode.LineNum, funcConstIdx);
 
             int nameIdx = _chunk.RegisterVariableName(funcNode.Name);
-            _chunk.AddInstruction(OperationCode.AssignOrDeclareVariable, funcNode.LineNum, nameIdx);
+            _chunk.AddInstr(OperationCode.AssignOrDeclareVariable, funcNode.LineNum, nameIdx);
         }
 
         void CompileCall(CallNode callNode)
         {
             int nameOperand = _chunk.RegisterVariableName(callNode.Name);
-            _chunk.AddInstruction(OperationCode.PushVariableValue, callNode.LineNum, nameOperand);
+            _chunk.AddInstr(OperationCode.PushVariableValue, callNode.LineNum, nameOperand);
 
             foreach (Node arg in callNode.Args)
             {
                 CompileTargetNode(arg);
             }
 
-            _chunk.AddInstruction(OperationCode.Call, callNode.LineNum, callNode.Args.Count);
+            _chunk.AddInstr(OperationCode.Call, callNode.LineNum, callNode.Args.Count);
         }
 
         void CompileTargetNode(Node targetNode)
@@ -142,14 +142,14 @@ namespace Chow.Interpreter.Compilation
         void CompileBlockNode(BlockNode blockNode)
         {
             // Indicate that the scope's depth increased and all variables that follow are nested in this block
-            _chunk.AddInstruction(OperationCode.IncScopeDepth, blockNode.LineNum);
+            _chunk.AddInstr(OperationCode.IncScopeDepth, blockNode.LineNum);
 
             foreach (Node statement in blockNode.Statements)
             {
                 CompileTargetNode(statement);
             }
 
-            _chunk.AddInstruction(OperationCode.DecScopeDepth, blockNode.LineNum);
+            _chunk.AddInstr(OperationCode.DecScopeDepth, blockNode.LineNum);
         }
 
         #region Statement Compilation
@@ -183,14 +183,14 @@ namespace Chow.Interpreter.Compilation
             // If a variable with the same name already exists in the chunk, the index of the existing variable will be returned.
             // Otherwise, the new variable will be added to the chunk and its new index will be returned.
             int varNameOperand = _chunk.RegisterVariableName(varAssignNode.Name);
-            _chunk.AddInstruction(OperationCode.AssignOrDeclareVariable, varAssignNode.LineNum, varNameOperand);
+            _chunk.AddInstr(OperationCode.AssignOrDeclareVariable, varAssignNode.LineNum, varNameOperand);
         }
 
         void CompileVarFactor(NameNode varFactorNode)
         {
             // Register to have its own constant in case the variable with this name is declared in a previous environment
             int varNameOperand = _chunk.RegisterVariableName(varFactorNode.Name);
-            _chunk.AddInstruction(OperationCode.PushVariableValue, varFactorNode.LineNum, varNameOperand);
+            _chunk.AddInstr(OperationCode.PushVariableValue, varFactorNode.LineNum, varNameOperand);
         }
 
         void CompileReturn(ReturnNode returnNode)
@@ -200,13 +200,13 @@ namespace Chow.Interpreter.Compilation
                 CompileTargetNode(returnNode.Expression);
             }
 
-            _chunk.AddInstruction(code: OperationCode.ReturnValue, returnNode.LineNum);
+            _chunk.AddInstr(code: OperationCode.ReturnValue, returnNode.LineNum);
         }
 
         void CompileExprStmnt(ExprStatementNode exprStmtNode)
         {
             CompileTargetNode(exprStmtNode.Expression);
-            _chunk.AddInstruction(OperationCode.PopExprStmntResult, exprStmtNode.LineNum);
+            _chunk.AddInstr(OperationCode.PopExprStmntResult, exprStmtNode.LineNum);
         }
 
         void CompileIfStmnt(IfNode ifNode)
@@ -217,7 +217,7 @@ namespace Chow.Interpreter.Compilation
 
             CompileTargetNode(ifNode.Expr);
 
-            _chunk.AddInstruction(OperationCode.JumpIfFalse, ifNode.LineNum);
+            _chunk.AddInstr(OperationCode.JumpIfFalse, ifNode.LineNum);
             int jumpFalseIdx = _chunk.Count - 1;
 
             CompileTargetNode(ifNode.Block);
@@ -225,19 +225,19 @@ namespace Chow.Interpreter.Compilation
             // Only emit a jump-past-branches if there's actually a branch to skip
             if (ifNode.Branch != null)
             {
-                _chunk.AddInstruction(OperationCode.JumpPastBranches, ifNode.LineNum);
+                _chunk.AddInstr(OperationCode.JumpPastBranches, ifNode.LineNum);
                 _pendingEndJumps.Add(_chunk.Count - 1);
             }
 
             // JumpIfFalse lands at the start of the next branch (or END if no branch)
-            _chunk.PatchInstructionOperand(jumpFalseIdx, _chunk.Count);
+            _chunk.PatchInstrOperand(jumpFalseIdx, _chunk.Count);
 
             CompileTargetNode(ifNode.Branch);
 
             // Patch every JumpPastBranches in this chain to land at END (current count)
             foreach (int idx in _pendingEndJumps)
             {
-                _chunk.PatchInstructionOperand(idx, _chunk.Count);
+                _chunk.PatchInstrOperand(idx, _chunk.Count);
             }
 
             _pendingEndJumps = saved;
@@ -253,18 +253,18 @@ namespace Chow.Interpreter.Compilation
 
             CompileTargetNode(node.Expr);
 
-            _chunk.AddInstruction(OperationCode.JumpIfFalse, node.LineNum);
+            _chunk.AddInstr(OperationCode.JumpIfFalse, node.LineNum);
             int jumpFalseIdx = _chunk.Count - 1;
 
             CompileTargetNode(node.Block);
 
             if (node.Branch != null)
             {
-                _chunk.AddInstruction(OperationCode.JumpPastBranches, node.LineNum);
+                _chunk.AddInstr(OperationCode.JumpPastBranches, node.LineNum);
                 _pendingEndJumps.Add(_chunk.Count - 1);
             }
 
-            _chunk.PatchInstructionOperand(jumpFalseIdx, _chunk.Count);
+            _chunk.PatchInstrOperand(jumpFalseIdx, _chunk.Count);
 
             CompileTargetNode(node.Branch);
         }
@@ -287,7 +287,7 @@ namespace Chow.Interpreter.Compilation
             CompileTargetNode(exprNode.Right);
 
             OperationCode opCode = GetExpressionOperationCode(exprNode);
-            _chunk.AddInstruction(opCode, exprNode.LineNum);
+            _chunk.AddInstr(opCode, exprNode.LineNum);
         }
 
         void CompileShortCircuit(ExprNode node)
@@ -306,13 +306,13 @@ namespace Chow.Interpreter.Compilation
             }
 
             // Emit jump with placeholder operand; the real target is unknown until the right side is compiled
-            _chunk.AddInstruction(jumpCode, node.LineNum);
+            _chunk.AddInstr(jumpCode, node.LineNum);
             int patchIdx = _chunk.Count - 1;
 
             CompileTargetNode(node.Right);
 
             // Land just past the right-hand bytecode
-            _chunk.PatchInstructionOperand(patchIdx, _chunk.Count);
+            _chunk.PatchInstrOperand(patchIdx, _chunk.Count);
         }
 
         private static OperationCode GetExpressionOperationCode(ExprNode node)
@@ -440,7 +440,7 @@ namespace Chow.Interpreter.Compilation
             // If a constant of the same value already exists in the chunk, the operand of the existing constant will be returned.
             // Otherwise, the new constant will be added to the chunk and its new operand will be returned.
             int constIdx = _chunk.RegisterConstant(constUnion);
-            _chunk.AddInstruction(OperationCode.PushConstant, literalNode.LineNum, constIdx);
+            _chunk.AddInstr(OperationCode.PushConstant, literalNode.LineNum, constIdx);
         }
 
         #endregion
