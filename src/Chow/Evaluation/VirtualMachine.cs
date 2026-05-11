@@ -105,6 +105,7 @@ namespace Chow.Interpreter.Evaluation
                             _callStack.JumpToInstr(CurrentOperation.Operand);
                             continue;
                         }
+
                         _valStack.Pop();
                         break;
 
@@ -115,6 +116,7 @@ namespace Chow.Interpreter.Evaluation
                             _callStack.JumpToInstr(CurrentOperation.Operand);
                             continue;
                         }
+
                         _valStack.Pop();
                         break;
 
@@ -160,11 +162,13 @@ namespace Chow.Interpreter.Evaluation
                         if (_exprHook == null)
                         {
                             _valStack.Pop();
-                            break;
+                        }
+                        else
+                        {
+                            TaggedUnion exprResult = _valStack.Pop();
+                            _exprHook.Invoke(ApiValueConverter.ToApiClassObj(exprResult));
                         }
 
-                        TaggedUnion exprResult = _valStack.Pop();
-                        _exprHook.Invoke(ApiValueConverter.ToApiClassObj(exprResult));
                         break;
 
                     case OperationCode.MakeClosure:
@@ -222,8 +226,10 @@ namespace Chow.Interpreter.Evaluation
         {
             TaggedUnion templateUnion = _valStack.Pop();
             ClosureTemplate template = (ClosureTemplate)templateUnion.ObjectValue;
+
             Scope captured = _callStack.CurrentScope;
             Closure closure = new Closure(template.Chunk, captured, template.Name, template.ParamCount);
+
             _valStack.Push(new TaggedUnion((object)closure));
         }
 
@@ -231,6 +237,7 @@ namespace Chow.Interpreter.Evaluation
         {
             TaggedUnion result = _valStack.Pop();
             _callStack.ExitFunctionCall();
+
             _valStack.Push(result);
         }
 
@@ -240,15 +247,14 @@ namespace Chow.Interpreter.Evaluation
             // name exists before this op runs; KeyNotFoundException here is a contract violation.
             string varName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
 
-            if (_callStack.IsVariableDefined(varName))
+            if (!_callStack.IsVariableDefined(varName))
             {
-                TaggedUnion varValue = _callStack.GetVariableValue(varName);
-                _valStack.Push(varValue);
-                return;
+                int line = GetCurrentLineNumber();
+                throw new ChowNameErrorException(varName, line);
             }
 
-            int errorLineNum = GetCurrentLineNumber();
-            throw new ChowNameErrorException(varName, errorLineNum);
+            TaggedUnion varValue = _callStack.GetVariableValue(varName);
+            _valStack.Push(varValue);
         }
 
         private void AssignOrDeclareVariable()
@@ -256,6 +262,7 @@ namespace Chow.Interpreter.Evaluation
             // Operand -> name via Chunk; CallStack routes the assign to the current frame's scope.
             string name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
             TaggedUnion assignVal = _valStack.Pop();
+
             _callStack.AssignVariableValue(name, assignVal);
         }
 
@@ -324,10 +331,11 @@ namespace Chow.Interpreter.Evaluation
             if (operand.IsFloat)
             {
                 _valStack.Push(new TaggedUnion(-operand.FloatValue));
-                return;
             }
-
-            _valStack.Push(new TaggedUnion(-operand.IntegerValue));
+            else
+            {
+                _valStack.Push(new TaggedUnion(-operand.IntegerValue));
+            }
         }
 
         void ExecuteNot()
@@ -345,16 +353,19 @@ namespace Chow.Interpreter.Evaluation
         {
             // Pop N values; reverse so source order is preserved.
             TaggedUnion[] reversed = new TaggedUnion[elementCount];
+
             for (int i = elementCount - 1; i >= 0; i--)
             {
                 reversed[i] = _valStack.Pop();
             }
 
             InternalList list = new InternalList();
+
             for (int i = 0; i < elementCount; i++)
             {
                 list.Add(reversed[i]);
             }
+
             _valStack.Push(new TaggedUnion(list));
         }
 
@@ -364,17 +375,17 @@ namespace Chow.Interpreter.Evaluation
             TaggedUnion target = _valStack.Pop();
 
             // FUTURE: strings/dicts add tag branches here.
-            if (target.Tag == Tag.List)
+            if (target.Tag != Tag.List)
             {
-                if (index.Tag != Tag.Int)
-                {
-                    throw new ChowTypeErrorException($"list indices must be integers, not {index.Tag}");
-                }
-                _valStack.Push(target.ListValue[index.IntegerValue]);
-                return;
+                throw new ChowTypeErrorException($"'{target.Tag}' object is not subscriptable");
             }
 
-            throw new ChowTypeErrorException($"'{target.Tag}' object is not subscriptable");
+            if (index.Tag != Tag.Int)
+            {
+                throw new ChowTypeErrorException($"list indices must be integers, not {index.Tag}");
+            }
+
+            _valStack.Push(target.ListValue[index.IntegerValue]);
         }
 
         void ExecuteSubscriptSlice()
@@ -385,13 +396,12 @@ namespace Chow.Interpreter.Evaluation
             TaggedUnion target = _valStack.Pop();
 
             // FUTURE: strings add a parallel slice branch.
-            if (target.Tag == Tag.List)
+            if (target.Tag != Tag.List)
             {
-                _valStack.Push(target.ListValue.GetSlice(start, stop, step));
-                return;
+                throw new ChowTypeErrorException($"'{target.Tag}' object is not subscriptable");
             }
 
-            throw new ChowTypeErrorException($"'{target.Tag}' object is not subscriptable");
+            _valStack.Push(target.ListValue.GetSlice(start, stop, step));
         }
 
         void ExecuteSubscriptSet()
@@ -401,17 +411,17 @@ namespace Chow.Interpreter.Evaluation
             TaggedUnion target = _valStack.Pop();
 
             // FUTURE: dicts add a key-set branch.
-            if (target.Tag == Tag.List)
+            if (target.Tag != Tag.List)
             {
-                if (index.Tag != Tag.Int)
-                {
-                    throw new ChowTypeErrorException($"list indices must be integers, not {index.Tag}");
-                }
-                target.ListValue[index.IntegerValue] = value;
-                return;
+                throw new ChowTypeErrorException($"'{target.Tag}' object does not support item assignment");
             }
 
-            throw new ChowTypeErrorException($"'{target.Tag}' object does not support item assignment");
+            if (index.Tag != Tag.Int)
+            {
+                throw new ChowTypeErrorException($"list indices must be integers, not {index.Tag}");
+            }
+
+            target.ListValue[index.IntegerValue] = value;
         }
 
         void ExecuteGetAttr()
@@ -420,28 +430,31 @@ namespace Chow.Interpreter.Evaluation
             TaggedUnion target = _valStack.Pop();
 
             // FUTURE: class instances add a branch that consults the instance attribute table, then the class method table.
-            if (target.Tag == Tag.List)
+            if (target.Tag != Tag.List)
             {
-                InternalList list = target.ListValue;
-                if (!list.HasMethod(attrName))
-                {
-                    throw new ChowAttributeErrorException("list", attrName, GetCurrentLineNumber());
-                }
-                _valStack.Push(list[attrName]);
-                return;
+                throw new ChowAttributeErrorException(target.Tag.ToString().ToLowerInvariant(), attrName, GetCurrentLineNumber());
             }
 
-            throw new ChowAttributeErrorException(target.Tag.ToString().ToLowerInvariant(), attrName, GetCurrentLineNumber());
+            InternalList list = target.ListValue;
+
+            if (!list.HasMethod(attrName))
+            {
+                throw new ChowAttributeErrorException("list", attrName, GetCurrentLineNumber());
+            }
+
+            _valStack.Push(list[attrName]);
         }
 
         void ExecuteSetAttr()
         {
             string attrName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
             _valStack.Pop(); // value
+
             TaggedUnion target = _valStack.Pop();
 
             // FUTURE: class instances assign here.
             string typeName = target.Tag == Tag.List ? "list" : target.Tag.ToString().ToLowerInvariant();
+
             throw new ChowAttributeErrorException(typeName, attrName, GetCurrentLineNumber());
         }
     }
