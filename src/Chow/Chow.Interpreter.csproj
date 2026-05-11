@@ -4,15 +4,13 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Title>Chow</Title>
     <Authors>Sebastian Bathrick</Authors>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/SebastianBathrick/Chow</RepositoryUrl>
-    <PackageTags>Embeddable; Scripting; Language; JIT; Bytecode; </PackageTags>
+    <RepositoryType></RepositoryType>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Description>Chow is an embeddable scripting language. Using its zero-dependency NET Standard 2.0 library, projects can embed the language using as little as a string and an API call. From there, Chow's runtime will convert the embedded code to bytecode via the JIT compiler and execute it using the included virtual machine.</Description>
     <Copyright>Copyright © 2026 Sebastian Bathrick</Copyright>
-	<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-	<PackageProjectUrl>https://github.com/SebastianBathrick/Chow</PackageProjectUrl>
+    <Version>0.1.0</Version>
+    <AssemblyName>Chow</AssemblyName>
+    <RootNamespace>Chow.Interpreter</RootNamespace>
+    <GenerateDocumentationFile>False</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

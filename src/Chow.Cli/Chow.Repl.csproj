@@ -7,8 +7,8 @@
     <Nullable>enable</Nullable>
     <PublishAot>true</PublishAot>
     <InvariantGlobalization>true</InvariantGlobalization>
-    <AssemblyTitle>chow</AssemblyTitle>
-    <AssemblyName>chow</AssemblyName>
+    <AssemblyTitle>chw</AssemblyTitle>
+    <AssemblyName>chw</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
