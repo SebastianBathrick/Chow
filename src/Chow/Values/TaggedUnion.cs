@@ -30,6 +30,7 @@ namespace Chow.Interpreter.Values
         public bool IsFloat => _type == Tag.Float;
         public bool IsString => _type == Tag.String;
         public bool IsBoolean => _type == Tag.Boolean;
+        public bool IsObject => _type == Tag.Object;
 
         public bool IsTruthy
         {
@@ -104,6 +105,20 @@ namespace Chow.Interpreter.Values
             {
                 ValidateTaggedUnionType(Tag.Boolean);
                 _bool = value;
+            }
+        }
+
+        public object ObjectValue
+        {
+            get
+            {
+                ValidateTaggedUnionType(Tag.Object);
+                return _obj;
+            }
+            set
+            {
+                ValidateTaggedUnionType(Tag.Object);
+                _obj = value;
             }
         }
 
@@ -496,6 +511,11 @@ namespace Chow.Interpreter.Values
             if (IsBoolean)
             {
                 return $"TaggedUnion(type={_type}, value={_bool})";
+            }
+
+            if (IsObject)
+            {
+                return $"TaggedUnion(type={_type}, value={_obj})";
             }
 
             return $"TaggedUnion(type={_type}, value={_int})";

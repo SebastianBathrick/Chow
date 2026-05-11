@@ -16,6 +16,11 @@ namespace Chow.Interpreter.Values
                 return TaggedUnion.None;
             }
 
+            if (value is ChowDynamic dynamicValue)
+            {
+                return new TaggedUnion(dynamicValue.Value);
+            }
+
             if (value.IsTypeOf<bool>())
             {
                 return new TaggedUnion(value.As<bool>());
@@ -46,6 +51,8 @@ namespace Chow.Interpreter.Values
                     return new ChowFloat(taggedUnion.FloatValue);
                 case Tag.Boolean:
                     return new ChowBool(taggedUnion.BooleanValue);
+                case Tag.Object:
+                    return new ChowDynamic(taggedUnion.ObjectValue);
                 case Tag.String:
                     throw new NotImplementedException();
                 default:
