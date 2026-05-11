@@ -15,6 +15,11 @@ namespace Chow.Interpreter.Values
             Internal = new InternalList();
         }
 
+        public ChowList(ChowList source)
+        {
+            Internal = InternalList.Concat(source.Internal, new InternalList());
+        }
+
         internal ChowList(InternalList wrapped)
         {
             Internal = wrapped;

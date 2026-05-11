@@ -16,6 +16,11 @@ namespace Chow.Interpreter.Values
             Internal = new InternalDict();
         }
 
+        public ChowDict(ChowDict source)
+        {
+            Internal = InternalDict.Merge(source.Internal, new InternalDict());
+        }
+
         internal ChowDict(InternalDict wrapped)
         {
             Internal = wrapped;

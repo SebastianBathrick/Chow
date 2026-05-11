@@ -107,7 +107,49 @@ module["bool"] = new ChowDynamic((ChowValue val) =>
     {
         return new ChowBool(s.Value.Length != 0);
     }
+    if (val is ChowList l)
+    {
+        return new ChowBool(l.Count != 0);
+    }
+    if (val is ChowDict d)
+    {
+        return new ChowBool(d.Count != 0);
+    }
     throw new InvalidOperationException($"bool() argument not supported for type '{ChowTypeName(val)}'");
+});
+
+module["list"] = new ChowDynamic((ChowValue[] args) =>
+{
+    if (args.Length == 0)
+    {
+        return new ChowList();
+    }
+    if (args.Length == 1)
+    {
+        if (args[0] is ChowList l)
+        {
+            return new ChowList(l);
+        }
+        throw new InvalidOperationException($"'{ChowTypeName(args[0])}' object is not iterable");
+    }
+    throw new InvalidOperationException($"list expected at most 1 argument, got {args.Length}");
+});
+
+module["dict"] = new ChowDynamic((ChowValue[] args) =>
+{
+    if (args.Length == 0)
+    {
+        return new ChowDict();
+    }
+    if (args.Length == 1)
+    {
+        if (args[0] is ChowDict d)
+        {
+            return new ChowDict(d);
+        }
+        throw new InvalidOperationException($"'{ChowTypeName(args[0])}' object is not iterable");
+    }
+    throw new InvalidOperationException($"dict expected at most 1 argument, got {args.Length}");
 });
 
 module["len"] = new ChowDynamic((ChowValue val) =>
@@ -119,6 +161,10 @@ module["len"] = new ChowDynamic((ChowValue val) =>
     else if (val is ChowList l)
     {
         return new ChowInt(l.Count);
+    }
+    else if (val is ChowDict d)
+    {
+        return new ChowInt(d.Count);
     }
     throw new InvalidOperationException($"object of type '{ChowTypeName(val)}' has no len()");
 });
@@ -396,6 +442,14 @@ static string ChowTypeName(ChowValue val)
     if (val is ChowStr)
     {
         return "str";
+    }
+    if (val is ChowList)
+    {
+        return "list";
+    }
+    if (val is ChowDict)
+    {
+        return "dict";
     }
     if (val is ChowDynamic d && d.Value != null)
     {

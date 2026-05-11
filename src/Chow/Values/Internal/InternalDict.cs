@@ -20,8 +20,6 @@ namespace Chow.Interpreter.Values.Internal
 
         public int Count => _keys.Count;
 
-        public IReadOnlyList<TaggedUnion> Keys => _keys;
-
         public TaggedUnion this[TaggedUnion key]
         {
             get
@@ -135,30 +133,6 @@ namespace Chow.Interpreter.Values.Internal
             TaggedUnion def = args.Length == 2 ? args[1] : TaggedUnion.None;
             Add(key, def);
             return def;
-        }
-
-        public TaggedUnion CallMethod(string methodName, TaggedUnion[] args = null)
-        {
-            switch (methodName)
-            {
-                case METHOD_GET_NAME:
-                    return Get(args);
-
-                case METHOD_CLEAR_NAME:
-                    return Clear(args);
-
-                case METHOD_POP_NAME:
-                    return Pop(args);
-
-                case METHOD_UPDATE_NAME:
-                    return Update(args);
-
-                case METHOD_SETDEFAULT_NAME:
-                    return SetDefault(args);
-
-                default:
-                    throw new NotImplementedException($"Method '{methodName}' is not implemented for InternalDict");
-            }
         }
 
         public Func<TaggedUnion[], TaggedUnion> GetMethod(string methodName)

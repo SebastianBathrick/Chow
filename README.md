@@ -62,6 +62,7 @@ Expected output:
 - **String:** `"Hello"`, `"World"`, `"123"`, `'abc'`
 - **None:** `None`
 - **List:** `[1, 2, 3]`, `[]`
+- **Dict:** `{1: 'a', 2: 'b'}`, `{}`
 
 ## Operators
 - **Arithmetic:** `+`, `-`, `*`, `/`, `//`, `%`, `**`
@@ -245,6 +246,96 @@ else:
     "empty is falsy"
 ```
 
+## Dicts
+
+Dicts hold an ordered, mutable mapping of hashable keys to values. Insertion order is preserved. Keys may be `None`, `bool`, `int`, `float`, or `str`; lists and dicts are not hashable and cannot be used as keys.
+
+### Literals
+```python
+empty = {}
+ages = {"alice": 30, "bob": 25}
+mixed = {1: "i", "k": "s", None: "n", True: "t"}
+nested = {1: {2: "inner"}}
+```
+
+### Subscript
+```python
+d = {1: "a", 2: "b"}
+
+d[1]          # "a"
+d[3] = "c"    # inserts; d is {1: "a", 2: "b", 3: "c"}
+d[1] = "z"    # overwrites in place; insertion order preserved
+
+d[99]         # KeyError: 99
+d[[1]]        # TypeError: unhashable type: 'list'
+```
+
+### Methods
+```python
+d = {1: "a", 2: "b"}
+
+d.get(1)              # "a"
+d.get(99)             # None
+d.get(99, "fallback") # "fallback"
+
+d.pop(1)              # returns "a"; d is {2: "b"}
+d.pop(99)             # KeyError
+d.pop(99, "fallback") # "fallback"
+
+d.setdefault(2, "z")  # returns "b" (existing); d unchanged
+d.setdefault(3, "c")  # inserts and returns "c"
+
+d.update({4: "d"})    # merges right into d; existing keys retain position, new keys append
+
+d.clear()             # d is {}
+```
+
+Like list methods, dict methods are first-class values bound to the original dict:
+```python
+d = {}
+f = d.setdefault
+f(1, "a")
+f(2, "b")
+# d is {1: "a", 2: "b"}
+```
+
+Accessing an attribute that isn't a dict method raises an `AttributeError`:
+```python
+{}.fake
+# AttributeError: 'dict' object has no attribute 'fake' on line 1
+```
+
+### Operators
+```python
+{1: "a", 2: "b"} | {2: "z", 3: "c"}   # {1: "a", 2: "z", 3: "c"}   merge (right wins)
+
+{1: "a"} == {1: "a"}     # True   order-independent equality
+{1: "a"} == {1: "b"}     # False
+{1: {2: "x"}} == {1: {2: "x"}}  # True   recursive
+```
+
+### Membership (`in` / `not in`)
+`in` and `not in` work on dicts (testing keys) and lists (testing elements):
+```python
+1 in {1: "a"}        # True
+99 not in {1: "a"}   # True
+
+2 in [1, 2, 3]       # True
+9 not in [1, 2, 3]   # True
+
+[1] in {1: "a"}      # TypeError: unhashable type: 'list'
+1 in 5               # TypeError: argument of type 'Int' is not iterable
+```
+
+### Truthiness
+Empty dicts are falsy, non-empty are truthy.
+```python
+if {}:
+    "never"
+else:
+    "empty is falsy"
+```
+
 # Library API
 
 Host C# code exposes variables and callable functions to Chow source through `ChowModule`. Variables flow in and out as `ChowValue` instances; functions are wrapped in `ChowDynamic`.
@@ -332,7 +423,7 @@ module.Execute("9 + 10\n3 / 2");
 ```
 
 ## Example: REPL builtins
-The Chow CLI registers `print`, `input`, `int`, `float`, `bool`, `str`, `len`, `type`, `abs`, `round`, `min`, `max` through this mechanism. Excerpt from `src/Chow.Cli/Program.cs`:
+The Chow CLI registers `print`, `input`, `int`, `float`, `bool`, `str`, `list`, `dict`, `len`, `type`, `abs`, `round`, `min`, `max` through this mechanism. Excerpt from `src/Chow.Cli/Program.cs`:
 ```csharp
 module["print"] = new ChowDynamic((ChowValue val) =>
 {
