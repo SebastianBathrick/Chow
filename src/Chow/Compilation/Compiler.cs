@@ -17,7 +17,7 @@ namespace Chow.Interpreter.Compilation
         public Compiler(Node root)
         {
             _chunk = new Chunk();
-            _root = root as TreeRootNode;
+            _root = root;
             _pendingEndJumps = new List<int>();
         }
 
@@ -38,9 +38,12 @@ namespace Chow.Interpreter.Compilation
             // The function does not need to declare its name as callable because it will have access to the variable of its parent scope
             FunctionNode funcNode = _root as FunctionNode;
 
-            foreach (Node param in funcNode.Params)
+            // Caller pushes args left-to-right; bind in reverse so positional order matches when popping
+            for (int i = funcNode.Params.Count - 1; i >= 0; i--)
             {
-                CompileTargetNode(param);
+                NameNode param = (NameNode)funcNode.Params[i];
+                int paramOperand = _chunk.RegisterVariableName(param.Name);
+                _chunk.AddInstruction(OperationCode.AssignOrDeclareVariable, param.LineNum, paramOperand);
             }
 
             // Compile its nested block
@@ -59,8 +62,21 @@ namespace Chow.Interpreter.Compilation
 
             _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNum, funcConstIdx);
 
-            int nameIdx = _chunk.RegisterConstant(new TaggedUnion(funcNode.Name));
+            int nameIdx = _chunk.RegisterVariableName(funcNode.Name);
             _chunk.AddInstruction(OperationCode.AssignOrDeclareVariable, funcNode.LineNum, nameIdx);
+        }
+
+        void CompileCall(CallNode callNode)
+        {
+            int nameOperand = _chunk.RegisterVariableName(callNode.Name);
+            _chunk.AddInstruction(OperationCode.PushVariableValue, callNode.LineNum, nameOperand);
+
+            foreach (Node arg in callNode.Args)
+            {
+                CompileTargetNode(arg);
+            }
+
+            _chunk.AddInstruction(OperationCode.Call, callNode.LineNum, callNode.Args.Count);
         }
 
         void CompileTargetNode(Node targetNode)
@@ -108,6 +124,14 @@ namespace Chow.Interpreter.Compilation
                 
                 case BranchStmntNode branchNode:
                     CompileBranchStmnt(branchNode);
+                    break;
+
+                case FunctionNode funcNode:
+                    CompileFuncDeclaration(funcNode);
+                    break;
+
+                case CallNode callNode:
+                    CompileCall(callNode);
                     break;
 
                 default:

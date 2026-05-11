@@ -28,6 +28,7 @@ namespace Chow.Interpreter.Compilation
         JumpPastBranches,
         IncScopeDepth,
         DecScopeDepth,
+        Call,
 
     }
 }
