@@ -26,6 +26,7 @@ namespace Chow.Interpreter.Compilation
         PopExprStmntResult,
         JumpIfFalse,
         JumpPastBranches,
+        Loop,
         IncScopeDepth,
         DecScopeDepth,
         Call,

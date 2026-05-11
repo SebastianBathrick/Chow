@@ -52,7 +52,7 @@ namespace Chow.Interpreter.Syntax
                     continue;
                 }
 
-                bool isBlockStmnt = stmnt is FunctionNode || stmnt is IfNode;
+                bool isBlockStmnt = stmnt is FunctionNode || stmnt is IfNode || stmnt is WhileNode;
 
                 if (isBlockStmnt)
                 {
@@ -109,6 +109,15 @@ namespace Chow.Interpreter.Syntax
 
                 case TokenType.KeywordDef:
                     return ParseFunction();
+
+                case TokenType.KeywordWhile:
+                    return ParseWhile();
+
+                case TokenType.KeywordBreak:
+                    return ParseBreak();
+
+                case TokenType.KeywordContinue:
+                    return ParseContinue();
             }
 
             if (IsPrimaryToken())
@@ -214,6 +223,31 @@ namespace Chow.Interpreter.Syntax
             }
 
             return null;
+        }
+
+        Node ParseWhile()
+        {
+            int lineNum = CurrToken.lineNum;
+            ConsumeToken(TokenType.KeywordWhile, "Expected 'while' keyword.");
+
+            Node expr = ParseExpr();
+            Node block = ParseBlock();
+
+            return new WhileNode(expr, block, lineNum);
+        }
+
+        Node ParseBreak()
+        {
+            int lineNum = CurrToken.lineNum;
+            ConsumeToken(TokenType.KeywordBreak, "Expected 'break' keyword.");
+            return new BreakNode(lineNum);
+        }
+
+        Node ParseContinue()
+        {
+            int lineNum = CurrToken.lineNum;
+            ConsumeToken(TokenType.KeywordContinue, "Expected 'continue' keyword.");
+            return new ContinueNode(lineNum);
         }
 
         Node ParseReturn()

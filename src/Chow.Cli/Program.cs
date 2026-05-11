@@ -116,6 +116,10 @@ module["len"] = new ChowDynamic((ChowValue val) =>
     {
         return new ChowInt(s.Value.Length);
     }
+    else if (val is ChowList l)
+    {
+        return new ChowInt(l.Count);
+    }
     throw new InvalidOperationException($"object of type '{ChowTypeName(val)}' has no len()");
 });
 

@@ -132,6 +132,11 @@ namespace Chow.Interpreter.Evaluation
                         _callStack.JumpToInstr(CurrentOperation.Operand);
                         continue;
 
+                    case OperationCode.Loop:
+                        // Unconditional backward jump emitted at the bottom of a loop body (and for `continue`)
+                        _callStack.JumpToInstr(CurrentOperation.Operand);
+                        continue;
+
                     case OperationCode.IncScopeDepth:
                         _callStack.EnterNestedScope();
                         break;

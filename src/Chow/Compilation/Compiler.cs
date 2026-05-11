@@ -1,4 +1,5 @@
 using Chow.Interpreter.Evaluation;
+using Chow.Interpreter.Syntax;
 using Chow.Interpreter.Syntax.Trees;
 using Chow.Interpreter.Syntax.Trees.Expressions;
 using Chow.Interpreter.Syntax.Trees.Statements;
@@ -13,12 +14,23 @@ namespace Chow.Interpreter.Compilation
         Chunk _chunk;
         Node _root;
         List<int> _pendingEndJumps;
+        Stack<LoopCtx> _loopCtxStack;
+        int _blockDepth;
 
         public Compiler(Node root)
         {
             _chunk = new Chunk();
             _root = root;
             _pendingEndJumps = new List<int>();
+            _loopCtxStack = new Stack<LoopCtx>();
+            _blockDepth = 0;
+        }
+
+        sealed class LoopCtx
+        {
+            public int LoopStartIdx;
+            public int BlockDepthAtEntry;
+            public List<int> PendingBreaks = new List<int>();
         }
 
         public Chunk CompileRoot()
@@ -125,9 +137,21 @@ namespace Chow.Interpreter.Compilation
                 case IfNode ifNode:
                     CompileIfStmnt(ifNode);
                     break;
-                
+
                 case BranchStmntNode branchNode:
                     CompileBranchStmnt(branchNode);
+                    break;
+
+                case WhileNode whileNode:
+                    CompileWhileStmnt(whileNode);
+                    break;
+
+                case BreakNode breakNode:
+                    CompileBreakStmnt(breakNode);
+                    break;
+
+                case ContinueNode continueNode:
+                    CompileContinueStmnt(continueNode);
                     break;
 
                 case FunctionNode funcNode:
@@ -232,12 +256,14 @@ namespace Chow.Interpreter.Compilation
         {
             // Indicate that the scope's depth increased and all variables that follow are nested in this block
             _chunk.AddInstr(OperationCode.IncScopeDepth, blockNode.LineNum);
+            _blockDepth++;
 
             foreach (Node statement in blockNode.Statements)
             {
                 CompileTargetNode(statement);
             }
 
+            _blockDepth--;
             _chunk.AddInstr(OperationCode.DecScopeDepth, blockNode.LineNum);
         }
 
@@ -336,6 +362,77 @@ namespace Chow.Interpreter.Compilation
             }
 
             _pendingEndJumps = saved;
+        }
+
+        void CompileWhileStmnt(WhileNode whileNode)
+        {
+            // loopStart marks the start of the condition; both `continue` and the bottom-of-body Loop op target it.
+            int loopStartIdx = _chunk.Count;
+
+            CompileTargetNode(whileNode.Expr);
+
+            _chunk.AddInstr(OperationCode.JumpIfFalse, whileNode.LineNum);
+            int exitJumpIdx = _chunk.Count - 1;
+
+            LoopCtx ctx = new LoopCtx
+            {
+                LoopStartIdx = loopStartIdx,
+                BlockDepthAtEntry = _blockDepth,
+            };
+            _loopCtxStack.Push(ctx);
+
+            CompileTargetNode(whileNode.Block);
+
+            _loopCtxStack.Pop();
+
+            _chunk.AddInstr(OperationCode.Loop, whileNode.LineNum, loopStartIdx);
+
+            // Condition-false exit and any `break` jumps land here, after the backward Loop.
+            int exitIdx = _chunk.Count;
+            _chunk.PatchInstrOperand(exitJumpIdx, exitIdx);
+
+            foreach (int idx in ctx.PendingBreaks)
+            {
+                _chunk.PatchInstrOperand(idx, exitIdx);
+            }
+        }
+
+        void CompileBreakStmnt(BreakNode breakNode)
+        {
+            if (_loopCtxStack.Count == 0)
+            {
+                throw new ParserEx("'break' outside loop", breakNode.LineNum);
+            }
+
+            LoopCtx ctx = _loopCtxStack.Peek();
+            EmitScopeExits(ctx.BlockDepthAtEntry, breakNode.LineNum);
+
+            _chunk.AddInstr(OperationCode.JumpPastBranches, breakNode.LineNum);
+            ctx.PendingBreaks.Add(_chunk.Count - 1);
+        }
+
+        void CompileContinueStmnt(ContinueNode continueNode)
+        {
+            if (_loopCtxStack.Count == 0)
+            {
+                throw new ParserEx("'continue' not properly in loop", continueNode.LineNum);
+            }
+
+            LoopCtx ctx = _loopCtxStack.Peek();
+            EmitScopeExits(ctx.BlockDepthAtEntry, continueNode.LineNum);
+
+            _chunk.AddInstr(OperationCode.Loop, continueNode.LineNum, ctx.LoopStartIdx);
+        }
+
+        // break/continue jump past the textual DecScopeDepth instructions of every block they escape;
+        // emit one DecScopeDepth per escaped level so the VM's scope stack stays balanced.
+        void EmitScopeExits(int targetDepth, int lineNum)
+        {
+            int levels = _blockDepth - targetDepth;
+            for (int i = 0; i < levels; i++)
+            {
+                _chunk.AddInstr(OperationCode.DecScopeDepth, lineNum);
+            }
         }
 
         void CompileBranchStmnt(BranchStmntNode node)
