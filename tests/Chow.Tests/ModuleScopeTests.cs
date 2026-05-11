@@ -4,13 +4,13 @@ using Chow.Interpreter.Values.Internal;
 namespace Chow.Tests
 {
     [TestFixture]
-    public class ChowEnviroTests
+    public class ModuleScopeTests
     {
         // ------------------------------------------------------------------------------------------------------------
         // Helpers
         // ------------------------------------------------------------------------------------------------------------
 
-        static LocalScope NewEnviro() => new LocalScope();
+        static ModuleScope NewModule() => new ModuleScope();
 
         static TaggedUnion Int(int value) => new TaggedUnion(value);
 
@@ -19,9 +19,9 @@ namespace Chow.Tests
         // ============================================================================================================
 
         [Test]
-        public void Constructor_NewInstance_IsTopLevel()
+        public void Constructor_NewInstance_IsOutermostDepth()
         {
-            var env = NewEnviro();
+            var env = NewModule();
 
             Assert.That(env.IsOutermostDepth, Is.True);
         }
@@ -29,9 +29,17 @@ namespace Chow.Tests
         [Test]
         public void Constructor_NewInstance_NoVariablesDefined()
         {
-            var env = NewEnviro();
+            var env = NewModule();
 
             Assert.That(env.IsVariableDefined("x"), Is.False);
+        }
+
+        [Test]
+        public void Constructor_NewInstance_HasNoParent()
+        {
+            var env = NewModule();
+
+            Assert.That(env.ParentOrNull, Is.Null);
         }
 
         // ============================================================================================================
@@ -41,7 +49,7 @@ namespace Chow.Tests
         [Test]
         public void AssignVariableValue_NewName_StoresValue()
         {
-            var env = NewEnviro();
+            var env = NewModule();
 
             env.AssignVariableValue("x", Int(5));
 
@@ -55,7 +63,7 @@ namespace Chow.Tests
         [Test]
         public void AssignVariableValue_ExistingName_OverwritesValue()
         {
-            var env = NewEnviro();
+            var env = NewModule();
 
             env.AssignVariableValue("x", Int(1));
             env.AssignVariableValue("x", Int(2));
@@ -66,7 +74,7 @@ namespace Chow.Tests
         [Test]
         public void IsVariableDefined_AfterAssign_ReturnsTrue()
         {
-            var env = NewEnviro();
+            var env = NewModule();
 
             env.AssignVariableValue("x", Int(0));
 
@@ -76,7 +84,7 @@ namespace Chow.Tests
         [Test]
         public void IsVariableDefined_BeforeAssign_ReturnsFalse()
         {
-            var env = NewEnviro();
+            var env = NewModule();
 
             Assert.That(env.IsVariableDefined("anything"), Is.False);
         }
@@ -86,9 +94,9 @@ namespace Chow.Tests
         // ============================================================================================================
 
         [Test]
-        public void EnterScope_AfterCall_NoLongerTopLevel()
+        public void EnterScope_AfterCall_NoLongerOutermostDepth()
         {
-            var env = NewEnviro();
+            var env = NewModule();
 
             env.EnterNestedScope();
 
@@ -96,9 +104,9 @@ namespace Chow.Tests
         }
 
         [Test]
-        public void ExitScope_AfterMatchingEnter_RestoresTopLevel()
+        public void ExitScope_AfterMatchingEnter_RestoresOutermostDepth()
         {
-            var env = NewEnviro();
+            var env = NewModule();
 
             env.EnterNestedScope();
             env.ExitNestedScope();
@@ -109,7 +117,7 @@ namespace Chow.Tests
         [Test]
         public void ExitScope_RemovesScopeLocalVariables()
         {
-            var env = NewEnviro();
+            var env = NewModule();
 
             env.EnterNestedScope();
             env.AssignVariableValue("x", Int(1));
@@ -121,7 +129,7 @@ namespace Chow.Tests
         [Test]
         public void ExitScope_PreservesOuterVariables()
         {
-            var env = NewEnviro();
+            var env = NewModule();
 
             env.AssignVariableValue("outer", Int(7));
             env.EnterNestedScope();
@@ -139,7 +147,7 @@ namespace Chow.Tests
         [Test]
         public void ExitScope_MultipleVariablesInScope_RemovesAll()
         {
-            var env = NewEnviro();
+            var env = NewModule();
 
             env.EnterNestedScope();
             env.AssignVariableValue("a", Int(1));
@@ -158,7 +166,7 @@ namespace Chow.Tests
         [Test]
         public void EnterExit_NestedScopes_TracksDepth()
         {
-            var env = NewEnviro();
+            var env = NewModule();
 
             env.EnterNestedScope();
             env.EnterNestedScope();
@@ -174,7 +182,7 @@ namespace Chow.Tests
         [Test]
         public void ExitScope_NestedScope_RemovesInnermostVariablesOnly()
         {
-            var env = NewEnviro();
+            var env = NewModule();
 
             env.EnterNestedScope();
             env.AssignVariableValue("mid", Int(5));
@@ -197,7 +205,7 @@ namespace Chow.Tests
         [Test]
         public void AssignVariableValue_InnerScopeRebindsExistingName_InnerScopeSeesNewValue()
         {
-            var env = NewEnviro();
+            var env = NewModule();
 
             env.AssignVariableValue("x", Int(1));
             env.EnterNestedScope();
@@ -210,7 +218,7 @@ namespace Chow.Tests
         public void AssignVariableValue_InnerScopeRebindsExistingName_PersistsAfterExit()
         {
             // Python block-scope: `x = 1; if cond: x = 2` -> x is 2 after the block.
-            var env = NewEnviro();
+            var env = NewModule();
 
             env.AssignVariableValue("x", Int(1));
             env.EnterNestedScope();

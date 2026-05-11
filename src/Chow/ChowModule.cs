@@ -14,15 +14,15 @@ namespace Chow.Interpreter
     public class ChowModule
     {
         List<IExecutionHook> _hooks = new List<IExecutionHook>();
-        LocalScope _enviro;
+        ModuleScope _moduleScope;
 
         public ChowValue this[string name]
         {
             get
             {
-                if (_enviro != null && _enviro.IsVariableDefined(name))
+                if (_moduleScope != null && _moduleScope.IsVariableDefined(name))
                 {
-                    TaggedUnion varUnion = _enviro.GetVariableValue(name);
+                    TaggedUnion varUnion = _moduleScope.GetVariableValue(name);
                     return ApiValueConverter.ToApiClassObj(varUnion);
                 }
 
@@ -31,13 +31,13 @@ namespace Chow.Interpreter
 
             set
             {
-                if (_enviro == null)
+                if (_moduleScope == null)
                 {
-                    _enviro = new LocalScope();
+                    _moduleScope = new ModuleScope();
                 }
 
                 TaggedUnion varUnion = ApiValueConverter.ToTaggedUnion(value);
-                _enviro.AssignVariableValue(name, varUnion);
+                _moduleScope.AssignVariableValue(name, varUnion);
             }
         }
 
@@ -57,11 +57,11 @@ namespace Chow.Interpreter
             // Get hook for expression statements, if it exists, to pass to the virtual machine for execution
             IExecutionHook exprStmtHook = _hooks.Find(h => h is IExprStatementHook);
 
-            // Executes the chunk with the provided environment, or if null, a new environment
-            VirtualMachine vm = new VirtualMachine(chunk, _enviro, exprStmtHook);
+            // Executes the chunk with the provided module scope, or if null, a new one
+            VirtualMachine vm = new VirtualMachine(chunk, _moduleScope, exprStmtHook);
 
-            // Return environment with all global variables and their values after executing the chunk
-            _enviro = vm.ExecuteChunk();
+            // Return the module scope with all top-level bindings after executing the chunk
+            _moduleScope = vm.ExecuteChunk();
         }
 
         public void AddHook(IExecutionHook hook)

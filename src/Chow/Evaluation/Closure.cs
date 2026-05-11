@@ -1,37 +1,43 @@
-﻿using Chow.Interpreter.Compilation;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Chow.Interpreter.Compilation;
 
 namespace Chow.Interpreter.Evaluation
 {
-    // Function that was defined in Chow source code, and not interoperated from the host language (C#).
-    internal class Closure
+    /// <summary>
+    /// Runtime function value produced by a <c>def</c> statement in Chow source (as opposed to
+    /// interop delegates supplied by the host language). Pairs a compiled <see cref="Chunk"/>
+    /// with the scope active at the moment <c>def</c> ran, so the function body can later
+    /// resolve enclosing names via the LEGB chain.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Enclosing"/> is a live reference — never a copy. Mutations to that scope
+    /// after capture remain visible to the function body, matching Python closure semantics.
+    /// </remarks>
+    internal sealed class Closure
     {
-        Chunk _chunk;
+        readonly Chunk _chunk;
+        readonly Scope _enclosing;
+        readonly string _name;
+        readonly int _paramCount;
 
-        // This is readonly because the closure should capture the scope at the time of definition
-        LocalScope _scope;
-        string _name;
-        int _paramCount;
-
+        /// <summary>The compiled bytecode of the function body.</summary>
         public Chunk Chunk => _chunk;
 
+        /// <summary>The scope active when <c>def</c> executed; used as the parent of the call's local scope.</summary>
+        public Scope Enclosing => _enclosing;
+
+        /// <summary>The function name as written in source. Used for diagnostics and stack traces.</summary>
         public string Name => _name;
 
+        /// <summary>Declared positional-parameter count. Used by the VM for arity checking at call sites.</summary>
         public int ParamCount => _paramCount;
 
-        public Closure(Chunk chunk, LocalScope scope, string name, int paramCount)
+        /// <summary>Constructs a closure. All fields are readonly; closures are immutable once built.</summary>
+        public Closure(Chunk chunk, Scope enclosing, string name, int paramCount)
         {
             _chunk = chunk;
-            _scope = scope;
+            _enclosing = enclosing;
             _name = name;
             _paramCount = paramCount;
-        }
-
-        public LocalScope CopyScope()
-        {
-            return new LocalScope(_scope);
         }
     }
 }

@@ -2,7 +2,7 @@ using Chow.Interpreter.Evaluation;
 using Chow.Interpreter.Syntax.Trees;
 using Chow.Interpreter.Syntax.Trees.Expressions;
 using Chow.Interpreter.Syntax.Trees.Statements;
-using Chow.Interpreter.Values;
+using Chow.Interpreter.Values.Internal;
 using System;
 using System.Collections.Generic;
 

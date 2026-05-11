@@ -1,6 +1,6 @@
 using System;
 
-namespace Chow.Interpreter.Values
+namespace Chow.Interpreter.Values.Internal
 {
     struct TaggedUnion
     {

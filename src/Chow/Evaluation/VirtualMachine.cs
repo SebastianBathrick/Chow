@@ -11,7 +11,7 @@ namespace Chow.Interpreter.Evaluation
     sealed class VirtualMachine
     {
         readonly Chunk _chunk;
-        readonly LocalScope _enviro;
+        readonly ModuleScope _enviro;
 
         Stack<TaggedUnion> _valStack;
         IExecutionHook _exprHook;
@@ -21,16 +21,16 @@ namespace Chow.Interpreter.Evaluation
 
         public TaggedUnion ValStackTop => _valStack.Count > 0 ? _valStack.Peek() : TaggedUnion.None;
 
-        public VirtualMachine(Chunk chunk, LocalScope enviro, IExecutionHook exprHook)
+        public VirtualMachine(Chunk chunk, ModuleScope enviro, IExecutionHook exprHook)
         {
             _chunk = chunk;
-            _enviro = enviro == null ? new LocalScope() : enviro;
+            _enviro = enviro == null ? new ModuleScope() : enviro;
             _valStack = new Stack<TaggedUnion>();
             _instructIdx = 0;
             _exprHook = exprHook;
         }
 
-        public LocalScope ExecuteChunk()
+        public ModuleScope ExecuteChunk()
         {
             while (IsRemainingOperation())
             {

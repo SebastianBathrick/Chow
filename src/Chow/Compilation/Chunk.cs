@@ -1,4 +1,4 @@
-using Chow.Interpreter.Values;
+using Chow.Interpreter.Values.Internal;
 using System.Collections.Generic;
 using System.Text;
 

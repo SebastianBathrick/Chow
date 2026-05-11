@@ -1,7 +1,6 @@
-﻿using Chow.Interpreter.Values.Internal;
-using System;
+﻿using System;
 
-namespace Chow.Interpreter.Values
+namespace Chow.Interpreter.Values.Internal
 {
     internal static class ApiValueConverter
     {
