@@ -119,6 +119,28 @@ namespace Chow.Interpreter.Evaluation
                         _valStack.Pop();
                         break;
 
+                    case OperationCode.JumpIfFalse:
+                        // Always pops; jumps past the branch body when the condition is false
+                        if (!_valStack.Pop().IsTruthy)
+                        {
+                            _instructIdx = CurrentOperation.Operand;
+                            continue;
+                        }
+                        break;
+
+                    case OperationCode.JumpPastBranches:
+                        // Unconditional jump emitted at the end of a taken if/elif body to skip remaining branches
+                        _instructIdx = CurrentOperation.Operand;
+                        continue;
+
+                    case OperationCode.IncScopeDepth:
+                        _enviro.EnterScope();
+                        break;
+
+                    case OperationCode.DecScopeDepth:
+                        _enviro.ExitScope();
+                        break;
+
                     // Statements
 
                     case OperationCode.AssignOrDeclareVariable:
@@ -173,10 +195,10 @@ namespace Chow.Interpreter.Evaluation
 
         private void AssignOrDeclareVariable()
         {
-            // Operand -> name via Chunk; dict indexer handles both insert and overwrite.
-            string assignName = _chunk.ReadVariableName(CurrentOperation.Operand);
+            // Operand -> name via Chunk; AssignVariableValue handles first-time declaration internally.
+            string name = _chunk.ReadVariableName(CurrentOperation.Operand);
             TaggedUnion assignVal = _valStack.Pop();
-            _enviro.AssignVariableValue(assignName, assignVal);
+            _enviro.AssignVariableValue(name, assignVal);
         }
 
         void ExecuteBinaryOperation(Func<TaggedUnion, TaggedUnion, TaggedUnion> operation)
@@ -194,11 +216,10 @@ namespace Chow.Interpreter.Evaluation
             if (operand.IsFloat)
             {
                 _valStack.Push(new TaggedUnion(-operand.FloatValue));
+                return;
             }
-            else
-            {
-                _valStack.Push(new TaggedUnion(-operand.IntegerValue));
-            }
+
+            _valStack.Push(new TaggedUnion(-operand.IntegerValue));
         }
 
         void ExecuteNot()

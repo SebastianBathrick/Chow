@@ -29,11 +29,6 @@ namespace Chow.Interpreter.Evaluation
             return _varMap.ContainsKey(name);
         }
 
-        public void DeclareVariable(string name)
-        {
-            _varNames.Push(name);
-        }
-
         public void EnterScope()
         {
             _scopeDepth++;
@@ -60,6 +55,13 @@ namespace Chow.Interpreter.Evaluation
 
         public void AssignVariableValue(string name, TaggedUnion value)
         {
+            // First-time assignment also declares: track the name in the current scope
+            // so it gets removed from the value map when the scope exits.
+            if (!_varMap.ContainsKey(name))
+            {
+                _varNames.Push(name);
+            }
+
             _varMap[name] = value;
         }
 
