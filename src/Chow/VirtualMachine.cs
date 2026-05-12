@@ -317,15 +317,15 @@ namespace Chow.Interpreter
             TaggedUnion result;
             if (argCount == 0)
             {
-                result = calleeUnion.MakeInteropCall(null, null);
+                result = calleeUnion.CallInteropFunction(null, null);
             }
             else if (argCount == 1)
             {
-                result = calleeUnion.MakeInteropCall(args[0], null);
+                result = calleeUnion.CallInteropFunction(args[0], null);
             }
             else
             {
-                result = calleeUnion.MakeInteropCall(null, args);
+                result = calleeUnion.CallInteropFunction(null, args);
             }
 
             _valStack.Push(result);

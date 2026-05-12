@@ -1,5 +1,6 @@
 using Chow.Interpreter.Values;
 using System;
+using Chow.Interpreter.Exceptions;
 
 namespace Chow.Interpreter.State.Values
 {
@@ -247,7 +248,7 @@ namespace Chow.Interpreter.State.Values
         /// <returns>The TaggedUnion result of the call. If the interop function returns void, the result is a None value.</returns>
         /// <exception cref="InvalidOperationException">If the object is not callable.</exception>
         /// <remarks><paramref name="singleArg"/> is its own parameter so that a new array does not have to be created for a single element.</remarks>
-        public TaggedUnion MakeInteropCall(TaggedUnion? singleArg, TaggedUnion[] args)
+        public TaggedUnion CallInteropFunction(TaggedUnion? singleArg, TaggedUnion[] args)
         {
             if (!IsObject)
             {
@@ -260,6 +261,7 @@ namespace Chow.Interpreter.State.Values
                 // FUTURE: this delegate case also serves class-bound methods (closure pre-binding `self`).
                 case Func<TaggedUnion[], TaggedUnion> methodDelegate:
                     TaggedUnion[] allArgs;
+
                     if (singleArg.HasValue)
                     {
                         allArgs = new[] { singleArg.Value };
@@ -268,25 +270,32 @@ namespace Chow.Interpreter.State.Values
                     {
                         allArgs = args ?? Array.Empty<TaggedUnion>();
                     }
+
                     return methodDelegate(allArgs);
 
                 case Func<ChowValue> funcNoArg:
                     return ChowValueConverter.ToTaggedUnion(funcNoArg());
+                
                 case Func<ChowValue, ChowValue> funcOneArg:
                     return ChowValueConverter.ToTaggedUnion(funcOneArg(ChowValueConverter.ToChowValue(singleArg.Value)));
+                
                 case Func<ChowValue[], ChowValue> funcManyArgs:
                     return ChowValueConverter.ToTaggedUnion(funcManyArgs(BuildArgArray(args)));
+                
                 case Action action:
                     action();
                     return TaggedUnion.None;
+
                 case Action<ChowValue> actionOneArg:
                     actionOneArg(ChowValueConverter.ToChowValue(singleArg.Value));
                     return TaggedUnion.None;
+
                 case Action<ChowValue[]> actionManyArgs:
                     actionManyArgs(BuildArgArray(args));
                     return TaggedUnion.None;
+
                 default:
-                    throw new InvalidOperationException($"Object of type '{_obj.GetType().Name}' is not callable");
+                    throw new TypeException($"Cannot call value of type '{_obj.GetType().Name}'");
             }
         }
 

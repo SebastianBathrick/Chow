@@ -52,7 +52,7 @@ namespace Chow.Interpreter
                 }
 
 
-                // Method either assigns a new value to an existing variable, or declares & initializes a new variable
+                // MethodDefinition either assigns a new value to an existing variable, or declares & initializes a new variable
                 _moduleScope.AssignVariableValue(name, varUnion);
             }
         }
@@ -88,7 +88,7 @@ namespace Chow.Interpreter
             // Extracts the value from ChowValue and creates a new TaggedUnion containing the value & appropriate tag
             var varUnion = ChowValueConverter.ToTaggedUnion(value);
 
-            // Method either assigns a new value to an existing variable, or declares & initializes a new variable
+            // MethodDefinition either assigns a new value to an existing variable, or declares & initializes a new variable
             _moduleScope.AssignVariableValue(name, varUnion);
         }
 
