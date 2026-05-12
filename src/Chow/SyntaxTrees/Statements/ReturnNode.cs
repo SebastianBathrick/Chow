@@ -2,7 +2,7 @@
 {
     class ReturnNode : Node
     {
-        Node _expr;
+        readonly Node _expr;
 
         /// <summary>
         /// Node representing the expression to be evaluated and returned by the return statement or null.

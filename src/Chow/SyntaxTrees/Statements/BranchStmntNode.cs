@@ -2,9 +2,9 @@
 {
     class BranchStmntNode : Node
     {
-        Node _expr;
-        Node _block;
-        Node _branch;
+        readonly Node _expr;
+        readonly Node _block;
+        readonly Node _branch;
 
         public Node Branch => _branch;
         public Node Expr => _expr;

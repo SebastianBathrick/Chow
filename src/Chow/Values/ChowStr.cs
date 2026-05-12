@@ -2,7 +2,7 @@ namespace Chow.Interpreter.Values
 {
     public class ChowStr : ChowValue
     {
-        string _val;
+        readonly string _val;
 
         public string Value => _val;
 
@@ -11,17 +11,17 @@ namespace Chow.Interpreter.Values
             _val = val;
         }
 
-        public override DataType As<DataType>()
+        public override TDataType As<TDataType>()
         {
-            if (typeof(DataType) == typeof(bool))
+            if (typeof(TDataType) == typeof(bool))
             {
-                return (DataType)(object)(_val.Length != 0);
+                return (TDataType)(object)(_val.Length != 0);
             }
 
-            throw new InvalidCastException(GetType(), typeof(DataType), this);
+            throw new InvalidCastException(GetType(), typeof(TDataType), this);
         }
 
-        public override bool Is<DataType>()
+        public override bool Is<TDataType>()
         {
             return false;
         }

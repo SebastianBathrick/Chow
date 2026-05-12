@@ -2,7 +2,7 @@ namespace Chow.Interpreter.Values
 {
     public class ChowDynamic : ChowValue
     {
-        object _val;
+        readonly object _val;
 
         public object Value => _val;
 
@@ -12,19 +12,19 @@ namespace Chow.Interpreter.Values
             _val = val;
         }
 
-        public override DataType As<DataType>()
+        public override TDataType As<TDataType>()
         {
-            if (_val is DataType value)
+            if (_val is TDataType value)
             {
                 return value;
             }
 
-            throw new InvalidCastException(GetType(), typeof(DataType), this);
+            throw new InvalidCastException(GetType(), typeof(TDataType), this);
         }
 
-        public override bool Is<DataType>()
+        public override bool Is<TDataType>()
         {
-            return _val is DataType;
+            return _val is TDataType;
         }
 
         public override string ToString()

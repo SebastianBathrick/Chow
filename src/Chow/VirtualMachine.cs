@@ -4,8 +4,8 @@ using Chow.Interpreter.Hooks;
 using Chow.Interpreter.State.Scopes;
 using Chow.Interpreter.State.Stack;
 using Chow.Interpreter.State.Values;
-using System;
 using System.Collections.Generic;
+using System;
 
 namespace Chow.Interpreter
 {

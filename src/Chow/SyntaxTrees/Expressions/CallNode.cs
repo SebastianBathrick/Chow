@@ -3,8 +3,8 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     class CallNode : Node
     {
-        Node _callName;
-        List<Node> _args;
+        readonly Node _callName;
+        readonly List<Node> _args;
 
         public Node CallName => _callName;
 

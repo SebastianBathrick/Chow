@@ -2,9 +2,9 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
 {
     class SubscriptAssignNode : Node
     {
-        Node _target;
-        Node _index;
-        Node _expr;
+        readonly Node _target;
+        readonly Node _index;
+        readonly Node _expr;
 
         public Node Target => _target;
         public Node Index => _index;
@@ -19,7 +19,7 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
 
         public override string ToString()
         {
-            return $"SubscriptAssign({_target}[{_index}], {_expr}) line={LineNum}";
+            return $"SubscriptAssign({_target}[{_index}], {_expr}) line={LineNumber}";
         }
     }
 }

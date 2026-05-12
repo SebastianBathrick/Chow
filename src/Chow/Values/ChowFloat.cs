@@ -2,36 +2,36 @@ namespace Chow.Interpreter.Values
 {
     public class ChowFloat : ChowValue
     {
-        double _val;
+        readonly double _val;
 
         public ChowFloat(double val)
         {
             _val = val;
         }
 
-        public override DataType As<DataType>()
+        public override TDataType As<TDataType>()
         {
-            if (typeof(DataType) == typeof(double))
+            if (typeof(TDataType) == typeof(double))
             {
-                return (DataType)(object)_val;
+                return (TDataType)(object)_val;
             }
 
-            if (typeof(DataType) == typeof(long))
+            if (typeof(TDataType) == typeof(long))
             {
-                return (DataType)(object)(long)_val;
+                return (TDataType)(object)(long)_val;
             }
 
-            if (typeof(DataType) == typeof(bool))
+            if (typeof(TDataType) == typeof(bool))
             {
-                return (DataType)(object)(_val != 0.0);
+                return (TDataType)(object)(_val != 0.0);
             }
 
-            throw new InvalidCastException(GetType(), typeof(DataType), this);
+            throw new InvalidCastException(GetType(), typeof(TDataType), this);
         }
 
-        public override bool Is<DataType>()
+        public override bool Is<TDataType>()
         {
-            return typeof(DataType) == typeof(double);
+            return typeof(TDataType) == typeof(double);
         }
 
         public override string ToString() => _val.ToString();

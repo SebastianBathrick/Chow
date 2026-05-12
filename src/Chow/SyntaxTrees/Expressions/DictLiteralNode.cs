@@ -3,8 +3,8 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     class DictLiteralNode : Node
     {
-        List<Node> _keys;
-        List<Node> _values;
+        readonly List<Node> _keys;
+        readonly List<Node> _values;
 
         public List<Node> Keys => _keys;
         public List<Node> Values => _values;
@@ -19,7 +19,7 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
         {
             if (_keys.Count == 0)
             {
-                return $"[Dict line={LineNum}]";
+                return $"[Dict line={LineNumber}]";
             }
 
             var body = string.Empty;
@@ -28,7 +28,7 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
                 body += "\n" + IndentChildren(_keys[i].ToString());
                 body += "\n" + IndentChildren(_values[i].ToString());
             }
-            return $"[Dict line={LineNum}{body}\n]";
+            return $"[Dict line={LineNumber}{body}\n]";
         }
 
         static string IndentChildren(string nodeString)

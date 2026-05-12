@@ -10,228 +10,218 @@ const string TRAILING_INDICATOR = "... ";
 const string FILE_PATH_PATTERN = @"^(?:(?:[A-Za-z]:[\\/])|(?:\\\\[^\\/:*?""<>|\r\n]+\\[^\\/:*?""<>|\r\n]+[\\/]?)|[\\/])?(?:[^\\/:*?""<>|\r\n]+[\\/])*[^\\/:*?""<>|\r\n]+$";
 const string REQUIRED_EXTENSION = ".chw";
 
-var module = new ChowModule();
-
-module["print"] = (ChowValue val) =>
+var module = new ChowModule
 {
-    Console.WriteLine(val);
-    return ChowValue.None;
-};
+    ["print"] = (ChowValue val) =>
+    {
+        Console.WriteLine(val);
+        return ChowValue.None;
+    },
+    ["input"] = () =>
+    {
+        var input = Console.ReadLine();
 
-module["input"] = () =>
-{
-    var input = Console.ReadLine();
-
-    if (input == null)
-    {
-        input = string.Empty;
-    }
-
-    return (ChowValue)new ChowStr(input);
-};
-
-module["float"] = (ChowValue val) =>
-{
-    if (val.Is<double>())
-    {
-        return new ChowFloat(val.As<double>());
-    }
-    if (val.Is<long>())
-    {
-        return new ChowFloat(val.As<long>());
-    }
-    if (val.Is<bool>())
-    {
-        return new ChowFloat(val.As<double>());
-    }
-    if (val is ChowStr s)
-    {
-        if (double.TryParse(s.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsed))
+        if (input == null)
         {
-            return new ChowFloat(parsed);
+            input = string.Empty;
         }
-        throw new InvalidOperationException($"could not convert string to float: '{s.Value}'");
-    }
-    throw new InvalidOperationException($"float() argument must be a string or a number, not '{ChowTypeName(val)}'");
-};
 
-module["str"] = (ChowValue val) =>
-{
-    return (ChowValue)new ChowStr(val.ToString());
-};
-
-module["int"] = (ChowValue val) =>
-{
-    if (val.Is<long>())
+        return (ChowValue)new ChowStr(input);
+    },
+    ["float"] = (ChowValue val) =>
     {
-        return new ChowInt(val.As<long>());
-    }
-    if (val.Is<double>())
-    {
-        return new ChowInt((long)val.As<double>());
-    }
-    if (val.Is<bool>())
-    {
-        return new ChowInt(val.As<long>());
-    }
-    if (val is ChowStr s)
-    {
-        if (long.TryParse(s.Value, out var parsed))
+        if (val.Is<double>())
         {
-            return new ChowInt(parsed);
+            return new ChowFloat(val.As<double>());
         }
-        throw new InvalidOperationException($"invalid literal for int() with base 10: '{s.Value}'");
-    }
-    throw new InvalidOperationException($"int() argument must be a string, a bytes-like object or a real number, not '{ChowTypeName(val)}'");
-};
-
-module["bool"] = (ChowValue val) =>
-{
-    if (val.IsNone)
-    {
-        return new ChowBool(false);
-    }
-    if (val.Is<bool>())
-    {
-        return new ChowBool(val.As<bool>());
-    }
-    if (val.Is<long>())
-    {
-        return new ChowBool(val.As<long>() != 0);
-    }
-    if (val.Is<double>())
-    {
-        return new ChowBool(val.As<double>() != 0.0);
-    }
-    if (val is ChowStr s)
-    {
-        return new ChowBool(s.Value.Length != 0);
-    }
-    if (val is ChowList l)
-    {
-        return new ChowBool(l.Count != 0);
-    }
-    if (val is ChowDict d)
-    {
-        return new ChowBool(d.Count != 0);
-    }
-    throw new InvalidOperationException($"bool() argument not supported for type '{ChowTypeName(val)}'");
-};
-
-module["list"] = (ChowValue[] args) =>
-{
-    if (args.Length == 0)
-    {
-        return new ChowList();
-    }
-    if (args.Length == 1)
-    {
-        if (args[0] is ChowList l)
+        if (val.Is<long>())
         {
-            return new ChowList(l);
+            return new ChowFloat(val.As<long>());
         }
-        throw new InvalidOperationException($"'{ChowTypeName(args[0])}' object is not iterable");
-    }
-    throw new InvalidOperationException($"list expected at most 1 argument, got {args.Length}");
-};
-
-module["dict"] = (ChowValue[] args) =>
-{
-    if (args.Length == 0)
-    {
-        return new ChowDict();
-    }
-    if (args.Length == 1)
-    {
-        if (args[0] is ChowDict d)
+        if (val.Is<bool>())
         {
-            return new ChowDict(d);
+            return new ChowFloat(val.As<double>());
         }
-        throw new InvalidOperationException($"'{ChowTypeName(args[0])}' object is not iterable");
-    }
-    throw new InvalidOperationException($"dict expected at most 1 argument, got {args.Length}");
-};
+        if (val is ChowStr s)
+        {
+            if (double.TryParse(s.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsed))
+            {
+                return new ChowFloat(parsed);
+            }
+            throw new InvalidOperationException($"could not convert string to float: '{s.Value}'");
+        }
+        throw new InvalidOperationException($"float() argument must be a string or a number, not '{ChowTypeName(val)}'");
+    },
+    ["str"] = (ChowValue val) =>
+    {
+        return (ChowValue)new ChowStr(val.ToString());
+    },
+    ["int"] = (ChowValue val) =>
+    {
+        if (val.Is<long>())
+        {
+            return new ChowInt(val.As<long>());
+        }
+        if (val.Is<double>())
+        {
+            return new ChowInt((long)val.As<double>());
+        }
+        if (val.Is<bool>())
+        {
+            return new ChowInt(val.As<long>());
+        }
+        if (val is ChowStr s)
+        {
+            if (long.TryParse(s.Value, out var parsed))
+            {
+                return new ChowInt(parsed);
+            }
+            throw new InvalidOperationException($"invalid literal for int() with base 10: '{s.Value}'");
+        }
+        throw new InvalidOperationException($"int() argument must be a string, a bytes-like object or a real number, not '{ChowTypeName(val)}'");
+    },
+    ["bool"] = (ChowValue val) =>
+    {
+        if (val.IsNone)
+        {
+            return new ChowBool(false);
+        }
+        if (val.Is<bool>())
+        {
+            return new ChowBool(val.As<bool>());
+        }
+        if (val.Is<long>())
+        {
+            return new ChowBool(val.As<long>() != 0);
+        }
+        if (val.Is<double>())
+        {
+            return new ChowBool(val.As<double>() != 0.0);
+        }
+        if (val is ChowStr s)
+        {
+            return new ChowBool(s.Value.Length != 0);
+        }
+        if (val is ChowList l)
+        {
+            return new ChowBool(l.Count != 0);
+        }
+        if (val is ChowDict d)
+        {
+            return new ChowBool(d.Count != 0);
+        }
+        throw new InvalidOperationException($"bool() argument not supported for type '{ChowTypeName(val)}'");
+    },
+    ["list"] = (ChowValue[] args) =>
+    {
+        if (args.Length == 0)
+        {
+            return new ChowList();
+        }
+        if (args.Length == 1)
+        {
+            if (args[0] is ChowList l)
+            {
+                return new ChowList(l);
+            }
+            throw new InvalidOperationException($"'{ChowTypeName(args[0])}' object is not iterable");
+        }
+        throw new InvalidOperationException($"list expected at most 1 argument, got {args.Length}");
+    },
+    ["dict"] = (ChowValue[] args) =>
+    {
+        if (args.Length == 0)
+        {
+            return new ChowDict();
+        }
+        if (args.Length == 1)
+        {
+            if (args[0] is ChowDict d)
+            {
+                return new ChowDict(d);
+            }
+            throw new InvalidOperationException($"'{ChowTypeName(args[0])}' object is not iterable");
+        }
+        throw new InvalidOperationException($"dict expected at most 1 argument, got {args.Length}");
+    },
+    ["len"] = (ChowValue val) =>
+    {
+        if (val is ChowStr s)
+        {
+            return new ChowInt(s.Value.Length);
+        }
 
-module["len"] = (ChowValue val) =>
-{
-    if (val is ChowStr s)
-    {
-        return new ChowInt(s.Value.Length);
-    }
-    else if (val is ChowList l)
-    {
-        return new ChowInt(l.Count);
-    }
-    else if (val is ChowDict d)
-    {
-        return new ChowInt(d.Count);
-    }
-    throw new InvalidOperationException($"object of type '{ChowTypeName(val)}' has no len()");
-};
+        if (val is ChowList l)
+        {
+            return new ChowInt(l.Count);
+        }
 
-module["type"] = (ChowValue val) =>
-{
-    return (ChowValue)new ChowStr(ChowTypeName(val));
-};
-
-module["abs"] = (ChowValue val) =>
-{
-    if (val.Is<long>())
+        if (val is ChowDict d)
+        {
+            return new ChowInt(d.Count);
+        }
+        throw new InvalidOperationException($"object of type '{ChowTypeName(val)}' has no len()");
+    },
+    ["type"] = (ChowValue val) =>
     {
-        return new ChowInt(Math.Abs(val.As<long>()));
-    }
-    if (val.Is<double>())
+        return (ChowValue)new ChowStr(ChowTypeName(val));
+    },
+    ["abs"] = (ChowValue val) =>
     {
-        return new ChowFloat(Math.Abs(val.As<double>()));
-    }
-    if (val.Is<bool>())
+        if (val.Is<long>())
+        {
+            return new ChowInt(Math.Abs(val.As<long>()));
+        }
+        if (val.Is<double>())
+        {
+            return new ChowFloat(Math.Abs(val.As<double>()));
+        }
+        if (val.Is<bool>())
+        {
+            return (ChowValue)new ChowInt(val.As<long>());
+        }
+        throw new InvalidOperationException($"bad operand type for abs(): '{ChowTypeName(val)}'");
+    },
+    ["round"] = (ChowValue val) =>
     {
-        return (ChowValue)new ChowInt(val.As<long>());
-    }
-    throw new InvalidOperationException($"bad operand type for abs(): '{ChowTypeName(val)}'");
-};
-
-module["round"] = (ChowValue val) =>
-{
-    if (val.Is<long>())
+        if (val.Is<long>())
+        {
+            return new ChowInt(val.As<long>());
+        }
+        if (val.Is<double>())
+        {
+            return new ChowInt((long)Math.Round(val.As<double>(), MidpointRounding.ToEven));
+        }
+        if (val.Is<bool>())
+        {
+            return new ChowInt(val.As<long>());
+        }
+        throw new InvalidOperationException($"type {ChowTypeName(val)} doesn't define __round__ method");
+    },
+    ["min"] = (ChowValue[] args) =>
     {
-        return new ChowInt(val.As<long>());
-    }
-    if (val.Is<double>())
+        if (args.Length != 2)
+        {
+            throw new InvalidOperationException($"min() expected 2 arguments, got {args.Length}");
+        }
+        if (!ChowIsNumeric(args[0]) || !ChowIsNumeric(args[1]))
+        {
+            throw new InvalidOperationException("min() arguments must be numbers");
+        }
+        return ChowAsDouble(args[0]) <= ChowAsDouble(args[1]) ? args[0] : args[1];
+    },
+    ["max"] = (ChowValue[] args) =>
     {
-        return new ChowInt((long)Math.Round(val.As<double>(), MidpointRounding.ToEven));
+        if (args.Length != 2)
+        {
+            throw new InvalidOperationException($"max() expected 2 arguments, got {args.Length}");
+        }
+        if (!ChowIsNumeric(args[0]) || !ChowIsNumeric(args[1]))
+        {
+            throw new InvalidOperationException("max() arguments must be numbers");
+        }
+        return ChowAsDouble(args[0]) >= ChowAsDouble(args[1]) ? args[0] : args[1];
     }
-    if (val.Is<bool>())
-    {
-        return new ChowInt(val.As<long>());
-    }
-    throw new InvalidOperationException($"type {ChowTypeName(val)} doesn't define __round__ method");
-};
-
-module["min"] = (ChowValue[] args) =>
-{
-    if (args.Length != 2)
-    {
-        throw new InvalidOperationException($"min() expected 2 arguments, got {args.Length}");
-    }
-    if (!ChowIsNumeric(args[0]) || !ChowIsNumeric(args[1]))
-    {
-        throw new InvalidOperationException("min() arguments must be numbers");
-    }
-    return ChowAsDouble(args[0]) <= ChowAsDouble(args[1]) ? args[0] : args[1];
-};
-
-module["max"] = (ChowValue[] args) =>
-{
-    if (args.Length != 2)
-    {
-        throw new InvalidOperationException($"max() expected 2 arguments, got {args.Length}");
-    }
-    if (!ChowIsNumeric(args[0]) || !ChowIsNumeric(args[1]))
-    {
-        throw new InvalidOperationException("max() arguments must be numbers");
-    }
-    return ChowAsDouble(args[0]) >= ChowAsDouble(args[1]) ? args[0] : args[1];
 };
 
 if (args.Length > 0)

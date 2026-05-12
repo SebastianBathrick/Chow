@@ -1,5 +1,5 @@
 using Chow.Interpreter.Bytecode;
-using Chow.Interpreter.Evaluation;
+using Chow.Interpreter;
 using Chow.Interpreter.State.Scopes;
 using Chow.Interpreter.State.Values;
 

@@ -1,4 +1,3 @@
-using Chow.Interpreter.Compilation;
 using Chow.Interpreter.State.Scopes;
 using Chow.Interpreter.State.Stack;
 using Chow.Interpreter.State.Values;

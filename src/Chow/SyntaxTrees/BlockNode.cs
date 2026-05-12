@@ -4,20 +4,20 @@ namespace Chow.Interpreter.SyntaxTrees
 {
     class BlockNode : Node
     {
-        List<Node> _stmnts;
+        readonly List<Node> _statements;
 
-        public int StatmentCount => _stmnts.Count;
+        public int StatementCount => _statements.Count;
 
-        public IReadOnlyList<Node> Statements => _stmnts;
+        public IReadOnlyList<Node> Statements => _statements;
 
-        public BlockNode(List<Node> stmnts, int line) : base(line)
+        public BlockNode(List<Node> statements, int line) : base(line)
         {
-            _stmnts = stmnts;
+            _statements = statements;
         }
 
         public override string ToString()
         {
-            return $"Block({StatmentCount} statements) line={LineNum}";
+            return $"Block({StatementCount} statements) line={LineNumber}";
         }
     }
 }

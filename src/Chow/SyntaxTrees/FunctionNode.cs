@@ -3,9 +3,9 @@ namespace Chow.Interpreter.SyntaxTrees
 {
     class FunctionNode : Node
     {
-        string _name;
-        List<Node> _params;
-        Node _body;
+        readonly string _name;
+        readonly List<Node> _params;
+        readonly Node _body;
 
         public string Name => _name;
 

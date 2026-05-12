@@ -4,7 +4,7 @@ namespace Chow.Interpreter.SyntaxTrees
     {
         readonly int _lineNumber;
 
-        public int LineNum => _lineNumber;
+        public int LineNumber => _lineNumber;
 
         protected Node(int line)
         {

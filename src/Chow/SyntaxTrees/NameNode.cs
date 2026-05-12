@@ -2,7 +2,7 @@ namespace Chow.Interpreter.SyntaxTrees
 {
     class NameNode : Node
     {
-        string _nameNode;
+        readonly string _nameNode;
 
         public string Name => _nameNode;
 
@@ -13,7 +13,7 @@ namespace Chow.Interpreter.SyntaxTrees
 
         public override string ToString()
         {
-            return $"VariableFactor({_nameNode}) line={LineNum}";
+            return $"VariableFactor({_nameNode}) line={LineNumber}";
         }
     }
 }

@@ -3,7 +3,7 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     class ListLiteralNode : Node
     {
-        List<Node> _elements;
+        readonly List<Node> _elements;
 
         public List<Node> Elements => _elements;
 
@@ -16,15 +16,15 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
         {
             if (_elements.Count == 0)
             {
-                return $"[List line={LineNum}]";
+                return $"[List line={LineNumber}]";
             }
 
             var body = string.Empty;
-            for (var i = 0; i < _elements.Count; i++)
+            foreach (var element in _elements)
             {
-                body += "\n" + IndentChildren(_elements[i].ToString());
+                body += "\n" + IndentChildren(element.ToString());
             }
-            return $"[List line={LineNum}{body}\n]";
+            return $"[List line={LineNumber}{body}\n]";
         }
 
         static string IndentChildren(string nodeString)

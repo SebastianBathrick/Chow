@@ -2,9 +2,9 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     class ExprNode : Node
     {
-        ExprOperator _operator;
-        Node _l;
-        Node _r;
+        readonly ExprOperator _operator;
+        readonly Node _l;
+        readonly Node _r;
 
         public ExprOperator Operator => _operator;
         public Node Left => _l;
@@ -33,11 +33,11 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 
             if (_r == null)
             {
-                return $"[{_operator} line={LineNum}\n{indentedLeft}\n]";
+                return $"[{_operator} line={LineNumber}\n{indentedLeft}\n]";
             }
 
             var indentedRight = IndentChildren(_r.ToString());
-            return $"[{_operator} line={LineNum}\n{indentedLeft}\n{indentedRight}\n]";
+            return $"[{_operator} line={LineNumber}\n{indentedLeft}\n{indentedRight}\n]";
         }
 
         static string IndentChildren(string nodeString)

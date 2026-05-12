@@ -1,19 +1,17 @@
-using Chow.Interpreter.Bytecode;
-using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Hooks;
 using Chow.Interpreter.State.Scopes;
 using Chow.Interpreter.State.Values;
+using Chow.Interpreter.Exceptions;
+using Chow.Interpreter.Hooks;
 using Chow.Interpreter.Tokens;
 using Chow.Interpreter.Values;
-using System;
 using System.Collections.Generic;
-using Chow.Interpreter.SyntaxTrees;
+using System;
 
 namespace Chow.Interpreter
 {
     public class ChowModule
     {
-        List<IHook> _hooks = new List<IHook>();
+        readonly List<IHook> _hooks = new List<IHook>();
         ModuleScope _moduleScope;
 
         #region Global Scope Access

@@ -3,33 +3,32 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     class LiteralNode : Node
     {
-        object _val;
-        LiteralDataType _type;
+        readonly object _val;
 
         public object Value => _val;
-        public LiteralDataType Type => _type;
+        public LiteralDataType Type { get; }
 
         public LiteralNode(object value, int lineNumber) : base(lineNumber)
         {
             if (value == null)
             {
-                _type = LiteralDataType.None;
+                Type = LiteralDataType.None;
             }
             else if (value is long)
             {
-                _type = LiteralDataType.Integer;
+                Type = LiteralDataType.Integer;
             }
             else if (value is double)
             {
-                _type = LiteralDataType.Float;
+                Type = LiteralDataType.Float;
             }
             else if (value is bool)
             {
-                _type = LiteralDataType.Boolean;
+                Type = LiteralDataType.Boolean;
             }
             else if (value is string)
             {
-                _type = LiteralDataType.String;
+                Type = LiteralDataType.String;
             }
             else
             {
@@ -41,7 +40,7 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 
         public override string ToString()
         {
-            return $"{_val} line={LineNum}";
+            return $"{_val} line={LineNumber}";
         }
     }
 }

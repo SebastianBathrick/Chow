@@ -5,36 +5,36 @@ namespace Chow.Interpreter.Values
         const string TRUE_STRING = "True";
         const string FALSE_STRING = "False";
 
-        bool _val;
+        readonly bool _val;
 
         public ChowBool(bool val)
         {
             _val = val;
         }
 
-        public override DataType As<DataType>()
+        public override TDataType As<TDataType>()
         {
-            if (typeof(DataType) == typeof(bool))
+            if (typeof(TDataType) == typeof(bool))
             {
-                return (DataType)(object)_val;
+                return (TDataType)(object)_val;
             }
 
-            if (typeof(DataType) == typeof(long))
+            if (typeof(TDataType) == typeof(long))
             {
-                return (DataType)(object)(_val ? 1L : 0L);
+                return (TDataType)(object)(_val ? 1L : 0L);
             }
 
-            if (typeof(DataType) == typeof(double))
+            if (typeof(TDataType) == typeof(double))
             {
-                return (DataType)(object)(_val ? 1.0 : 0.0);
+                return (TDataType)(object)(_val ? 1.0 : 0.0);
             }
 
-            throw new InvalidCastException(GetType(), typeof(DataType), this);
+            throw new InvalidCastException(GetType(), typeof(TDataType), this);
         }
 
-        public override bool Is<DataType>()
+        public override bool Is<TDataType>()
         {
-            return typeof(DataType) == typeof(bool);
+            return typeof(TDataType) == typeof(bool);
         }
 
         public override string ToString() => _val ? TRUE_STRING : FALSE_STRING;

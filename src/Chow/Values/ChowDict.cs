@@ -26,17 +26,17 @@ namespace Chow.Interpreter.Values
             Internal = wrapped;
         }
 
-        public override DataType As<DataType>()
+        public override TDataType As<TDataType>()
         {
-            if (typeof(DataType) == typeof(bool))
+            if (typeof(TDataType) == typeof(bool))
             {
-                return (DataType)(object)(Internal.Count != 0);
+                return (TDataType)(object)(Internal.Count != 0);
             }
 
-            throw new InvalidCastException(GetType(), typeof(DataType), this);
+            throw new InvalidCastException(GetType(), typeof(TDataType), this);
         }
 
-        public override bool Is<DataType>()
+        public override bool Is<TDataType>()
         {
             return false;
         }

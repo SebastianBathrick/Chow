@@ -31,7 +31,7 @@ namespace Chow.Tests
 
         static Node UnwrapAssignmentExpression(Node root)
         {
-            var statement = ((TreeRootNode)root).Stmnts[0];
+            var statement = ((TreeRootNode)root).Statements[0];
             return ((VarAssignNode)statement).Expression;
         }
 
@@ -112,7 +112,7 @@ namespace Chow.Tests
                 Token(TokenType.LiteralInt, "42", 7, 42L),
                 Token(TokenType.EndOfCode, string.Empty, 7));
 
-            Assert.That(result.LineNum, Is.EqualTo(7));
+            Assert.That(result.LineNumber, Is.EqualTo(7));
         }
 
         [Test]
@@ -180,7 +180,7 @@ namespace Chow.Tests
                 Token(TokenType.LiteralInt, "2", 4, 2L),
                 Token(TokenType.EndOfCode, string.Empty, 4));
 
-            Assert.That(result.LineNum, Is.EqualTo(3));
+            Assert.That(result.LineNumber, Is.EqualTo(3));
         }
 
         [Test]
@@ -293,8 +293,8 @@ namespace Chow.Tests
 
             Assert.Multiple(() =>
             {
-                Assert.That(inner.LineNum, Is.EqualTo(2));
-                Assert.That(outer.LineNum, Is.EqualTo(4));
+                Assert.That(inner.LineNumber, Is.EqualTo(2));
+                Assert.That(outer.LineNumber, Is.EqualTo(4));
             });
         }
 
@@ -343,7 +343,7 @@ namespace Chow.Tests
                 Token(TokenType.LiteralInt, "5", 7, 5L),
                 Token(TokenType.EndOfCode, string.Empty, 7));
 
-            Assert.That(result.LineNum, Is.EqualTo(6));
+            Assert.That(result.LineNumber, Is.EqualTo(6));
         }
 
         [Test]
@@ -406,7 +406,7 @@ namespace Chow.Tests
         static Node ParseStmt(string source)
         {
             var root = new Parser(new Scanner(source).ScanTokens()).BuildTree();
-            return ((TreeRootNode)root).Stmnts[0];
+            return ((TreeRootNode)root).Statements[0];
         }
 
         static ListLiteralNode AssertList(Node node, int expectedCount)
@@ -528,7 +528,7 @@ namespace Chow.Tests
                 Token(TokenType.LiteralInt, "1", 3, 1L),
                 Token(TokenType.SymbolRightBracket, "]", 3),
                 Token(TokenType.EndOfCode, string.Empty, 3));
-            Assert.That(result.LineNum, Is.EqualTo(3));
+            Assert.That(result.LineNumber, Is.EqualTo(3));
         }
 
         [Test]

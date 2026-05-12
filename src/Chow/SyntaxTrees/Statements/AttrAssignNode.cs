@@ -2,9 +2,9 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
 {
     class AttrAssignNode : Node
     {
-        Node _target;
-        string _attrName;
-        Node _expr;
+        readonly Node _target;
+        readonly string _attrName;
+        readonly Node _expr;
 
         public Node Target => _target;
         public string AttrName => _attrName;
@@ -19,7 +19,7 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
 
         public override string ToString()
         {
-            return $"AttrAssign({_target}.{_attrName}, {_expr}) line={LineNum}";
+            return $"AttrAssign({_target}.{_attrName}, {_expr}) line={LineNumber}";
         }
     }
 }

@@ -2,8 +2,8 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     class SubscriptNode : Node
     {
-        Node _target;
-        Node _index;
+        readonly Node _target;
+        readonly Node _index;
 
         public Node Target => _target;
         public Node Index => _index;
@@ -18,7 +18,7 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
         {
             var indentedTarget = IndentChildren(_target.ToString());
             var indentedIndex = IndentChildren(_index.ToString());
-            return $"[Subscript line={LineNum}\n{indentedTarget}\n{indentedIndex}\n]";
+            return $"[Subscript line={LineNumber}\n{indentedTarget}\n{indentedIndex}\n]";
         }
 
         static string IndentChildren(string nodeString)

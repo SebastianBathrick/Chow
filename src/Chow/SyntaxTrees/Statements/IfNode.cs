@@ -2,9 +2,9 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
 {
     class IfNode : Node
     {
-        Node _expr;
-        Node _block;
-        Node _branch;
+        readonly Node _expr;
+        readonly Node _block;
+        readonly Node _branch;
 
         public Node Expr => _expr;
         public Node Block => _block;

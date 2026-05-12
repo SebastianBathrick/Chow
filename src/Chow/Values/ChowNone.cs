@@ -6,7 +6,7 @@ namespace Chow.Interpreter.Values
     {
         const string NONE_STRING = "None";
 
-        static ChowValue _instance = new ChowNone();
+        static readonly ChowValue _instance = new ChowNone();
 
         internal static ChowValue Instance => _instance;
 
@@ -21,12 +21,12 @@ namespace Chow.Interpreter.Values
             throw new InvalidOperationException("Only one instance of ChowNone should exist.");
         }
 
-        public override DataType As<DataType>()
+        public override TDataType As<TDataType>()
         {
-            throw new InvalidCastException(GetType(), typeof(DataType), this);
+            throw new InvalidCastException(GetType(), typeof(TDataType), this);
         }
 
-        public override bool Is<DataType>()
+        public override bool Is<TDataType>()
         {
             return false;
         }

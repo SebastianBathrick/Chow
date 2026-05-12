@@ -2,8 +2,8 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
 {
     class WhileNode : Node
     {
-        Node _expr;
-        Node _block;
+        readonly Node _expr;
+        readonly Node _block;
 
         public Node Expr => _expr;
         public Node Block => _block;

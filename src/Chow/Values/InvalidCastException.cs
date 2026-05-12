@@ -4,10 +4,10 @@ namespace Chow.Interpreter.Values
 {
     public class InvalidCastException : Exception
     {
-        Type _fromType;
-        Type _toType;
+        readonly Type _fromType;
+        readonly Type _toType;
 
-        ChowValue _value;
+        readonly ChowValue _value;
 
         public InvalidCastException(Type fromType, Type toType, ChowValue value)
             : base($"Cannot convert value from {fromType} to {toType}.")

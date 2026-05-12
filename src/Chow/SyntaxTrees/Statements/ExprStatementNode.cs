@@ -2,7 +2,7 @@
 {
     class ExprStatementNode : Node
     {
-        Node _expr;
+        readonly Node _expr;
 
         public Node Expression => _expr;
 
