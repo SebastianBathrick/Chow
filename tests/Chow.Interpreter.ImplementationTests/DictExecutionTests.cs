@@ -241,14 +241,14 @@ namespace Chow.Interpreter.ImplementationTests
         public void Attribute_Unknown_ThrowsAttributeError()
         {
             (var module, _) = NewModule();
-            Assert.That(() => module.Execute("{}.fake"), Throws.TypeOf<AttributeException>());
+            Assert.That(() => module.Execute("{}.fake"), Throws.TypeOf<Exceptions.AttributeException>());
         }
 
         [Test]
         public void AttributeAssign_OnDict_ThrowsAttributeError()
         {
             (var module, _) = NewModule();
-            Assert.That(() => module.Execute("d = {}\nd.x = 1"), Throws.TypeOf<AttributeException>());
+            Assert.That(() => module.Execute("d = {}\nd.x = 1"), Throws.TypeOf<Exceptions.AttributeException>());
         }
 
         // ============================================================================================================

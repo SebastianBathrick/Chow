@@ -522,7 +522,7 @@ namespace Chow.Interpreter
 
                 if (!list.HasMethod(attrName))
                 {
-                    throw new AttributeException("list", attrName, GetCurrentLineNumber());
+                    throw new Exceptions.AttributeException("list", attrName, GetCurrentLineNumber());
                 }
 
                 _valStack.Push(list[attrName]);
@@ -535,14 +535,14 @@ namespace Chow.Interpreter
 
                 if (!dict.HasMethod(attrName))
                 {
-                    throw new AttributeException("dict", attrName, GetCurrentLineNumber());
+                    throw new Exceptions.AttributeException("dict", attrName, GetCurrentLineNumber());
                 }
 
                 _valStack.Push(dict[attrName]);
                 return;
             }
 
-            throw new AttributeException(target.Tag.ToString().ToLowerInvariant(), attrName, GetCurrentLineNumber());
+            throw new Exceptions.AttributeException(target.Tag.ToString().ToLowerInvariant(), attrName, GetCurrentLineNumber());
         }
 
         void ExecuteSetAttr()
@@ -567,7 +567,7 @@ namespace Chow.Interpreter
                     break;
             }
 
-            throw new AttributeException(typeName, attrName, GetCurrentLineNumber());
+            throw new Exceptions.AttributeException(typeName, attrName, GetCurrentLineNumber());
         }
     }
 }
