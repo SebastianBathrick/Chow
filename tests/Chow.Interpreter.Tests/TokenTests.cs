@@ -1,7 +1,7 @@
 using Chow.Interpreter;
 using Chow.Interpreter.Tokens;
 
-namespace Chow.Tests
+namespace Chow.Interpreter.Tests
 {
     [TestFixture]
     public class TokenTests

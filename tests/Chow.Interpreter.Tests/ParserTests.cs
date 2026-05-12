@@ -5,7 +5,7 @@ using Chow.Interpreter.SyntaxTrees.Expressions;
 using Chow.Interpreter.SyntaxTrees.Statements;
 using Chow.Interpreter.Tokens;
 
-namespace Chow.Tests
+namespace Chow.Interpreter.Tests
 {
     [TestFixture]
     public class ParserTests
@@ -15,7 +15,7 @@ namespace Chow.Tests
         // ------------------------------------------------------------------------------------------------------------
 
         static Node Parse(string source) =>
-            UnwrapAssignmentExpression(new Parser(new Scanner("x = " + source).ScanTokens()).BuildTree());
+            UnwrapAssignmentExpression(new Interpreter.Parser(new Interpreter.Scanner("x = " + source).ScanTokens()).BuildTree());
 
         static Node ParseTokens(params Token[] tokens)
         {
@@ -25,7 +25,7 @@ namespace Chow.Tests
                 Token(TokenType.SymbolAssign, "=", 1),
             };
             wrapped.AddRange(tokens);
-            return UnwrapAssignmentExpression(new Parser(wrapped).BuildTree());
+            return UnwrapAssignmentExpression(new Interpreter.Parser(wrapped).BuildTree());
         }
 
         static Node UnwrapAssignmentExpression(Node root)
@@ -404,7 +404,7 @@ namespace Chow.Tests
 
         static Node ParseStmt(string source)
         {
-            var root = new Parser(new Scanner(source).ScanTokens()).BuildTree();
+            var root = new Interpreter.Parser(new Interpreter.Scanner(source).ScanTokens()).BuildTree();
             return ((TreeRootNode)root).Statements[0];
         }
 

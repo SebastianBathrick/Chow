@@ -2,7 +2,7 @@ using Chow.Interpreter;
 using Chow.Interpreter.Values;
 using System;
 
-namespace Chow.Tests
+namespace Chow.Interpreter.Tests
 {
     [TestFixture]
     public class InteropCallTests

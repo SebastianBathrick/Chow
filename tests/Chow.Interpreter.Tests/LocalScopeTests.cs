@@ -1,7 +1,7 @@
 using Chow.Interpreter.State.Scopes;
 using Chow.Interpreter.State.Values;
 
-namespace Chow.Tests
+namespace Chow.Interpreter.Tests
 {
     [TestFixture]
     public class LocalScopeTests

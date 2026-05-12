@@ -2,7 +2,7 @@ using Chow.Interpreter;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Values;
 
-namespace Chow.Tests
+namespace Chow.Interpreter.Tests
 {
     [TestFixture]
     public class PublicApiFunctionTests

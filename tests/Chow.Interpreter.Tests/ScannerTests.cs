@@ -2,7 +2,7 @@ using Chow.Interpreter;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Tokens;
 
-namespace Chow.Tests
+namespace Chow.Interpreter.Tests
 {
     [TestFixture]
     public class ScannerTests
@@ -11,7 +11,7 @@ namespace Chow.Tests
         // Helpers
         // ------------------------------------------------------------------------------------------------------------
 
-        static List<Token> Tokenize(string source) => new Scanner(source).ScanTokens();
+        static List<Token> Tokenize(string source) => new Interpreter.Scanner(source).ScanTokens();
 
         static List<TokenType> TokenTypes(string source) => Tokenize(source).Select(token => token.type).ToList();
 
@@ -38,7 +38,7 @@ namespace Chow.Tests
         [Test]
         public void ScanTokens_EmptySource_ReturnsEndOfCode()
         {
-            var tokens = new Scanner("").ScanTokens();
+            var tokens = new Interpreter.Scanner("").ScanTokens();
             Assert.That(tokens.Select(t => t.type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
 
@@ -639,7 +639,7 @@ namespace Chow.Tests
         [Test]
         public void ScanTokens_CalledTwiceOnSameInstance_ReturnsEquivalentTokens()
         {
-            var scanner = new Scanner("1\n    2\n3\n");
+            var scanner = new Interpreter.Scanner("1\n    2\n3\n");
 
             var first = scanner.ScanTokens();
             var second = scanner.ScanTokens();
@@ -650,8 +650,8 @@ namespace Chow.Tests
         [Test]
         public void ScanTokens_TwoIndependentInstancesOnSameInput_ReturnEqualSequences()
         {
-            var s1 = new Scanner("1\n    2\n3\n");
-            var s2 = new Scanner("1\n    2\n3\n");
+            var s1 = new Interpreter.Scanner("1\n    2\n3\n");
+            var s2 = new Interpreter.Scanner("1\n    2\n3\n");
 
             Assert.That(s2.ScanTokens(), Is.EqualTo(s1.ScanTokens()));
         }
@@ -659,7 +659,7 @@ namespace Chow.Tests
         [Test]
         public void ScanTokens_CalledTwiceOnWhitespaceOnlySource_ReturnsEquivalentTokens()
         {
-            var scanner = new Scanner("    ");
+            var scanner = new Interpreter.Scanner("    ");
 
             var first = scanner.ScanTokens();
             var second = scanner.ScanTokens();
@@ -670,7 +670,7 @@ namespace Chow.Tests
         [Test]
         public void ScanTokens_CalledAgainAfterScannerException_ThrowsSameScannerException()
         {
-            var scanner = new Scanner("@");
+            var scanner = new Interpreter.Scanner("@");
 
             Assert.That(() => scanner.ScanTokens(), Throws.TypeOf<ScannerEx>());
             Assert.That(() => scanner.ScanTokens(), Throws.TypeOf<ScannerEx>());
@@ -733,7 +733,7 @@ namespace Chow.Tests
         [Test]
         public void ScanTokens_NewlinesOnlySource_ReturnsEndOfCode()
         {
-            var tokens = new Scanner("\n\n\n").ScanTokens();
+            var tokens = new Interpreter.Scanner("\n\n\n").ScanTokens();
             Assert.That(tokens.Select(t => t.type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
 
@@ -744,7 +744,7 @@ namespace Chow.Tests
         [Test]
         public void ScanTokens_NullSource_ReturnsEndOfCode()
         {
-            var tokens = new Scanner(null!).ScanTokens();
+            var tokens = new Interpreter.Scanner(null!).ScanTokens();
             Assert.That(tokens.Select(t => t.type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
 
@@ -768,7 +768,7 @@ namespace Chow.Tests
         [Test]
         public void ScanTokens_CommentOnlySource_ReturnsEndOfCode()
         {
-            var tokens = new Scanner("# only a comment").ScanTokens();
+            var tokens = new Interpreter.Scanner("# only a comment").ScanTokens();
 
             Assert.That(tokens.Select(t => t.type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
