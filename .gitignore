@@ -434,6 +434,7 @@ FodyWeavers.xsd
 # Coding agent local state
 .claude/
 .cursor/
+.agents/
 
 # Keep repository-owned guidance and automation files tracked
 !AGENTS.md
@@ -443,7 +444,7 @@ AGENTS.md
 CLAUDE.md
 .github/copilot-instructions.md
 BytecodeTransformations.md
-.idea
+.idea/
 .idea/.idea.Chow.V2/.idea/workspace.xml
 .idea/.idea.Chow.V2/.idea/vcs.xml
 .idea/.idea.Chow.V2/.idea/projectSettingsUpdater.xml
@@ -453,3 +454,4 @@ BytecodeTransformations.md
 .idea/.idea.Chow/.idea/copilot.data.migration.ask2agent.xml
 .idea/.idea.Chow/.idea/indexLayout.xml
 .idea/.idea.Chow/.idea/vcs.xml
+skills-lock.json
