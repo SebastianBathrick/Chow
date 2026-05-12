@@ -22,7 +22,7 @@ namespace Chow.Tests
         {
             var module = MakeModule();
             bool called = false;
-            module["f"] = new ChowDynamic((Action)(() => { called = true; }));
+            module["f"] = (Action)(() => { called = true; });
 
             module.Execute("f()");
 
@@ -33,12 +33,11 @@ namespace Chow.Tests
         public void A02_NoArgFunc_ReturnValueStoredInVariable()
         {
             var module = MakeModule();
-            module["f"] = new ChowDynamic((Func<ChowValue>)(() => new ChowInt(42)));
+            module["f"] = (Func<ChowValue>)(() => new ChowInt(42));
 
             module.Execute("x = f()");
 
-            ChowValue result = module["x"];
-            Assert.That(result.As<long>(), Is.EqualTo(42));
+            Assert.That(module.GetGlobal("x").As<long>(), Is.EqualTo(42));
         }
 
         // ------------------------------------------------------------------------------------------------------------
@@ -49,11 +48,11 @@ namespace Chow.Tests
         public void B01_SingleArgFunc_ArgPassedCorrectly()
         {
             var module = MakeModule();
-            module["f"] = new ChowDynamic((Func<ChowValue, ChowValue>)(v => new ChowInt(v.As<long>() + 1)));
+            module["f"] = (Func<ChowValue, ChowValue>)(v => new ChowInt(v.As<long>() + 1));
 
             module.Execute("x = f(10)");
 
-            Assert.That(module["x"].As<long>(), Is.EqualTo(11));
+            Assert.That(module.GetGlobal("x").As<long>(), Is.EqualTo(11));
         }
 
         [Test]
@@ -61,7 +60,7 @@ namespace Chow.Tests
         {
             var module = MakeModule();
             long received = -1;
-            module["f"] = new ChowDynamic((Action<ChowValue>)(v => { received = v.As<long>(); }));
+            module["f"] = (Action<ChowValue>)(v => { received = v.As<long>(); });
 
             module.Execute("f(99)");
 
@@ -76,12 +75,12 @@ namespace Chow.Tests
         public void C01_MultiArgFunc_ArgsInCorrectOrder()
         {
             var module = MakeModule();
-            module["f"] = new ChowDynamic((Func<ChowValue[], ChowValue>)(args =>
-                new ChowInt(args[0].As<long>() * 10 + args[1].As<long>())));
+            module["f"] = (Func<ChowValue[], ChowValue>)(args =>
+                new ChowInt(args[0].As<long>() * 10 + args[1].As<long>()));
 
             module.Execute("x = f(3, 7)");
 
-            Assert.That(module["x"].As<long>(), Is.EqualTo(37));
+            Assert.That(module.GetGlobal("x").As<long>(), Is.EqualTo(37));
         }
 
         [Test]
@@ -89,11 +88,11 @@ namespace Chow.Tests
         {
             var module = MakeModule();
             long first = -1, second = -1;
-            module["f"] = new ChowDynamic((Action<ChowValue[]>)(args =>
+            module["f"] = (Action<ChowValue[]>)(args =>
             {
                 first = args[0].As<long>();
                 second = args[1].As<long>();
-            }));
+            });
 
             module.Execute("f(1, 2)");
 
@@ -112,7 +111,7 @@ namespace Chow.Tests
         public void D01_NonCallableObject_ThrowsInvalidOperationException()
         {
             var module = MakeModule();
-            module["f"] = new ChowDynamic(new object());
+            module["f"] = new object();
 
             Assert.Throws<InvalidOperationException>(() => module.Execute("f()"));
         }

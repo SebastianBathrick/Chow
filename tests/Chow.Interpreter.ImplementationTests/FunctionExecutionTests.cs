@@ -17,9 +17,9 @@ namespace Chow.Interpreter.ImplementationTests
         {
             public List<ChowValue> Values { get; } = new List<ChowValue>();
 
-            public void Invoke(ChowValue value)
+            public void Invoke(object value = null)
             {
-                Values.Add(value);
+                Values.Add((ChowValue)value);
             }
         }
 
@@ -267,7 +267,7 @@ namespace Chow.Interpreter.ImplementationTests
 
             moduleA.Execute("def f():\n    return 42");
 
-            ChowValue fValue = moduleA["f"];
+            ChowValue fValue = moduleA.GetGlobal("f");
             moduleB["f"] = fValue;
 
             moduleB.Execute("f()");

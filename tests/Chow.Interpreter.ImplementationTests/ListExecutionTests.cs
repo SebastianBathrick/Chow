@@ -17,9 +17,9 @@ namespace Chow.Interpreter.ImplementationTests
         {
             public List<ChowValue> Values { get; } = new List<ChowValue>();
 
-            public void Invoke(ChowValue value)
+            public void Invoke(object value = null)
             {
-                Values.Add(value);
+                Values.Add((ChowValue)value);
             }
         }
 
@@ -359,7 +359,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             ChowModule module = new ChowModule();
             module.Execute("x = [1, 2, 3]");
-            ChowList list = (ChowList)module["x"];
+            ChowList list = (ChowList)module.GetGlobal("x");
             Assert.That(list.Count, Is.EqualTo(3));
             Assert.That(list[1].As<long>(), Is.EqualTo(2));
         }

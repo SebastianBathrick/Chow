@@ -17,9 +17,9 @@ namespace Chow.Interpreter.ImplementationTests
         {
             public List<ChowValue> Values { get; } = new List<ChowValue>();
 
-            public void Invoke(ChowValue value)
+            public void Invoke(object value = null)
             {
-                Values.Add(value);
+                Values.Add((ChowValue)value);
             }
         }
 
@@ -45,7 +45,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, _) = NewModule();
             module.Execute("x = 0\nwhile x < 5:\n    x = x + 1");
-            Assert.That(module["x"].As<long>(), Is.EqualTo(5));
+            Assert.That(module.GetGlobal("x").As<long>(), Is.EqualTo(5));
         }
 
         [Test]
@@ -53,7 +53,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, _) = NewModule();
             module.Execute("x = 10\nwhile x < 5:\n    x = x + 1");
-            Assert.That(module["x"].As<long>(), Is.EqualTo(10));
+            Assert.That(module.GetGlobal("x").As<long>(), Is.EqualTo(10));
         }
 
         // ============================================================================================================
@@ -71,7 +71,7 @@ namespace Chow.Interpreter.ImplementationTests
                 "    if x == 3:\n" +
                 "        break";
             module.Execute(src);
-            Assert.That(module["x"].As<long>(), Is.EqualTo(3));
+            Assert.That(module.GetGlobal("x").As<long>(), Is.EqualTo(3));
         }
 
         [Test]
@@ -99,7 +99,7 @@ namespace Chow.Interpreter.ImplementationTests
                 "    total = total + x";
             module.Execute(src);
             // 1 + 2 + 4 + 5 = 12 (x == 3 skipped)
-            Assert.That(module["total"].As<long>(), Is.EqualTo(12));
+            Assert.That(module.GetGlobal("total").As<long>(), Is.EqualTo(12));
         }
 
         [Test]
@@ -132,8 +132,8 @@ namespace Chow.Interpreter.ImplementationTests
             // inner adds 2 per outer iter; outer runs 3 times -> 6
             Assert.Multiple(() =>
             {
-                Assert.That(module["i"].As<long>(), Is.EqualTo(3));
-                Assert.That(module["total"].As<long>(), Is.EqualTo(6));
+                Assert.That(module.GetGlobal("i").As<long>(), Is.EqualTo(3));
+                Assert.That(module.GetGlobal("total").As<long>(), Is.EqualTo(6));
             });
         }
 
@@ -146,7 +146,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, _) = NewModule();
             module.Execute("i = 0\nwhile i < 4:\n    i = i + 1");
-            Assert.That(module["i"].As<long>(), Is.EqualTo(4));
+            Assert.That(module.GetGlobal("i").As<long>(), Is.EqualTo(4));
         }
 
         // ============================================================================================================

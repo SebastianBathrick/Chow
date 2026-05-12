@@ -22,7 +22,7 @@
 - Callable interop/non-interop functions
 
 ## Tests
-399/399 passing tests
+444/444 passing tests
 
 ## Small TODOs
 - Get rid of "is dirty" flags in major classes (redundant)

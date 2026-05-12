@@ -17,9 +17,9 @@ namespace Chow.Tests
         {
             public List<ChowValue> Values { get; } = new List<ChowValue>();
 
-            public void Invoke(ChowValue value)
+            public void Invoke(object value = null)
             {
-                Values.Add(value);
+                Values.Add((ChowValue)value);
             }
         }
 
@@ -41,7 +41,7 @@ namespace Chow.Tests
             (ChowModule module, CaptureExprHook _) = NewModule();
             module.Execute("def f():\n    return 1");
 
-            ChowValue value = module["f"];
+            ChowValue value = module.GetGlobal("f");
 
             Assert.That(value, Is.Not.Null);
         }
@@ -52,7 +52,7 @@ namespace Chow.Tests
             (ChowModule module, CaptureExprHook _) = NewModule();
             module.Execute("def f():\n    return 1");
 
-            ChowValue value = module["f"];
+            ChowValue value = module.GetGlobal("f");
 
             Assert.That(value.IsNone, Is.False);
         }
@@ -66,7 +66,7 @@ namespace Chow.Tests
         {
             (ChowModule module, CaptureExprHook _) = NewModule();
 
-            Assert.Throws<GlobalAccessException>(() => { ChowValue _ = module["missing"]; });
+            Assert.Throws<GlobalAccessException>(() => { var _ = module["missing"]; });
         }
 
         [Test]
@@ -75,7 +75,7 @@ namespace Chow.Tests
             (ChowModule module, CaptureExprHook _) = NewModule();
             module.Execute("x = 1");
 
-            Assert.Throws<GlobalAccessException>(() => { ChowValue _ = module["missing"]; });
+            Assert.Throws<GlobalAccessException>(() => { var _ = module["missing"]; });
         }
 
         // ============================================================================================================
@@ -152,7 +152,7 @@ namespace Chow.Tests
             (ChowModule module, CaptureExprHook hook) = NewModule();
             module.Execute("def f():\n    return 5");
 
-            ChowValue fValue = module["f"];
+            ChowValue fValue = module.GetGlobal("f");
             module["g"] = fValue;
             module.Execute("g()");
 
