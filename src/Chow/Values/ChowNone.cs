@@ -4,17 +4,14 @@ namespace Chow.Interpreter.Values
 {
     public class ChowNone : ChowValue
     {
-        private const string NONE_STRING = "None";
+        const string NONE_STRING = "None";
 
-        private static ChowValue _instance = new ChowNone();
+        static ChowValue _instance = new ChowNone();
 
-        internal static ChowValue Instance
-        {
-            get { return _instance; }
-        }
+        internal static ChowValue Instance => _instance;
 
         // Only one instance of ChowNone should exist
-        private ChowNone()
+        ChowNone()
         {
             if (_instance == null)
             {

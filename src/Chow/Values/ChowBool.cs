@@ -2,10 +2,10 @@ namespace Chow.Interpreter.Values
 {
     public class ChowBool : ChowValue
     {
-        private const string TRUE_STRING = "True";
-        private const string FALSE_STRING = "False";
+        const string TRUE_STRING = "True";
+        const string FALSE_STRING = "False";
 
-        private bool _val;
+        bool _val;
 
         public ChowBool(bool val)
         {

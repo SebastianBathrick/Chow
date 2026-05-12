@@ -258,7 +258,7 @@ namespace Chow.Interpreter
             _valStack.Push(result);
         }
 
-        private void PushVariableValue()
+        void PushVariableValue()
         {
             // Operand -> name via Chunk. Semantic analysis is responsible for ensuring the
             // name exists before this op runs; KeyNotFoundException here is a contract violation.
@@ -274,7 +274,7 @@ namespace Chow.Interpreter
             _valStack.Push(varValue);
         }
 
-        private void AssignOrDeclareVariable()
+        void AssignOrDeclareVariable()
         {
             // Operand -> name via Chunk; CallStack routes the assign to the current frame's scope.
             string name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);

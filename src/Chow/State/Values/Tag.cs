@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.State.Values
 {
-    internal enum Tag
+    enum Tag
     {
         Empty,
         None,

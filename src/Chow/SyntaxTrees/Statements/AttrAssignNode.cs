@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    internal class AttrAssignNode : Node
+    class AttrAssignNode : Node
     {
         Node _target;
         string _attrName;

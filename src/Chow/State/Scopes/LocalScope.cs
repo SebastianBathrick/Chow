@@ -8,7 +8,7 @@ namespace Chow.Interpreter.State.Scopes
     /// L (Local) layer of LEGB; <see cref="ParentOrNull"/> exposes the captured enclosing scope
     /// (E), chaining upward through any outer locals to the terminating <see cref="ModuleScope"/>.
     /// </summary>
-    internal sealed class LocalScope : Scope
+    sealed class LocalScope : Scope
     {
         readonly Scope _parent;
 

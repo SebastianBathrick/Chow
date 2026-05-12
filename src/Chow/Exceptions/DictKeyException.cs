@@ -1,10 +1,10 @@
 namespace Chow.Interpreter.Exceptions
 {
-    internal class DictKeyException : ChowRuntimeException
+    class DictKeyException : ChowRuntimeException
     {
         const string EXCEPTION_ALIAS = "KeyError";
 
-        private string _keyRepr;
+        string _keyRepr;
 
         public string KeyRepr => _keyRepr;
 

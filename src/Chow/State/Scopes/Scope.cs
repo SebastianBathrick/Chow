@@ -13,7 +13,7 @@ namespace Chow.Interpreter.State.Scopes
     /// No source identifier can start with <c>&lt;</c>, so <c>SCOPE_BOUNDARY_ELEMENT</c> never
     /// collides with a real variable name.
     /// </remarks>
-    internal abstract class Scope
+    abstract class Scope
     {
         protected const string SCOPE_BOUNDARY_ELEMENT = "<SCOPE_BOUNDARY>";
         protected const int OUTERMOST_SCOPE_DEPTH = 0;

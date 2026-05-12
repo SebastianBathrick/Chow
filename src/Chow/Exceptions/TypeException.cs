@@ -2,7 +2,7 @@ using System;
 
 namespace Chow.Interpreter.Exceptions
 {
-    internal class TypeException : Exception
+    class TypeException : Exception
     {
         public TypeException()
         {

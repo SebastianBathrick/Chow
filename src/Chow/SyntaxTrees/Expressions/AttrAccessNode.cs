@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
-    internal class AttrAccessNode : Node
+    class AttrAccessNode : Node
     {
         Node _target;
         string _attrName;

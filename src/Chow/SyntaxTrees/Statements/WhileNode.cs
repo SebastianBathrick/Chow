@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    internal class WhileNode : Node
+    class WhileNode : Node
     {
         Node _expr;
         Node _block;

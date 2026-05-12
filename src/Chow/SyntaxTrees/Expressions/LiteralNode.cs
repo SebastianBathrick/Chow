@@ -1,7 +1,7 @@
 using System;
 namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
-    internal class LiteralNode : Node
+    class LiteralNode : Node
     {
         object _val;
         LiteralDataType _type;

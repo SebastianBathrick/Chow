@@ -11,7 +11,7 @@ namespace Chow.Interpreter.State.Stack
     /// chain (L → E* → G) via <see cref="Scope.ParentOrNull"/> walking; assignments always
     /// land in the current frame's scope (Python local-by-default).
     /// </summary>
-    internal class CallStack
+    class CallStack
     {
         StackFrame _moduleLvl;
         Stack<StackFrame> _callFrames;

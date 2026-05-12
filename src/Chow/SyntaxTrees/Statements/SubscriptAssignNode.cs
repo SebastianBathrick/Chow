@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    internal class SubscriptAssignNode : Node
+    class SubscriptAssignNode : Node
     {
         Node _target;
         Node _index;

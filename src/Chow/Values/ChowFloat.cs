@@ -2,7 +2,7 @@ namespace Chow.Interpreter.Values
 {
     public class ChowFloat : ChowValue
     {
-        private double _val;
+        double _val;
 
         public ChowFloat(double val)
         {

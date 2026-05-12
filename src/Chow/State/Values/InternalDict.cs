@@ -6,13 +6,13 @@ using System.Text;
 
 namespace Chow.Interpreter.State.Values
 {
-    internal class InternalDict
+    class InternalDict
     {
         const string METHOD_GET_NAME = "get";
         const string METHOD_CLEAR_NAME = "clear";
         const string METHOD_POP_NAME = "pop";
         const string METHOD_UPDATE_NAME = "update";
-        const string METHOD_SETDEFAULT_NAME = "setdefault";
+        const string METHOD_SET_DEFAULT_NAME = "setdefault";
 
 
         Dictionary<TaggedUnion, TaggedUnion> _entries;
@@ -31,20 +31,12 @@ namespace Chow.Interpreter.State.Values
                 }
                 return value;
             }
-            set
-            {
-                Add(key, value);
-            }
+            set => Add(key, value);
         }
 
-        public TaggedUnion this[string name]
-        {
-            get
-            {
-                // Will throw if method name is invalid, which is the expected behavior
-                return new TaggedUnion(GetMethod(name));
-            }
-        }
+        public TaggedUnion this[string name] =>
+            // Will throw if method name is invalid, which is the expected behavior
+            new TaggedUnion(GetMethod(name));
 
         public InternalDict()
         {
@@ -147,7 +139,7 @@ namespace Chow.Interpreter.State.Values
                     return Pop;
                 case METHOD_UPDATE_NAME:
                     return Update;
-                case METHOD_SETDEFAULT_NAME:
+                case METHOD_SET_DEFAULT_NAME:
                     return SetDefault;
                 default:
                     throw new NotImplementedException($"Method '{methodName}' is not implemented for InternalDict");
@@ -162,7 +154,7 @@ namespace Chow.Interpreter.State.Values
                 case METHOD_CLEAR_NAME:
                 case METHOD_POP_NAME:
                 case METHOD_UPDATE_NAME:
-                case METHOD_SETDEFAULT_NAME:
+                case METHOD_SET_DEFAULT_NAME:
                     return true;
                 default:
                     return false;

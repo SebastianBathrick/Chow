@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Chow.Interpreter.SyntaxTrees
 {
-    internal class BlockNode : Node
+    class BlockNode : Node
     {
         List<Node> _stmnts;
 

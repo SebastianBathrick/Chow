@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Chow.Interpreter.State.Values
 {
-    internal class InternalList
+    class InternalList
     {
         const string METHOD_APPEND_NAME = "append";
         const string METHOD_CLEAR_NAME = "clear";
@@ -41,15 +41,8 @@ namespace Chow.Interpreter.State.Values
             }
             return idx;
         }
-
-        public TaggedUnion this[string name]
-        {
-            get
-            {
-                // Will throw if method name is invalid, which is the expected behavior
-                return new TaggedUnion(GetMethod(name));
-            }
-        }
+        // Will throw if method name is invalid, which is the expected behavior
+        public TaggedUnion this[string name] => new TaggedUnion(GetMethod(name));
 
         public InternalList()
         {

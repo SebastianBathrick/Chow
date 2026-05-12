@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
-    internal class DictLiteralNode : Node
+    class DictLiteralNode : Node
     {
         List<Node> _keys;
         List<Node> _values;

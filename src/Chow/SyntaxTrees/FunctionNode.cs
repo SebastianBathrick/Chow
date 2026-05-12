@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 namespace Chow.Interpreter.SyntaxTrees
 {
-    internal class FunctionNode : Node
+    class FunctionNode : Node
     {
         string _name;
         List<Node> _params;

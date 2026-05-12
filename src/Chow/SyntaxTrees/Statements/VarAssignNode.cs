@@ -1,6 +1,6 @@
 ﻿namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    internal class VarAssignNode : Node
+    class VarAssignNode : Node
     {
         string _name;
         Node _expr;

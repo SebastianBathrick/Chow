@@ -1,6 +1,6 @@
 ﻿namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    internal class BranchStmntNode : Node
+    class BranchStmntNode : Node
     {
         Node _expr;
         Node _block;

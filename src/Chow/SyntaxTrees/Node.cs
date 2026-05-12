@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees
 {
-    internal abstract class Node
+    abstract class Node
     {
         readonly int _lineNumber;
 

@@ -4,7 +4,7 @@ using System;
 
 namespace Chow.Interpreter
 {
-    internal static class ChowValueConverter
+    static class ChowValueConverter
     {
         public static TaggedUnion ToTaggedUnion(ChowValue value)
         {

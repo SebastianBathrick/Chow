@@ -2,7 +2,7 @@ using System;
 
 namespace Chow.Interpreter.Exceptions
 {
-    internal sealed class ParserEx : Exception
+    sealed class ParserEx : Exception
     {
         int _lineNum;
 

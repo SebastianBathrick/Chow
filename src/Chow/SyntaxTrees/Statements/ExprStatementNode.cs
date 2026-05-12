@@ -1,6 +1,6 @@
 ﻿namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    internal class ExprStatementNode : Node
+    class ExprStatementNode : Node
     {
         Node _expr;
 

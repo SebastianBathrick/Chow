@@ -1,6 +1,6 @@
 ﻿namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    internal class ReturnNode : Node
+    class ReturnNode : Node
     {
         Node _expr;
 

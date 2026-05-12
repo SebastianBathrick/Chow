@@ -2,7 +2,7 @@ namespace Chow.Interpreter.Values
 {
     public class ChowDynamic : ChowValue
     {
-        private object _val;
+        object _val;
 
         public object Value => _val;
 

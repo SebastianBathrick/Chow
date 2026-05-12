@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
-    internal class ListLiteralNode : Node
+    class ListLiteralNode : Node
     {
         List<Node> _elements;
 

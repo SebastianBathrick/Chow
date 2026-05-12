@@ -1,10 +1,10 @@
 ﻿namespace Chow.Interpreter.Exceptions
 {
-    internal class UndefinedNameException : ChowRuntimeException
+    class UndefinedNameException : ChowRuntimeException
     {
         const string EXCEPTION_ALIAS = "NameError";
 
-        private string _undefinedName;
+        string _undefinedName;
 
         public string UndefinedName => _undefinedName;
 

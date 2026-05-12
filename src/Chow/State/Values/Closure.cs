@@ -13,7 +13,7 @@ namespace Chow.Interpreter.State.Values
     /// <see cref="Enclosing"/> is a live reference — never a copy. Mutations to that scope
     /// after capture remain visible to the function body, matching Python closure semantics.
     /// </remarks>
-    internal sealed class Closure
+    sealed class Closure
     {
         readonly Chunk _chunk;
         readonly Scope _enclosing;

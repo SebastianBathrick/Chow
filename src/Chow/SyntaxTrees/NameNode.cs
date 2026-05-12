@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees
 {
-    internal class NameNode : Node
+    class NameNode : Node
     {
         string _nameNode;
 

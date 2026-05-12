@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
-    internal class SubscriptNode : Node
+    class SubscriptNode : Node
     {
         Node _target;
         Node _index;

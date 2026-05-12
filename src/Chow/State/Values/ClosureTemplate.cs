@@ -7,7 +7,7 @@ namespace Chow.Interpreter.State.Values
     /// and consumed by the <c>MakeClosure</c> op at runtime, which combines this template with
     /// the currently-active scope to produce a real <see cref="Closure"/>.
     /// </summary>
-    internal sealed class ClosureTemplate
+    sealed class ClosureTemplate
     {
         readonly Chunk _chunk;
         readonly string _name;

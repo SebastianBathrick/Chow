@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
-    internal enum LiteralDataType
+    enum LiteralDataType
     {
         Integer,
         Float,

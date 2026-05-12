@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
-    internal class SliceNode : Node
+    class SliceNode : Node
     {
         Node _start;
         Node _stop;

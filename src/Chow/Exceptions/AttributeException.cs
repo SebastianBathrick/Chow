@@ -1,11 +1,11 @@
 namespace Chow.Interpreter.Exceptions
 {
-    internal class AttributeException : ChowRuntimeException
+    class AttributeException : ChowRuntimeException
     {
         const string EXCEPTION_ALIAS = "AttributeError";
 
-        private string _typeName;
-        private string _attrName;
+        string _typeName;
+        string _attrName;
 
         public string TypeName => _typeName;
         public string AttrName => _attrName;

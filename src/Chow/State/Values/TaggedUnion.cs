@@ -147,7 +147,7 @@ namespace Chow.Interpreter.State.Values
             }
         }
 
-        private TaggedUnion(Tag type)
+        TaggedUnion(Tag type)
         {
             _type = type;
             _longInt = DEFAULT_INT_VALUE;

@@ -2,7 +2,7 @@ namespace Chow.Interpreter.Values
 {
     public class ChowStr : ChowValue
     {
-        private string _val;
+        string _val;
 
         public string Value => _val;
 

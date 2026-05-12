@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    internal class IfNode : Node
+    class IfNode : Node
     {
         Node _expr;
         Node _block;

@@ -5,7 +5,7 @@ namespace Chow.Interpreter.State.Scopes
     /// <c>Execute</c> call so REPL-style state carries between inputs. Acts as the G
     /// (Global) terminator of LEGB lookup chains and never has a parent.
     /// </summary>
-    internal sealed class ModuleScope : Scope
+    sealed class ModuleScope : Scope
     {
         /// <summary>Creates an empty module scope with no bindings.</summary>
         public ModuleScope() : base()

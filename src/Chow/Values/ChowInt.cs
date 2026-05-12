@@ -2,7 +2,7 @@ namespace Chow.Interpreter.Values
 {
     public class ChowInt : ChowValue
     {
-        private long _val;
+        long _val;
 
         public ChowInt(long val)
         {

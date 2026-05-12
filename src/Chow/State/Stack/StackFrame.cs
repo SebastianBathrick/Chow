@@ -7,7 +7,7 @@ namespace Chow.Interpreter.State.Stack
     /// One slot on the <see cref="CallStack"/>. Pairs a <see cref="Chunk"/> being executed
     /// with its associated <see cref="Scope"/> and tracks the current instruction pointer.
     /// </summary>
-    internal class StackFrame
+    class StackFrame
     {
         const int INIT_INSTR_IDX = 0;
 
