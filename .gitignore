@@ -150,6 +150,9 @@ ipch/
 # Visual Studio Trace Files
 *.e2e
 
+# Rider Directory
+.idea/
+
 # TFS 2012 Local Workspace
 $tf/
 
@@ -445,3 +448,7 @@ BytecodeTransformations.md
 .idea/.idea.Chow.V2/.idea/projectSettingsUpdater.xml
 .idea/.idea.Chow.V2/.idea/indexLayout.xml
 .idea/.idea.Chow.V2/.idea/copilot.data.migration.ask2agent.xml
+.idea/.idea.Chow/.idea/.name
+.idea/.idea.Chow/.idea/copilot.data.migration.ask2agent.xml
+.idea/.idea.Chow/.idea/indexLayout.xml
+.idea/.idea.Chow/.idea/vcs.xml
