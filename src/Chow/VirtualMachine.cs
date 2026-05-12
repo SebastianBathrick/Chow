@@ -166,7 +166,7 @@ namespace Chow.Interpreter
                         }
                         else
                         {
-                            TaggedUnion exprResult = _valStack.Pop();
+                            var exprResult = _valStack.Pop();
                             _exprHook.Invoke(ChowValueConverter.ToChowValue(exprResult));
                         }
 
@@ -241,18 +241,18 @@ namespace Chow.Interpreter
 
         void ExecuteMakeClosure()
         {
-            TaggedUnion templateUnion = _valStack.Pop();
-            ClosureTemplate template = (ClosureTemplate)templateUnion.ObjectValue;
+            var templateUnion = _valStack.Pop();
+            var template = (ClosureTemplate)templateUnion.ObjectValue;
 
-            Scope captured = _callStack.CurrentScope;
-            Closure closure = new Closure(template.Chunk, captured, template.Name, template.ParamCount);
+            var captured = _callStack.CurrentScope;
+            var closure = new Closure(template.Chunk, captured, template.Name, template.ParamCount);
 
             _valStack.Push(new TaggedUnion((object)closure));
         }
 
         void ExecuteReturnValue()
         {
-            TaggedUnion result = _valStack.Pop();
+            var result = _valStack.Pop();
             _callStack.ExitFunctionCall();
 
             _valStack.Push(result);
@@ -262,23 +262,23 @@ namespace Chow.Interpreter
         {
             // Operand -> name via Chunk. Semantic analysis is responsible for ensuring the
             // name exists before this op runs; KeyNotFoundException here is a contract violation.
-            string varName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            var varName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
 
             if (!_callStack.IsVariableDefined(varName))
             {
-                int line = GetCurrentLineNumber();
+                var line = GetCurrentLineNumber();
                 throw new UndefinedNameException(varName, line);
             }
 
-            TaggedUnion varValue = _callStack.GetVariableValue(varName);
+            var varValue = _callStack.GetVariableValue(varName);
             _valStack.Push(varValue);
         }
 
         void AssignOrDeclareVariable()
         {
             // Operand -> name via Chunk; CallStack routes the assign to the current frame's scope.
-            string name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
-            TaggedUnion assignVal = _valStack.Pop();
+            var name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            var assignVal = _valStack.Pop();
 
             _callStack.AssignVariableValue(name, assignVal);
         }
@@ -287,12 +287,12 @@ namespace Chow.Interpreter
         // Returns false for the synchronous interop path, where the result is already on the value stack.
         bool ExecuteCall(int argCount)
         {
-            TaggedUnion[] args = new TaggedUnion[argCount];
-            for (int i = argCount - 1; i >= 0; i--)
+            var args = new TaggedUnion[argCount];
+            for (var i = argCount - 1; i >= 0; i--)
             {
                 args[i] = _valStack.Pop();
             }
-            TaggedUnion calleeUnion = _valStack.Pop();
+            var calleeUnion = _valStack.Pop();
 
             if (calleeUnion.Tag == Tag.Object && calleeUnion.ObjectValue is Closure closure)
             {
@@ -303,7 +303,7 @@ namespace Chow.Interpreter
                 }
 
                 // Re-push args; function body's first ops are param-bind AssignOrDeclareVariable's, popping right-to-left.
-                for (int i = 0; i < argCount; i++)
+                for (var i = 0; i < argCount; i++)
                 {
                     _valStack.Push(args[i]);
                 }
@@ -336,14 +336,14 @@ namespace Chow.Interpreter
         void ExecuteBinaryOperation(Func<TaggedUnion, TaggedUnion, TaggedUnion> operation)
         {
             // Floats coerce integers into floats inside TaggedUnion's operator overloads
-            TaggedUnion right = _valStack.Pop();
-            TaggedUnion left = _valStack.Pop();
+            var right = _valStack.Pop();
+            var left = _valStack.Pop();
             _valStack.Push(operation(left, right));
         }
 
         void ExecuteNegate()
         {
-            TaggedUnion operand = _valStack.Pop();
+            var operand = _valStack.Pop();
 
             if (operand.IsFloat)
             {
@@ -357,7 +357,7 @@ namespace Chow.Interpreter
 
         void ExecuteNot()
         {
-            TaggedUnion operand = _valStack.Pop();
+            var operand = _valStack.Pop();
             _valStack.Push(new TaggedUnion(!operand.IsTruthy));
         }
 
@@ -369,16 +369,16 @@ namespace Chow.Interpreter
         void ExecuteBuildList(int elementCount)
         {
             // Pop N values; reverse so source order is preserved.
-            TaggedUnion[] reversed = new TaggedUnion[elementCount];
+            var reversed = new TaggedUnion[elementCount];
 
-            for (int i = elementCount - 1; i >= 0; i--)
+            for (var i = elementCount - 1; i >= 0; i--)
             {
                 reversed[i] = _valStack.Pop();
             }
 
-            InternalList list = new InternalList();
+            var list = new InternalList();
 
-            for (int i = 0; i < elementCount; i++)
+            for (var i = 0; i < elementCount; i++)
             {
                 list.Add(reversed[i]);
             }
@@ -389,18 +389,18 @@ namespace Chow.Interpreter
         void ExecuteBuildDict(int pairCount)
         {
             // Pop 2N values (value, key, value, key, ...); rebuild source order before insertion.
-            TaggedUnion[] keys = new TaggedUnion[pairCount];
-            TaggedUnion[] values = new TaggedUnion[pairCount];
+            var keys = new TaggedUnion[pairCount];
+            var values = new TaggedUnion[pairCount];
 
-            for (int i = pairCount - 1; i >= 0; i--)
+            for (var i = pairCount - 1; i >= 0; i--)
             {
                 values[i] = _valStack.Pop();
                 keys[i] = _valStack.Pop();
             }
 
-            InternalDict dict = new InternalDict();
+            var dict = new InternalDict();
 
-            for (int i = 0; i < pairCount; i++)
+            for (var i = 0; i < pairCount; i++)
             {
                 dict.Add(keys[i], values[i]);
             }
@@ -410,8 +410,8 @@ namespace Chow.Interpreter
 
         void ExecuteIn(bool negate)
         {
-            TaggedUnion container = _valStack.Pop();
-            TaggedUnion needle = _valStack.Pop();
+            var container = _valStack.Pop();
+            var needle = _valStack.Pop();
 
             bool found;
             switch (container.Tag)
@@ -421,8 +421,8 @@ namespace Chow.Interpreter
                     break;
                 case Tag.List:
                     found = false;
-                    InternalList list = container.ListValue;
-                    for (int i = 0; i < list.Count; i++)
+                    var list = container.ListValue;
+                    for (var i = 0; i < list.Count; i++)
                     {
                         if (list[i] == needle)
                         {
@@ -440,8 +440,8 @@ namespace Chow.Interpreter
 
         void ExecuteSubscript()
         {
-            TaggedUnion index = _valStack.Pop();
-            TaggedUnion target = _valStack.Pop();
+            var index = _valStack.Pop();
+            var target = _valStack.Pop();
 
             // FUTURE: strings add a tag branch here.
             if (target.Tag == Tag.Dict)
@@ -472,10 +472,10 @@ namespace Chow.Interpreter
 
         void ExecuteSubscriptSlice()
         {
-            TaggedUnion step = _valStack.Pop();
-            TaggedUnion stop = _valStack.Pop();
-            TaggedUnion start = _valStack.Pop();
-            TaggedUnion target = _valStack.Pop();
+            var step = _valStack.Pop();
+            var stop = _valStack.Pop();
+            var start = _valStack.Pop();
+            var target = _valStack.Pop();
 
             // FUTURE: strings add a parallel slice branch.
             if (target.Tag != Tag.List)
@@ -488,9 +488,9 @@ namespace Chow.Interpreter
 
         void ExecuteSubscriptSet()
         {
-            TaggedUnion value = _valStack.Pop();
-            TaggedUnion index = _valStack.Pop();
-            TaggedUnion target = _valStack.Pop();
+            var value = _valStack.Pop();
+            var index = _valStack.Pop();
+            var target = _valStack.Pop();
 
             if (target.Tag == Tag.Dict)
             {
@@ -513,13 +513,13 @@ namespace Chow.Interpreter
 
         void ExecuteGetAttr()
         {
-            string attrName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
-            TaggedUnion target = _valStack.Pop();
+            var attrName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            var target = _valStack.Pop();
 
             // FUTURE: class instances add a branch that consults the instance attribute table, then the class method table.
             if (target.Tag == Tag.List)
             {
-                InternalList list = target.ListValue;
+                var list = target.ListValue;
 
                 if (!list.HasMethod(attrName))
                 {
@@ -532,7 +532,7 @@ namespace Chow.Interpreter
 
             if (target.Tag == Tag.Dict)
             {
-                InternalDict dict = target.DictValue;
+                var dict = target.DictValue;
 
                 if (!dict.HasMethod(attrName))
                 {
@@ -548,10 +548,10 @@ namespace Chow.Interpreter
 
         void ExecuteSetAttr()
         {
-            string attrName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            var attrName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
             _valStack.Pop(); // value
 
-            TaggedUnion target = _valStack.Pop();
+            var target = _valStack.Pop();
 
             // FUTURE: class instances assign here.
             string typeName;

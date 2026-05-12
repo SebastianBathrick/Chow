@@ -19,17 +19,17 @@ namespace Chow.Interpreter.ImplementationTests
 
         static Chunk Compile(string source)
         {
-            Scanner scanner = new Scanner(source);
-            List<Token> tokens = scanner.ScanTokens();
-            Parser parser = new Parser(tokens);
-            Node root = parser.BuildTree();
-            Compiler compiler = new Compiler(root);
+            var scanner = new Scanner(source);
+            var tokens = scanner.ScanTokens();
+            var parser = new Parser(tokens);
+            var root = parser.BuildTree();
+            var compiler = new Compiler(root);
             return compiler.CompileRoot();
         }
 
         static TaggedUnion Execute(Chunk chunk, ModuleScope scope = null)
         {
-            VirtualMachine vm = new VirtualMachine(chunk, scope, null!);
+            var vm = new VirtualMachine(chunk, scope, null!);
             vm.EvaluateChunk();
             return vm.ValStackTop;
         }
@@ -47,22 +47,22 @@ namespace Chow.Interpreter.ImplementationTests
         public void MakeClosure_ProducesClosure_WithCapturedScope()
         {
             // Hand-build a chunk: PushConstant(template) + MakeClosure
-            Chunk module = new Chunk();
-            ClosureTemplate template = new ClosureTemplate(new Chunk(), "f", 0);
-            int idx = module.RegisterConstant(new TaggedUnion((object)template));
+            var module = new Chunk();
+            var template = new ClosureTemplate(new Chunk(), "f", 0);
+            var idx = module.RegisterConstant(new TaggedUnion((object)template));
             module.AddInstruction(OperationCode.PushConstant, LINE, idx);
             module.AddInstruction(OperationCode.MakeClosure, LINE);
 
-            ModuleScope scope = new ModuleScope();
-            VirtualMachine vm = new VirtualMachine(module, scope, null!);
+            var scope = new ModuleScope();
+            var vm = new VirtualMachine(module, scope, null!);
             vm.EvaluateChunk();
 
-            TaggedUnion top = vm.ValStackTop;
+            var top = vm.ValStackTop;
             Assert.Multiple(() =>
             {
                 Assert.That(top.Tag, Is.EqualTo(Tag.Object));
                 Assert.That(top.ObjectValue, Is.InstanceOf<Closure>());
-                Closure closure = (Closure)top.ObjectValue;
+                var closure = (Closure)top.ObjectValue;
                 Assert.That(closure.Chunk, Is.SameAs(template.Chunk));
                 Assert.That(closure.Enclosing, Is.SameAs(scope));
                 Assert.That(closure.Name, Is.EqualTo("f"));
@@ -77,7 +77,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Call_OnClosure_ProducesReturnValue()
         {
-            ModuleScope scope = new ModuleScope();
+            var scope = new ModuleScope();
             ExecuteSource("def f():\n    return 7\nresult = f()", scope);
 
             Assert.That(scope.GetVariableValue("result").IntegerValue, Is.EqualTo(7));
@@ -90,7 +90,7 @@ namespace Chow.Interpreter.ImplementationTests
             // Result on the value stack is whatever the last expression statement produced; PopExprStmntResult
             // discards `f()`'s result. The last surviving stack top is the `1 + 2` result (discarded too), so we
             // rely on no infinite loop and on completion.
-            TaggedUnion _ = ExecuteSource("def f():\n    return 1\nf()\n1 + 2");
+            var _ = ExecuteSource("def f():\n    return 1\nf()\n1 + 2");
 
             // If we got here, IP advancement after Call works.
             Assert.Pass();
@@ -103,9 +103,9 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Call_ArityMismatch_RaisesTypeError_WithFunctionName()
         {
-            Chunk chunk = Compile("def myFunc(a):\n    return a\nmyFunc(1, 2)");
+            var chunk = Compile("def myFunc(a):\n    return a\nmyFunc(1, 2)");
 
-            TypeException ex = Assert.Throws<TypeException>(() => Execute(chunk));
+            var ex = Assert.Throws<TypeException>(() => Execute(chunk));
 
             Assert.That(ex.Message, Does.Contain("myFunc"));
         }
@@ -113,7 +113,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Call_TooFewArgs_RaisesTypeError()
         {
-            Chunk chunk = Compile("def f(a, b):\n    return a\nf(1)");
+            var chunk = Compile("def f(a, b):\n    return a\nf(1)");
 
             Assert.Throws<TypeException>(() => Execute(chunk));
         }
@@ -125,8 +125,8 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Call_OnInteropDelegate_StillExecutes()
         {
-            ChowModule module = new ChowModule();
-            int captured = 0;
+            var module = new ChowModule();
+            var captured = 0;
             module["bump"] = new Chow.Interpreter.Values.ChowDynamic((System.Action)(() => { captured = 1; }));
 
             module.Execute("bump()");
@@ -141,14 +141,14 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void DeepRecursion_200Levels_DoesNotStackOverflow()
         {
-            string source =
+            var source =
                 "def deep(n):\n" +
                 "    if n == 0:\n" +
                 "        return 0\n" +
                 "    return deep(n - 1) + 1\n" +
                 "result = deep(200)";
 
-            ModuleScope scope = new ModuleScope();
+            var scope = new ModuleScope();
             ExecuteSource(source, scope);
 
             Assert.That(scope.GetVariableValue("result").IntegerValue, Is.EqualTo(200));
@@ -162,7 +162,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Return_PopsFrame_ModuleResumesAfterCall()
         {
             // The post-call statement `x = 99` must execute; verify the module scope has `x = 99`.
-            ModuleScope scope = new ModuleScope();
+            var scope = new ModuleScope();
             ExecuteSource("def f():\n    return 1\nf()\nx = 99", scope);
 
             Assert.Multiple(() =>
@@ -179,7 +179,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Closure_CapturesModuleGlobal_VisibleInsideCall()
         {
-            ModuleScope scope = new ModuleScope();
+            var scope = new ModuleScope();
             ExecuteSource(
                 "x = 100\n" +
                 "def get():\n" +

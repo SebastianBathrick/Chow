@@ -25,8 +25,8 @@ namespace Chow.Interpreter.ImplementationTests
 
         static (ChowModule module, CaptureExprHook hook) NewModule()
         {
-            ChowModule module = new ChowModule();
-            CaptureExprHook hook = new CaptureExprHook();
+            var module = new ChowModule();
+            var hook = new CaptureExprHook();
             module.AddHook(hook);
             return (module, hook);
         }
@@ -43,7 +43,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Def_NoArgs_ReturnsLiteral()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
 
             module.Execute("def f():\n    return 1");
             module.Execute("f()");
@@ -58,7 +58,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Def_TwoArgs_ReturnsSum()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
 
             module.Execute("def add(a, b):\n    return a + b");
             module.Execute("add(3, 4)");
@@ -73,9 +73,9 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Def_Recursive_Factorial()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
 
-            string defSource =
+            var defSource =
                 "def fact(n):\n" +
                 "    if n == 0:\n" +
                 "        return 1\n" +
@@ -94,7 +94,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Def_NoReturn_ReturnsNone()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
 
             module.Execute("def noop():\n    x = 1");
             module.Execute("noop()");
@@ -109,9 +109,9 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Def_BareReturn_ReturnsNone()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
 
-            string defSource =
+            var defSource =
                 "def early(n):\n" +
                 "    if n < 0:\n" +
                 "        return\n" +
@@ -126,9 +126,9 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Def_BareReturn_FallThroughReturnsValue()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
 
-            string defSource =
+            var defSource =
                 "def early(n):\n" +
                 "    if n < 0:\n" +
                 "        return\n" +
@@ -147,7 +147,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Closure_OverGlobal_SeesLatestValue()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
 
             module.Execute("x = 10");
             module.Execute("def get():\n    return x");
@@ -164,9 +164,9 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void NestedDef_CapturesOuterLocal()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
 
-            string defSource =
+            var defSource =
                 "def outer():\n" +
                 "    x = 1\n" +
                 "    def inner():\n" +
@@ -186,9 +186,9 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Closure_OutlivesOuterCall()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
 
-            string defSource =
+            var defSource =
                 "def make():\n" +
                 "    x = 5\n" +
                 "    def f():\n" +
@@ -210,9 +210,9 @@ namespace Chow.Interpreter.ImplementationTests
         public void Recursion_LocalsAreIsolatedPerCall()
         {
             // Counts down from 3 to 0; each frame's `n` must not be clobbered by deeper frames.
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
 
-            string defSource =
+            var defSource =
                 "def countdown(n):\n" +
                 "    if n == 0:\n" +
                 "        return 0\n" +
@@ -233,7 +233,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Call_ArityMismatch_RaisesTypeError()
         {
-            (ChowModule module, CaptureExprHook _) = NewModule();
+            (var module, var _) = NewModule();
 
             module.Execute("def f(a):\n    return a");
 
@@ -247,7 +247,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Execute_TwoCalls_FunctionDefinedInFirstUsableInSecond()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
 
             module.Execute("def square(n):\n    return n * n");
             module.Execute("square(7)");
@@ -262,12 +262,12 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Function_TransportedAcrossModules_StillCallable()
         {
-            (ChowModule moduleA, CaptureExprHook _) = NewModule();
-            (ChowModule moduleB, CaptureExprHook hookB) = NewModule();
+            (var moduleA, var _) = NewModule();
+            (var moduleB, var hookB) = NewModule();
 
             moduleA.Execute("def f():\n    return 42");
 
-            ChowValue fValue = moduleA.GetGlobal("f");
+            var fValue = moduleA.GetGlobal("f");
             moduleB["f"] = fValue;
 
             moduleB.Execute("f()");
@@ -282,9 +282,9 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void NestedDef_ThreeLevels_DeepestSeesOutermost()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
 
-            string defSource =
+            var defSource =
                 "def a():\n" +
                 "    x = 1\n" +
                 "    def b():\n" +
@@ -306,7 +306,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Function_AssignedToNewName_CallableThroughAlias()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
 
             module.Execute("def f():\n    return 1");
             module.Execute("g = f");
@@ -322,7 +322,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Function_PassedAsArg_InvokedByCallee()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
 
             module.Execute("def apply(fn):\n    return fn()");
             module.Execute("def one():\n    return 1");

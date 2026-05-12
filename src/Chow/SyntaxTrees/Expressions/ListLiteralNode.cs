@@ -19,8 +19,8 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
                 return $"[List line={LineNum}]";
             }
 
-            string body = string.Empty;
-            for (int i = 0; i < _elements.Count; i++)
+            var body = string.Empty;
+            for (var i = 0; i < _elements.Count; i++)
             {
                 body += "\n" + IndentChildren(_elements[i].ToString());
             }

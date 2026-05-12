@@ -61,7 +61,7 @@ namespace Chow.Interpreter.State.Scopes
         public void ExitNestedScope()
         {
             // Pop the name of the variable declared last OR the boundary element if no variables were declared in the current scope
-            string popName = _varNames.Pop();
+            var popName = _varNames.Pop();
 
             // Pop until the boundary element has been popped (either popped or is below the name of the first variable in the scope)
             while (popName != SCOPE_BOUNDARY_ELEMENT)

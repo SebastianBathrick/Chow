@@ -19,7 +19,7 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
 
         public override string ToString()
         {
-            string result = $"if {_expr}\n{{\n{_block}\n}}";
+            var result = $"if {_expr}\n{{\n{_block}\n}}";
 
             if (_branch != null)
             {

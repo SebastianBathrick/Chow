@@ -25,8 +25,8 @@ namespace Chow.Interpreter.ImplementationTests
 
         static (ChowModule module, CaptureExprHook hook) NewModule()
         {
-            ChowModule module = new ChowModule();
-            CaptureExprHook hook = new CaptureExprHook();
+            var module = new ChowModule();
+            var hook = new CaptureExprHook();
             module.AddHook(hook);
             return (module, hook);
         }
@@ -43,7 +43,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void While_CounterLoop_RunsConditionTimes()
         {
-            (ChowModule module, _) = NewModule();
+            (var module, _) = NewModule();
             module.Execute("x = 0\nwhile x < 5:\n    x = x + 1");
             Assert.That(module.GetGlobal("x").As<long>(), Is.EqualTo(5));
         }
@@ -51,7 +51,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void While_ConditionFalseAtEntry_BodyNeverRuns()
         {
-            (ChowModule module, _) = NewModule();
+            (var module, _) = NewModule();
             module.Execute("x = 10\nwhile x < 5:\n    x = x + 1");
             Assert.That(module.GetGlobal("x").As<long>(), Is.EqualTo(10));
         }
@@ -63,8 +63,8 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Break_ExitsLoopEarly()
         {
-            (ChowModule module, _) = NewModule();
-            string src =
+            (var module, _) = NewModule();
+            var src =
                 "x = 0\n" +
                 "while True:\n" +
                 "    x = x + 1\n" +
@@ -77,7 +77,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Break_OutsideLoop_ThrowsAtCompileTime()
         {
-            (ChowModule module, _) = NewModule();
+            (var module, _) = NewModule();
             Assert.Throws<ParserEx>(() => module.Execute("break"));
         }
 
@@ -88,8 +88,8 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Continue_SkipsRemainderOfBody_ConditionReevaluated()
         {
-            (ChowModule module, _) = NewModule();
-            string src =
+            (var module, _) = NewModule();
+            var src =
                 "x = 0\n" +
                 "total = 0\n" +
                 "while x < 5:\n" +
@@ -105,7 +105,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Continue_OutsideLoop_ThrowsAtCompileTime()
         {
-            (ChowModule module, _) = NewModule();
+            (var module, _) = NewModule();
             Assert.Throws<ParserEx>(() => module.Execute("continue"));
         }
 
@@ -116,8 +116,8 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void NestedWhile_InnerBreak_OnlyExitsInner()
         {
-            (ChowModule module, _) = NewModule();
-            string src =
+            (var module, _) = NewModule();
+            var src =
                 "i = 0\n" +
                 "total = 0\n" +
                 "while i < 3:\n" +
@@ -144,7 +144,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void While_LoopVariable_VisibleAfterLoopExits()
         {
-            (ChowModule module, _) = NewModule();
+            (var module, _) = NewModule();
             module.Execute("i = 0\nwhile i < 4:\n    i = i + 1");
             Assert.That(module.GetGlobal("i").As<long>(), Is.EqualTo(4));
         }
@@ -156,7 +156,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void While_ExprStmntInBody_HookFiresEachIteration()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
             module.Execute("i = 0\nwhile i < 3:\n    i\n    i = i + 1");
             Assert.That(hook.Values.Count, Is.EqualTo(3));
             Assert.Multiple(() =>

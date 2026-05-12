@@ -15,18 +15,18 @@ namespace Chow.Interpreter.ImplementationTests
 
         static Chunk Compile(string source)
         {
-            Scanner scanner = new Scanner(source);
-            List<Token> tokens = scanner.ScanTokens();
-            Parser parser = new Parser(tokens);
-            Node root = parser.BuildTree();
-            Compiler compiler = new Compiler(root);
+            var scanner = new Scanner(source);
+            var tokens = scanner.ScanTokens();
+            var parser = new Parser(tokens);
+            var root = parser.BuildTree();
+            var compiler = new Compiler(root);
             return compiler.CompileRoot();
         }
 
         static List<Instruction> Instructions(Chunk chunk)
         {
-            List<Instruction> result = new List<Instruction>();
-            for (int i = 0; i < chunk.InstructionCount; i++)
+            var result = new List<Instruction>();
+            for (var i = 0; i < chunk.InstructionCount; i++)
             {
                 result.Add(chunk[i]);
             }
@@ -35,14 +35,14 @@ namespace Chow.Interpreter.ImplementationTests
 
         static ClosureTemplate FindFirstTemplate(Chunk chunk)
         {
-            for (int i = 0; i < chunk.InstructionCount; i++)
+            for (var i = 0; i < chunk.InstructionCount; i++)
             {
-                Instruction op = chunk[i];
+                var op = chunk[i];
                 if (op.Code != OperationCode.PushConstant)
                 {
                     continue;
                 }
-                TaggedUnion constant = chunk.ReadConstant(op.Operand);
+                var constant = chunk.ReadConstant(op.Operand);
                 if (constant.Tag == Tag.Object && constant.ObjectValue is ClosureTemplate template)
                 {
                     return template;
@@ -58,13 +58,13 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Def_EmitsPushTemplate_MakeClosure_Assign_InOrder()
         {
-            Chunk chunk = Compile("def f():\n    return 1");
+            var chunk = Compile("def f():\n    return 1");
 
-            List<Instruction> ops = Instructions(chunk);
+            var ops = Instructions(chunk);
 
             // Expect last three of module chunk: PushConstant(template), MakeClosure, AssignOrDeclareVariable(f)
             Assert.That(ops.Count, Is.GreaterThanOrEqualTo(3));
-            int n = ops.Count;
+            var n = ops.Count;
 
             Assert.Multiple(() =>
             {
@@ -77,9 +77,9 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Def_TemplateConstant_HasFunctionMetadata()
         {
-            Chunk chunk = Compile("def myFunc(a, b, c):\n    return a");
+            var chunk = Compile("def myFunc(a, b, c):\n    return a");
 
-            ClosureTemplate template = FindFirstTemplate(chunk);
+            var template = FindFirstTemplate(chunk);
 
             Assert.That(template, Is.Not.Null);
             Assert.Multiple(() =>
@@ -92,10 +92,10 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Def_AssignOperand_BindsToFunctionName()
         {
-            Chunk chunk = Compile("def myFunc():\n    return 1");
+            var chunk = Compile("def myFunc():\n    return 1");
 
-            List<Instruction> ops = Instructions(chunk);
-            Instruction assignOp = ops[ops.Count - 1];
+            var ops = Instructions(chunk);
+            var assignOp = ops[ops.Count - 1];
 
             Assert.That(chunk.ReadVariableName(assignOp.Operand), Is.EqualTo("myFunc"));
         }
@@ -107,18 +107,18 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void FuncBody_NoExplicitReturn_EndsWithImplicitNoneReturn()
         {
-            Chunk chunk = Compile("def f():\n    x = 1");
-            Chunk body = FindFirstTemplate(chunk).Chunk;
-            List<Instruction> ops = Instructions(body);
+            var chunk = Compile("def f():\n    x = 1");
+            var body = FindFirstTemplate(chunk).Chunk;
+            var ops = Instructions(body);
 
-            int n = ops.Count;
+            var n = ops.Count;
             Assert.That(n, Is.GreaterThanOrEqualTo(2));
             Assert.Multiple(() =>
             {
                 Assert.That(ops[n - 2].Code, Is.EqualTo(OperationCode.PushConstant));
                 Assert.That(ops[n - 1].Code, Is.EqualTo(OperationCode.ReturnValue));
 
-                TaggedUnion tailConst = body.ReadConstant(ops[n - 2].Operand);
+                var tailConst = body.ReadConstant(ops[n - 2].Operand);
                 Assert.That(tailConst.Tag, Is.EqualTo(Tag.None));
             });
         }
@@ -126,18 +126,18 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void FuncBody_WithExplicitReturn_StillHasImplicitTail()
         {
-            Chunk chunk = Compile("def f():\n    return 1");
-            Chunk body = FindFirstTemplate(chunk).Chunk;
-            List<Instruction> ops = Instructions(body);
+            var chunk = Compile("def f():\n    return 1");
+            var body = FindFirstTemplate(chunk).Chunk;
+            var ops = Instructions(body);
 
             // Last two ops are always the implicit None + ReturnValue tail.
-            int n = ops.Count;
+            var n = ops.Count;
             Assert.Multiple(() =>
             {
                 Assert.That(ops[n - 1].Code, Is.EqualTo(OperationCode.ReturnValue));
                 Assert.That(ops[n - 2].Code, Is.EqualTo(OperationCode.PushConstant));
 
-                TaggedUnion tailConst = body.ReadConstant(ops[n - 2].Operand);
+                var tailConst = body.ReadConstant(ops[n - 2].Operand);
                 Assert.That(tailConst.Tag, Is.EqualTo(Tag.None));
             });
         }
@@ -149,16 +149,16 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void BareReturn_EmitsPushNoneThenReturnValue()
         {
-            Chunk chunk = Compile("def f():\n    return");
-            Chunk body = FindFirstTemplate(chunk).Chunk;
-            List<Instruction> ops = Instructions(body);
+            var chunk = Compile("def f():\n    return");
+            var body = FindFirstTemplate(chunk).Chunk;
+            var ops = Instructions(body);
 
             // Body has the block-wrapped bare return plus the implicit-None tail; both produce
             // a PushConstant(None) + ReturnValue pair. Two ReturnValues confirms the bare return
             // is not optimized away.
-            int returnValueCount = 0;
-            int pushNoneBeforeReturnCount = 0;
-            for (int i = 0; i < ops.Count; i++)
+            var returnValueCount = 0;
+            var pushNoneBeforeReturnCount = 0;
+            for (var i = 0; i < ops.Count; i++)
             {
                 if (ops[i].Code != OperationCode.ReturnValue)
                 {
@@ -167,7 +167,7 @@ namespace Chow.Interpreter.ImplementationTests
                 returnValueCount++;
 
                 Assert.That(i, Is.GreaterThan(0), "ReturnValue cannot be the first op");
-                Instruction prev = ops[i - 1];
+                var prev = ops[i - 1];
                 if (prev.Code == OperationCode.PushConstant && body.ReadConstant(prev.Operand).Tag == Tag.None)
                 {
                     pushNoneBeforeReturnCount++;
@@ -188,9 +188,9 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Params_BoundInReverseOrder_AtStartOfBody()
         {
-            Chunk chunk = Compile("def f(a, b, c):\n    return a");
-            Chunk body = FindFirstTemplate(chunk).Chunk;
-            List<Instruction> ops = Instructions(body);
+            var chunk = Compile("def f(a, b, c):\n    return a");
+            var body = FindFirstTemplate(chunk).Chunk;
+            var ops = Instructions(body);
 
             Assert.That(ops.Count, Is.GreaterThanOrEqualTo(3));
             Assert.Multiple(() =>
@@ -214,14 +214,14 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Call_EmitsPushNameThenArgsThenCallWithArgCount()
         {
-            Chunk chunk = Compile("def add(a, b):\n    return a + b\nadd(3, 4)");
+            var chunk = Compile("def add(a, b):\n    return a + b\nadd(3, 4)");
 
             // The call site is at the end of the module chunk; find it.
-            List<Instruction> ops = Instructions(chunk);
+            var ops = Instructions(chunk);
 
             // Scan for the Call op; verify operand and preceding ops.
-            int callIdx = -1;
-            for (int i = 0; i < ops.Count; i++)
+            var callIdx = -1;
+            for (var i = 0; i < ops.Count; i++)
             {
                 if (ops[i].Code == OperationCode.Call)
                 {
@@ -244,11 +244,11 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void CallNoArgs_EmitsCallWithZeroOperand()
         {
-            Chunk chunk = Compile("def f():\n    return 1\nf()");
+            var chunk = Compile("def f():\n    return 1\nf()");
 
-            List<Instruction> ops = Instructions(chunk);
-            int callIdx = -1;
-            for (int i = 0; i < ops.Count; i++)
+            var ops = Instructions(chunk);
+            var callIdx = -1;
+            for (var i = 0; i < ops.Count; i++)
             {
                 if (ops[i].Code == OperationCode.Call)
                 {
@@ -268,18 +268,18 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void NestedDef_OuterChunk_ContainsInnerMakeClosure()
         {
-            string source =
+            var source =
                 "def outer():\n" +
                 "    def inner():\n" +
                 "        return 1\n" +
                 "    return inner()";
 
-            Chunk module = Compile(source);
-            ClosureTemplate outerTemplate = FindFirstTemplate(module);
-            Chunk outerBody = outerTemplate.Chunk;
+            var module = Compile(source);
+            var outerTemplate = FindFirstTemplate(module);
+            var outerBody = outerTemplate.Chunk;
 
             // Inner def must appear inside outer's body as a ClosureTemplate constant.
-            ClosureTemplate innerTemplate = FindFirstTemplate(outerBody);
+            var innerTemplate = FindFirstTemplate(outerBody);
 
             Assert.That(innerTemplate, Is.Not.Null);
             Assert.Multiple(() =>

@@ -49,7 +49,7 @@ namespace Chow.Interpreter.State.Stack
         /// <summary>Sets the instruction pointer to <paramref name="instrIdx"/> and returns its previous value.</summary>
         public int JumpToInstr(int instrIdx)
         {
-            int prevInstrIdx = _instrIdx;
+            var prevInstrIdx = _instrIdx;
             _instrIdx = instrIdx;
             return prevInstrIdx;
         }

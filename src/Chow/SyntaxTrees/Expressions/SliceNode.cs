@@ -19,9 +19,9 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 
         public override string ToString()
         {
-            string startStr = _start == null ? "None" : _start.ToString();
-            string stopStr = _stop == null ? "None" : _stop.ToString();
-            string stepStr = _step == null ? "None" : _step.ToString();
+            var startStr = _start == null ? "None" : _start.ToString();
+            var stopStr = _stop == null ? "None" : _stop.ToString();
+            var stepStr = _step == null ? "None" : _step.ToString();
             return $"[Slice line={LineNum}\n  start={IndentChildren(startStr)}\n  stop={IndentChildren(stopStr)}\n  step={IndentChildren(stepStr)}\n]";
         }
 

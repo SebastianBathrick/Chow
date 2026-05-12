@@ -293,8 +293,8 @@ namespace Chow.Interpreter.State.Values
 
         static ChowValue[] BuildArgArray(TaggedUnion[] args)
         {
-            ChowValue[] result = new ChowValue[args.Length];
-            for (int i = 0; i < args.Length; i++)
+            var result = new ChowValue[args.Length];
+            for (var i = 0; i < args.Length; i++)
             {
                 result[i] = ChowValueConverter.ToChowValue(args[i]);
             }
@@ -402,19 +402,19 @@ namespace Chow.Interpreter.State.Values
             // Python semantics: result has the sign of the divisor.
             if (BothAreBoolean(left, right))
             {
-                long a = BoolAsInt(left);
-                long b = BoolAsInt(right);
+                var a = BoolAsInt(left);
+                var b = BoolAsInt(right);
                 return new TaggedUnion(((a % b) + b) % b);
             }
             if (EitherIsFloat(left, right))
             {
-                double l = AsFloat(left);
-                double r = AsFloat(right);
+                var l = AsFloat(left);
+                var r = AsFloat(right);
                 return new TaggedUnion(((l % r) + r) % r);
             }
 
-            long ai = left.IntegerValue;
-            long bi = right.IntegerValue;
+            var ai = left.IntegerValue;
+            var bi = right.IntegerValue;
             return new TaggedUnion(((ai % bi) + bi) % bi);
         }
 
@@ -451,7 +451,7 @@ namespace Chow.Interpreter.State.Values
                 return new TaggedUnion(Math.Pow(AsFloat(left), AsFloat(right)));
             }
 
-            long exp = right.IntegerValue;
+            var exp = right.IntegerValue;
             if (exp < 0)
             {
                 return new TaggedUnion(Math.Pow(left.IntegerValue, exp));
@@ -592,14 +592,14 @@ namespace Chow.Interpreter.State.Values
         // TODO: Temporary guard. Delete when mixed bool/numeric coercion is implemented.
         static void ThrowIfMixedBoolNumeric(TaggedUnion left, TaggedUnion right)
         {
-            bool leftBool = left.IsBoolean;
-            bool rightBool = right.IsBoolean;
+            var leftBool = left.IsBoolean;
+            var rightBool = right.IsBoolean;
             if (leftBool == rightBool)
             {
                 return;
             }
 
-            bool otherIsNumeric = leftBool ? (right.IsInt || right.IsFloat) : (left.IsInt || left.IsFloat);
+            var otherIsNumeric = leftBool ? (right.IsInt || right.IsFloat) : (left.IsInt || left.IsFloat);
             if (otherIsNumeric)
             {
                 throw new NotImplementedException("Mixed boolean and numeric operands are not yet implemented.");

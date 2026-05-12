@@ -19,8 +19,8 @@ namespace Chow.Tests
         [Test]
         public void Constructor_WithModuleParent_ParentOrNullReturnsModule()
         {
-            ModuleScope module = new ModuleScope();
-            LocalScope local = new LocalScope(module);
+            var module = new ModuleScope();
+            var local = new LocalScope(module);
 
             Assert.That(local.ParentOrNull, Is.SameAs(module));
         }
@@ -28,9 +28,9 @@ namespace Chow.Tests
         [Test]
         public void Constructor_WithLocalParent_ParentOrNullReturnsParentLocal()
         {
-            ModuleScope module = new ModuleScope();
-            LocalScope outer = new LocalScope(module);
-            LocalScope inner = new LocalScope(outer);
+            var module = new ModuleScope();
+            var outer = new LocalScope(module);
+            var inner = new LocalScope(outer);
 
             Assert.That(inner.ParentOrNull, Is.SameAs(outer));
         }
@@ -38,7 +38,7 @@ namespace Chow.Tests
         [Test]
         public void Constructor_NewInstance_NoVariablesDefined()
         {
-            LocalScope local = new LocalScope(new ModuleScope());
+            var local = new LocalScope(new ModuleScope());
 
             Assert.That(local.IsVariableDefined("x"), Is.False);
         }
@@ -50,9 +50,9 @@ namespace Chow.Tests
         [Test]
         public void AssignVariableValue_DoesNotMutateParent()
         {
-            ModuleScope module = new ModuleScope();
+            var module = new ModuleScope();
             module.AssignVariableValue("x", Int(1));
-            LocalScope local = new LocalScope(module);
+            var local = new LocalScope(module);
 
             local.AssignVariableValue("x", Int(2));
 
@@ -67,9 +67,9 @@ namespace Chow.Tests
         public void IsVariableDefined_LocalOnly_DoesNotConsultParent()
         {
             // LocalScope.IsVariableDefined is non-recursive; chain walking lives in CallStack.
-            ModuleScope module = new ModuleScope();
+            var module = new ModuleScope();
             module.AssignVariableValue("x", Int(1));
-            LocalScope local = new LocalScope(module);
+            var local = new LocalScope(module);
 
             Assert.That(local.IsVariableDefined("x"), Is.False);
         }
@@ -83,11 +83,11 @@ namespace Chow.Tests
         {
             // Compile-time check: this test exists to flag any reintroduction of a copy ctor.
             // If a copy ctor returns, this test still passes but the design intent is documented.
-            System.Reflection.ConstructorInfo[] ctors = typeof(LocalScope).GetConstructors();
-            bool hasCopyCtor = false;
-            foreach (System.Reflection.ConstructorInfo ctor in ctors)
+            var ctors = typeof(LocalScope).GetConstructors();
+            var hasCopyCtor = false;
+            foreach (var ctor in ctors)
             {
-                System.Reflection.ParameterInfo[] parameters = ctor.GetParameters();
+                var parameters = ctor.GetParameters();
                 if (parameters.Length == 1 && parameters[0].ParameterType == typeof(LocalScope))
                 {
                     hasCopyCtor = true;

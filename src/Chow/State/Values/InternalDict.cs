@@ -25,7 +25,7 @@ namespace Chow.Interpreter.State.Values
             get
             {
                 ValidateHashable(key);
-                if (!_entries.TryGetValue(key, out TaggedUnion value))
+                if (!_entries.TryGetValue(key, out var value))
                 {
                     throw new DictKeyException(KeyRepr(key));
                 }
@@ -63,9 +63,9 @@ namespace Chow.Interpreter.State.Values
         TaggedUnion Get(TaggedUnion[] args)
         {
             ValidateArgRange(args, 1, 2);
-            TaggedUnion key = args[0];
+            var key = args[0];
             ValidateHashable(key);
-            if (_entries.TryGetValue(key, out TaggedUnion value))
+            if (_entries.TryGetValue(key, out var value))
             {
                 return value;
             }
@@ -83,9 +83,9 @@ namespace Chow.Interpreter.State.Values
         TaggedUnion Pop(TaggedUnion[] args)
         {
             ValidateArgRange(args, 1, 2);
-            TaggedUnion key = args[0];
+            var key = args[0];
             ValidateHashable(key);
-            if (_entries.TryGetValue(key, out TaggedUnion value))
+            if (_entries.TryGetValue(key, out var value))
             {
                 _entries.Remove(key);
                 _keys.Remove(key);
@@ -105,8 +105,8 @@ namespace Chow.Interpreter.State.Values
             {
                 throw new TypeException($"'{args[0].Tag}' object is not a dict");
             }
-            InternalDict other = args[0].DictValue;
-            foreach (TaggedUnion key in other._keys)
+            var other = args[0].DictValue;
+            foreach (var key in other._keys)
             {
                 Add(key, other._entries[key]);
             }
@@ -116,13 +116,13 @@ namespace Chow.Interpreter.State.Values
         TaggedUnion SetDefault(TaggedUnion[] args)
         {
             ValidateArgRange(args, 1, 2);
-            TaggedUnion key = args[0];
+            var key = args[0];
             ValidateHashable(key);
-            if (_entries.TryGetValue(key, out TaggedUnion existing))
+            if (_entries.TryGetValue(key, out var existing))
             {
                 return existing;
             }
-            TaggedUnion def = args.Length == 2 ? args[1] : TaggedUnion.None;
+            var def = args.Length == 2 ? args[1] : TaggedUnion.None;
             Add(key, def);
             return def;
         }
@@ -167,9 +167,9 @@ namespace Chow.Interpreter.State.Values
             {
                 return false;
             }
-            foreach (TaggedUnion key in a._keys)
+            foreach (var key in a._keys)
             {
-                if (!b._entries.TryGetValue(key, out TaggedUnion bValue))
+                if (!b._entries.TryGetValue(key, out var bValue))
                 {
                     return false;
                 }
@@ -183,12 +183,12 @@ namespace Chow.Interpreter.State.Values
 
         public static InternalDict Merge(InternalDict a, InternalDict b)
         {
-            InternalDict result = new InternalDict();
-            foreach (TaggedUnion key in a._keys)
+            var result = new InternalDict();
+            foreach (var key in a._keys)
             {
                 result.Add(key, a._entries[key]);
             }
-            foreach (TaggedUnion key in b._keys)
+            foreach (var key in b._keys)
             {
                 result.Add(key, b._entries[key]);
             }
@@ -212,15 +212,15 @@ namespace Chow.Interpreter.State.Values
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append('{');
-            for (int i = 0; i < _keys.Count; i++)
+            for (var i = 0; i < _keys.Count; i++)
             {
                 if (i > 0)
                 {
                     sb.Append(", ");
                 }
-                TaggedUnion key = _keys[i];
+                var key = _keys[i];
                 Repr(sb, key);
                 sb.Append(": ");
                 Repr(sb, _entries[key]);
@@ -245,8 +245,8 @@ namespace Chow.Interpreter.State.Values
                     sb.Append(value.IntegerValue);
                     return;
                 case Tag.Float:
-                    double f = value.FloatValue;
-                    string fs = f.ToString("R", CultureInfo.InvariantCulture);
+                    var f = value.FloatValue;
+                    var fs = f.ToString("R", CultureInfo.InvariantCulture);
                     if (fs.IndexOfAny(new[] { '.', 'e', 'E', 'n', 'N', 'i', 'I' }) < 0)
                     {
                         fs += ".0";
@@ -272,7 +272,7 @@ namespace Chow.Interpreter.State.Values
 
         static string KeyRepr(TaggedUnion key)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             Repr(sb, key);
             return sb.ToString();
         }
@@ -292,7 +292,7 @@ namespace Chow.Interpreter.State.Values
 
         static void ValidateArgCount(TaggedUnion[] args, int expectedCount)
         {
-            int actualCount = args?.Length ?? 0;
+            var actualCount = args?.Length ?? 0;
             if (actualCount != expectedCount)
             {
                 throw new ArgumentException($"Method requires {expectedCount} arguments, but {actualCount} were provided");
@@ -301,7 +301,7 @@ namespace Chow.Interpreter.State.Values
 
         static void ValidateArgRange(TaggedUnion[] args, int min, int max)
         {
-            int actualCount = args?.Length ?? 0;
+            var actualCount = args?.Length ?? 0;
             if (actualCount < min || actualCount > max)
             {
                 throw new ArgumentException($"Method requires between {min} and {max} arguments, but {actualCount} were provided");

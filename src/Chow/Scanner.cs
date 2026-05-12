@@ -121,14 +121,14 @@ namespace Chow.Interpreter
 
         void ScanNameTkn()
         {
-            int startIdx = _charIdx;
+            var startIdx = _charIdx;
 
             while (IsCharToScan() && IsNameTrailChar(CurrChar))
             {
                 MoveToNextChar();
             }
 
-            string lexeme = _src.Substring(startIdx, _charIdx - startIdx);
+            var lexeme = _src.Substring(startIdx, _charIdx - startIdx);
 
             if (ReservedKeywords.Contains(lexeme))
             {
@@ -153,7 +153,7 @@ namespace Chow.Interpreter
 
         void ScanIndentTkn()
         {
-            int indentColumn = ScanIndentColumn();
+            var indentColumn = ScanIndentColumn();
 
             if (!IsCharToScan() || IsNewlineChar(CurrChar) || IsCommentPrefix(CurrChar))
             {
@@ -166,7 +166,7 @@ namespace Chow.Interpreter
 
         int ScanIndentColumn()
         {
-            int indentColumn = 0;
+            var indentColumn = 0;
 
             while (IsCharToScan() && IsFormFeedChar(CurrChar))
             {
@@ -193,7 +193,7 @@ namespace Chow.Interpreter
 
         void CreateIndentTkns(int indentLvl)
         {
-            int prevIndentLvl = _indentLvls.Peek();
+            var prevIndentLvl = _indentLvls.Peek();
 
             if (indentLvl > prevIndentLvl)
             {
@@ -403,7 +403,7 @@ namespace Chow.Interpreter
                     }
             }
 
-            string lexeme = CurrChar.ToString();
+            var lexeme = CurrChar.ToString();
             MoveToNextChar();
             AddNewToken(tknType, lexeme, _lineNum);
             return true;
@@ -424,7 +424,7 @@ namespace Chow.Interpreter
 
         void ScanNumericToken()
         {
-            int startIdx = _charIdx;
+            var startIdx = _charIdx;
 
             // Move past digits before any decimal point (if any)
             MoveToNextChar();
@@ -435,7 +435,7 @@ namespace Chow.Interpreter
             }
 
             // If there is a decimal point, move past it and any following digits
-            bool isFloat = IsCharToScan() && CurrChar == '.';
+            var isFloat = IsCharToScan() && CurrChar == '.';
 
             if (isFloat)
             {
@@ -447,9 +447,9 @@ namespace Chow.Interpreter
                 }
             }
 
-            int len = _charIdx - startIdx;
-            string lexeme = _src.Substring(startIdx, len);
-            TokenType numTknType = isFloat ? TokenType.LiteralFloat : TokenType.LiteralInt;
+            var len = _charIdx - startIdx;
+            var lexeme = _src.Substring(startIdx, len);
+            var numTknType = isFloat ? TokenType.LiteralFloat : TokenType.LiteralInt;
             object literal;
 
             try
@@ -478,11 +478,11 @@ namespace Chow.Interpreter
 
         void ScanStringTkn()
         {
-            char quoteChar = CurrChar;
-            int startIdx = _charIdx;
+            var quoteChar = CurrChar;
+            var startIdx = _charIdx;
             MoveToNextChar();
 
-            int contentStartIdx = _charIdx;
+            var contentStartIdx = _charIdx;
 
             while (IsCharToScan() && CurrChar != quoteChar)
             {
@@ -499,11 +499,11 @@ namespace Chow.Interpreter
                 throw new ScannerEx("Unterminated string literal", _lineNum);
             }
 
-            int contentEndIdx = _charIdx;
+            var contentEndIdx = _charIdx;
             MoveToNextChar();
 
-            string lexeme = _src.Substring(startIdx, _charIdx - startIdx);
-            string literal = _src.Substring(contentStartIdx, contentEndIdx - contentStartIdx);
+            var lexeme = _src.Substring(startIdx, _charIdx - startIdx);
+            var literal = _src.Substring(contentStartIdx, contentEndIdx - contentStartIdx);
 
             AddNewToken(TokenType.LiteralStr, lexeme, _lineNum, literal);
         }
@@ -525,7 +525,7 @@ namespace Chow.Interpreter
 
         char PeekNextChar()
         {
-            int nextIndex = _charIdx + 1;
+            var nextIndex = _charIdx + 1;
             return nextIndex < _src.Length ? _src[nextIndex] : '\0';
         }
 

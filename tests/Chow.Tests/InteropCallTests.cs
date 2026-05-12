@@ -21,7 +21,7 @@ namespace Chow.Tests
         public void A01_NoArgAction_SideEffectOccurs()
         {
             var module = MakeModule();
-            bool called = false;
+            var called = false;
             module["f"] = (Action)(() => { called = true; });
 
             module.Execute("f()");

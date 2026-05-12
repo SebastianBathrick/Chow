@@ -22,19 +22,19 @@ namespace Chow.Interpreter.State.Values
         {
             get
             {
-                int idx = NormalizeIndex(index);
+                var idx = NormalizeIndex(index);
                 return _elements[idx];
             }
             set
             {
-                int idx = NormalizeIndex(index);
+                var idx = NormalizeIndex(index);
                 _elements[idx] = value;
             }
         }
 
         int NormalizeIndex(int index)
         {
-            int idx = index < 0 ? _elements.Count + index : index;
+            var idx = index < 0 ? _elements.Count + index : index;
             if (idx < 0 || idx >= _elements.Count)
             {
                 throw new IndexOutOfRangeException();
@@ -72,7 +72,7 @@ namespace Chow.Interpreter.State.Values
                 throw new ArgumentException($"Argument 0 must be of type {Tag.Int}, but was {args[0].Tag}");
             }
 
-            int idx = (int)args[0].IntegerValue;
+            var idx = (int)args[0].IntegerValue;
 
             if (idx < 0)
             {
@@ -98,7 +98,7 @@ namespace Chow.Interpreter.State.Values
                 throw new InvalidOperationException("pop from empty list");
             }
 
-            int index = _elements.Count - 1;
+            var index = _elements.Count - 1;
             if (args != null && args.Length == 1)
             {
                 if (args[0].Tag != Tag.Int)
@@ -116,7 +116,7 @@ namespace Chow.Interpreter.State.Values
                 }
             }
 
-            TaggedUnion value = _elements[index];
+            var value = _elements[index];
             _elements.RemoveAt(index);
 
             return value;
@@ -125,7 +125,7 @@ namespace Chow.Interpreter.State.Values
         TaggedUnion Remove(TaggedUnion[] args)
         {
             ValidateArguments(args, 1);
-            for (int i = 0; i < _elements.Count; i++)
+            for (var i = 0; i < _elements.Count; i++)
             {
                 if (_elements[i] == args[0])
                 {
@@ -219,7 +219,7 @@ namespace Chow.Interpreter.State.Values
             {
                 return false;
             }
-            for (int i = 0; i < a._elements.Count; i++)
+            for (var i = 0; i < a._elements.Count; i++)
             {
                 if (a._elements[i] != b._elements[i])
                 {
@@ -231,7 +231,7 @@ namespace Chow.Interpreter.State.Values
 
         public static InternalList Concat(InternalList a, InternalList b)
         {
-            InternalList result = new InternalList();
+            var result = new InternalList();
             result._elements.AddRange(a._elements);
             result._elements.AddRange(b._elements);
             return result;
@@ -239,12 +239,12 @@ namespace Chow.Interpreter.State.Values
 
         public static InternalList Repeat(InternalList a, int n)
         {
-            InternalList result = new InternalList();
+            var result = new InternalList();
             if (n <= 0)
             {
                 return result;
             }
-            for (int i = 0; i < n; i++)
+            for (var i = 0; i < n; i++)
             {
                 result._elements.AddRange(a._elements);
             }
@@ -254,9 +254,9 @@ namespace Chow.Interpreter.State.Values
         // FUTURE: strings will need a parallel GetSlice returning a string, not a list. Do not abstract.
         public TaggedUnion GetSlice(TaggedUnion startUnion, TaggedUnion stopUnion, TaggedUnion stepUnion)
         {
-            int length = _elements.Count;
+            var length = _elements.Count;
 
-            int step = SliceArgOrDefault(stepUnion, 1);
+            var step = SliceArgOrDefault(stepUnion, 1);
             if (step == 0)
             {
                 throw new ArgumentException("slice step cannot be zero");
@@ -319,17 +319,17 @@ namespace Chow.Interpreter.State.Values
                 }
             }
 
-            InternalList sliced = new InternalList();
+            var sliced = new InternalList();
             if (step > 0)
             {
-                for (int i = start; i < stop; i += step)
+                for (var i = start; i < stop; i += step)
                 {
                     sliced._elements.Add(_elements[i]);
                 }
             }
             else
             {
-                for (int i = start; i > stop; i += step)
+                for (var i = start; i > stop; i += step)
                 {
                     sliced._elements.Add(_elements[i]);
                 }
@@ -353,9 +353,9 @@ namespace Chow.Interpreter.State.Values
         public override string ToString()
         {
             // FUTURE: once dicts/class instances exist, Repr below will grow branches for them.
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append('[');
-            for (int i = 0; i < _elements.Count; i++)
+            for (var i = 0; i < _elements.Count; i++)
             {
                 if (i > 0)
                 {
@@ -384,8 +384,8 @@ namespace Chow.Interpreter.State.Values
                     return;
                 case Tag.Float:
                     // Python prints `1.0`, not `1`. C#'s default float.ToString() may drop the trailing zero.
-                    double f = value.FloatValue;
-                    string fs = f.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+                    var f = value.FloatValue;
+                    var fs = f.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
                     if (fs.IndexOfAny(new[] { '.', 'e', 'E', 'n', 'N', 'i', 'I' }) < 0)
                     {
                         fs += ".0";
@@ -411,8 +411,8 @@ namespace Chow.Interpreter.State.Values
 
         static void ValidateArguments(TaggedUnion[] args, int reqArgCount = 0, Tag[] reqTypes = null)
         {
-            int expectedCount = reqTypes?.Length ?? reqArgCount;
-            int actualCount = args?.Length ?? 0;
+            var expectedCount = reqTypes?.Length ?? reqArgCount;
+            var actualCount = args?.Length ?? 0;
 
             if (actualCount != expectedCount)
             {
@@ -424,7 +424,7 @@ namespace Chow.Interpreter.State.Values
                 return;
             }
 
-            for (int i = 0; i < reqTypes.Length; i++)
+            for (var i = 0; i < reqTypes.Length; i++)
             {
                 if (args[i].Tag == reqTypes[i])
                 {

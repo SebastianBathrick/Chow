@@ -8,33 +8,31 @@ namespace Chow.Interpreter.Bytecode
     {
         const int NO_OPERAND = -1;
 
-        int _id = 0;
+        readonly List<Instruction> _instructions;
+        readonly List<TaggedUnion> _constants;
 
-        List<Instruction> _instrs;
-        List<TaggedUnion> _consts;
-
-        List<string> _varNames;
-        List<int> _instrLines;
+        readonly List<string> _varNames;
+        readonly List<int> _instrLines;
 
         /// <summary>
         /// The total number of bytecode instructions stored in this Chunk.
         /// </summary>
-        public int InstructionCount => _instrs.Count;
+        public int InstructionCount => _instructions.Count;
 
         /// <summary>
         /// Returns the instruction stored in this Chunk at the provided index.
         /// </summary>
         /// <param name="index">The index of the instruction to retrieve.</param>
         /// <returns>The instruction at the specified index.</returns>
-        public Instruction this[int index] => _instrs[index];
+        public Instruction this[int index] => _instructions[index];
 
         /// <summary>
         /// Initializes a new Chunk without any instructions, constants,  or variable names.
         /// </summary>
         public Chunk()
         {
-            _instrs = new List<Instruction>();
-            _consts = new List<TaggedUnion>();
+            _instructions = new List<Instruction>();
+            _constants = new List<TaggedUnion>();
             _varNames = new List<string>();
             _instrLines = new List<int>();
         }
@@ -49,7 +47,7 @@ namespace Chow.Interpreter.Bytecode
         /// <param name="operand">Optional operand for the instruction, default is -1.</param>
         public void AddInstruction(OperationCode code, int line, int operand = NO_OPERAND)
         {
-            _instrs.Add(new Instruction(code, operand));
+            _instructions.Add(new Instruction(code, operand));
             _instrLines.Add(line);
         }
 
@@ -60,7 +58,7 @@ namespace Chow.Interpreter.Bytecode
         /// <param name="operand">The new operand value to assign to the instruction.</param>
         public void PatchInstruction(int idx, int operand)
         {
-            _instrs[idx] = new Instruction(_instrs[idx].Code, operand);
+            _instructions[idx] = new Instruction(_instructions[idx].Code, operand);
         }
 
         /// <summary>
@@ -82,7 +80,7 @@ namespace Chow.Interpreter.Bytecode
         /// </summary>
         /// <param name="operand">The operand index of the constant to retrieve.</param>
         /// <returns>The <see cref="TaggedUnion"/> constant at the specified operand index.</returns>
-        public TaggedUnion ReadConstant(int operand) => _consts[operand];
+        public TaggedUnion ReadConstant(int operand) => _constants[operand];
 
         /// <summary>
         /// Stores a constant value and returns an integer for use as an operand assigned to <see cref="Instruction"/> instance(s).
@@ -93,15 +91,15 @@ namespace Chow.Interpreter.Bytecode
         /// that existing constant will be returned. Otherwise, the new constant is stored and a new operand is returned</remarks>
         public int RegisterConstant(TaggedUnion newConst)
         {
-            int constIndex = _consts.IndexOf(newConst);
+            var constIndex = _constants.IndexOf(newConst);
 
             if (constIndex >= 0)
             {
                 return constIndex;
             }
 
-            constIndex = _consts.Count;
-            _consts.Add(newConst);
+            constIndex = _constants.Count;
+            _constants.Add(newConst);
             return constIndex;
         }
 
@@ -146,18 +144,18 @@ namespace Chow.Interpreter.Bytecode
         /// <param name="varName">Variable name to register.</param>
         /// <returns>If a variable name equal to <paramref name="varName"/> is already registered, the operand for the
         /// existing entry is returned. Otherwise, the new variable name is stored and a new operand is returned.</returns>
-        /// <remarks>This is ONLY for storing variable names COMPILE-TIME. NOT for storing variable names runtime, AND NOT NEVER
+        /// <remarks>This is ONLY for storing variable names COMPILE-TIME. NOT for storing variable names runtime, AND NEVER
         /// for storing variable values. </remarks>
         public int RegisterVariableName(string varName)
         {
-            int existing = FindVariableName(varName);
+            var existing = FindVariableName(varName);
 
             if (existing >= 0)
             {
                 return existing;
             }
 
-            int operand = _varNames.Count;
+            var operand = _varNames.Count;
             _varNames.Add(varName);
             return operand;
         }
@@ -171,17 +169,17 @@ namespace Chow.Interpreter.Bytecode
             var sb = new StringBuilder();
 
             sb.AppendLine("Constants:");
-            for (int i = 0; i < _consts.Count; i++)
+            for (var i = 0; i < _constants.Count; i++)
             {
                 sb.Append("  ");
                 sb.Append(i);
                 sb.Append(": ");
-                AppendConstant(sb, _consts[i]);
+                AppendConstant(sb, _constants[i]);
                 sb.AppendLine();
             }
 
             sb.AppendLine("Variables:");
-            for (int i = 0; i < _varNames.Count; i++)
+            for (var i = 0; i < _varNames.Count; i++)
             {
                 sb.Append("  ");
                 sb.Append(i);
@@ -191,9 +189,9 @@ namespace Chow.Interpreter.Bytecode
             }
 
             sb.AppendLine("Operations:");
-            for (int i = 0; i < _instrs.Count; i++)
+            for (var i = 0; i < _instructions.Count; i++)
             {
-                Instruction op = _instrs[i];
+                var op = _instructions[i];
 
                 sb.Append("  ");
                 sb.Append(i);
@@ -209,7 +207,7 @@ namespace Chow.Interpreter.Bytecode
                     sb.Append(')');
                 }
 
-                if (i < _instrs.Count - 1)
+                if (i < _instructions.Count - 1)
                 {
                     sb.AppendLine();
                 }
@@ -243,7 +241,7 @@ namespace Chow.Interpreter.Bytecode
             else if (constant.IsList)
             {
                 sb.Append("List=");
-                sb.Append(constant.ListValue.ToString());
+                sb.Append(constant.ListValue);
             }
         }
 
@@ -252,7 +250,7 @@ namespace Chow.Interpreter.Bytecode
             switch (op.Code)
             {
                 case OperationCode.PushConstant:
-                    AppendConstant(sb, _consts[op.Operand]);
+                    AppendConstant(sb, _constants[op.Operand]);
                     break;
                 case OperationCode.AssignOrDeclareVariable:
                 case OperationCode.PushVariableValue:

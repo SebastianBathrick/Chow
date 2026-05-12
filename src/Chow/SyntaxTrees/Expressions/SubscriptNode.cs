@@ -16,8 +16,8 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 
         public override string ToString()
         {
-            string indentedTarget = IndentChildren(_target.ToString());
-            string indentedIndex = IndentChildren(_index.ToString());
+            var indentedTarget = IndentChildren(_target.ToString());
+            var indentedIndex = IndentChildren(_index.ToString());
             return $"[Subscript line={LineNum}\n{indentedTarget}\n{indentedIndex}\n]";
         }
 

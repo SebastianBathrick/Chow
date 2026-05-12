@@ -16,7 +16,7 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 
         public override string ToString()
         {
-            string indentedTarget = IndentChildren(_target.ToString());
+            var indentedTarget = IndentChildren(_target.ToString());
             return $"[AttrAccess line={LineNum} attr={_attrName}\n{indentedTarget}\n]";
         }
 

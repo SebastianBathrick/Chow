@@ -22,8 +22,8 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
                 return $"[Dict line={LineNum}]";
             }
 
-            string body = string.Empty;
-            for (int i = 0; i < _keys.Count; i++)
+            var body = string.Empty;
+            for (var i = 0; i < _keys.Count; i++)
             {
                 body += "\n" + IndentChildren(_keys[i].ToString());
                 body += "\n" + IndentChildren(_values[i].ToString());

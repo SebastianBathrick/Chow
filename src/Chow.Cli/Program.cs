@@ -10,7 +10,7 @@ const string TRAILING_INDICATOR = "... ";
 const string FILE_PATH_PATTERN = @"^(?:(?:[A-Za-z]:[\\/])|(?:\\\\[^\\/:*?""<>|\r\n]+\\[^\\/:*?""<>|\r\n]+[\\/]?)|[\\/])?(?:[^\\/:*?""<>|\r\n]+[\\/])*[^\\/:*?""<>|\r\n]+$";
 const string REQUIRED_EXTENSION = ".chw";
 
-ChowModule module = new ChowModule();
+var module = new ChowModule();
 
 module["print"] = (ChowValue val) =>
 {
@@ -20,7 +20,7 @@ module["print"] = (ChowValue val) =>
 
 module["input"] = () =>
 {
-    string? input = Console.ReadLine();
+    var input = Console.ReadLine();
 
     if (input == null)
     {
@@ -46,7 +46,7 @@ module["float"] = (ChowValue val) =>
     }
     if (val is ChowStr s)
     {
-        if (double.TryParse(s.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double parsed))
+        if (double.TryParse(s.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var parsed))
         {
             return new ChowFloat(parsed);
         }
@@ -76,7 +76,7 @@ module["int"] = (ChowValue val) =>
     }
     if (val is ChowStr s)
     {
-        if (long.TryParse(s.Value, out long parsed))
+        if (long.TryParse(s.Value, out var parsed))
         {
             return new ChowInt(parsed);
         }
@@ -236,7 +236,7 @@ module["max"] = (ChowValue[] args) =>
 
 if (args.Length > 0)
 {
-    string arg = args[0];
+    var arg = args[0];
 
     if (Regex.IsMatch(arg, FILE_PATH_PATTERN))
     {
@@ -248,7 +248,7 @@ if (args.Length > 0)
 
         try
         {
-            string src = File.ReadAllText(arg);
+            var src = File.ReadAllText(arg);
             module.Execute(src);
         }
         catch (Exception ex)
@@ -306,7 +306,7 @@ static List<string> GetLineList(string startIndicator, string trailingIndicator)
     Console.Write(startIndicator);
 
     ConsoleKeyInfo keyInfo;
-    bool isSubmitting = false;
+    var isSubmitting = false;
 
     do
     {
@@ -340,7 +340,7 @@ static List<string> GetLineList(string startIndicator, string trailingIndicator)
                 Console.Clear();
                 cursorY = currLine;
 
-                for (int i = 0; i < lines.Count; i++)
+                for (var i = 0; i < lines.Count; i++)
                 {
                     var redrawPrefix = i == 0 ? startIndicator : trailingIndicator;
                     RedrawLine(lines[i], i, redrawPrefix);

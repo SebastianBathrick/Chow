@@ -29,14 +29,14 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 
         public override string ToString()
         {
-            string indentedLeft = IndentChildren(_l.ToString());
+            var indentedLeft = IndentChildren(_l.ToString());
 
             if (_r == null)
             {
                 return $"[{_operator} line={LineNum}\n{indentedLeft}\n]";
             }
 
-            string indentedRight = IndentChildren(_r.ToString());
+            var indentedRight = IndentChildren(_r.ToString());
             return $"[{_operator} line={LineNum}\n{indentedLeft}\n{indentedRight}\n]";
         }
 

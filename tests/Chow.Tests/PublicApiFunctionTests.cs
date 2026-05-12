@@ -25,8 +25,8 @@ namespace Chow.Tests
 
         static (ChowModule module, CaptureExprHook hook) NewModule()
         {
-            ChowModule module = new ChowModule();
-            CaptureExprHook hook = new CaptureExprHook();
+            var module = new ChowModule();
+            var hook = new CaptureExprHook();
             module.AddHook(hook);
             return (module, hook);
         }
@@ -38,10 +38,10 @@ namespace Chow.Tests
         [Test]
         public void Indexer_DefinedFunction_ReturnsNonNullValue()
         {
-            (ChowModule module, CaptureExprHook _) = NewModule();
+            (var module, var _) = NewModule();
             module.Execute("def f():\n    return 1");
 
-            ChowValue value = module.GetGlobal("f");
+            var value = module.GetGlobal("f");
 
             Assert.That(value, Is.Not.Null);
         }
@@ -49,10 +49,10 @@ namespace Chow.Tests
         [Test]
         public void Indexer_DefinedFunction_IsNotNone()
         {
-            (ChowModule module, CaptureExprHook _) = NewModule();
+            (var module, var _) = NewModule();
             module.Execute("def f():\n    return 1");
 
-            ChowValue value = module.GetGlobal("f");
+            var value = module.GetGlobal("f");
 
             Assert.That(value.IsNone, Is.False);
         }
@@ -64,7 +64,7 @@ namespace Chow.Tests
         [Test]
         public void Indexer_UndefinedName_RaisesApiNameError()
         {
-            (ChowModule module, CaptureExprHook _) = NewModule();
+            (var module, var _) = NewModule();
 
             Assert.Throws<GlobalAccessException>(() => { var _ = module["missing"]; });
         }
@@ -72,7 +72,7 @@ namespace Chow.Tests
         [Test]
         public void Indexer_UndefinedName_AfterEmptyExecute_RaisesApiNameError()
         {
-            (ChowModule module, CaptureExprHook _) = NewModule();
+            (var module, var _) = NewModule();
             module.Execute("x = 1");
 
             Assert.Throws<GlobalAccessException>(() => { var _ = module["missing"]; });
@@ -85,8 +85,8 @@ namespace Chow.Tests
         [Test]
         public void IndexerSet_CrossModule_FunctionCallable()
         {
-            (ChowModule moduleA, CaptureExprHook _) = NewModule();
-            (ChowModule moduleB, CaptureExprHook hookB) = NewModule();
+            (var moduleA, var _) = NewModule();
+            (var moduleB, var hookB) = NewModule();
 
             moduleA.Execute("def f():\n    return 99");
             moduleB["f"] = moduleA["f"];
@@ -101,8 +101,8 @@ namespace Chow.Tests
         {
             // Function defined in moduleA closes over moduleA's `x`. Even when called via moduleB,
             // it should resolve `x` via moduleA's scope (closure semantics).
-            (ChowModule moduleA, CaptureExprHook _) = NewModule();
-            (ChowModule moduleB, CaptureExprHook hookB) = NewModule();
+            (var moduleA, var _) = NewModule();
+            (var moduleB, var hookB) = NewModule();
 
             moduleA.Execute("x = 7");
             moduleA.Execute("def get():\n    return x");
@@ -120,7 +120,7 @@ namespace Chow.Tests
         [Test]
         public void Hook_InvokedOncePerFunctionCallExpression()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
             module.Execute("def f():\n    return 1");
 
             module.Execute("f()");
@@ -133,12 +133,12 @@ namespace Chow.Tests
         [Test]
         public void Hook_ReceivesReturnValue_NotFunctionItself()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
             module.Execute("def f():\n    return 42");
 
             module.Execute("f()");
 
-            ChowValue lastValue = hook.Values[hook.Values.Count - 1];
+            var lastValue = hook.Values[hook.Values.Count - 1];
             Assert.That(lastValue.As<long>(), Is.EqualTo(42));
         }
 
@@ -149,10 +149,10 @@ namespace Chow.Tests
         [Test]
         public void IndexerRoundTrip_FunctionStillCallable()
         {
-            (ChowModule module, CaptureExprHook hook) = NewModule();
+            (var module, var hook) = NewModule();
             module.Execute("def f():\n    return 5");
 
-            ChowValue fValue = module.GetGlobal("f");
+            var fValue = module.GetGlobal("f");
             module["g"] = fValue;
             module.Execute("g()");
 

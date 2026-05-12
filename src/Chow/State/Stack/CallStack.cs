@@ -73,7 +73,7 @@ namespace Chow.Interpreter.State.Stack
         /// </summary>
         public bool IsVariableDefined(string name)
         {
-            for (Scope s = CurrFrame.Scope; s != null; s = s.ParentOrNull)
+            for (var s = CurrFrame.Scope; s != null; s = s.ParentOrNull)
             {
                 if (s.IsVariableDefined(name))
                 {
@@ -92,7 +92,7 @@ namespace Chow.Interpreter.State.Stack
         /// </summary>
         public TaggedUnion GetVariableValue(string name)
         {
-            for (Scope s = CurrFrame.Scope; s != null; s = s.ParentOrNull)
+            for (var s = CurrFrame.Scope; s != null; s = s.ParentOrNull)
             {
                 if (s.IsVariableDefined(name))
                 {
@@ -136,8 +136,8 @@ namespace Chow.Interpreter.State.Stack
         /// </summary>
         public void EnterFunctionCall(Closure func)
         {
-            LocalScope frameScope = new LocalScope(func.Enclosing);
-            StackFrame newFrame = new StackFrame(func.Chunk, frameScope);
+            var frameScope = new LocalScope(func.Enclosing);
+            var newFrame = new StackFrame(func.Chunk, frameScope);
             _callFrames.Push(newFrame);
         }
 

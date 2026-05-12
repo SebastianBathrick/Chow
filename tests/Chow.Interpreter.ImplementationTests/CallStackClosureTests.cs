@@ -12,8 +12,8 @@ namespace Chow.Interpreter.ImplementationTests
 
         static (CallStack stack, ModuleScope module) NewStack()
         {
-            ModuleScope module = new ModuleScope();
-            CallStack stack = new CallStack(new Chunk(), module);
+            var module = new ModuleScope();
+            var stack = new CallStack(new Chunk(), module);
             return (stack, module);
         }
 
@@ -29,7 +29,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void NewStack_IsModuleLevel()
         {
-            (CallStack stack, ModuleScope _) = NewStack();
+            (var stack, var _) = NewStack();
 
             Assert.That(stack.IsModuleLevel, Is.True);
         }
@@ -37,7 +37,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void NewStack_CurrentScope_IsModuleScope()
         {
-            (CallStack stack, ModuleScope module) = NewStack();
+            (var stack, var module) = NewStack();
 
             Assert.That(stack.CurrentScope, Is.SameAs(module));
         }
@@ -49,7 +49,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void EnterFunctionCall_FlipsIsModuleLevel()
         {
-            (CallStack stack, ModuleScope module) = NewStack();
+            (var stack, var module) = NewStack();
 
             stack.EnterFunctionCall(NewClosure(module));
 
@@ -59,8 +59,8 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void EnterFunctionCall_SwitchesCurrentChunkToClosureChunk()
         {
-            (CallStack stack, ModuleScope module) = NewStack();
-            Closure closure = NewClosure(module);
+            (var stack, var module) = NewStack();
+            var closure = NewClosure(module);
 
             stack.EnterFunctionCall(closure);
 
@@ -70,7 +70,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void EnterFunctionCall_NewFrameScope_IsLocalScope()
         {
-            (CallStack stack, ModuleScope module) = NewStack();
+            (var stack, var module) = NewStack();
 
             stack.EnterFunctionCall(NewClosure(module));
 
@@ -80,8 +80,8 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void EnterFunctionCall_NewLocalScope_ParentIsClosureEnclosing()
         {
-            (CallStack stack, ModuleScope module) = NewStack();
-            Closure closure = NewClosure(module);
+            (var stack, var module) = NewStack();
+            var closure = NewClosure(module);
 
             stack.EnterFunctionCall(closure);
 
@@ -91,11 +91,11 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void EnterFunctionCall_NestedClosure_ParentIsOuterLocalScope()
         {
-            (CallStack stack, ModuleScope module) = NewStack();
+            (var stack, var module) = NewStack();
 
             // Simulate outer function call
             stack.EnterFunctionCall(NewClosure(module));
-            Scope outerLocal = stack.CurrentScope;
+            var outerLocal = stack.CurrentScope;
 
             // Inner closure was defined inside the outer call, so it captures outerLocal.
             stack.EnterFunctionCall(NewClosure(outerLocal));
@@ -110,7 +110,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Assign_InsideCall_LandsInLocalScope_NotModule()
         {
-            (CallStack stack, ModuleScope module) = NewStack();
+            (var stack, var module) = NewStack();
             stack.EnterFunctionCall(NewClosure(module));
 
             stack.AssignVariableValue("x", Int(99));
@@ -129,7 +129,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Lookup_InsideCall_FindsCapturedModuleGlobal()
         {
-            (CallStack stack, ModuleScope module) = NewStack();
+            (var stack, var module) = NewStack();
             module.AssignVariableValue("g", Int(7));
             stack.EnterFunctionCall(NewClosure(module));
 
@@ -143,12 +143,12 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void Lookup_InsideNestedCall_WalksLocalThenEnclosingThenModule()
         {
-            (CallStack stack, ModuleScope module) = NewStack();
+            (var stack, var module) = NewStack();
             module.AssignVariableValue("globalVar", Int(1));
 
             stack.EnterFunctionCall(NewClosure(module));
             stack.AssignVariableValue("outerLocal", Int(2));
-            Scope outerLocal = stack.CurrentScope;
+            var outerLocal = stack.CurrentScope;
 
             stack.EnterFunctionCall(NewClosure(outerLocal));
             stack.AssignVariableValue("innerLocal", Int(3));
@@ -168,14 +168,14 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void TwoNestedEntries_OfSameClosure_HaveDistinctLocalScopes()
         {
-            (CallStack stack, ModuleScope module) = NewStack();
-            Closure closure = NewClosure(module);
+            (var stack, var module) = NewStack();
+            var closure = NewClosure(module);
 
             stack.EnterFunctionCall(closure);
-            Scope first = stack.CurrentScope;
+            var first = stack.CurrentScope;
 
             stack.EnterFunctionCall(closure);
-            Scope second = stack.CurrentScope;
+            var second = stack.CurrentScope;
 
             Assert.That(first, Is.Not.SameAs(second));
         }
@@ -187,7 +187,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void ExitFunctionCall_RestoresIsModuleLevel()
         {
-            (CallStack stack, ModuleScope module) = NewStack();
+            (var stack, var module) = NewStack();
             stack.EnterFunctionCall(NewClosure(module));
 
             stack.ExitFunctionCall();
@@ -198,7 +198,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void ExitFunctionCall_RestoresCurrentScope_ToModule()
         {
-            (CallStack stack, ModuleScope module) = NewStack();
+            (var stack, var module) = NewStack();
             stack.EnterFunctionCall(NewClosure(module));
 
             stack.ExitFunctionCall();
@@ -209,7 +209,7 @@ namespace Chow.Interpreter.ImplementationTests
         [Test]
         public void ExitFunctionCall_LocalNames_NoLongerVisible()
         {
-            (CallStack stack, ModuleScope module) = NewStack();
+            (var stack, var module) = NewStack();
             stack.EnterFunctionCall(NewClosure(module));
             stack.AssignVariableValue("x", Int(5));
 
