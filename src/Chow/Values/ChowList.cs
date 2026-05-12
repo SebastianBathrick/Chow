@@ -8,7 +8,7 @@ namespace Chow.Interpreter.Values
 
         public int Count => Internal.Count;
 
-        public ChowValue this[int index] => ApiValueConverter.ToApiClassObj(Internal[index]);
+        public ChowValue this[int index] => ChowValueConverter.ToChowValue(Internal[index]);
 
         public ChowList()
         {

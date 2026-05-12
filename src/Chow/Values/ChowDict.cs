@@ -9,7 +9,7 @@ namespace Chow.Interpreter.Values
         public int Count => Internal.Count;
 
         public ChowValue this[ChowValue key]
-            => ApiValueConverter.ToApiClassObj(Internal[ApiValueConverter.ToTaggedUnion(key)]);
+            => ChowValueConverter.ToChowValue(Internal[ChowValueConverter.ToTaggedUnion(key)]);
 
         public ChowDict()
         {

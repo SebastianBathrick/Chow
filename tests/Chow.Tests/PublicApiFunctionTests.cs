@@ -13,7 +13,7 @@ namespace Chow.Tests
         // Helpers
         // ------------------------------------------------------------------------------------------------------------
 
-        sealed class CaptureExprHook : IExprStatementHook
+        sealed class CaptureExprHook : IExpressionStatementHook
         {
             public List<ChowValue> Values { get; } = new List<ChowValue>();
 
@@ -39,7 +39,7 @@ namespace Chow.Tests
         public void Indexer_DefinedFunction_ReturnsNonNullValue()
         {
             (ChowModule module, CaptureExprHook _) = NewModule();
-            module.Run("def f():\n    return 1");
+            module.Execute("def f():\n    return 1");
 
             ChowValue value = module["f"];
 
@@ -50,7 +50,7 @@ namespace Chow.Tests
         public void Indexer_DefinedFunction_IsNotNone()
         {
             (ChowModule module, CaptureExprHook _) = NewModule();
-            module.Run("def f():\n    return 1");
+            module.Execute("def f():\n    return 1");
 
             ChowValue value = module["f"];
 
@@ -66,16 +66,16 @@ namespace Chow.Tests
         {
             (ChowModule module, CaptureExprHook _) = NewModule();
 
-            Assert.Throws<ChowApiNameErrorException>(() => { ChowValue _ = module["missing"]; });
+            Assert.Throws<GetGlobalException>(() => { ChowValue _ = module["missing"]; });
         }
 
         [Test]
         public void Indexer_UndefinedName_AfterEmptyExecute_RaisesApiNameError()
         {
             (ChowModule module, CaptureExprHook _) = NewModule();
-            module.Run("x = 1");
+            module.Execute("x = 1");
 
-            Assert.Throws<ChowApiNameErrorException>(() => { ChowValue _ = module["missing"]; });
+            Assert.Throws<GetGlobalException>(() => { ChowValue _ = module["missing"]; });
         }
 
         // ============================================================================================================
@@ -88,10 +88,10 @@ namespace Chow.Tests
             (ChowModule moduleA, CaptureExprHook _) = NewModule();
             (ChowModule moduleB, CaptureExprHook hookB) = NewModule();
 
-            moduleA.Run("def f():\n    return 99");
+            moduleA.Execute("def f():\n    return 99");
             moduleB["f"] = moduleA["f"];
 
-            moduleB.Run("f()");
+            moduleB.Execute("f()");
 
             Assert.That(hookB.Values[hookB.Values.Count - 1].As<long>(), Is.EqualTo(99));
         }
@@ -104,11 +104,11 @@ namespace Chow.Tests
             (ChowModule moduleA, CaptureExprHook _) = NewModule();
             (ChowModule moduleB, CaptureExprHook hookB) = NewModule();
 
-            moduleA.Run("x = 7");
-            moduleA.Run("def get():\n    return x");
+            moduleA.Execute("x = 7");
+            moduleA.Execute("def get():\n    return x");
             moduleB["get"] = moduleA["get"];
 
-            moduleB.Run("get()");
+            moduleB.Execute("get()");
 
             Assert.That(hookB.Values[hookB.Values.Count - 1].As<long>(), Is.EqualTo(7));
         }
@@ -121,11 +121,11 @@ namespace Chow.Tests
         public void Hook_InvokedOncePerFunctionCallExpression()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("def f():\n    return 1");
+            module.Execute("def f():\n    return 1");
 
-            module.Run("f()");
-            module.Run("f()");
-            module.Run("f()");
+            module.Execute("f()");
+            module.Execute("f()");
+            module.Execute("f()");
 
             Assert.That(hook.Values.Count, Is.EqualTo(3));
         }
@@ -134,9 +134,9 @@ namespace Chow.Tests
         public void Hook_ReceivesReturnValue_NotFunctionItself()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("def f():\n    return 42");
+            module.Execute("def f():\n    return 42");
 
-            module.Run("f()");
+            module.Execute("f()");
 
             ChowValue lastValue = hook.Values[hook.Values.Count - 1];
             Assert.That(lastValue.As<long>(), Is.EqualTo(42));
@@ -150,11 +150,11 @@ namespace Chow.Tests
         public void IndexerRoundTrip_FunctionStillCallable()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("def f():\n    return 5");
+            module.Execute("def f():\n    return 5");
 
             ChowValue fValue = module["f"];
             module["g"] = fValue;
-            module.Run("g()");
+            module.Execute("g()");
 
             Assert.That(hook.Values[hook.Values.Count - 1].As<long>(), Is.EqualTo(5));
         }

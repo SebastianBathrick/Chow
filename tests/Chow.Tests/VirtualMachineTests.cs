@@ -23,7 +23,7 @@ namespace Chow.Tests
         static TaggedUnion Execute(Chunk chunk)
         {
             var vm = new VirtualMachine(chunk, new ModuleScope(), null!);
-            vm.ExecuteChunk();
+            vm.EvaluateChunk();
             return vm.ValStackTop;
         }
 
@@ -346,7 +346,7 @@ namespace Chow.Tests
             });
 
             var vm = new VirtualMachine(chunk, new ModuleScope(), null!);
-            vm.ExecuteChunk();
+            vm.EvaluateChunk();
             TaggedUnion result = vm.ValStackTop;
 
             AssertIntegerResult(result, 5);
@@ -363,7 +363,7 @@ namespace Chow.Tests
             });
 
             var vm = new VirtualMachine(chunk, new ModuleScope(), null!);
-            vm.ExecuteChunk();
+            vm.EvaluateChunk();
             TaggedUnion result = vm.ValStackTop;
 
             AssertIntegerResult(result, 7);
@@ -382,7 +382,7 @@ namespace Chow.Tests
             });
 
             var vm = new VirtualMachine(chunk, new ModuleScope(), null!);
-            vm.ExecuteChunk();
+            vm.EvaluateChunk();
             TaggedUnion result = vm.ValStackTop;
 
             AssertIntegerResult(result, 3);

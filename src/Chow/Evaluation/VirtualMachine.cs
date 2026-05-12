@@ -14,13 +14,13 @@ namespace Chow.Interpreter.Evaluation
         readonly CallStack _callStack;
 
         Stack<TaggedUnion> _valStack;
-        IExecutionHook _exprHook;
+        IHook _exprHook;
 
         Instruction CurrentOperation => _callStack.CurrentInstr;
 
         public TaggedUnion ValStackTop => _valStack.Count > 0 ? _valStack.Peek() : TaggedUnion.None;
 
-        public VirtualMachine(Chunk chunk, ModuleScope moduleScope, IExecutionHook exprHook)
+        public VirtualMachine(Chunk chunk, ModuleScope moduleScope, IHook exprHook)
         {
             _moduleScope = moduleScope == null ? new ModuleScope() : moduleScope;
             _callStack = new CallStack(chunk, _moduleScope);
@@ -28,7 +28,7 @@ namespace Chow.Interpreter.Evaluation
             _exprHook = exprHook;
         }
 
-        public ModuleScope ExecuteChunk()
+        public ModuleScope EvaluateChunk()
         {
             while (_callStack.IsInstrToRun)
             {
@@ -166,7 +166,7 @@ namespace Chow.Interpreter.Evaluation
                         else
                         {
                             TaggedUnion exprResult = _valStack.Pop();
-                            _exprHook.Invoke(ApiValueConverter.ToApiClassObj(exprResult));
+                            _exprHook.Invoke(ChowValueConverter.ToChowValue(exprResult));
                         }
 
                         break;

@@ -2,7 +2,7 @@
 
 namespace Chow.Interpreter.Values.Internal
 {
-    internal static class ApiValueConverter
+    internal static class ChowValueConverter
     {
         public static TaggedUnion ToTaggedUnion(ChowValue value)
         {
@@ -54,7 +54,7 @@ namespace Chow.Interpreter.Values.Internal
             throw new NotImplementedException();
         }
 
-        public static ChowValue ToApiClassObj(TaggedUnion taggedUnion)
+        public static ChowValue ToChowValue(TaggedUnion taggedUnion)
         {
             switch (taggedUnion.Tag)
             {

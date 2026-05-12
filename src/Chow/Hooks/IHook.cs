@@ -3,8 +3,8 @@ using System;
 
 namespace Chow.Interpreter.Hooks
 {
-    public interface IExecutionHook
+    public interface IHook
     {
-        void Invoke(ChowValue value = null);
+        void Invoke(object value = null);
     }
 }

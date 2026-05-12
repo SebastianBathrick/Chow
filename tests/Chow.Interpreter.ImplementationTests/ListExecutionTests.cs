@@ -13,7 +13,7 @@ namespace Chow.Interpreter.ImplementationTests
         // Helpers
         // ------------------------------------------------------------------------------------------------------------
 
-        sealed class CaptureExprHook : IExprStatementHook
+        sealed class CaptureExprHook : IExpressionStatementHook
         {
             public List<ChowValue> Values { get; } = new List<ChowValue>();
 
@@ -43,7 +43,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void EmptyListLiteral_ProducesZeroElementList()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[]");
+            module.Execute("[]");
             Assert.That(LastList(hook).Count, Is.EqualTo(0));
         }
 
@@ -51,7 +51,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void ListLiteral_PreservesElementOrder()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[1, 2, 3]");
+            module.Execute("[1, 2, 3]");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
             Assert.That(list[0].As<long>(), Is.EqualTo(1));
@@ -63,7 +63,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void NestedListLiteral_ParsesAndExecutes()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[[1, 2], [3]]");
+            module.Execute("[[1, 2], [3]]");
             ChowList outer = LastList(hook);
             Assert.That(outer.Count, Is.EqualTo(2));
             ChowList inner0 = (ChowList)outer[0];
@@ -79,7 +79,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Subscript_PositiveIndex_ReadsElement()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[10, 20, 30][1]");
+            module.Execute("[10, 20, 30][1]");
             Assert.That(Last(hook).As<long>(), Is.EqualTo(20));
         }
 
@@ -87,7 +87,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Subscript_NegativeIndex_WrapsFromEnd()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[10, 20, 30][-1]");
+            module.Execute("[10, 20, 30][-1]");
             Assert.That(Last(hook).As<long>(), Is.EqualTo(30));
         }
 
@@ -95,7 +95,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Subscript_OutOfRange_Throws()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Run("[1, 2][5]"), Throws.TypeOf<System.IndexOutOfRangeException>());
+            Assert.That(() => module.Execute("[1, 2][5]"), Throws.TypeOf<System.IndexOutOfRangeException>());
         }
 
         // ============================================================================================================
@@ -106,7 +106,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void SubscriptAssign_PositiveIndex_Mutates()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("a = [1, 2, 3]\na[0] = 9\na");
+            module.Execute("a = [1, 2, 3]\na[0] = 9\na");
             ChowList list = LastList(hook);
             Assert.That(list[0].As<long>(), Is.EqualTo(9));
             Assert.That(list[1].As<long>(), Is.EqualTo(2));
@@ -116,7 +116,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void SubscriptAssign_NegativeIndex_Mutates()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("a = [1, 2, 3]\na[-1] = 9\na");
+            module.Execute("a = [1, 2, 3]\na[-1] = 9\na");
             ChowList list = LastList(hook);
             Assert.That(list[2].As<long>(), Is.EqualTo(9));
         }
@@ -129,7 +129,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Slice_StartStop_ReturnsRange()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[10, 20, 30, 40][1:3]");
+            module.Execute("[10, 20, 30, 40][1:3]");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(2));
             Assert.That(list[0].As<long>(), Is.EqualTo(20));
@@ -140,7 +140,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Slice_FullColon_ReturnsCopy()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[1, 2, 3][:]");
+            module.Execute("[1, 2, 3][:]");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
         }
@@ -149,7 +149,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Slice_NegativeStep_ReversesList()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[1, 2, 3][::-1]");
+            module.Execute("[1, 2, 3][::-1]");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
             Assert.That(list[0].As<long>(), Is.EqualTo(3));
@@ -160,7 +160,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Slice_StepTwo_SkipsElements()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[0, 1, 2, 3, 4][::2]");
+            module.Execute("[0, 1, 2, 3, 4][::2]");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
             Assert.That(list[0].As<long>(), Is.EqualTo(0));
@@ -176,7 +176,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_Append_MutatesList()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("a = [1]\na.append(2)\na");
+            module.Execute("a = [1]\na.append(2)\na");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(2));
             Assert.That(list[1].As<long>(), Is.EqualTo(2));
@@ -186,7 +186,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_PopNoArg_RemovesAndReturnsLast()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("a = [1, 2, 3]\na.pop()");
+            module.Execute("a = [1, 2, 3]\na.pop()");
             Assert.That(Last(hook).As<long>(), Is.EqualTo(3));
         }
 
@@ -194,7 +194,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_Reverse_InPlace()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("a = [1, 2, 3]\na.reverse()\na");
+            module.Execute("a = [1, 2, 3]\na.reverse()\na");
             ChowList list = LastList(hook);
             Assert.That(list[0].As<long>(), Is.EqualTo(3));
             Assert.That(list[2].As<long>(), Is.EqualTo(1));
@@ -204,7 +204,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void BoundMethod_StoredInVariable_StillBoundToOriginalList()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("a = [1]\nf = a.append\nf(2)\nf(3)\na");
+            module.Execute("a = [1]\nf = a.append\nf(2)\nf(3)\na");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
             Assert.That(list[1].As<long>(), Is.EqualTo(2));
@@ -219,14 +219,14 @@ namespace Chow.Interpreter.ImplementationTests
         public void Attribute_Unknown_ThrowsAttributeError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Run("[1].fake"), Throws.TypeOf<ChowAttributeErrorException>());
+            Assert.That(() => module.Execute("[1].fake"), Throws.TypeOf<ChowAttributeErrorException>());
         }
 
         [Test]
         public void AttributeAssign_OnList_ThrowsAttributeError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Run("a = [1]\na.x = 1"), Throws.TypeOf<ChowAttributeErrorException>());
+            Assert.That(() => module.Execute("a = [1]\na.x = 1"), Throws.TypeOf<ChowAttributeErrorException>());
         }
 
         // ============================================================================================================
@@ -237,7 +237,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Concat_TwoLists_ProducesJoined()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[1] + [2, 3]");
+            module.Execute("[1] + [2, 3]");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
             Assert.That(list[0].As<long>(), Is.EqualTo(1));
@@ -248,7 +248,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Repeat_ListTimesInt_RepeatsN()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[0] * 3");
+            module.Execute("[0] * 3");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
         }
@@ -257,7 +257,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Repeat_IntTimesList_AlsoRepeats()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("3 * [0]");
+            module.Execute("3 * [0]");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
         }
@@ -266,7 +266,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Repeat_NegativeCount_ProducesEmptyList()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[1, 2] * -1");
+            module.Execute("[1, 2] * -1");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(0));
         }
@@ -279,7 +279,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Equality_EqualLists_True()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[1, 2] == [1, 2]");
+            module.Execute("[1, 2] == [1, 2]");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -287,7 +287,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Equality_DifferentElements_False()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[1, 2] == [1, 3]");
+            module.Execute("[1, 2] == [1, 3]");
             Assert.That(Last(hook).As<bool>(), Is.False);
         }
 
@@ -295,7 +295,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Equality_NestedLists_Recursive()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[1, [2]] == [1, [2]]");
+            module.Execute("[1, [2]] == [1, [2]]");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -307,7 +307,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Truthiness_EmptyList_IsFalsy()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("if []:\n    1\nelse:\n    2");
+            module.Execute("if []:\n    1\nelse:\n    2");
             Assert.That(Last(hook).As<long>(), Is.EqualTo(2));
         }
 
@@ -315,7 +315,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Truthiness_NonEmptyList_IsTruthy()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("if [0]:\n    1\nelse:\n    2");
+            module.Execute("if [0]:\n    1\nelse:\n    2");
             Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
         }
 
@@ -327,7 +327,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Repr_IntList_FormatsWithBracketsAndCommaSpace()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[1, 2, 3]");
+            module.Execute("[1, 2, 3]");
             Assert.That(Last(hook).ToString(), Is.EqualTo("[1, 2, 3]"));
         }
 
@@ -335,7 +335,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Repr_EmptyList_FormatsAsBrackets()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Run("[]");
+            module.Execute("[]");
             Assert.That(Last(hook).ToString(), Is.EqualTo("[]"));
         }
 
@@ -350,7 +350,7 @@ namespace Chow.Interpreter.ImplementationTests
             ChowList list = new ChowList();
             list.Internal.Add(new Chow.Interpreter.Values.Internal.TaggedUnion(42));
             module["x"] = list;
-            module.Run("x[0]");
+            module.Execute("x[0]");
             Assert.That(Last(hook).As<long>(), Is.EqualTo(42));
         }
 
@@ -358,7 +358,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Api_SourceCreatesList_ReadableViaHost()
         {
             ChowModule module = new ChowModule();
-            module.Run("x = [1, 2, 3]");
+            module.Execute("x = [1, 2, 3]");
             ChowList list = (ChowList)module["x"];
             Assert.That(list.Count, Is.EqualTo(3));
             Assert.That(list[1].As<long>(), Is.EqualTo(2));
@@ -372,7 +372,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void SliceAssign_ThrowsNotImplemented()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Run("a = [1, 2]\na[0:1] = [9]"), Throws.TypeOf<System.NotImplementedException>());
+            Assert.That(() => module.Execute("a = [1, 2]\na[0:1] = [9]"), Throws.TypeOf<System.NotImplementedException>());
         }
     }
 }

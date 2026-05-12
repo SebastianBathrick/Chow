@@ -31,7 +31,7 @@ namespace Chow.Interpreter.ImplementationTests
         static TaggedUnion Execute(Chunk chunk, ModuleScope scope = null)
         {
             VirtualMachine vm = new VirtualMachine(chunk, scope, null!);
-            vm.ExecuteChunk();
+            vm.EvaluateChunk();
             return vm.ValStackTop;
         }
 
@@ -56,7 +56,7 @@ namespace Chow.Interpreter.ImplementationTests
 
             ModuleScope scope = new ModuleScope();
             VirtualMachine vm = new VirtualMachine(module, scope, null!);
-            vm.ExecuteChunk();
+            vm.EvaluateChunk();
 
             TaggedUnion top = vm.ValStackTop;
             Assert.Multiple(() =>
@@ -130,7 +130,7 @@ namespace Chow.Interpreter.ImplementationTests
             int captured = 0;
             module["bump"] = new Chow.Interpreter.Values.ChowDynamic((System.Action)(() => { captured = 1; }));
 
-            module.Run("bump()");
+            module.Execute("bump()");
 
             Assert.That(captured, Is.EqualTo(1));
         }

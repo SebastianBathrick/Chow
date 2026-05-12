@@ -190,6 +190,54 @@ namespace Chow.Interpreter.Values.Internal
             _obj = dict;
         }
 
+        public static TaggedUnion CreateWithValue(object value)
+        {
+            if (value == null)
+            {
+                return TaggedUnion.None;
+            }
+
+            switch (value)
+            {
+                case long l:
+                    return new TaggedUnion(l);
+                case double d:
+                    return new TaggedUnion(d);
+                case bool b:
+                    return new TaggedUnion(b);
+                case string s:
+                    return new TaggedUnion(s);
+                case InternalList list:
+                    return new TaggedUnion(list);
+                case InternalDict dict:
+                    return new TaggedUnion(dict);
+                default:
+                    return new TaggedUnion(value);
+            }
+        }
+
+        public object GetTaggedValue()
+        {
+            switch (_type)
+            {
+                case Tag.Int:
+                    return _longInt;
+                case Tag.Float:
+                    return _doubleFloat;
+                case Tag.Boolean:
+                    return _bool;
+                case Tag.Str:
+                case Tag.Object:
+                case Tag.List:
+                case Tag.Dict:
+                    return _obj;
+                case Tag.None:
+                    return null;
+                default:
+                    throw new InvalidOperationException($"Cannot get value of TaggedUnion with type {_type}");
+            }
+        }
+
         /// <summary>
         ///  Makes call to a value that is not a function declared in Chow source code, but instead a client-provided 
         ///  delegate types that optionally accept <see cref="ChowValue"/> parameters and can return a <see cref="ChowValue"/>.
@@ -223,16 +271,16 @@ namespace Chow.Interpreter.Values.Internal
                     return methodDelegate(allArgs);
 
                 case Func<ChowValue> funcNoArg:
-                    return ApiValueConverter.ToTaggedUnion(funcNoArg());
+                    return ChowValueConverter.ToTaggedUnion(funcNoArg());
                 case Func<ChowValue, ChowValue> funcOneArg:
-                    return ApiValueConverter.ToTaggedUnion(funcOneArg(ApiValueConverter.ToApiClassObj(singleArg.Value)));
+                    return ChowValueConverter.ToTaggedUnion(funcOneArg(ChowValueConverter.ToChowValue(singleArg.Value)));
                 case Func<ChowValue[], ChowValue> funcManyArgs:
-                    return ApiValueConverter.ToTaggedUnion(funcManyArgs(BuildArgArray(args)));
+                    return ChowValueConverter.ToTaggedUnion(funcManyArgs(BuildArgArray(args)));
                 case Action action:
                     action();
                     return TaggedUnion.None;
                 case Action<ChowValue> actionOneArg:
-                    actionOneArg(ApiValueConverter.ToApiClassObj(singleArg.Value));
+                    actionOneArg(ChowValueConverter.ToChowValue(singleArg.Value));
                     return TaggedUnion.None;
                 case Action<ChowValue[]> actionManyArgs:
                     actionManyArgs(BuildArgArray(args));
@@ -247,7 +295,7 @@ namespace Chow.Interpreter.Values.Internal
             ChowValue[] result = new ChowValue[args.Length];
             for (int i = 0; i < args.Length; i++)
             {
-                result[i] = ApiValueConverter.ToApiClassObj(args[i]);
+                result[i] = ChowValueConverter.ToChowValue(args[i]);
             }
             return result;
         }
