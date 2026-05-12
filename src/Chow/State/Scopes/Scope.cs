@@ -13,23 +13,20 @@ namespace Chow.Interpreter.State.Scopes
     /// No source identifier can start with <c>&lt;</c>, so <c>SCOPE_BOUNDARY_ELEMENT</c> never
     /// collides with a real variable name.
     /// </remarks>
-    abstract class Scope
+    abstract class Scope : IScope
     {
         protected const string SCOPE_BOUNDARY_ELEMENT = "<SCOPE_BOUNDARY>";
         protected const int OUTERMOST_SCOPE_DEPTH = 0;
 
-        Stack<string> _varNames;
-        Dictionary<string, TaggedUnion> _varMap;
+        readonly Stack<string> _varNames;
+        readonly Dictionary<string, TaggedUnion> _varMap;
         int _scopeDepth;
 
         /// <summary>True when no nested block has been entered (scope depth is 0).</summary>
         public bool IsOutermostDepth => _scopeDepth == OUTERMOST_SCOPE_DEPTH;
 
-        /// <summary>
-        /// The enclosing scope used for LEGB chain walking, or <c>null</c> at the top of the chain.
-        /// Returns <c>null</c> by default; overridden by <see cref="LocalScope"/>.
-        /// </summary>
-        public virtual Scope ParentOrNull => null;
+        /// <inheritdoc/>
+        public virtual IScope ParentOrNull => null;
 
         protected Scope()
         {
@@ -41,23 +38,20 @@ namespace Chow.Interpreter.State.Scopes
             _varNames.Push(SCOPE_BOUNDARY_ELEMENT);
         }
 
-        /// <summary>True if <paramref name="name"/> is bound in this scope. Does not consult <see cref="ParentOrNull"/>.</summary>
+        /// <inheritdoc/>
         public bool IsVariableDefined(string name)
         {
             return _varMap.ContainsKey(name);
         }
 
-        /// <summary>Begins a new nested block. Subsequent assignments are tracked for removal on the matching <see cref="ExitNestedScope"/>.</summary>
+        /// <inheritdoc/>
         public void EnterNestedScope()
         {
             _scopeDepth++;
             _varNames.Push(SCOPE_BOUNDARY_ELEMENT);
         }
 
-        /// <summary>
-        /// Ends the innermost nested block, removing every binding first declared inside it.
-        /// Rebindings of outer names made within the block are left in place (Python block semantics).
-        /// </summary>
+        /// <inheritdoc/>
         public void ExitNestedScope()
         {
             // Pop the name of the variable declared last OR the boundary element if no variables were declared in the current scope
@@ -76,10 +70,7 @@ namespace Chow.Interpreter.State.Scopes
             _scopeDepth--;
         }
 
-        /// <summary>
-        /// Binds <paramref name="name"/> to <paramref name="value"/> in this scope. Creates the binding
-        /// if it does not exist; otherwise overwrites it in place.
-        /// </summary>
+        /// <inheritdoc/>
         public void AssignVariableValue(string name, TaggedUnion value)
         {
             // First-time assignment also declares: track the name in the current scope
@@ -92,7 +83,7 @@ namespace Chow.Interpreter.State.Scopes
             _varMap[name] = value;
         }
 
-        /// <summary>Returns the value bound to <paramref name="name"/> in this scope. Throws if undefined.</summary>
+        /// <inheritdoc/>
         public TaggedUnion GetVariableValue(string name)
         {
             return _varMap[name];

@@ -12,7 +12,7 @@ namespace Chow.Interpreter
     public class ChowModule
     {
         readonly List<IHook> _hooks = new List<IHook>();
-        ModuleScope _moduleScope;
+        IScope _moduleScope;
 
         #region Global Scope Access
 

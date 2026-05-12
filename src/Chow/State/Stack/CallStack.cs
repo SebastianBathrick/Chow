@@ -26,7 +26,7 @@ namespace Chow.Interpreter.State.Stack
         public bool IsInstrToRun => CurrFrame.IsInstrToRun;
 
         /// <summary>The current frame's scope. Captured by <c>MakeClosure</c> at runtime.</summary>
-        public Scope CurrentScope => CurrFrame.Scope;
+        public IScope CurrentScope => CurrFrame.Scope;
 
         /// <summary>Source line number associated with the current frame's pointer.</summary>
         public int CurrentLineNum => CurrFrame.CurrentLineNum;
@@ -50,7 +50,7 @@ namespace Chow.Interpreter.State.Stack
         /// <summary>Creates a call stack rooted at a single module frame.</summary>
         /// <param name="moduleChunk">The compiled bytecode for the module being executed.</param>
         /// <param name="moduleScope">The module scope to operate against; persists across <c>ChowModule.Execute</c> calls.</param>
-        public CallStack(Chunk moduleChunk, ModuleScope moduleScope)
+        public CallStack(Chunk moduleChunk, IScope moduleScope)
         {
             _moduleLvl = new StackFrame(moduleChunk, moduleScope);
             _callFrames = new Stack<StackFrame>();

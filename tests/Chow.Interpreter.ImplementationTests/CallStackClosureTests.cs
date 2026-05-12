@@ -17,7 +17,7 @@ namespace Chow.Interpreter.ImplementationTests
             return (stack, module);
         }
 
-        static Closure NewClosure(Scope enclosing, int paramCount = 0)
+        static Closure NewClosure(IScope enclosing, int paramCount = 0)
         {
             return new Closure(new Chunk(), enclosing, "f", paramCount);
         }

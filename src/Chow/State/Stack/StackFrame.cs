@@ -18,7 +18,7 @@ namespace Chow.Interpreter.State.Stack
         public Chunk Chunk { get; }
 
         /// <summary>The frame's scope: a <see cref="ModuleScope"/> for the module frame, a <see cref="LocalScope"/> for any function frame.</summary>
-        public Scope Scope { get; }
+        public IScope Scope { get; }
 
         /// <summary>The instruction at the current pointer.</summary>
         public Instruction CurrentInstr => Chunk[_instrIdx];
@@ -30,7 +30,7 @@ namespace Chow.Interpreter.State.Stack
         public int CurrentLineNum => Chunk.GetInstructionLine(_instrIdx);
 
         /// <summary>Creates a frame positioned at the first instruction.</summary>
-        public StackFrame(Chunk chunk, Scope scope)
+        public StackFrame(Chunk chunk, IScope scope)
         {
             Chunk = chunk;
             Scope = scope;
