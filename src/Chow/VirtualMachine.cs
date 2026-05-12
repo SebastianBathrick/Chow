@@ -13,9 +13,8 @@ namespace Chow.Interpreter
     {
         readonly ModuleScope _moduleScope;
         readonly CallStack _callStack;
-
-        Stack<TaggedUnion> _valStack;
-        IHook _exprHook;
+        readonly Stack<TaggedUnion> _valStack;
+        readonly IHook _exprHook;
 
         Instruction CurrentOperation => _callStack.CurrentInstr;
 
@@ -23,7 +22,7 @@ namespace Chow.Interpreter
 
         public VirtualMachine(Chunk chunk, ModuleScope moduleScope, IHook exprHook)
         {
-            _moduleScope = moduleScope == null ? new ModuleScope() : moduleScope;
+            _moduleScope = moduleScope ?? new ModuleScope();
             _callStack = new CallStack(chunk, _moduleScope);
             _valStack = new Stack<TaggedUnion>();
             _exprHook = exprHook;
@@ -247,7 +246,7 @@ namespace Chow.Interpreter
             var captured = _callStack.CurrentScope;
             var closure = new Closure(template.Chunk, captured, template.Name, template.ParamCount);
 
-            _valStack.Push(new TaggedUnion((object)closure));
+            _valStack.Push(new TaggedUnion(closure));
         }
 
         void ExecuteReturnValue()

@@ -49,7 +49,7 @@ namespace Chow.Interpreter.ImplementationTests
             // Hand-build a chunk: PushConstant(template) + MakeClosure
             var module = new Chunk();
             var template = new ClosureTemplate(new Chunk(), "f", 0);
-            var idx = module.RegisterConstant(new TaggedUnion((object)template));
+            var idx = module.RegisterConstant(new TaggedUnion(template));
             module.AddInstruction(OperationCode.PushConstant, LINE, idx);
             module.AddInstruction(OperationCode.MakeClosure, LINE);
 

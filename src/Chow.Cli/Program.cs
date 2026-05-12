@@ -38,7 +38,7 @@ module["float"] = (ChowValue val) =>
     }
     if (val.Is<long>())
     {
-        return new ChowFloat((double)val.As<long>());
+        return new ChowFloat(val.As<long>());
     }
     if (val.Is<bool>())
     {
@@ -178,11 +178,11 @@ module["abs"] = (ChowValue val) =>
 {
     if (val.Is<long>())
     {
-        return (ChowValue)new ChowInt(Math.Abs(val.As<long>()));
+        return new ChowInt(Math.Abs(val.As<long>()));
     }
     if (val.Is<double>())
     {
-        return (ChowValue)new ChowFloat(Math.Abs(val.As<double>()));
+        return new ChowFloat(Math.Abs(val.As<double>()));
     }
     if (val.Is<bool>())
     {

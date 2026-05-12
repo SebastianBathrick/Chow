@@ -11,10 +11,11 @@ namespace Chow.Interpreter
 {
     class Compiler
     {
-        Chunk _chunk;
-        Node _root;
+        readonly Chunk _chunk;
+        readonly Node _root;
+        readonly Stack<LoopContext> _loopCtxStack;
+        
         List<int> _pendingEndJumps;
-        Stack<LoopContext> _loopCtxStack;
         int _blockDepth;
 
         public Compiler(Node root)
@@ -30,9 +31,14 @@ namespace Chow.Interpreter
         {
             var treeRoot = _root as TreeRootNode;
 
-            foreach (var stmnt in treeRoot.Stmnts)
+            if (treeRoot == null)
             {
-                CompileTargetNode(stmnt);
+                throw new InvalidOperationException();
+            }
+
+            foreach (var statement in treeRoot.Stmnts)
+            {
+                CompileTargetNode(statement);
             }
 
             return _chunk;
@@ -42,6 +48,11 @@ namespace Chow.Interpreter
         {
             var funcNode = _root as FunctionNode;
 
+            if (funcNode == null)
+            {
+                throw new InvalidOperationException();
+            }
+            
             // Caller pushes args left-to-right; bind in reverse so positional order matches when popping
             for (var i = funcNode.Params.Count - 1; i >= 0; i--)
             {
@@ -68,7 +79,7 @@ namespace Chow.Interpreter
             var funcChunk = funcCompiler.CompileFuncBody();
 
             var template = new ClosureTemplate(funcChunk, funcNode.Name, funcNode.Params.Count);
-            var templateIdx = _chunk.RegisterConstant(new TaggedUnion((object)template));
+            var templateIdx = _chunk.RegisterConstant(new TaggedUnion(template));
 
             // Push template, then runtime MakeClosure captures the active scope and wraps it as a Closure.
             _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNum, templateIdx);
