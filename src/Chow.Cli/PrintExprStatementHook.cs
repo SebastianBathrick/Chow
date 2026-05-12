@@ -5,9 +5,9 @@ namespace Chow.Repl
 {
     internal sealed class PrintExprStatementHook : IExpressionStatementHook
     {
-        public void Invoke(ChowValue value)
+        public void Invoke(object value)
         {
-            Console.WriteLine(value);
+            Console.WriteLine((ChowValue)value);
         }
     }
 }

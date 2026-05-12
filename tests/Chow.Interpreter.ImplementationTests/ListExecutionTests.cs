@@ -219,14 +219,14 @@ namespace Chow.Interpreter.ImplementationTests
         public void Attribute_Unknown_ThrowsAttributeError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("[1].fake"), Throws.TypeOf<ChowAttributeErrorException>());
+            Assert.That(() => module.Execute("[1].fake"), Throws.TypeOf<AttributeException>());
         }
 
         [Test]
         public void AttributeAssign_OnList_ThrowsAttributeError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("a = [1]\na.x = 1"), Throws.TypeOf<ChowAttributeErrorException>());
+            Assert.That(() => module.Execute("a = [1]\na.x = 1"), Throws.TypeOf<AttributeException>());
         }
 
         // ============================================================================================================

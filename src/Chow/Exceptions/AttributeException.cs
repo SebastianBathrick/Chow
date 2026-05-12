@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.Exceptions
 {
-    internal class ChowAttributeErrorException : ChowRuntimeException
+    internal class AttributeException : ChowRuntimeException
     {
         const string EXCEPTION_ALIAS = "AttributeError";
 
@@ -10,7 +10,7 @@ namespace Chow.Interpreter.Exceptions
         public string TypeName => _typeName;
         public string AttrName => _attrName;
 
-        public ChowAttributeErrorException(string typeName, string attrName, int lineNumber)
+        public AttributeException(string typeName, string attrName, int lineNumber)
             : base(EXCEPTION_ALIAS, $"'{typeName}' object has no attribute '{attrName}'", lineNumber)
         {
             _typeName = typeName;

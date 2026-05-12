@@ -266,7 +266,7 @@ namespace Chow.Interpreter.Evaluation
             if (!_callStack.IsVariableDefined(varName))
             {
                 int line = GetCurrentLineNumber();
-                throw new ChowNameErrorException(varName, line);
+                throw new UndefinedNameException(varName, line);
             }
 
             TaggedUnion varValue = _callStack.GetVariableValue(varName);
@@ -297,7 +297,7 @@ namespace Chow.Interpreter.Evaluation
             {
                 if (argCount != closure.ParamCount)
                 {
-                    throw new ChowTypeErrorException(
+                    throw new TypeException(
                         $"{closure.Name}() takes {closure.ParamCount} positional arguments but {argCount} were given");
                 }
 
@@ -431,7 +431,7 @@ namespace Chow.Interpreter.Evaluation
                     }
                     break;
                 default:
-                    throw new ChowTypeErrorException($"argument of type '{container.Tag}' is not iterable");
+                    throw new TypeException($"argument of type '{container.Tag}' is not iterable");
             }
 
             _valStack.Push(new TaggedUnion(negate ? !found : found));
@@ -449,21 +449,21 @@ namespace Chow.Interpreter.Evaluation
                 {
                     _valStack.Push(target.DictValue[index]);
                 }
-                catch (ChowKeyErrorException ex)
+                catch (DictKeyException ex)
                 {
-                    throw new ChowKeyErrorException(ex.KeyRepr, GetCurrentLineNumber());
+                    throw new DictKeyException(ex.KeyRepr, GetCurrentLineNumber());
                 }
                 return;
             }
 
             if (target.Tag != Tag.List)
             {
-                throw new ChowTypeErrorException($"'{target.Tag}' object is not subscriptable");
+                throw new TypeException($"'{target.Tag}' object is not subscriptable");
             }
 
             if (index.Tag != Tag.Int)
             {
-                throw new ChowTypeErrorException($"list indices must be integers, not {index.Tag}");
+                throw new TypeException($"list indices must be integers, not {index.Tag}");
             }
 
             _valStack.Push(target.ListValue[(int)index.IntegerValue]);
@@ -479,7 +479,7 @@ namespace Chow.Interpreter.Evaluation
             // FUTURE: strings add a parallel slice branch.
             if (target.Tag != Tag.List)
             {
-                throw new ChowTypeErrorException($"'{target.Tag}' object is not subscriptable");
+                throw new TypeException($"'{target.Tag}' object is not subscriptable");
             }
 
             _valStack.Push(target.ListValue.GetSlice(start, stop, step));
@@ -499,12 +499,12 @@ namespace Chow.Interpreter.Evaluation
 
             if (target.Tag != Tag.List)
             {
-                throw new ChowTypeErrorException($"'{target.Tag}' object does not support item assignment");
+                throw new TypeException($"'{target.Tag}' object does not support item assignment");
             }
 
             if (index.Tag != Tag.Int)
             {
-                throw new ChowTypeErrorException($"list indices must be integers, not {index.Tag}");
+                throw new TypeException($"list indices must be integers, not {index.Tag}");
             }
 
             target.ListValue[(int)index.IntegerValue] = value;
@@ -522,7 +522,7 @@ namespace Chow.Interpreter.Evaluation
 
                 if (!list.HasMethod(attrName))
                 {
-                    throw new ChowAttributeErrorException("list", attrName, GetCurrentLineNumber());
+                    throw new AttributeException("list", attrName, GetCurrentLineNumber());
                 }
 
                 _valStack.Push(list[attrName]);
@@ -535,14 +535,14 @@ namespace Chow.Interpreter.Evaluation
 
                 if (!dict.HasMethod(attrName))
                 {
-                    throw new ChowAttributeErrorException("dict", attrName, GetCurrentLineNumber());
+                    throw new AttributeException("dict", attrName, GetCurrentLineNumber());
                 }
 
                 _valStack.Push(dict[attrName]);
                 return;
             }
 
-            throw new ChowAttributeErrorException(target.Tag.ToString().ToLowerInvariant(), attrName, GetCurrentLineNumber());
+            throw new AttributeException(target.Tag.ToString().ToLowerInvariant(), attrName, GetCurrentLineNumber());
         }
 
         void ExecuteSetAttr()
@@ -567,7 +567,7 @@ namespace Chow.Interpreter.Evaluation
                     break;
             }
 
-            throw new ChowAttributeErrorException(typeName, attrName, GetCurrentLineNumber());
+            throw new AttributeException(typeName, attrName, GetCurrentLineNumber());
         }
     }
 }

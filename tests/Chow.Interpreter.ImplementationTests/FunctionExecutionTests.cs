@@ -237,7 +237,7 @@ namespace Chow.Interpreter.ImplementationTests
 
             module.Execute("def f(a):\n    return a");
 
-            Assert.Throws<ChowTypeErrorException>(() => module.Execute("f(1, 2)"));
+            Assert.Throws<TypeException>(() => module.Execute("f(1, 2)"));
         }
 
         // ============================================================================================================

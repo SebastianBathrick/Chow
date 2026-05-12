@@ -111,14 +111,14 @@ namespace Chow.Interpreter.ImplementationTests
         public void Subscript_MissingKey_ThrowsKeyError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("{1: 10}[99]"), Throws.TypeOf<ChowKeyErrorException>());
+            Assert.That(() => module.Execute("{1: 10}[99]"), Throws.TypeOf<DictKeyException>());
         }
 
         [Test]
         public void Subscript_UnhashableKey_ThrowsTypeError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("{1: 10}[[1]]"), Throws.TypeOf<ChowTypeErrorException>());
+            Assert.That(() => module.Execute("{1: 10}[[1]]"), Throws.TypeOf<TypeException>());
         }
 
         // ============================================================================================================
@@ -189,7 +189,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_PopMissingNoDefault_ThrowsKeyError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("{1: 'a'}.pop(99)"), Throws.TypeOf<ChowKeyErrorException>());
+            Assert.That(() => module.Execute("{1: 'a'}.pop(99)"), Throws.TypeOf<DictKeyException>());
         }
 
         [Test]
@@ -240,14 +240,14 @@ namespace Chow.Interpreter.ImplementationTests
         public void Attribute_Unknown_ThrowsAttributeError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("{}.fake"), Throws.TypeOf<ChowAttributeErrorException>());
+            Assert.That(() => module.Execute("{}.fake"), Throws.TypeOf<AttributeException>());
         }
 
         [Test]
         public void AttributeAssign_OnDict_ThrowsAttributeError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("d = {}\nd.x = 1"), Throws.TypeOf<ChowAttributeErrorException>());
+            Assert.That(() => module.Execute("d = {}\nd.x = 1"), Throws.TypeOf<AttributeException>());
         }
 
         // ============================================================================================================
@@ -381,14 +381,14 @@ namespace Chow.Interpreter.ImplementationTests
         public void In_UnhashableKeyAgainstDict_ThrowsTypeError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("[1] in {1: 'a'}"), Throws.TypeOf<ChowTypeErrorException>());
+            Assert.That(() => module.Execute("[1] in {1: 'a'}"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
         public void In_NonIterableRightOperand_ThrowsTypeError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("1 in 5"), Throws.TypeOf<ChowTypeErrorException>());
+            Assert.That(() => module.Execute("1 in 5"), Throws.TypeOf<TypeException>());
         }
 
         // ============================================================================================================

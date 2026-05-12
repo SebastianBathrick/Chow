@@ -17,6 +17,8 @@ namespace Chow.Interpreter
         List<IHook> _hooks = new List<IHook>();
         ModuleScope _moduleScope;
 
+        #region Global Scope Access
+
         public object this[string name]
         {
             get
@@ -30,6 +32,8 @@ namespace Chow.Interpreter
 
             set
             {
+                ValidateGlobalName(name);
+
                 if (_moduleScope == null)
                 {
                     _moduleScope = new ModuleScope();
@@ -44,6 +48,11 @@ namespace Chow.Interpreter
             }
         }
 
+        public bool ContainsGlobal(string name)
+        {
+            return _moduleScope != null && _moduleScope.IsVariableDefined(name);
+        }
+
         public ChowValue GetGlobal(string name)
         {
             ValidateGlobalExists(name);
@@ -55,11 +64,11 @@ namespace Chow.Interpreter
 
         public void SetGlobal(string name, ChowValue value)
         {
-            if ()
+            ValidateGlobalName(name);
 
             if (value == null)
             {
-                throw new ArgumentNullException(nameof(value));
+                throw new GlobalAccessException(name, "Cannot assign null to a global variable");
             }
 
             if (_moduleScope == null)
@@ -74,10 +83,12 @@ namespace Chow.Interpreter
             _moduleScope.AssignVariableValue(name, varUnion);
         }
 
+        #endregion
+
         public void Execute(string sourceCode)
         {
-            // Run source code with an environment if this instance has executed code before
-            // Otherwise, environment will be null and a new environment will be created for the source code to run in
+            // Source code that is null, empty, or whitespace is treated the same by the Scanner (it does a null check)
+            // The rest of the pipeline does so as well to keep state consistent (e.g. _moduleScope)
             Scanner scanner = new Scanner(sourceCode);
             List<Token> tokens = scanner.ScanTokens();
 
@@ -94,18 +105,7 @@ namespace Chow.Interpreter
             VirtualMachine vm = new VirtualMachine(chunk, _moduleScope, exprStmtHook);
 
             // The module scope will now contain any global variables & functions defined in the source code
-            // Each global will contain their final values after execution
             _moduleScope = vm.EvaluateChunk();
-        }
-
-        private void ValidateGlobalExists(string name)
-        {
-            if (_moduleScope != null && _moduleScope.IsVariableDefined(name))
-            {
-                return;
-            }
-
-            throw new GetGlobalException(name);
         }
 
         public void AddHook(IHook hook)
@@ -115,19 +115,39 @@ namespace Chow.Interpreter
                 throw new ArgumentNullException(nameof(hook));
             }
 
+            if (_hooks.Contains(hook))
+            {
+                throw new ArgumentException("Hook has already been added to the module", nameof(hook));
+            }
+
             _hooks.Add(hook);
         }
 
-        static bool IsValidGlobalName(string name)
+        #region Helper Methods
+
+        void ValidateGlobalExists(string name)
+        {
+            if (!ContainsGlobal(name))
+            {
+                throw new GlobalAccessException(name, $"Global name '{name}' is not defined");
+            }
+        }
+
+        static void ValidateGlobalName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                return false;
+                throw new GlobalAccessException(name, "Global variable names cannot be null, empty, or whitespace");
             }    
+
+            if (ReservedKeywords.Contains(name))
+            {
+                throw new GlobalAccessException(name, "Global variable names cannot be reserved keywords");
+            }
 
             if (!IsLetter(name[0]) && name[0] != '_')
             {
-                return false;
+                throw new GlobalAccessException(name, "Global variable names must start with a letter or underscores");
             }
 
             // Skip first char
@@ -135,11 +155,9 @@ namespace Chow.Interpreter
             {
                 if (!IsLetter(name[i]) && !IsDigit(name[i]) && name[i] != '_')
                 {
-                    return false;
+                    throw new GlobalAccessException(name, "Global variable names can only contain letters, digits, or underscores");
                 }
             }
-
-            return true;
         }
 
         static bool IsDigit(char c)
@@ -151,5 +169,7 @@ namespace Chow.Interpreter
         {
             return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
         }
+
+        #endregion
     }
 }

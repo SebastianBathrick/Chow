@@ -27,7 +27,7 @@ namespace Chow.Interpreter.Values.Internal
                 ValidateHashable(key);
                 if (!_entries.TryGetValue(key, out TaggedUnion value))
                 {
-                    throw new ChowKeyErrorException(KeyRepr(key));
+                    throw new DictKeyException(KeyRepr(key));
                 }
                 return value;
             }
@@ -103,7 +103,7 @@ namespace Chow.Interpreter.Values.Internal
             {
                 return args[1];
             }
-            throw new ChowKeyErrorException(KeyRepr(key));
+            throw new DictKeyException(KeyRepr(key));
         }
 
         TaggedUnion Update(TaggedUnion[] args)
@@ -111,7 +111,7 @@ namespace Chow.Interpreter.Values.Internal
             ValidateArgCount(args, 1);
             if (args[0].Tag != Tag.Dict)
             {
-                throw new ChowTypeErrorException($"'{args[0].Tag}' object is not a dict");
+                throw new TypeException($"'{args[0].Tag}' object is not a dict");
             }
             InternalDict other = args[0].DictValue;
             foreach (TaggedUnion key in other._keys)
@@ -214,7 +214,7 @@ namespace Chow.Interpreter.Values.Internal
                 case Tag.Str:
                     return;
                 default:
-                    throw new ChowTypeErrorException($"unhashable type: '{TypeName(key.Tag)}'");
+                    throw new TypeException($"unhashable type: '{TypeName(key.Tag)}'");
             }
         }
 

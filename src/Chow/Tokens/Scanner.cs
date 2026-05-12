@@ -10,37 +10,6 @@ namespace Chow.Interpreter.Tokens
 
         const int TAB_SIZE = 4;
 
-        static readonly IReadOnlyDictionary<string, TokenType> _keywords = new Dictionary<string, TokenType>
-        {
-            { "True", TokenType.KeywordTrue },
-            { "False", TokenType.KeywordFalse },
-            { "None", TokenType.KeywordNone },
-            { "and", TokenType.KeywordAnd },
-            { "or", TokenType.KeywordOr },
-            { "not", TokenType.KeywordNot },
-            { "is", TokenType.KeywordIs },
-            { "in", TokenType.KeywordIn },
-            { "def", TokenType.KeywordDef },
-            { "return", TokenType.KeywordReturn },
-            { "class", TokenType.KeywordClass },
-            { "with", TokenType.KeywordWith },
-            { "as", TokenType.KeywordAs },
-            { "global", TokenType.KeywordGlobal },
-            { "if", TokenType.KeywordIf },
-            { "else", TokenType.KeywordElse },
-            { "elif", TokenType.KeywordElif },
-            { "for", TokenType.KeywordFor },
-            { "while", TokenType.KeywordWhile },
-            { "break", TokenType.KeywordBreak },
-            { "continue", TokenType.KeywordContinue },
-            { "pass", TokenType.KeywordPass },
-            { "try", TokenType.KeywordTry },
-            { "except", TokenType.KeywordExcept },
-            { "finally", TokenType.KeywordFinally },
-            { "raise", TokenType.KeywordRaise },
-            { "assert", TokenType.KeywordAssert },
-        };
-
         readonly List<Token> _tkns;
         readonly Stack<int> _indentLvls;
         readonly Stack<char> _brackets;
@@ -158,11 +127,10 @@ namespace Chow.Interpreter.Tokens
             }
 
             string lexeme = _src.Substring(startIdx, _charIdx - startIdx);
-            TokenType tknType;
 
-            if (_keywords.TryGetValue(lexeme, out tknType))
+            if (ReservedKeywords.Contains(lexeme))
             {
-                AddNewToken(tknType, lexeme, _lineNum);
+                AddNewToken(ReservedKeywords.GetTokenType(lexeme), lexeme, _lineNum);
                 return;
             }
 
