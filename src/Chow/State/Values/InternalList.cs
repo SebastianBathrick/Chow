@@ -143,6 +143,34 @@ namespace Chow.Interpreter.State.Values
             return TaggedUnion.None;
         }
 
+        // TODO: Refactor to reduce code duplication (e.g. with a dictionary of method name to Func<TaggedUnion[], TaggedUnion>)
+        public TaggedUnion CallMethod(string methodName, TaggedUnion[] args = null)
+        {
+            switch (methodName)
+            {
+                case METHOD_APPEND_NAME:
+                    return Append(args);
+
+                case METHOD_CLEAR_NAME:
+                    return Clear(args);
+
+                case METHOD_INSERT_NAME:
+                    return Insert(args);
+
+                case METHOD_POP_NAME:
+                    return Pop(args);
+
+                case METHOD_REMOVE_NAME:
+                    return Remove(args);
+
+                case METHOD_REVERSE_NAME:
+                    return Reverse(args);
+
+                default:
+                    throw new NotImplementedException($"Method '{methodName}' is not implemented for InternalList");
+            }
+        }
+
         public Func<TaggedUnion[], TaggedUnion> GetMethod(string methodName)
         {
             switch (methodName)
@@ -184,6 +212,7 @@ namespace Chow.Interpreter.State.Values
                     return false;
             }
         }
+
         public static bool ElementsEqual(InternalList a, InternalList b)
         {
             if (a._elements.Count != b._elements.Count)

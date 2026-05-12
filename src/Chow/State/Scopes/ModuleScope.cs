@@ -7,6 +7,9 @@ namespace Chow.Interpreter.State.Scopes
     /// </summary>
     sealed class ModuleScope : Scope
     {
-        // Will have future functionality.
+        /// <summary>Creates an empty module scope with no bindings.</summary>
+        public ModuleScope() : base()
+        {
+        }
     }
 }

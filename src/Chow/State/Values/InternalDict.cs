@@ -142,7 +142,7 @@ namespace Chow.Interpreter.State.Values
                 case METHOD_SET_DEFAULT_NAME:
                     return SetDefault;
                 default:
-                    throw new NotImplementedException($"MethodDefinition '{methodName}' is not implemented for InternalDict");
+                    throw new NotImplementedException($"Method '{methodName}' is not implemented for InternalDict");
             }
         }
 
@@ -295,7 +295,7 @@ namespace Chow.Interpreter.State.Values
             var actualCount = args?.Length ?? 0;
             if (actualCount != expectedCount)
             {
-                throw new ArgumentException($"MethodDefinition requires {expectedCount} arguments, but {actualCount} were provided");
+                throw new ArgumentException($"Method requires {expectedCount} arguments, but {actualCount} were provided");
             }
         }
 
@@ -304,7 +304,7 @@ namespace Chow.Interpreter.State.Values
             var actualCount = args?.Length ?? 0;
             if (actualCount < min || actualCount > max)
             {
-                throw new ArgumentException($"MethodDefinition requires between {min} and {max} arguments, but {actualCount} were provided");
+                throw new ArgumentException($"Method requires between {min} and {max} arguments, but {actualCount} were provided");
             }
         }
     }
