@@ -1,4 +1,3 @@
-using Chow.Interpreter;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Tokens;
 
@@ -11,7 +10,7 @@ namespace Chow.Interpreter.Tests
         // Helpers
         // ------------------------------------------------------------------------------------------------------------
 
-        static List<Token> Tokenize(string source) => new Interpreter.Scanner(source).ScanTokens();
+        static List<Token> Tokenize(string source) => new Scanner(source).ScanTokens();
 
         static List<TokenType> TokenTypes(string source) => Tokenize(source).Select(token => token.type).ToList();
 
@@ -38,7 +37,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ScanTokens_EmptySource_ReturnsEndOfCode()
         {
-            var tokens = new Interpreter.Scanner("").ScanTokens();
+            var tokens = new Scanner("").ScanTokens();
             Assert.That(tokens.Select(t => t.type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
 
@@ -53,10 +52,10 @@ namespace Chow.Interpreter.Tests
 
             Assert.That(tokens, Has.Count.EqualTo(5));
             AssertToken(tokens[0], TokenType.LiteralInt, "42", 1, 42);
-            AssertToken(tokens[1], TokenType.Newline, "\n", 1, null);
+            AssertToken(tokens[1], TokenType.Newline, "\n", 1);
             AssertToken(tokens[2], TokenType.LiteralInt, "42", 2, 42);
-            AssertToken(tokens[3], TokenType.Newline, "\n", 2, null);
-            AssertToken(tokens[4], TokenType.EndOfCode, "", 3, null);
+            AssertToken(tokens[3], TokenType.Newline, "\n", 2);
+            AssertToken(tokens[4], TokenType.EndOfCode, "", 3);
         }
 
         [Test]
@@ -66,14 +65,14 @@ namespace Chow.Interpreter.Tests
 
             Assert.That(tokens, Has.Count.EqualTo(9));
             AssertToken(tokens[0], TokenType.LiteralInt, "1", 1, 1);
-            AssertToken(tokens[1], TokenType.Newline, "\n", 1, null);
+            AssertToken(tokens[1], TokenType.Newline, "\n", 1);
             AssertToken(tokens[2], TokenType.LiteralInt, "2", 2, 2);
-            AssertToken(tokens[3], TokenType.Newline, "\n", 2, null);
+            AssertToken(tokens[3], TokenType.Newline, "\n", 2);
             AssertToken(tokens[4], TokenType.LiteralInt, "3", 3, 3);
-            AssertToken(tokens[5], TokenType.Newline, "\n", 3, null);
+            AssertToken(tokens[5], TokenType.Newline, "\n", 3);
             AssertToken(tokens[6], TokenType.LiteralInt, "4", 4, 4);
-            AssertToken(tokens[7], TokenType.Newline, "\n", 4, null);
-            AssertToken(tokens[8], TokenType.EndOfCode, "", 5, null);
+            AssertToken(tokens[7], TokenType.Newline, "\n", 4);
+            AssertToken(tokens[8], TokenType.EndOfCode, "", 5);
         }
 
         [Test]
@@ -83,11 +82,11 @@ namespace Chow.Interpreter.Tests
 
             Assert.That(tokens, Has.Count.EqualTo(6));
             AssertToken(tokens[0], TokenType.LiteralInt, "1", 1, 1);
-            AssertToken(tokens[1], TokenType.Newline, "\n", 1, null);
-            AssertToken(tokens[2], TokenType.Newline, "\n", 2, null);
+            AssertToken(tokens[1], TokenType.Newline, "\n", 1);
+            AssertToken(tokens[2], TokenType.Newline, "\n", 2);
             AssertToken(tokens[3], TokenType.LiteralInt, "2", 3, 2);
-            AssertToken(tokens[4], TokenType.Newline, "\n", 3, null);
-            AssertToken(tokens[5], TokenType.EndOfCode, "", 4, null);
+            AssertToken(tokens[4], TokenType.Newline, "\n", 3);
+            AssertToken(tokens[5], TokenType.EndOfCode, "", 4);
         }
 
         [TestCase("\n")]
@@ -112,7 +111,7 @@ namespace Chow.Interpreter.Tests
 
             Assert.That(tokens, Has.Count.EqualTo(2));
             AssertToken(tokens[0], TokenType.LiteralInt, "0", 1, 0);
-            AssertToken(tokens[1], TokenType.EndOfCode, "", 1, null);
+            AssertToken(tokens[1], TokenType.EndOfCode, "", 1);
         }
 
         [Test]
@@ -122,7 +121,7 @@ namespace Chow.Interpreter.Tests
 
             Assert.That(tokens, Has.Count.EqualTo(2));
             AssertToken(tokens[0], TokenType.LiteralInt, "42", 1, 42);
-            AssertToken(tokens[1], TokenType.EndOfCode, "", 1, null);
+            AssertToken(tokens[1], TokenType.EndOfCode, "", 1);
         }
 
         [Test]
@@ -186,7 +185,7 @@ namespace Chow.Interpreter.Tests
 
             Assert.That(tokens, Has.Count.EqualTo(2));
             AssertToken(tokens[0], TokenType.LiteralFloat, "3.14", 1, 3.14);
-            AssertToken(tokens[1], TokenType.EndOfCode, "", 1, null);
+            AssertToken(tokens[1], TokenType.EndOfCode, "", 1);
         }
 
         [Test]
@@ -252,8 +251,8 @@ namespace Chow.Interpreter.Tests
             var tokens = Tokenize(source);
 
             Assert.That(tokens, Has.Count.EqualTo(2));
-            AssertToken(tokens[0], (TokenType)expectedType, source, 1, null);
-            AssertToken(tokens[1], TokenType.EndOfCode, string.Empty, 1, null);
+            AssertToken(tokens[0], (TokenType)expectedType, source, 1);
+            AssertToken(tokens[1], TokenType.EndOfCode, string.Empty, 1);
         }
 
         [TestCase("()", TokenType.SymbolLeftParen, TokenType.SymbolRightParen)]
@@ -267,9 +266,9 @@ namespace Chow.Interpreter.Tests
             var tokens = Tokenize(source);
 
             Assert.That(tokens, Has.Count.EqualTo(3));
-            AssertToken(tokens[0], (TokenType)expectedOpenType, source[0].ToString(), 1, null);
-            AssertToken(tokens[1], (TokenType)expectedCloseType, source[1].ToString(), 1, null);
-            AssertToken(tokens[2], TokenType.EndOfCode, string.Empty, 1, null);
+            AssertToken(tokens[0], (TokenType)expectedOpenType, source[0].ToString(), 1);
+            AssertToken(tokens[1], (TokenType)expectedCloseType, source[1].ToString(), 1);
+            AssertToken(tokens[2], TokenType.EndOfCode, string.Empty, 1);
         }
 
         [TestCase("]")]
@@ -312,7 +311,7 @@ namespace Chow.Interpreter.Tests
         {
             var tokens = Tokenize("\n+");
 
-            AssertToken(tokens[0], TokenType.SymbolPlus, "+", 2, null);
+            AssertToken(tokens[0], TokenType.SymbolPlus, "+", 2);
         }
 
         // ============================================================================================================
@@ -325,8 +324,8 @@ namespace Chow.Interpreter.Tests
             var tokens = Tokenize("**");
 
             Assert.That(tokens, Has.Count.EqualTo(2));
-            AssertToken(tokens[0], TokenType.SymbolExponent, "**", 1, null);
-            AssertToken(tokens[1], TokenType.EndOfCode, string.Empty, 1, null);
+            AssertToken(tokens[0], TokenType.SymbolExponent, "**", 1);
+            AssertToken(tokens[1], TokenType.EndOfCode, string.Empty, 1);
         }
 
         [Test]
@@ -335,8 +334,8 @@ namespace Chow.Interpreter.Tests
             var tokens = Tokenize("//");
 
             Assert.That(tokens, Has.Count.EqualTo(2));
-            AssertToken(tokens[0], TokenType.SymbolFloorDivide, "//", 1, null);
-            AssertToken(tokens[1], TokenType.EndOfCode, string.Empty, 1, null);
+            AssertToken(tokens[0], TokenType.SymbolFloorDivide, "//", 1);
+            AssertToken(tokens[1], TokenType.EndOfCode, string.Empty, 1);
         }
 
         [Test]
@@ -639,7 +638,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ScanTokens_CalledTwiceOnSameInstance_ReturnsEquivalentTokens()
         {
-            var scanner = new Interpreter.Scanner("1\n    2\n3\n");
+            var scanner = new Scanner("1\n    2\n3\n");
 
             var first = scanner.ScanTokens();
             var second = scanner.ScanTokens();
@@ -650,8 +649,8 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ScanTokens_TwoIndependentInstancesOnSameInput_ReturnEqualSequences()
         {
-            var s1 = new Interpreter.Scanner("1\n    2\n3\n");
-            var s2 = new Interpreter.Scanner("1\n    2\n3\n");
+            var s1 = new Scanner("1\n    2\n3\n");
+            var s2 = new Scanner("1\n    2\n3\n");
 
             Assert.That(s2.ScanTokens(), Is.EqualTo(s1.ScanTokens()));
         }
@@ -659,7 +658,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ScanTokens_CalledTwiceOnWhitespaceOnlySource_ReturnsEquivalentTokens()
         {
-            var scanner = new Interpreter.Scanner("    ");
+            var scanner = new Scanner("    ");
 
             var first = scanner.ScanTokens();
             var second = scanner.ScanTokens();
@@ -670,7 +669,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ScanTokens_CalledAgainAfterScannerException_ThrowsSameScannerException()
         {
-            var scanner = new Interpreter.Scanner("@");
+            var scanner = new Scanner("@");
 
             Assert.That(() => scanner.ScanTokens(), Throws.TypeOf<ScannerEx>());
             Assert.That(() => scanner.ScanTokens(), Throws.TypeOf<ScannerEx>());
@@ -733,7 +732,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ScanTokens_NewlinesOnlySource_ReturnsEndOfCode()
         {
-            var tokens = new Interpreter.Scanner("\n\n\n").ScanTokens();
+            var tokens = new Scanner("\n\n\n").ScanTokens();
             Assert.That(tokens.Select(t => t.type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
 
@@ -744,7 +743,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ScanTokens_NullSource_ReturnsEndOfCode()
         {
-            var tokens = new Interpreter.Scanner(null!).ScanTokens();
+            var tokens = new Scanner(null!).ScanTokens();
             Assert.That(tokens.Select(t => t.type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
 
@@ -768,7 +767,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ScanTokens_CommentOnlySource_ReturnsEndOfCode()
         {
-            var tokens = new Interpreter.Scanner("# only a comment").ScanTokens();
+            var tokens = new Scanner("# only a comment").ScanTokens();
 
             Assert.That(tokens.Select(t => t.type), Is.EqualTo(new[] { TokenType.EndOfCode }));
         }
@@ -837,7 +836,7 @@ namespace Chow.Interpreter.Tests
 
             Assert.That(tokens, Has.Count.EqualTo(2));
             AssertToken(tokens[0], TokenType.LiteralStr, "'hello'", 1, "hello");
-            AssertToken(tokens[1], TokenType.EndOfCode, "", 1, null);
+            AssertToken(tokens[1], TokenType.EndOfCode, "", 1);
         }
 
         [Test]
@@ -847,7 +846,7 @@ namespace Chow.Interpreter.Tests
 
             Assert.That(tokens, Has.Count.EqualTo(2));
             AssertToken(tokens[0], TokenType.LiteralStr, "\"hello\"", 1, "hello");
-            AssertToken(tokens[1], TokenType.EndOfCode, "", 1, null);
+            AssertToken(tokens[1], TokenType.EndOfCode, "", 1);
         }
 
         [TestCase("''")]
@@ -882,8 +881,8 @@ namespace Chow.Interpreter.Tests
 
             Assert.That(tokens, Has.Count.EqualTo(3));
             AssertToken(tokens[0], TokenType.LiteralStr, "'x'", 1, "x");
-            AssertToken(tokens[1], TokenType.Newline, "\n", 1, null);
-            AssertToken(tokens[2], TokenType.EndOfCode, "", 2, null);
+            AssertToken(tokens[1], TokenType.Newline, "\n", 1);
+            AssertToken(tokens[2], TokenType.EndOfCode, "", 2);
         }
 
         [TestCase("'abc")]

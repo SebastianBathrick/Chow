@@ -15,8 +15,8 @@ namespace Chow.Interpreter.State.Values
         const string METHOD_SET_DEFAULT_NAME = "setdefault";
 
 
-        Dictionary<TaggedUnion, TaggedUnion> _entries;
-        List<TaggedUnion> _keys;
+        readonly Dictionary<TaggedUnion, TaggedUnion> _entries;
+        readonly List<TaggedUnion> _keys;
 
         public int Count => _keys.Count;
 
@@ -141,9 +141,9 @@ namespace Chow.Interpreter.State.Values
                     return Update;
                 case METHOD_SET_DEFAULT_NAME:
                     return SetDefault;
-                default:
-                    throw new NotImplementedException($"Method '{methodName}' is not implemented for InternalDict");
             }
+            
+            throw new NotImplementedException($"Method '{methodName}' is not implemented for InternalDict");
         }
 
         public bool HasMethod(string methodName)
@@ -238,12 +238,15 @@ namespace Chow.Interpreter.State.Values
                 case Tag.None:
                     sb.Append("None");
                     return;
+                
                 case Tag.Boolean:
                     sb.Append(value.BooleanValue ? "True" : "False");
                     return;
+                
                 case Tag.Int:
                     sb.Append(value.IntegerValue);
                     return;
+                
                 case Tag.Float:
                     var f = value.FloatValue;
                     var fs = f.ToString("R", CultureInfo.InvariantCulture);
@@ -253,17 +256,21 @@ namespace Chow.Interpreter.State.Values
                     }
                     sb.Append(fs);
                     return;
+                
                 case Tag.Str:
                     sb.Append('\'');
                     sb.Append(value.StringValue);
                     sb.Append('\'');
                     return;
+                
                 case Tag.List:
-                    sb.Append(value.ListValue.ToString());
+                    sb.Append(value.ListValue);
                     return;
+                
                 case Tag.Dict:
-                    sb.Append(value.DictValue.ToString());
+                    sb.Append(value.DictValue);
                     return;
+                
                 default:
                     sb.Append(value.ToString());
                     return;

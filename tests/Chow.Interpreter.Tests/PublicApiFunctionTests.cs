@@ -1,4 +1,3 @@
-using Chow.Interpreter;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Values;
 

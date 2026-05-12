@@ -15,7 +15,7 @@ namespace Chow.Interpreter.State.Scopes
 
         /// <summary>Creates an empty local scope chained to <paramref name="parent"/>.</summary>
         /// <param name="parent">The enclosing scope (another <see cref="LocalScope"/> for nested defs, or the <see cref="ModuleScope"/> for top-level defs).</param>
-        public LocalScope(IScope parent) : base()
+        public LocalScope(IScope parent)
         {
             ParentOrNull = parent;
         }

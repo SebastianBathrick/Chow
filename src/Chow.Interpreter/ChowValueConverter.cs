@@ -13,6 +13,7 @@ namespace Chow.Interpreter
                 throw new ArgumentNullException(nameof(value));
             }
 
+            // TODO: Refactor to make this a switch
             if (value.IsNone)
             {
                 return TaggedUnion.None;
@@ -37,7 +38,8 @@ namespace Chow.Interpreter
             {
                 return new TaggedUnion(dynamicValue.Value);
             }
-
+            
+            // TODO: Split this method into two publically exposed methods
             if (value.Is<bool>())
             {
                 return new TaggedUnion(value.As<bool>());

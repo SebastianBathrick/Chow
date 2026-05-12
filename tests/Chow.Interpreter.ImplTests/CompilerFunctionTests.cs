@@ -1,8 +1,5 @@
 using Chow.Interpreter.Bytecode;
 using Chow.Interpreter.State.Values;
-using Chow.Interpreter.Tokens;
-using System.Collections.Generic;
-using Chow.Interpreter.SyntaxTrees;
 
 namespace Chow.Interpreter.ImplTests
 {

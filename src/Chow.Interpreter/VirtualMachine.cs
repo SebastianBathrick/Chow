@@ -509,7 +509,7 @@ namespace Chow.Interpreter
 
                 if (!list.HasMethod(attrName))
                 {
-                    throw new Exceptions.AttributeException("list", attrName, GetCurrentLineNumber());
+                    throw new AttributeException("list", attrName, GetCurrentLineNumber());
                 }
 
                 _valStack.Push(list[attrName]);
@@ -522,7 +522,7 @@ namespace Chow.Interpreter
 
                 if (!dict.HasMethod(attrName))
                 {
-                    throw new Exceptions.AttributeException("dict", attrName, GetCurrentLineNumber());
+                    throw new AttributeException("dict", attrName, GetCurrentLineNumber());
                 }
 
                 _valStack.Push(dict[attrName]);
@@ -533,13 +533,13 @@ namespace Chow.Interpreter
             {
                 if (!ico.HasAttribute(attrName))
                 {
-                    throw new Exceptions.AttributeException(ico.ClassName, attrName, GetCurrentLineNumber());
+                    throw new AttributeException(ico.ClassName, attrName, GetCurrentLineNumber());
                 }
                 _valStack.Push(ico.GetAttribute(attrName));
                 return;
             }
 
-            throw new Exceptions.AttributeException(target.Tag.ToString().ToLowerInvariant(), attrName, GetCurrentLineNumber());
+            throw new AttributeException(target.Tag.ToString().ToLowerInvariant(), attrName, GetCurrentLineNumber());
         }
 
         void ExecuteSetAttr()
@@ -552,12 +552,12 @@ namespace Chow.Interpreter
             {
                 if (!ico.HasAttribute(attrName))
                 {
-                    throw new Exceptions.AttributeException(ico.ClassName, attrName, GetCurrentLineNumber());
+                    throw new AttributeException(ico.ClassName, attrName, GetCurrentLineNumber());
                 }
                 if (!ico.IsWritableField(attrName))
                 {
                     // Method names and read-only fields both land here.
-                    throw new Exceptions.AttributeException(
+                    throw new AttributeException(
                         ico.ClassName, attrName, GetCurrentLineNumber(),
                         $"'{ico.ClassName}' object attribute '{attrName}' is read-only");
                 }
@@ -579,7 +579,7 @@ namespace Chow.Interpreter
                     break;
             }
 
-            throw new Exceptions.AttributeException(typeName, attrName, GetCurrentLineNumber());
+            throw new AttributeException(typeName, attrName, GetCurrentLineNumber());
         }
     }
 }

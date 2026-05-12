@@ -13,8 +13,8 @@ namespace Chow.Interpreter.State.Stack
     /// </summary>
     class CallStack
     {
-        StackFrame _moduleLvl;
-        Stack<StackFrame> _callFrames;
+        readonly StackFrame _moduleLvl;
+        readonly Stack<StackFrame> _callFrames;
 
         /// <summary>The chunk currently being executed (function chunk if inside a call, module chunk otherwise).</summary>
         public Chunk CurrentChunk => CurrFrame.Chunk;

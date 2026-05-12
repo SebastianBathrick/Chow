@@ -6,11 +6,13 @@ namespace Chow.Interpreter.Values
 
         public bool IsNone => this == None;
 
-        public abstract DataType As<DataType>() where DataType : struct;
+        // TODO: Refactor As<T>() and Is<T>() to use a nullable type
+        public abstract TDataType As<TDataType>() where TDataType : struct;
 
-        public abstract bool Is<DataType>() where DataType : struct;
+        public abstract bool Is<TDataType>() where TDataType : struct;
 
 
+        // TODO: Remove this overide because As<string>() serves the same purpose and their will be less code
         public abstract override string ToString();
     }
 }

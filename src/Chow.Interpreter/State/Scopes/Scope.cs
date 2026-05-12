@@ -15,8 +15,8 @@ namespace Chow.Interpreter.State.Scopes
     /// </remarks>
     abstract class Scope : IScope
     {
-        protected const string SCOPE_BOUNDARY_ELEMENT = "<SCOPE_BOUNDARY>";
-        protected const int OUTERMOST_SCOPE_DEPTH = 0;
+        const string SCOPE_BOUNDARY_ELEMENT = "<SCOPE_BOUNDARY>";
+        const int OUTERMOST_SCOPE_DEPTH = 0;
 
         readonly Stack<string> _varNames;
         readonly Dictionary<string, TaggedUnion> _varMap;

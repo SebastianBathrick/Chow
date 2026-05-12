@@ -55,7 +55,7 @@ namespace Chow.Interpreter.State.Values
             }
             if (_methods.TryGetValue(name, out var m))
             {
-                return new TaggedUnion((object)m);
+                return new TaggedUnion(m);
             }
             throw new InvalidOperationException($"contract violation: '{ClassName}' has no attribute '{name}'");
         }

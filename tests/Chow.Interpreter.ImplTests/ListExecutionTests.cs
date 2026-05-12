@@ -1,4 +1,3 @@
-using Chow.Interpreter;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State.Values;
 using Chow.Interpreter.Values;
@@ -95,7 +94,7 @@ namespace Chow.Interpreter.ImplTests
         public void Subscript_OutOfRange_Throws()
         {
             (var module, _) = NewModule();
-            Assert.That(() => module.Execute("[1, 2][5]"), Throws.TypeOf<System.IndexOutOfRangeException>());
+            Assert.That(() => module.Execute("[1, 2][5]"), Throws.TypeOf<IndexOutOfRangeException>());
         }
 
         // ============================================================================================================
@@ -219,14 +218,14 @@ namespace Chow.Interpreter.ImplTests
         public void Attribute_Unknown_ThrowsAttributeError()
         {
             (var module, _) = NewModule();
-            Assert.That(() => module.Execute("[1].fake"), Throws.TypeOf<Exceptions.AttributeException>());
+            Assert.That(() => module.Execute("[1].fake"), Throws.TypeOf<AttributeException>());
         }
 
         [Test]
         public void AttributeAssign_OnList_ThrowsAttributeError()
         {
             (var module, _) = NewModule();
-            Assert.That(() => module.Execute("a = [1]\na.x = 1"), Throws.TypeOf<Exceptions.AttributeException>());
+            Assert.That(() => module.Execute("a = [1]\na.x = 1"), Throws.TypeOf<AttributeException>());
         }
 
         // ============================================================================================================
@@ -372,7 +371,7 @@ namespace Chow.Interpreter.ImplTests
         public void SliceAssign_ThrowsNotImplemented()
         {
             (var module, _) = NewModule();
-            Assert.That(() => module.Execute("a = [1, 2]\na[0:1] = [9]"), Throws.TypeOf<System.NotImplementedException>());
+            Assert.That(() => module.Execute("a = [1, 2]\na[0:1] = [9]"), Throws.TypeOf<NotImplementedException>());
         }
     }
 }

@@ -662,7 +662,7 @@ namespace Chow.Interpreter
         sealed class LoopContext
         {
             public int LoopStartIdx;
-            public List<int> PendingBreaks = new List<int>();
+            public readonly List<int> PendingBreaks = new List<int>();
         }
 
     }

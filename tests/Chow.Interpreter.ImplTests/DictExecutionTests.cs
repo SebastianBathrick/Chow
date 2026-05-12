@@ -1,4 +1,3 @@
-using Chow.Interpreter;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State.Values;
 using Chow.Interpreter.Values;
@@ -240,14 +239,14 @@ namespace Chow.Interpreter.ImplementationTests
         public void Attribute_Unknown_ThrowsAttributeError()
         {
             (var module, _) = NewModule();
-            Assert.That(() => module.Execute("{}.fake"), Throws.TypeOf<Exceptions.AttributeException>());
+            Assert.That(() => module.Execute("{}.fake"), Throws.TypeOf<AttributeException>());
         }
 
         [Test]
         public void AttributeAssign_OnDict_ThrowsAttributeError()
         {
             (var module, _) = NewModule();
-            Assert.That(() => module.Execute("d = {}\nd.x = 1"), Throws.TypeOf<Exceptions.AttributeException>());
+            Assert.That(() => module.Execute("d = {}\nd.x = 1"), Throws.TypeOf<AttributeException>());
         }
 
         // ============================================================================================================
@@ -266,7 +265,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Merge_NonDictOperand_Throws()
         {
             (var module, _) = NewModule();
-            Assert.That(() => module.Execute("{1: 'a'} | 5"), Throws.InstanceOf<System.Exception>());
+            Assert.That(() => module.Execute("{1: 'a'} | 5"), Throws.InstanceOf<Exception>());
         }
 
         // ============================================================================================================

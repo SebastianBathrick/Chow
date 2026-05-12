@@ -3,7 +3,6 @@ using Chow.Interpreter.State.Values;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Tokens;
 using Chow.Interpreter.Values;
-using System;
 
 namespace Chow.Interpreter
 {

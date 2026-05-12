@@ -14,7 +14,7 @@ namespace Chow.Interpreter.State.Values
         const string METHOD_REVERSE_NAME = "reverse";
 
 
-        List<TaggedUnion> _elements;
+        readonly List<TaggedUnion> _elements;
 
         public int Count => _elements.Count;
 
@@ -58,7 +58,7 @@ namespace Chow.Interpreter.State.Values
 
         TaggedUnion Clear(TaggedUnion[] args)
         {
-            ValidateArguments(args, 0);
+            ValidateArguments(args);
             _elements.Clear();
             return TaggedUnion.None;
         }
@@ -138,7 +138,7 @@ namespace Chow.Interpreter.State.Values
 
         TaggedUnion Reverse(TaggedUnion[] args)
         {
-            ValidateArguments(args, 0);
+            ValidateArguments(args);
             _elements.Reverse();
             return TaggedUnion.None;
         }
@@ -398,10 +398,10 @@ namespace Chow.Interpreter.State.Values
                     sb.Append('\'');
                     return;
                 case Tag.List:
-                    sb.Append(value.ListValue.ToString());
+                    sb.Append(value.ListValue);
                     return;
                 case Tag.Dict:
-                    sb.Append(value.DictValue.ToString());
+                    sb.Append(value.DictValue);
                     return;
                 default:
                     sb.Append(value.ToString());

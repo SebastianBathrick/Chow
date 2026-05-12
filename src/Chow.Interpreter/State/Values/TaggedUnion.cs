@@ -5,32 +5,52 @@ namespace Chow.Interpreter.State.Values
 {
     struct TaggedUnion
     {
+        #region Constants
+        
         const double DEFAULT_FLOAT_VALUE = 0.0;
         const long DEFAULT_INT_VALUE = 0L;
         const bool DEFAULT_BOOL_VALUE = false;
         const object DEFAULT_NULL_VALUE = null;
-
-        // TODO: Test whether using explicit struct layouts meaningly affects performance
-        long _longInt;
-        double _doubleFloat;
-        bool _bool;
-        object _obj;
-
+        
+        #endregion
+        
+        #region Fields
+        
         public static TaggedUnion Empty = new TaggedUnion(Tag.Empty);
         public static TaggedUnion None = new TaggedUnion(Tag.None);
 
-        public Tag Tag { get; }
+        // TODO: Test whether using explicit struct layouts meaningly affects performance
+        // If it seems it reduces execution time then Tag likely will become a byte enum
+        Tag _tag;
+        bool _bool;
+        object _obj;
+        long _longInt;
+        double _doubleFloat;
+
+        #endregion
+        
+        #region Properties
+        
+        // TODO: Get rid of these, because .Tag does the same thing with not that much more code
+        public Tag Tag => _tag;
 
         public bool IsEmpty => Tag == Tag.Empty;
+        
         public bool IsInt => Tag == Tag.Int;
+        
         public bool IsFloat => Tag == Tag.Float;
+        
         public bool IsString => Tag == Tag.Str;
+        
         public bool IsBoolean => Tag == Tag.Boolean;
+        
         public bool IsObject => Tag == Tag.Object;
+        
         public bool IsList => Tag == Tag.List;
+        
         public bool IsDict => Tag == Tag.Dict;
-
-        public bool IsTruthy
+        
+                public bool IsTruthy
         {
             get
             {
@@ -149,9 +169,14 @@ namespace Chow.Interpreter.State.Values
             }
         }
 
+        
+        #endregion
+        
+        #region Constructors
+        
         TaggedUnion(Tag type)
         {
-            Tag = type;
+            _tag = type;
             _longInt = DEFAULT_INT_VALUE;
             _doubleFloat = DEFAULT_FLOAT_VALUE;
             _bool = DEFAULT_BOOL_VALUE;
@@ -192,12 +217,16 @@ namespace Chow.Interpreter.State.Values
         {
             _obj = dict;
         }
+        
+        #endregion
+
+
 
         public static TaggedUnion CreateWithValue(object value)
         {
             if (value == null)
             {
-                return TaggedUnion.None;
+                return None;
             }
 
             switch (value)
@@ -281,13 +310,13 @@ namespace Chow.Interpreter.State.Values
                     return ChowValueConverter.ToTaggedUnion(funcManyArgs(BuildArgArray(args)));
                 case Action action:
                     action();
-                    return TaggedUnion.None;
+                    return None;
                 case Action<ChowValue> actionOneArg:
                     actionOneArg(ChowValueConverter.ToChowValue(singleArg.Value));
-                    return TaggedUnion.None;
+                    return None;
                 case Action<ChowValue[]> actionManyArgs:
                     actionManyArgs(BuildArgArray(args));
-                    return TaggedUnion.None;
+                    return None;
                 default:
                     throw new InvalidOperationException($"Object of type '{_obj.GetType().Name}' is not callable");
             }

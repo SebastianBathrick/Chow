@@ -1,4 +1,3 @@
-using Chow.Interpreter;
 using Chow.Interpreter.Tokens;
 
 namespace Chow.Interpreter.Tests

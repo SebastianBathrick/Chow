@@ -2,9 +2,6 @@ using Chow.Interpreter.Bytecode;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State.Scopes;
 using Chow.Interpreter.State.Values;
-using Chow.Interpreter.Tokens;
-using System.Collections.Generic;
-using Chow.Interpreter.SyntaxTrees;
 
 namespace Chow.Interpreter.ImplTests
 {
@@ -127,7 +124,7 @@ namespace Chow.Interpreter.ImplTests
         {
             var module = new ChowModule();
             var captured = 0;
-            module["bump"] = new Chow.Interpreter.Values.ChowDynamic((System.Action)(() => { captured = 1; }));
+            module["bump"] = new Values.ChowDynamic((Action)(() => { captured = 1; }));
 
             module.Execute("bump()");
 

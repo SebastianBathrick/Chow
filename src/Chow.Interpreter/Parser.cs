@@ -10,7 +10,7 @@ namespace Chow.Interpreter
 {
     class Parser
     {
-        List<Token> _tkns;
+        readonly List<Token> _tkns;
         int _tknIdx;
 
         Token CurrToken => _tkns[_tknIdx];
@@ -261,13 +261,6 @@ namespace Chow.Interpreter
             var expr = IsPrimaryToken() ? ParseExpr() : null;
 
             return new ReturnNode(expr, line);
-        }
-
-        Node ParseExprStmnt()
-        {
-            var line = CurrToken.lineNum;
-            var expr = ParseExpr();
-            return new ExprStatementNode(expr, line);
         }
 
         #endregion

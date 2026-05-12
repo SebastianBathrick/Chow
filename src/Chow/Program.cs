@@ -1,8 +1,6 @@
-using System;
 using System.Text.RegularExpressions;
 using Chow.Interpreter;
 using Chow.Interpreter.Values;
-using Chow;
 
 const char NEWLINE_CHAR = '\n';
 const string START_INDICATOR = ">>> ";

@@ -1,5 +1,4 @@
 using Chow.Interpreter.Bytecode;
-using Chow.Interpreter;
 using Chow.Interpreter.State.Scopes;
 using Chow.Interpreter.State.Values;
 
@@ -23,7 +22,7 @@ namespace Chow.Interpreter.Tests
 
         static TaggedUnion Execute(Chunk chunk)
         {
-            var vm = new Interpreter.VirtualMachine(chunk, new ModuleScope());
+            var vm = new VirtualMachine(chunk, new ModuleScope());
             vm.EvaluateChunk();
             return vm.ValStackTop;
         }
@@ -346,7 +345,7 @@ namespace Chow.Interpreter.Tests
                 EmitLoad(c, "x");
             });
 
-            var vm = new Interpreter.VirtualMachine(chunk, new ModuleScope());
+            var vm = new VirtualMachine(chunk, new ModuleScope());
             vm.EvaluateChunk();
             TaggedUnion result = vm.ValStackTop;
 
@@ -363,7 +362,7 @@ namespace Chow.Interpreter.Tests
                 EmitLoad(c, "x");
             });
 
-            var vm = new Interpreter.VirtualMachine(chunk, new ModuleScope());
+            var vm = new VirtualMachine(chunk, new ModuleScope());
             vm.EvaluateChunk();
             TaggedUnion result = vm.ValStackTop;
 
@@ -382,7 +381,7 @@ namespace Chow.Interpreter.Tests
                 c.AddInstruction(OperationCode.Add, LINE);
             });
 
-            var vm = new Interpreter.VirtualMachine(chunk, new ModuleScope());
+            var vm = new VirtualMachine(chunk, new ModuleScope());
             vm.EvaluateChunk();
             TaggedUnion result = vm.ValStackTop;
 

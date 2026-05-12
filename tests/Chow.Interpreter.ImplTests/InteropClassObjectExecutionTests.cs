@@ -1,8 +1,6 @@
-using Chow.Interpreter;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State.Values;
 using Chow.Interpreter.Values;
-using System;
 
 namespace Chow.Interpreter.ImplTests
 {
