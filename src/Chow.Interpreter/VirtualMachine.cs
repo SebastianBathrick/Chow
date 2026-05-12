@@ -1,6 +1,5 @@
 using Chow.Interpreter.Bytecode;
 using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Hooks;
 using Chow.Interpreter.State.Scopes;
 using Chow.Interpreter.State.Stack;
 using Chow.Interpreter.State.Values;
@@ -14,18 +13,16 @@ namespace Chow.Interpreter
         readonly IScope _moduleScope;
         readonly CallStack _callStack;
         readonly Stack<TaggedUnion> _valStack;
-        readonly IHook _exprHook;
 
         Instruction CurrentOperation => _callStack.CurrentInstr;
 
         public TaggedUnion ValStackTop => _valStack.Count > 0 ? _valStack.Peek() : TaggedUnion.None;
 
-        public VirtualMachine(Chunk chunk, IScope moduleScope, IHook exprHook)
+        public VirtualMachine(Chunk chunk, IScope moduleScope)
         {
             _moduleScope = moduleScope ?? new ModuleScope();
             _callStack = new CallStack(chunk, _moduleScope);
             _valStack = new Stack<TaggedUnion>();
-            _exprHook = exprHook;
         }
 
         public IScope EvaluateChunk()
@@ -158,17 +155,7 @@ namespace Chow.Interpreter
                         break;
 
                     case OperationCode.PopExprStmntResult:
-                        // Pop the result of an expression statement and ignore it, but trigger the expression statement hook for debugging
-                        if (_exprHook == null)
-                        {
-                            _valStack.Pop();
-                        }
-                        else
-                        {
-                            var exprResult = _valStack.Pop();
-                            _exprHook.Invoke(ChowValueConverter.ToChowValue(exprResult));
-                        }
-
+                        // TODO: Find a good use case for this
                         break;
 
                     case OperationCode.MakeClosure:

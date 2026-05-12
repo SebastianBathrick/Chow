@@ -4,7 +4,7 @@ using Chow.Interpreter.Tokens;
 using System.Collections.Generic;
 using Chow.Interpreter.SyntaxTrees;
 
-namespace Chow.Interpreter.ImplementationTests
+namespace Chow.Interpreter.ImplTests
 {
     [TestFixture]
     public class CompilerFunctionTests

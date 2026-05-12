@@ -1,10 +1,8 @@
 using Chow.Interpreter;
 using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Hooks;
 using Chow.Interpreter.Values;
-using System.Collections.Generic;
 
-namespace Chow.Interpreter.ImplementationTests
+namespace Chow.Interpreter.ImplTests
 {
     [TestFixture]
     public class FunctionExecutionTests
@@ -13,27 +11,28 @@ namespace Chow.Interpreter.ImplementationTests
         // Helpers
         // ------------------------------------------------------------------------------------------------------------
 
-        sealed class CaptureExprHook : IExpressionStatementHook
+        sealed class CaptureExprHook
         {
-            public List<ChowValue> Values { get; } = new List<ChowValue>();
+            readonly ChowModule _module;
 
-            public void Invoke(object value = null)
+            public CaptureExprHook(ChowModule module)
             {
-                Values.Add((ChowValue)value);
+                _module = module;
             }
+
+            public ChowValue Last => _module.GetGlobal("__result");
         }
 
         static (ChowModule module, CaptureExprHook hook) NewModule()
         {
             var module = new ChowModule();
-            var hook = new CaptureExprHook();
-            module.AddHook(hook);
+            var hook = new CaptureExprHook(module);
             return (module, hook);
         }
 
         static ChowValue Last(CaptureExprHook hook)
         {
-            return hook.Values[hook.Values.Count - 1];
+            return hook.Last;
         }
 
         // ============================================================================================================
@@ -46,7 +45,7 @@ namespace Chow.Interpreter.ImplementationTests
             (var module, var hook) = NewModule();
 
             module.Execute("def f():\n    return 1");
-            module.Execute("f()");
+            module.Execute("__result = f()");
 
             Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
         }
@@ -61,7 +60,7 @@ namespace Chow.Interpreter.ImplementationTests
             (var module, var hook) = NewModule();
 
             module.Execute("def add(a, b):\n    return a + b");
-            module.Execute("add(3, 4)");
+            module.Execute("__result = add(3, 4)");
 
             Assert.That(Last(hook).As<long>(), Is.EqualTo(7));
         }
@@ -82,7 +81,7 @@ namespace Chow.Interpreter.ImplementationTests
                 "    return n * fact(n - 1)";
 
             module.Execute(defSource);
-            module.Execute("fact(5)");
+            module.Execute("__result = fact(5)");
 
             Assert.That(Last(hook).As<long>(), Is.EqualTo(120));
         }
@@ -97,7 +96,7 @@ namespace Chow.Interpreter.ImplementationTests
             (var module, var hook) = NewModule();
 
             module.Execute("def noop():\n    x = 1");
-            module.Execute("noop()");
+            module.Execute("__result = noop()");
 
             Assert.That(Last(hook).IsNone, Is.True);
         }
@@ -118,7 +117,7 @@ namespace Chow.Interpreter.ImplementationTests
                 "    return n";
 
             module.Execute(defSource);
-            module.Execute("early(-1)");
+            module.Execute("__result = early(-1)");
 
             Assert.That(Last(hook).IsNone, Is.True);
         }
@@ -135,7 +134,7 @@ namespace Chow.Interpreter.ImplementationTests
                 "    return n";
 
             module.Execute(defSource);
-            module.Execute("early(5)");
+            module.Execute("__result = early(5)");
 
             Assert.That(Last(hook).As<long>(), Is.EqualTo(5));
         }
@@ -152,7 +151,7 @@ namespace Chow.Interpreter.ImplementationTests
             module.Execute("x = 10");
             module.Execute("def get():\n    return x");
             module.Execute("x = 20");
-            module.Execute("get()");
+            module.Execute("__result = get()");
 
             Assert.That(Last(hook).As<long>(), Is.EqualTo(20));
         }
@@ -174,7 +173,7 @@ namespace Chow.Interpreter.ImplementationTests
                 "    return inner()";
 
             module.Execute(defSource);
-            module.Execute("outer()");
+            module.Execute("__result = outer()");
 
             Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
         }
@@ -197,7 +196,7 @@ namespace Chow.Interpreter.ImplementationTests
 
             module.Execute(defSource);
             module.Execute("g = make()");
-            module.Execute("g()");
+            module.Execute("__result = g()");
 
             Assert.That(Last(hook).As<long>(), Is.EqualTo(5));
         }
@@ -220,7 +219,7 @@ namespace Chow.Interpreter.ImplementationTests
                 "    return n + x";
 
             module.Execute(defSource);
-            module.Execute("countdown(3)");
+            module.Execute("__result = countdown(3)");
 
             // 3 + (2 + (1 + 0)) = 6
             Assert.That(Last(hook).As<long>(), Is.EqualTo(6));
@@ -250,7 +249,7 @@ namespace Chow.Interpreter.ImplementationTests
             (var module, var hook) = NewModule();
 
             module.Execute("def square(n):\n    return n * n");
-            module.Execute("square(7)");
+            module.Execute("__result = square(7)");
 
             Assert.That(Last(hook).As<long>(), Is.EqualTo(49));
         }
@@ -270,7 +269,7 @@ namespace Chow.Interpreter.ImplementationTests
             var fValue = moduleA.GetGlobal("f");
             moduleB["f"] = fValue;
 
-            moduleB.Execute("f()");
+            moduleB.Execute("__result = f()");
 
             Assert.That(Last(hookB).As<long>(), Is.EqualTo(42));
         }
@@ -294,7 +293,7 @@ namespace Chow.Interpreter.ImplementationTests
                 "    return b()";
 
             module.Execute(defSource);
-            module.Execute("a()");
+            module.Execute("__result = a()");
 
             Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
         }
@@ -310,7 +309,7 @@ namespace Chow.Interpreter.ImplementationTests
 
             module.Execute("def f():\n    return 1");
             module.Execute("g = f");
-            module.Execute("g()");
+            module.Execute("__result = g()");
 
             Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
         }
@@ -326,7 +325,7 @@ namespace Chow.Interpreter.ImplementationTests
 
             module.Execute("def apply(fn):\n    return fn()");
             module.Execute("def one():\n    return 1");
-            module.Execute("apply(one)");
+            module.Execute("__result = apply(one)");
 
             Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
         }

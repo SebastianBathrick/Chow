@@ -1,8 +1,6 @@
 using Chow.Interpreter;
 using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Hooks;
 using Chow.Interpreter.Values;
-using System.Collections.Generic;
 
 namespace Chow.Tests
 {
@@ -13,22 +11,28 @@ namespace Chow.Tests
         // Helpers
         // ------------------------------------------------------------------------------------------------------------
 
-        sealed class CaptureExprHook : IExpressionStatementHook
+        sealed class CaptureExprHook
         {
-            public List<ChowValue> Values { get; } = new List<ChowValue>();
+            readonly ChowModule _module;
 
-            public void Invoke(object value = null)
+            public CaptureExprHook(ChowModule module)
             {
-                Values.Add((ChowValue)value);
+                _module = module;
             }
+
+            public ChowValue Last => _module.GetGlobal("__result");
         }
 
         static (ChowModule module, CaptureExprHook hook) NewModule()
         {
             var module = new ChowModule();
-            var hook = new CaptureExprHook();
-            module.AddHook(hook);
+            var hook = new CaptureExprHook(module);
             return (module, hook);
+        }
+
+        static ChowValue Last(CaptureExprHook hook)
+        {
+            return hook.Last;
         }
 
         // ============================================================================================================
@@ -91,9 +95,9 @@ namespace Chow.Tests
             moduleA.Execute("def f():\n    return 99");
             moduleB["f"] = moduleA["f"];
 
-            moduleB.Execute("f()");
+            moduleB.Execute("__result = f()");
 
-            Assert.That(hookB.Values[hookB.Values.Count - 1].As<long>(), Is.EqualTo(99));
+            Assert.That(Last(hookB).As<long>(), Is.EqualTo(99));
         }
 
         [Test]
@@ -108,37 +112,40 @@ namespace Chow.Tests
             moduleA.Execute("def get():\n    return x");
             moduleB["get"] = moduleA["get"];
 
-            moduleB.Execute("get()");
+            moduleB.Execute("__result = get()");
 
-            Assert.That(hookB.Values[hookB.Values.Count - 1].As<long>(), Is.EqualTo(7));
+            Assert.That(Last(hookB).As<long>(), Is.EqualTo(7));
         }
 
         // ============================================================================================================
-        // D. Hook invocation
+        // D. Function call expression values
         // ============================================================================================================
 
         [Test]
-        public void Hook_InvokedOncePerFunctionCallExpression()
+        public void FunctionCallExpression_CanBeAssignedRepeatedly()
         {
             (var module, var hook) = NewModule();
             module.Execute("def f():\n    return 1");
 
-            module.Execute("f()");
-            module.Execute("f()");
-            module.Execute("f()");
+            module.Execute("__result = f()");
+            Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
 
-            Assert.That(hook.Values.Count, Is.EqualTo(3));
+            module.Execute("__result = f()");
+            Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
+
+            module.Execute("__result = f()");
+            Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
         }
 
         [Test]
-        public void Hook_ReceivesReturnValue_NotFunctionItself()
+        public void FunctionCallExpression_AssignsReturnValue_NotFunctionItself()
         {
             (var module, var hook) = NewModule();
             module.Execute("def f():\n    return 42");
 
-            module.Execute("f()");
+            module.Execute("__result = f()");
 
-            var lastValue = hook.Values[hook.Values.Count - 1];
+            var lastValue = Last(hook);
             Assert.That(lastValue.As<long>(), Is.EqualTo(42));
         }
 
@@ -154,9 +161,9 @@ namespace Chow.Tests
 
             var fValue = module.GetGlobal("f");
             module["g"] = fValue;
-            module.Execute("g()");
+            module.Execute("__result = g()");
 
-            Assert.That(hook.Values[hook.Values.Count - 1].As<long>(), Is.EqualTo(5));
+            Assert.That(Last(hook).As<long>(), Is.EqualTo(5));
         }
     }
 }

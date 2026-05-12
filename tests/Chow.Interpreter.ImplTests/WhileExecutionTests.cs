@@ -1,10 +1,8 @@
 using Chow.Interpreter;
 using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Hooks;
 using Chow.Interpreter.Values;
-using System.Collections.Generic;
 
-namespace Chow.Interpreter.ImplementationTests
+namespace Chow.Interpreter.ImplTests
 {
     [TestFixture]
     public class WhileExecutionTests
@@ -13,21 +11,22 @@ namespace Chow.Interpreter.ImplementationTests
         // Helpers
         // ------------------------------------------------------------------------------------------------------------
 
-        sealed class CaptureExprHook : IExpressionStatementHook
+        sealed class CaptureExprHook
         {
-            public List<ChowValue> Values { get; } = new List<ChowValue>();
+            readonly ChowModule _module;
 
-            public void Invoke(object value = null)
+            public CaptureExprHook(ChowModule module)
             {
-                Values.Add((ChowValue)value);
+                _module = module;
             }
+
+            public ChowValue Last => _module.GetGlobal("__result");
         }
 
         static (ChowModule module, CaptureExprHook hook) NewModule()
         {
             var module = new ChowModule();
-            var hook = new CaptureExprHook();
-            module.AddHook(hook);
+            var hook = new CaptureExprHook(module);
             return (module, hook);
         }
 
@@ -150,20 +149,23 @@ namespace Chow.Interpreter.ImplementationTests
         }
 
         // ============================================================================================================
-        // F. Expression-statement hook still fires inside loop body
+        // F. Expression values can be captured inside loop body
         // ============================================================================================================
 
         [Test]
-        public void While_ExprStmntInBody_HookFiresEachIteration()
+        public void While_AssignmentInBody_CapturesEachIteration()
         {
-            (var module, var hook) = NewModule();
-            module.Execute("i = 0\nwhile i < 3:\n    i\n    i = i + 1");
-            Assert.That(hook.Values.Count, Is.EqualTo(3));
+            (var module, var _) = NewModule();
+            module.Execute("i = 0\nvalues = []\nwhile i < 3:\n    values.append(i)\n    i = i + 1");
+
+            var values = (ChowList)module.GetGlobal("values");
+
             Assert.Multiple(() =>
             {
-                Assert.That(hook.Values[0].As<long>(), Is.EqualTo(0));
-                Assert.That(hook.Values[1].As<long>(), Is.EqualTo(1));
-                Assert.That(hook.Values[2].As<long>(), Is.EqualTo(2));
+                Assert.That(values.Count, Is.EqualTo(3));
+                Assert.That(values[0].As<long>(), Is.EqualTo(0));
+                Assert.That(values[1].As<long>(), Is.EqualTo(1));
+                Assert.That(values[2].As<long>(), Is.EqualTo(2));
             });
         }
     }

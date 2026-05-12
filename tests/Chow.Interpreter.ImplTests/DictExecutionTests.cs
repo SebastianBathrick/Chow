@@ -1,9 +1,7 @@
 using Chow.Interpreter;
 using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Hooks;
 using Chow.Interpreter.State.Values;
 using Chow.Interpreter.Values;
-using System.Collections.Generic;
 
 namespace Chow.Interpreter.ImplementationTests
 {
@@ -14,25 +12,26 @@ namespace Chow.Interpreter.ImplementationTests
         // Helpers
         // ------------------------------------------------------------------------------------------------------------
 
-        sealed class CaptureExprHook : IExpressionStatementHook
+        sealed class CaptureExprHook
         {
-            public List<ChowValue> Values { get; } = new List<ChowValue>();
+            readonly ChowModule _module;
 
-            public void Invoke(object value = null)
+            public CaptureExprHook(ChowModule module)
             {
-                Values.Add((ChowValue)value);
+                _module = module;
             }
+
+            public ChowValue Last => _module.GetGlobal("__result");
         }
 
         static (ChowModule module, CaptureExprHook hook) NewModule()
         {
             var module = new ChowModule();
-            var hook = new CaptureExprHook();
-            module.AddHook(hook);
+            var hook = new CaptureExprHook(module);
             return (module, hook);
         }
 
-        static ChowValue Last(CaptureExprHook hook) => hook.Values[hook.Values.Count - 1];
+        static ChowValue Last(CaptureExprHook hook) => hook.Last;
 
         static ChowDict LastDict(CaptureExprHook hook) => (ChowDict)Last(hook);
 
@@ -44,7 +43,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void EmptyDictLiteral_ProducesZeroEntryDict()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{}");
+            module.Execute("__result = {}");
             Assert.That(LastDict(hook).Count, Is.EqualTo(0));
         }
 
@@ -52,7 +51,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void DictLiteral_SinglePair_StoresValue()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{1: 'a'}[1]");
+            module.Execute("__result = {1: 'a'}[1]");
             Assert.That(Last(hook).ToString(), Is.EqualTo("a"));
         }
 
@@ -60,7 +59,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void DictLiteral_PreservesInsertionOrder()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{3: 'a', 1: 'b', 2: 'c'}");
+            module.Execute("__result = {3: 'a', 1: 'b', 2: 'c'}");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{3: 'a', 1: 'b', 2: 'c'}"));
         }
 
@@ -68,7 +67,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void DictLiteral_MixedKeyTypes_Allowed()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{1: 'i', 'k': 's', None: 'n'}");
+            module.Execute("__result = {1: 'i', 'k': 's', None: 'n'}");
             Assert.That(LastDict(hook).Count, Is.EqualTo(3));
         }
 
@@ -76,7 +75,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void DictLiteral_NestedDict_ParsesAndExecutes()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{1: {2: 'inner'}}");
+            module.Execute("__result = {1: {2: 'inner'}}");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: {2: 'inner'}}"));
         }
 
@@ -84,7 +83,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void DictLiteral_ContainingList_ParsesAndExecutes()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{1: [10, 20]}");
+            module.Execute("__result = {1: [10, 20]}");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: [10, 20]}"));
         }
 
@@ -92,7 +91,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void ListLiteral_ContainingDict_ParsesAndExecutes()
         {
             (var module, var hook) = NewModule();
-            module.Execute("[{1: 'a'}, {2: 'b'}]");
+            module.Execute("__result = [{1: 'a'}, {2: 'b'}]");
             Assert.That(Last(hook).ToString(), Is.EqualTo("[{1: 'a'}, {2: 'b'}]"));
         }
 
@@ -104,7 +103,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Subscript_ExistingKey_ReadsValue()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{1: 10, 2: 20}[2]");
+            module.Execute("__result = {1: 10, 2: 20}[2]");
             Assert.That(Last(hook).As<long>(), Is.EqualTo(20));
         }
 
@@ -130,7 +129,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void SubscriptAssign_NewKey_AppendsInInsertionOrder()
         {
             (var module, var hook) = NewModule();
-            module.Execute("d = {1: 'a'}\nd[2] = 'b'\nd");
+            module.Execute("d = {1: 'a'}\nd[2] = 'b'\n__result = d");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: 'a', 2: 'b'}"));
         }
 
@@ -138,7 +137,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void SubscriptAssign_ExistingKey_OverwritesAndPreservesPosition()
         {
             (var module, var hook) = NewModule();
-            module.Execute("d = {1: 'a', 2: 'b'}\nd[1] = 'z'\nd");
+            module.Execute("d = {1: 'a', 2: 'b'}\nd[1] = 'z'\n__result = d");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: 'z', 2: 'b'}"));
         }
 
@@ -150,7 +149,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_GetPresent_ReturnsValue()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{1: 'a'}.get(1)");
+            module.Execute("__result = {1: 'a'}.get(1)");
             Assert.That(Last(hook).ToString(), Is.EqualTo("a"));
         }
 
@@ -158,7 +157,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_GetMissingNoDefault_ReturnsNone()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{1: 'a'}.get(99)");
+            module.Execute("__result = {1: 'a'}.get(99)");
             Assert.That(Last(hook).IsNone, Is.True);
         }
 
@@ -166,7 +165,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_GetMissingWithDefault_ReturnsDefault()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{1: 'a'}.get(99, 'fallback')");
+            module.Execute("__result = {1: 'a'}.get(99, 'fallback')");
             Assert.That(Last(hook).ToString(), Is.EqualTo("fallback"));
         }
 
@@ -174,7 +173,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_Clear_EmptiesDict()
         {
             (var module, var hook) = NewModule();
-            module.Execute("d = {1: 'a', 2: 'b'}\nd.clear()\nd");
+            module.Execute("d = {1: 'a', 2: 'b'}\nd.clear()\n__result = d");
             Assert.That(LastDict(hook).Count, Is.EqualTo(0));
         }
 
@@ -182,7 +181,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_PopPresent_RemovesAndReturnsValue()
         {
             (var module, var hook) = NewModule();
-            module.Execute("d = {1: 'a', 2: 'b'}\nd.pop(1)");
+            module.Execute("d = {1: 'a', 2: 'b'}\n__result = d.pop(1)");
             Assert.That(Last(hook).ToString(), Is.EqualTo("a"));
         }
 
@@ -197,7 +196,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_PopMissingWithDefault_ReturnsDefault()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{1: 'a'}.pop(99, 'fallback')");
+            module.Execute("__result = {1: 'a'}.pop(99, 'fallback')");
             Assert.That(Last(hook).ToString(), Is.EqualTo("fallback"));
         }
 
@@ -205,7 +204,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_Update_MergesRightWinsAndAppendsNewKeys()
         {
             (var module, var hook) = NewModule();
-            module.Execute("d = {1: 'a', 2: 'b'}\nd.update({2: 'z', 3: 'c'})\nd");
+            module.Execute("d = {1: 'a', 2: 'b'}\nd.update({2: 'z', 3: 'c'})\n__result = d");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: 'a', 2: 'z', 3: 'c'}"));
         }
 
@@ -213,7 +212,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_SetDefaultPresent_ReturnsExisting()
         {
             (var module, var hook) = NewModule();
-            module.Execute("d = {1: 'a'}\nd.setdefault(1, 'z')");
+            module.Execute("d = {1: 'a'}\n__result = d.setdefault(1, 'z')");
             Assert.That(Last(hook).ToString(), Is.EqualTo("a"));
         }
 
@@ -221,7 +220,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_SetDefaultMissing_InsertsAndReturnsDefault()
         {
             (var module, var hook) = NewModule();
-            module.Execute("d = {1: 'a'}\nd.setdefault(2, 'b')\nd");
+            module.Execute("d = {1: 'a'}\nd.setdefault(2, 'b')\n__result = d");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: 'a', 2: 'b'}"));
         }
 
@@ -229,7 +228,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void BoundMethod_StoredInVariable_StillBoundToOriginalDict()
         {
             (var module, var hook) = NewModule();
-            module.Execute("d = {}\nf = d.setdefault\nf(1, 'a')\nf(2, 'b')\nd");
+            module.Execute("d = {}\nf = d.setdefault\nf(1, 'a')\nf(2, 'b')\n__result = d");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: 'a', 2: 'b'}"));
         }
 
@@ -259,7 +258,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Merge_TwoDicts_RightWinsAndPreservesOrder()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{1: 'a', 2: 'b'} | {2: 'z', 3: 'c'}");
+            module.Execute("__result = {1: 'a', 2: 'b'} | {2: 'z', 3: 'c'}");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: 'a', 2: 'z', 3: 'c'}"));
         }
 
@@ -278,7 +277,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Equality_EqualDicts_True()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{1: 'a', 2: 'b'} == {2: 'b', 1: 'a'}");
+            module.Execute("__result = {1: 'a', 2: 'b'} == {2: 'b', 1: 'a'}");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -286,7 +285,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Equality_DifferentValues_False()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{1: 'a'} == {1: 'b'}");
+            module.Execute("__result = {1: 'a'} == {1: 'b'}");
             Assert.That(Last(hook).As<bool>(), Is.False);
         }
 
@@ -294,7 +293,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Equality_NestedDicts_Recursive()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{1: {2: 'x'}} == {1: {2: 'x'}}");
+            module.Execute("__result = {1: {2: 'x'}} == {1: {2: 'x'}}");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -302,7 +301,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Inequality_DifferentDicts_True()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{1: 'a'} != {1: 'b'}");
+            module.Execute("__result = {1: 'a'} != {1: 'b'}");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -314,7 +313,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Truthiness_EmptyDict_IsFalsy()
         {
             (var module, var hook) = NewModule();
-            module.Execute("if {}:\n    1\nelse:\n    2");
+            module.Execute("if {}:\n    __result = 1\nelse:\n    __result = 2");
             Assert.That(Last(hook).As<long>(), Is.EqualTo(2));
         }
 
@@ -322,7 +321,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Truthiness_NonEmptyDict_IsTruthy()
         {
             (var module, var hook) = NewModule();
-            module.Execute("if {1: 'a'}:\n    1\nelse:\n    2");
+            module.Execute("if {1: 'a'}:\n    __result = 1\nelse:\n    __result = 2");
             Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
         }
 
@@ -334,7 +333,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void In_DictPresentKey_True()
         {
             (var module, var hook) = NewModule();
-            module.Execute("1 in {1: 'a'}");
+            module.Execute("__result = 1 in {1: 'a'}");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -342,7 +341,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void In_DictAbsentKey_False()
         {
             (var module, var hook) = NewModule();
-            module.Execute("99 in {1: 'a'}");
+            module.Execute("__result = 99 in {1: 'a'}");
             Assert.That(Last(hook).As<bool>(), Is.False);
         }
 
@@ -350,7 +349,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void NotIn_DictAbsentKey_True()
         {
             (var module, var hook) = NewModule();
-            module.Execute("99 not in {1: 'a'}");
+            module.Execute("__result = 99 not in {1: 'a'}");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -358,7 +357,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void In_ListPresentElement_True()
         {
             (var module, var hook) = NewModule();
-            module.Execute("2 in [1, 2, 3]");
+            module.Execute("__result = 2 in [1, 2, 3]");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -366,7 +365,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void In_ListAbsentElement_False()
         {
             (var module, var hook) = NewModule();
-            module.Execute("9 in [1, 2, 3]");
+            module.Execute("__result = 9 in [1, 2, 3]");
             Assert.That(Last(hook).As<bool>(), Is.False);
         }
 
@@ -374,7 +373,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void NotIn_ListAbsentElement_True()
         {
             (var module, var hook) = NewModule();
-            module.Execute("9 not in [1, 2, 3]");
+            module.Execute("__result = 9 not in [1, 2, 3]");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -400,7 +399,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Repr_EmptyDict_FormatsAsBraces()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{}");
+            module.Execute("__result = {}");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{}"));
         }
 
@@ -408,7 +407,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Repr_StringValues_SingleQuoted()
         {
             (var module, var hook) = NewModule();
-            module.Execute("{1: 'a', 2: 'b'}");
+            module.Execute("__result = {1: 'a', 2: 'b'}");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: 'a', 2: 'b'}"));
         }
 
@@ -425,7 +424,7 @@ namespace Chow.Interpreter.ImplementationTests
                 new TaggedUnion(1),
                 new TaggedUnion(42));
             module["x"] = dict;
-            module.Execute("x[1]");
+            module.Execute("__result = x[1]");
             Assert.That(Last(hook).As<long>(), Is.EqualTo(42));
         }
 

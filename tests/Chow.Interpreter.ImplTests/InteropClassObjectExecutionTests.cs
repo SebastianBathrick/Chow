@@ -1,12 +1,10 @@
 using Chow.Interpreter;
 using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Hooks;
 using Chow.Interpreter.State.Values;
 using Chow.Interpreter.Values;
 using System;
-using System.Collections.Generic;
 
-namespace Chow.Interpreter.ImplementationTests
+namespace Chow.Interpreter.ImplTests
 {
     [TestFixture]
     public class InteropClassObjectExecutionTests
@@ -15,14 +13,16 @@ namespace Chow.Interpreter.ImplementationTests
         // Helpers
         // ------------------------------------------------------------------------------------------------------------
 
-        sealed class CaptureExprHook : IExpressionStatementHook
+        sealed class CaptureExprHook
         {
-            public List<ChowValue> Values { get; } = new List<ChowValue>();
+            readonly ChowModule _module;
 
-            public void Invoke(object value = null)
+            public CaptureExprHook(ChowModule module)
             {
-                Values.Add((ChowValue)value);
+                _module = module;
             }
+
+            public ChowValue Last => _module.GetGlobal("__result");
         }
 
         sealed class TestGameObject : InteropClassObject
@@ -69,14 +69,13 @@ namespace Chow.Interpreter.ImplementationTests
         static (ChowModule module, CaptureExprHook hook, TestGameObject obj) NewModule(string name = "thing", bool active = false)
         {
             var module = new ChowModule();
-            var hook = new CaptureExprHook();
-            module.AddHook(hook);
+            var hook = new CaptureExprHook(module);
             var obj = new TestGameObject(name, active);
             module["game_object"] = obj;
             return (module, hook, obj);
         }
 
-        static ChowValue Last(CaptureExprHook hook) => hook.Values[hook.Values.Count - 1];
+        static ChowValue Last(CaptureExprHook hook) => hook.Last;
 
         // ============================================================================================================
         // A. Field reads
@@ -86,7 +85,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void ReadField_Writable_ReturnsInitialValue()
         {
             (var module, var hook, _) = NewModule(active: true);
-            module.Execute("game_object.active_self");
+            module.Execute("__result = game_object.active_self");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -94,7 +93,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void ReadField_ReadOnly_ReturnsValue()
         {
             (var module, var hook, _) = NewModule(name: "player");
-            module.Execute("game_object.name");
+            module.Execute("__result = game_object.name");
             Assert.That(((ChowStr)Last(hook)).Value, Is.EqualTo("player"));
         }
 
@@ -102,11 +101,11 @@ namespace Chow.Interpreter.ImplementationTests
         public void ReadField_LiveSemantics_ReflectsExternalMutation()
         {
             (var module, var hook, var obj) = NewModule(active: false);
-            module.Execute("game_object.active_self");
+            module.Execute("__result = game_object.active_self");
             Assert.That(Last(hook).As<bool>(), Is.False);
 
             obj.ActiveSelf = true;
-            module.Execute("game_object.active_self");
+            module.Execute("__result = game_object.active_self");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -118,7 +117,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void WriteField_Writable_ReflectsInSubsequentRead()
         {
             (var module, var hook, _) = NewModule(active: false);
-            module.Execute("game_object.active_self = True\ngame_object.active_self");
+            module.Execute("game_object.active_self = True\n__result = game_object.active_self");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -146,7 +145,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_MutatesUnderlyingState()
         {
             (var module, var hook, var obj) = NewModule(active: false);
-            module.Execute("game_object.set_active(True)\ngame_object.active_self");
+            module.Execute("game_object.set_active(True)\n__result = game_object.active_self");
             Assert.That(Last(hook).As<bool>(), Is.True);
             Assert.That(obj.ActiveSelf, Is.True);
         }
@@ -155,7 +154,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void BoundMethod_StoredInVariable_StillBoundToOriginalInstance()
         {
             (var module, var hook, _) = NewModule(active: true);
-            module.Execute("f = game_object.set_active\nf(False)\ngame_object.active_self");
+            module.Execute("f = game_object.set_active\nf(False)\n__result = game_object.active_self");
             Assert.That(Last(hook).As<bool>(), Is.False);
         }
 
@@ -194,7 +193,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             // Python parity: an object instance is truthy. `not game_object` should be False.
             (var module, var hook, _) = NewModule();
-            module.Execute("not game_object");
+            module.Execute("__result = not game_object");
             Assert.That(Last(hook).As<bool>(), Is.False);
         }
     }

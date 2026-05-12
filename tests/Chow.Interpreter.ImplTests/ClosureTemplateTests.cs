@@ -2,7 +2,7 @@ using Chow.Interpreter.Bytecode;
 using Chow.Interpreter.State.Values;
 using System.Reflection;
 
-namespace Chow.Interpreter.ImplementationTests
+namespace Chow.Interpreter.ImplTests
 {
     [TestFixture]
     public class ClosureTemplateTests

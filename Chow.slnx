@@ -1,6 +1,6 @@
 <Solution>
   <Project Path="src/Chow.Interpreter/Chow.Interpreter.csproj" />
   <Project Path="src/Chow/Chow.csproj" />
-  <Project Path="tests/Chow.Interpreter.ImplTests/Chow.Interpreter.ImplementationTests.csproj" />
+  <Project Path="tests/Chow.Interpreter.ImplTests/Chow.Interpreter.ImplTests.csproj" />
   <Project Path="tests/Chow.Interpreter.Tests/Chow.Tests.csproj" />
 </Solution>

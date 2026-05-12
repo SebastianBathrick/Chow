@@ -6,7 +6,7 @@ using Chow.Interpreter.Tokens;
 using System.Collections.Generic;
 using Chow.Interpreter.SyntaxTrees;
 
-namespace Chow.Interpreter.ImplementationTests
+namespace Chow.Interpreter.ImplTests
 {
     [TestFixture]
     public class VirtualMachineFunctionTests
@@ -29,7 +29,7 @@ namespace Chow.Interpreter.ImplementationTests
 
         static TaggedUnion Execute(Chunk chunk, ModuleScope scope = null)
         {
-            var vm = new VirtualMachine(chunk, scope, null!);
+            var vm = new VirtualMachine(chunk, scope);
             vm.EvaluateChunk();
             return vm.ValStackTop;
         }
@@ -54,7 +54,7 @@ namespace Chow.Interpreter.ImplementationTests
             module.AddInstruction(OperationCode.MakeClosure, LINE);
 
             var scope = new ModuleScope();
-            var vm = new VirtualMachine(module, scope, null!);
+            var vm = new VirtualMachine(module, scope);
             vm.EvaluateChunk();
 
             var top = vm.ValStackTop;

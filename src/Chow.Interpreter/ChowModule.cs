@@ -1,17 +1,14 @@
 using Chow.Interpreter.State.Scopes;
 using Chow.Interpreter.State.Values;
 using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Hooks;
 using Chow.Interpreter.Tokens;
 using Chow.Interpreter.Values;
-using System.Collections.Generic;
 using System;
 
 namespace Chow.Interpreter
 {
     public class ChowModule
     {
-        readonly List<IHook> _hooks = new List<IHook>();
         IScope _moduleScope;
 
         #region Global Scope Access
@@ -106,31 +103,14 @@ namespace Chow.Interpreter
 
             var compiler = new Compiler(syntaxTreeRoot);
             var chunk = compiler.CompileRoot();
-
-            // Get hook for expression statements, if it exists, to pass to the virtual machine for execution
-            var exprStmtHook = _hooks.Find(h => h is IExpressionStatementHook);
-
+            
             // Executes the chunk with the provided module scope, or if null, a new one
-            var vm = new VirtualMachine(chunk, _moduleScope, exprStmtHook);
+            var vm = new VirtualMachine(chunk, _moduleScope);
 
             // The module scope will now contain any global variables & functions defined in the source code
             _moduleScope = vm.EvaluateChunk();
         }
-
-        public void AddHook(IHook hook)
-        {
-            if (hook == null)
-            {
-                throw new ArgumentNullException(nameof(hook));
-            }
-
-            if (_hooks.Contains(hook))
-            {
-                throw new ArgumentException("Hook has already been added to the module", nameof(hook));
-            }
-
-            _hooks.Add(hook);
-        }
+        
 
         #region Helper Methods
 

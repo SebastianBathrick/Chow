@@ -262,8 +262,6 @@ if (args.Length > 0)
     return;
 }
 
-module.AddHook(new PrintExprStatementHook());
-
 while (true)
 {
     try
