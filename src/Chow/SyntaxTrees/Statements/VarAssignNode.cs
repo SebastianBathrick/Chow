@@ -1,0 +1,22 @@
+﻿namespace Chow.Interpreter.SyntaxTrees.Statements
+{
+    internal class VarAssignNode : Node
+    {
+        string _name;
+        Node _expr;
+
+        public string Name => _name;
+        public Node Expression => _expr;
+
+        public VarAssignNode(string name, Node expr, int line) : base(line)
+        {
+            _name = name;
+            _expr = expr;
+        }
+
+        public override string ToString()
+        {
+            return $"VariableAssignment({_name}, {_expr}) line={LineNum}";
+        }
+    }
+}

@@ -1,14 +1,13 @@
-using Chow.Interpreter.Compilation;
-using Chow.Interpreter.Evaluation;
+using Chow.Interpreter.Bytecode;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Hooks;
-using Chow.Interpreter.Syntax;
-using Chow.Interpreter.Syntax.Trees;
+using Chow.Interpreter.State.Scopes;
+using Chow.Interpreter.State.Values;
 using Chow.Interpreter.Tokens;
 using Chow.Interpreter.Values;
-using Chow.Interpreter.Values.Internal;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using Chow.Interpreter.SyntaxTrees;
 
 namespace Chow.Interpreter
 {
@@ -150,7 +149,7 @@ namespace Chow.Interpreter
             if (string.IsNullOrWhiteSpace(name))
             {
                 throw new GlobalAccessException(name, "Global variable names cannot be null, empty, or whitespace");
-            }    
+            }
 
             if (ReservedKeywords.Contains(name))
             {

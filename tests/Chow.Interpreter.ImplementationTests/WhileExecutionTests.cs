@@ -1,6 +1,6 @@
 using Chow.Interpreter;
+using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Hooks;
-using Chow.Interpreter.Syntax;
 using Chow.Interpreter.Values;
 using System.Collections.Generic;
 

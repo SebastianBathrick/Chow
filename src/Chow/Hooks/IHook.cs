@@ -1,7 +1,4 @@
-﻿using Chow.Interpreter.Values;
-using System;
-
-namespace Chow.Interpreter.Hooks
+﻿namespace Chow.Interpreter.Hooks
 {
     public interface IHook
     {

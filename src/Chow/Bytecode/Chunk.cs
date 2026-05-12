@@ -1,0 +1,267 @@
+using Chow.Interpreter.State.Values;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Chow.Interpreter.Bytecode
+{
+    class Chunk
+    {
+        const int NO_OPERAND = -1;
+
+        int _id = 0;
+
+        List<Instruction> _instrs;
+        List<TaggedUnion> _consts;
+
+        List<string> _varNames;
+        List<int> _instrLines;
+
+        /// <summary>
+        /// The total number of bytecode instructions stored in this Chunk.
+        /// </summary>
+        public int InstructionCount => _instrs.Count;
+
+        /// <summary>
+        /// Returns the instruction stored in this Chunk at the provided index.
+        /// </summary>
+        /// <param name="index">The index of the instruction to retrieve.</param>
+        /// <returns>The instruction at the specified index.</returns>
+        public Instruction this[int index] => _instrs[index];
+
+        /// <summary>
+        /// Initializes a new Chunk without any instructions, constants,  or variable names.
+        /// </summary>
+        public Chunk()
+        {
+            _instrs = new List<Instruction>();
+            _consts = new List<TaggedUnion>();
+            _varNames = new List<string>();
+            _instrLines = new List<int>();
+        }
+
+        #region Instruction Methods
+
+        /// <summary>
+        /// Creates and adds a new <see cref="Instruction"/> with the provided operation code, operand, and line number 
+        /// </summary>
+        /// <param name="code">Operation code associated with the instruction's logic in the <see cref="Interpreter.VirtualMachine"/></param>
+        /// <param name="line">The line number in the source code associated with this instruction.</param>
+        /// <param name="operand">Optional operand for the instruction, default is -1.</param>
+        public void AddInstruction(OperationCode code, int line, int operand = NO_OPERAND)
+        {
+            _instrs.Add(new Instruction(code, operand));
+            _instrLines.Add(line);
+        }
+
+        /// <summary>
+        /// Replaces the operand of the <see cref="Instruction"/> at the provided index, preserving its operation code.
+        /// </summary>
+        /// <param name="idx">The index of the instruction to patch.</param>
+        /// <param name="operand">The new operand value to assign to the instruction.</param>
+        public void PatchInstruction(int idx, int operand)
+        {
+            _instrs[idx] = new Instruction(_instrs[idx].Code, operand);
+        }
+
+        /// <summary>
+        /// Returns the source code line number associated with the instruction at the provided index.
+        /// </summary>
+        /// <param name="instrIdx">The index of the instruction whose line number is to be retrieved.</param>
+        /// <returns>The line number in the source code associated with the specified instruction.</returns>
+        public int GetInstructionLine(int instrIdx)
+        {
+            return _instrLines[instrIdx];
+        }
+
+        #endregion
+
+        #region Constant Methods
+
+        /// <summary>
+        /// Returns the constant value stored at the provided operand index in the constant pool.
+        /// </summary>
+        /// <param name="operand">The operand index of the constant to retrieve.</param>
+        /// <returns>The <see cref="TaggedUnion"/> constant at the specified operand index.</returns>
+        public TaggedUnion ReadConstant(int operand) => _consts[operand];
+
+        /// <summary>
+        /// Stores a constant value and returns an integer for use as an operand assigned to <see cref="Instruction"/> instance(s).
+        /// </summary>
+        /// <param name="newConst">TaggedUnion containing a constant primitive value.</param>
+        /// <returns>Integer representing the operand used to read the constant at runtime.</returns>
+        /// <remarks>If an existing constant has the same value as <paramref name="newConst"/> then the operand for 
+        /// that existing constant will be returned. Otherwise, the new constant is stored and a new operand is returned</remarks>
+        public int RegisterConstant(TaggedUnion newConst)
+        {
+            int constIndex = _consts.IndexOf(newConst);
+
+            if (constIndex >= 0)
+            {
+                return constIndex;
+            }
+
+            constIndex = _consts.Count;
+            _consts.Add(newConst);
+            return constIndex;
+        }
+
+        #endregion
+
+        #region Variable Name Methods
+
+        /// <summary>
+        /// Determines whether the provided name has been registered as a variable name in this Chunk.
+        /// </summary>
+        /// <param name="name">The variable name to check for.</param>
+        /// <returns><c>true</c> if the name is registered; otherwise, <c>false</c>.</returns>
+        public bool IsVariableName(string name)
+        {
+            return _varNames.Contains(name);
+        }
+
+        /// <summary>
+        /// Returns the variable name stored at the provided operand index.
+        /// </summary>
+        /// <param name="operand">The operand index of the variable name to retrieve.</param>
+        /// <returns>The variable name at the specified operand index.</returns>
+        public string ReadVariableName(int operand)
+        {
+            return _varNames[operand];
+        }
+
+        /// <summary>
+        /// Returns the operand index associated with the provided variable name.
+        /// </summary>
+        /// <param name="name">The variable name to look up.</param>
+        /// <returns>The operand index of the variable name, or -1 if the name is not registered.</returns>
+        public int FindVariableName(string name)
+        {
+            return _varNames.IndexOf(name);
+        }
+
+        /// <summary>
+        /// Used to register a variable name compile-time and return an operand for use in <see cref="Instruction"/> instance(s)
+        /// that declare or reference that variable.
+        /// </summary>
+        /// <param name="varName">Variable name to register.</param>
+        /// <returns>If a variable name equal to <paramref name="varName"/> is already registered, the operand for the
+        /// existing entry is returned. Otherwise, the new variable name is stored and a new operand is returned.</returns>
+        /// <remarks>This is ONLY for storing variable names COMPILE-TIME. NOT for storing variable names runtime, AND NOT NEVER
+        /// for storing variable values. </remarks>
+        public int RegisterVariableName(string varName)
+        {
+            int existing = FindVariableName(varName);
+
+            if (existing >= 0)
+            {
+                return existing;
+            }
+
+            int operand = _varNames.Count;
+            _varNames.Add(varName);
+            return operand;
+        }
+
+        #endregion
+
+        #region ToString Methods
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("Constants:");
+            for (int i = 0; i < _consts.Count; i++)
+            {
+                sb.Append("  ");
+                sb.Append(i);
+                sb.Append(": ");
+                AppendConstant(sb, _consts[i]);
+                sb.AppendLine();
+            }
+
+            sb.AppendLine("Variables:");
+            for (int i = 0; i < _varNames.Count; i++)
+            {
+                sb.Append("  ");
+                sb.Append(i);
+                sb.Append(": ");
+                sb.Append(_varNames[i]);
+                sb.AppendLine();
+            }
+
+            sb.AppendLine("Operations:");
+            for (int i = 0; i < _instrs.Count; i++)
+            {
+                Instruction op = _instrs[i];
+
+                sb.Append("  ");
+                sb.Append(i);
+                sb.Append(": ");
+                sb.Append(op.Code);
+
+                if (op.Operand != -1)
+                {
+                    sb.Append(' ');
+                    sb.Append(op.Operand);
+                    sb.Append(" (");
+                    AppendOperandTarget(sb, op);
+                    sb.Append(')');
+                }
+
+                if (i < _instrs.Count - 1)
+                {
+                    sb.AppendLine();
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        static void AppendConstant(StringBuilder sb, TaggedUnion constant)
+        {
+            if (constant.IsInt)
+            {
+                sb.Append("Int=");
+                sb.Append(constant.IntegerValue);
+            }
+            else if (constant.IsFloat)
+            {
+                sb.Append("Float=");
+                sb.Append(constant.FloatValue);
+            }
+            else if (constant.IsString)
+            {
+                sb.Append("String=");
+                sb.Append(constant.StringValue);
+            }
+            else if (constant.IsBoolean)
+            {
+                sb.Append("Bool=");
+                sb.Append(constant.BooleanValue);
+            }
+            else if (constant.IsList)
+            {
+                sb.Append("List=");
+                sb.Append(constant.ListValue.ToString());
+            }
+        }
+
+        void AppendOperandTarget(StringBuilder sb, Instruction op)
+        {
+            switch (op.Code)
+            {
+                case OperationCode.PushConstant:
+                    AppendConstant(sb, _consts[op.Operand]);
+                    break;
+                case OperationCode.AssignOrDeclareVariable:
+                case OperationCode.PushVariableValue:
+                    sb.Append("Var=");
+                    sb.Append(_varNames[op.Operand]);
+                    break;
+            }
+        }
+
+        #endregion
+    }
+}

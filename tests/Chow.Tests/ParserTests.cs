@@ -1,8 +1,9 @@
 using Chow.Interpreter;
+using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Syntax;
-using Chow.Interpreter.Syntax.Trees;
-using Chow.Interpreter.Syntax.Trees.Expressions;
-using Chow.Interpreter.Syntax.Trees.Statements;
+using Chow.Interpreter.SyntaxTrees;
+using Chow.Interpreter.SyntaxTrees.Expressions;
+using Chow.Interpreter.SyntaxTrees.Statements;
 using Chow.Interpreter.Tokens;
 
 namespace Chow.Tests

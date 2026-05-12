@@ -1,4 +1,4 @@
-namespace Chow.Interpreter
+namespace Chow.Interpreter.Tokens
 {
     /// <summary>
     /// Identifies the scanner category for a token.

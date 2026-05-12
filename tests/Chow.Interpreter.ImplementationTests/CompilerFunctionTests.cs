@@ -1,10 +1,8 @@
-using Chow.Interpreter.Compilation;
-using Chow.Interpreter.Evaluation;
-using Chow.Interpreter.Syntax;
-using Chow.Interpreter.Syntax.Trees;
+using Chow.Interpreter.Bytecode;
+using Chow.Interpreter.State.Values;
 using Chow.Interpreter.Tokens;
-using Chow.Interpreter.Values.Internal;
 using System.Collections.Generic;
+using Chow.Interpreter.SyntaxTrees;
 
 namespace Chow.Interpreter.ImplementationTests
 {

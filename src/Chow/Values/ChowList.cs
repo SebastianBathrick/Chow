@@ -1,4 +1,4 @@
-using Chow.Interpreter.Values.Internal;
+using Chow.Interpreter.State.Values;
 
 namespace Chow.Interpreter.Values
 {

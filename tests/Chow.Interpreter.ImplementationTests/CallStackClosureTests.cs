@@ -1,6 +1,7 @@
 using Chow.Interpreter.Compilation;
-using Chow.Interpreter.Evaluation;
-using Chow.Interpreter.Values.Internal;
+using Chow.Interpreter.State.Scopes;
+using Chow.Interpreter.State.Stack;
+using Chow.Interpreter.State.Values;
 
 namespace Chow.Interpreter.ImplementationTests
 {

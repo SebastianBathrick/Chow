@@ -1,5 +1,6 @@
+using Chow.Interpreter;
+using Chow.Interpreter.State.Values;
 using Chow.Interpreter.Values;
-using Chow.Interpreter.Values.Internal;
 
 namespace Chow.Tests
 {
