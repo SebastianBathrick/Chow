@@ -16,7 +16,6 @@ namespace Chow.Interpreter
         readonly Stack<LoopContext> _loopCtxStack;
         
         List<int> _pendingEndJumps;
-        int _blockDepth;
 
         public Compiler(Node root)
         {
@@ -24,7 +23,6 @@ namespace Chow.Interpreter
             _root = root;
             _pendingEndJumps = new List<int>();
             _loopCtxStack = new Stack<LoopContext>();
-            _blockDepth = 0;
         }
 
         public Chunk CompileRoot()
@@ -272,17 +270,12 @@ namespace Chow.Interpreter
 
         void CompileBlockNode(BlockNode blockNode)
         {
-            // Indicate that the scope's depth increased and all variables that follow are nested in this block
-            _chunk.AddInstruction(OperationCode.IncScopeDepth, blockNode.LineNumber);
-            _blockDepth++;
-
+            // Python has no block scope: names assigned inside an `if`/`while` body
+            // belong to the enclosing function or module scope, so no Inc/DecScopeDepth.
             foreach (var statement in blockNode.Statements)
             {
                 CompileTargetNode(statement);
             }
-
-            _blockDepth--;
-            _chunk.AddInstruction(OperationCode.DecScopeDepth, blockNode.LineNumber);
         }
 
         #region Statement Compilation
@@ -398,7 +391,6 @@ namespace Chow.Interpreter
             var ctx = new LoopContext
             {
                 LoopStartIdx = loopStartIdx,
-                BlockDepthAtEntry = _blockDepth,
             };
 
             _loopCtxStack.Push(ctx);
@@ -427,7 +419,6 @@ namespace Chow.Interpreter
             }
 
             var ctx = _loopCtxStack.Peek();
-            EmitScopeExits(ctx.BlockDepthAtEntry, breakNode.LineNumber);
 
             _chunk.AddInstruction(OperationCode.JumpPastBranches, breakNode.LineNumber);
             ctx.PendingBreaks.Add(_chunk.InstructionCount - 1);
@@ -442,20 +433,8 @@ namespace Chow.Interpreter
             }
 
             var ctx = _loopCtxStack.Peek();
-            EmitScopeExits(ctx.BlockDepthAtEntry, continueNode.LineNumber);
 
             _chunk.AddInstruction(OperationCode.Loop, continueNode.LineNumber, ctx.LoopStartIdx);
-        }
-
-        // break/continue jump past the textual DecScopeDepth instructions of every block they escape;
-        // emit one DecScopeDepth per escaped level so the VM's scope stack stays balanced.
-        void EmitScopeExits(int targetDepth, int lineNum)
-        {
-            var levels = _blockDepth - targetDepth;
-            for (var i = 0; i < levels; i++)
-            {
-                _chunk.AddInstruction(OperationCode.DecScopeDepth, lineNum);
-            }
         }
 
         void CompileBranchStmnt(BranchStmntNode node)
@@ -683,7 +662,6 @@ namespace Chow.Interpreter
         sealed class LoopContext
         {
             public int LoopStartIdx;
-            public int BlockDepthAtEntry;
             public List<int> PendingBreaks = new List<int>();
         }
 

@@ -2,7 +2,7 @@
 
 ## Current Features
 - Pythonic syntax
-- REPL (`Chow.Cli`, assembly `chw`)
+- REPL (`src/Chow/`, assembly `chw`)
 - Data types: `int`, `float`, `bool`, `str`, `None`, list, dict, function (source-defined)
 - Opaque object passthrough — arbitrary host objects can be assigned to Chow globals and round-tripped back unchanged
 - Internal extension point (`InteropClassObject`) for adding built-in "class-like" types with attribute/method dispatch (used internally; not part of the public host API yet)
@@ -174,7 +174,7 @@ while i < 5:
     print(i)   # prints 1, 2, 4, 5
 ```
 
-`break` and `continue` outside a loop are caught at compile time. Variables first assigned inside a loop body are not visible after the loop exits — block bodies have their own scope (see CLAUDE.md "Scoping" for details).
+`break` and `continue` outside a loop are caught at compile time. Like Python, Chow has no block scope: a name first assigned inside an `if`/`elif`/`else`/`while` body is bound in the enclosing function (or module) scope and remains visible after the block. The name only exists if the assignment actually executed at runtime — reading a name that no branch bound raises an error.
 
 ## Lists
 
@@ -358,7 +358,7 @@ else:
 
 # Library API
 
-Host C# code exposes variables and callable functions to Chow source through `ChowModule`. Variables flow in and out as `ChowValue` instances; functions are wrapped in `ChowDynamic`.
+Host C# code exposes variables and callable functions to Chow source through `ChowModule`. Values flow in and out as `ChowValue` instances; callables are plain C# delegates assigned through the module indexer.
 
 ## Exposing variables
 ```csharp
@@ -370,13 +370,13 @@ module["count"] = new ChowInt(42);
 
 // Chow -> Host (after Execute)
 module.Execute("result = count * 2");
-int doubled = module.GetGlobal("result").As<int>();
+long doubled = module.GetGlobal("result").As<long>();
 ```
 
-The `ChowModule` indexer's getter returns the raw `object` boxed inside the `TaggedUnion` (`long`/`double`/`bool`/`string`/etc.). Prefer `GetGlobal(name)` when you want a typed `ChowValue` to call `.As<T>()` / pattern-match against. Reading an unset name throws `GlobalAccessException`.
+The `ChowModule` indexer's setter accepts either a `ChowValue` (passed through unchanged) or any other `object` (boxed into the underlying `TaggedUnion`). Its getter returns the raw boxed object (`long`/`double`/`bool`/`string`/etc.). Prefer `GetGlobal(name)` when you want a typed `ChowValue` to call `.As<T>()` / pattern-match against. Reading an unset name throws `GlobalAccessException`.
 
 ## Exposing functions
-Wrap a delegate in `ChowDynamic`. Supported signatures:
+Assign a delegate directly to the indexer — no wrapper type is required. Supported signatures:
 
 | Delegate                              | Behavior                          |
 |---------------------------------------|-----------------------------------|
@@ -389,77 +389,62 @@ Wrap a delegate in `ChowDynamic`. Supported signatures:
 
 ```csharp
 // Zero args
-module["pi"] = new ChowDynamic(() => new ChowFloat(3.14159f));
+module["pi"] = () => (ChowValue)new ChowFloat(3.14159);
 
 // One arg
-module["double"] = new ChowDynamic((ChowValue v) =>
-    new ChowInt(v.As<int>() * 2));
+module["double"] = (ChowValue v) =>
+    (ChowValue)new ChowInt(v.As<long>() * 2);
 
 // Variadic
-module["sum"] = new ChowDynamic((ChowValue[] args) =>
+module["sum"] = (ChowValue[] args) =>
 {
-    int total = 0;
-    foreach (ChowValue a in args) total += a.As<int>();
-    return new ChowInt(total);
-});
+    long total = 0;
+    foreach (ChowValue a in args) total += a.As<long>();
+    return (ChowValue)new ChowInt(total);
+};
 
-// Side-effect (returns None)
-module["log"] = new ChowDynamic((ChowValue v) => Console.WriteLine(v));
+// Side-effect (returns None implicitly)
+module["log"] = (ChowValue v) => Console.WriteLine(v);
 ```
 
 ## Inspecting `ChowValue` inside a delegate
-```csharp
-val.IsNone               // None check
-val.Is<int>()            // tag check
-val.As<int>()            // tag-typed cast (int / float / bool / long / double)
-val is ChowStr  s        // string pattern match: s.Value
-val is ChowList l        // list pattern match: l.Count, l[i]
-val is ChowDict d        // dict pattern match
-val is ChowDynamic dyn   // arbitrary host object: dyn.Value
-```
-
-## Expression statement hook
-To access the result of an evaluated expression statement, implement `IExpressionStatementHook`. The example below is used by `Chow.Cli`:
+The tag-typed `Is<T>()` / `As<T>()` use the underlying .NET primitive — `long` for Chow `int`, `double` for Chow `float`, `bool` for Chow `bool`. `As<int>()` / `As<float>()` are not supported and will throw.
 
 ```csharp
-using Chow.Interpreter.Hooks;
-using Chow.Interpreter.Values;
-
-class PrintExprStatementHook : IExpressionStatementHook
-{
-    // Called after each expression statement is evaluated.
-    // `value` is the result of the evaluated expression (cast from `object` to `ChowValue`).
-    public void Invoke(object value = null) => Console.WriteLine((ChowValue)value);
-}
+val.IsNone                // None check
+val.Is<long>()            // int tag check
+val.Is<double>()          // float tag check
+val.Is<bool>()            // bool tag check
+val.As<long>()            // typed cast (int -> long, float -> double, bool -> bool)
+val is ChowStr  s         // string pattern match: s.Value
+val is ChowList l         // list pattern match: l.Count, l[i]
+val is ChowDict d         // dict pattern match
+val is ChowDynamic dyn    // arbitrary host object passthrough: dyn.Value
 ```
-Add an instance of the hook to a `ChowModule` object and execute your Chow source code:
-```csharp
-ChowModule module = new ChowModule();
-module.AddHook(new PrintExprStatementHook());
 
-// Prints:
-// 19
-// 1.5
-module.Execute("9 + 10\n3 / 2");
-```
+`ChowDynamic` is the wrapper used for opaque host objects round-tripped through Chow — assign one to a global when you need a handle that Chow code can pass around but never inspect.
 
 ## Example: REPL builtins
-The Chow CLI registers `print`, `input`, `int`, `float`, `bool`, `str`, `list`, `dict`, `len`, `type`, `abs`, `round`, `min`, `max` through this mechanism. Excerpt from `src/Chow.Cli/Program.cs`:
+The Chow CLI registers `print`, `input`, `int`, `float`, `bool`, `str`, `list`, `dict`, `len`, `type`, `abs`, `round`, `min`, `max` through this mechanism. Excerpt from `src/Chow/Program.cs`:
 ```csharp
-module["print"] = new ChowDynamic((ChowValue val) =>
+var module = new ChowModule
 {
-    Console.WriteLine(val);
-    return ChowValue.None;
-});
+    ["print"] = (ChowValue val) =>
+    {
+        Console.WriteLine(val);
+        return ChowValue.None;
+    },
 
-module["int"] = new ChowDynamic((ChowValue val) =>
-{
-    if (val.Is<int>())   return new ChowInt(val.As<int>());
-    if (val.Is<float>()) return new ChowInt((int)val.As<float>());
-    if (val is ChowStr s && int.TryParse(s.Value, out int parsed))
-        return new ChowInt(parsed);
-    throw new InvalidOperationException("int() argument unsupported");
-});
+    ["int"] = (ChowValue val) =>
+    {
+        if (val.Is<long>())   return new ChowInt(val.As<long>());
+        if (val.Is<double>()) return new ChowInt((long)val.As<double>());
+        if (val.Is<bool>())   return new ChowInt(val.As<long>());
+        if (val is ChowStr s && long.TryParse(s.Value, out var parsed))
+            return new ChowInt(parsed);
+        throw new InvalidOperationException("int() argument unsupported");
+    },
+};
 ```
 
 Once registered, the names are callable from Chow source like any other function:
