@@ -466,7 +466,7 @@ namespace Chow.Interpreter.Evaluation
                 throw new ChowTypeErrorException($"list indices must be integers, not {index.Tag}");
             }
 
-            _valStack.Push(target.ListValue[index.IntegerValue]);
+            _valStack.Push(target.ListValue[(int)index.IntegerValue]);
         }
 
         void ExecuteSubscriptSlice()
@@ -507,7 +507,7 @@ namespace Chow.Interpreter.Evaluation
                 throw new ChowTypeErrorException($"list indices must be integers, not {index.Tag}");
             }
 
-            target.ListValue[index.IntegerValue] = value;
+            target.ListValue[(int)index.IntegerValue] = value;
         }
 
         void ExecuteGetAttr()

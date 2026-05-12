@@ -12,7 +12,7 @@ namespace Chow.Tests
 
         static ModuleScope NewModule() => new ModuleScope();
 
-        static TaggedUnion Int(int value) => new TaggedUnion(value);
+        static TaggedUnion Int(long value) => new TaggedUnion(value);
 
         // ============================================================================================================
         // A. Construction

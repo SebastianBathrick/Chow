@@ -133,17 +133,17 @@ namespace Chow.Tests
         }
 
         [Test]
-        public void ScanTokens_IntMaxValueBoundary_ParsesAsInteger()
+        public void ScanTokens_LongMaxValueBoundary_ParsesAsInteger()
         {
-            var tokens = Tokenize("2147483647");
+            var tokens = Tokenize("9223372036854775807");
 
-            AssertToken(tokens[0], TokenType.LiteralInt, "2147483647", 1, int.MaxValue);
+            AssertToken(tokens[0], TokenType.LiteralInt, "9223372036854775807", 1, long.MaxValue);
         }
 
         [Test]
         public void ScanTokens_IntegerOverflow_ThrowsOverflowException()
         {
-            Assert.That(() => Tokenize("2147483648"), Throws.TypeOf<OverflowException>());
+            Assert.That(() => Tokenize("9223372036854775808"), Throws.TypeOf<OverflowException>());
         }
 
         [Test]
@@ -167,11 +167,11 @@ namespace Chow.Tests
         }
 
         [Test]
-        public void ScanTokens_IntegerLiteralIsBoxedInt32()
+        public void ScanTokens_IntegerLiteralIsBoxedInt64()
         {
             var tokens = Tokenize("42");
 
-            Assert.That(tokens[0].literal, Is.TypeOf<int>());
+            Assert.That(tokens[0].literal, Is.TypeOf<long>());
         }
 
         // ============================================================================================================

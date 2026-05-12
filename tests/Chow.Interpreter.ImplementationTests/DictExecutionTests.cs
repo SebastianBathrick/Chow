@@ -104,7 +104,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
             module.Run("{1: 10, 2: 20}[2]");
-            Assert.That(Last(hook).As<int>(), Is.EqualTo(20));
+            Assert.That(Last(hook).As<long>(), Is.EqualTo(20));
         }
 
         [Test]
@@ -314,7 +314,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
             module.Run("if {}:\n    1\nelse:\n    2");
-            Assert.That(Last(hook).As<int>(), Is.EqualTo(2));
+            Assert.That(Last(hook).As<long>(), Is.EqualTo(2));
         }
 
         [Test]
@@ -322,7 +322,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
             module.Run("if {1: 'a'}:\n    1\nelse:\n    2");
-            Assert.That(Last(hook).As<int>(), Is.EqualTo(1));
+            Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
         }
 
         // ============================================================================================================
@@ -425,7 +425,7 @@ namespace Chow.Interpreter.ImplementationTests
                 new Chow.Interpreter.Values.Internal.TaggedUnion(42));
             module["x"] = dict;
             module.Run("x[1]");
-            Assert.That(Last(hook).As<int>(), Is.EqualTo(42));
+            Assert.That(Last(hook).As<long>(), Is.EqualTo(42));
         }
 
         [Test]

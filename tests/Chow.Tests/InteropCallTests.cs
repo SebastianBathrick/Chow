@@ -38,7 +38,7 @@ namespace Chow.Tests
             module.Run("x = f()");
 
             ChowValue result = module["x"];
-            Assert.That(result.As<int>(), Is.EqualTo(42));
+            Assert.That(result.As<long>(), Is.EqualTo(42));
         }
 
         // ------------------------------------------------------------------------------------------------------------
@@ -49,19 +49,19 @@ namespace Chow.Tests
         public void B01_SingleArgFunc_ArgPassedCorrectly()
         {
             var module = MakeModule();
-            module["f"] = new ChowDynamic((Func<ChowValue, ChowValue>)(v => new ChowInt(v.As<int>() + 1)));
+            module["f"] = new ChowDynamic((Func<ChowValue, ChowValue>)(v => new ChowInt(v.As<long>() + 1)));
 
             module.Run("x = f(10)");
 
-            Assert.That(module["x"].As<int>(), Is.EqualTo(11));
+            Assert.That(module["x"].As<long>(), Is.EqualTo(11));
         }
 
         [Test]
         public void B02_SingleArgAction_ArgPassedCorrectly()
         {
             var module = MakeModule();
-            int received = -1;
-            module["f"] = new ChowDynamic((Action<ChowValue>)(v => { received = v.As<int>(); }));
+            long received = -1;
+            module["f"] = new ChowDynamic((Action<ChowValue>)(v => { received = v.As<long>(); }));
 
             module.Run("f(99)");
 
@@ -77,22 +77,22 @@ namespace Chow.Tests
         {
             var module = MakeModule();
             module["f"] = new ChowDynamic((Func<ChowValue[], ChowValue>)(args =>
-                new ChowInt(args[0].As<int>() * 10 + args[1].As<int>())));
+                new ChowInt(args[0].As<long>() * 10 + args[1].As<long>())));
 
             module.Run("x = f(3, 7)");
 
-            Assert.That(module["x"].As<int>(), Is.EqualTo(37));
+            Assert.That(module["x"].As<long>(), Is.EqualTo(37));
         }
 
         [Test]
         public void C02_MultiArgAction_ArgsInCorrectOrder()
         {
             var module = MakeModule();
-            int first = -1, second = -1;
+            long first = -1, second = -1;
             module["f"] = new ChowDynamic((Action<ChowValue[]>)(args =>
             {
-                first = args[0].As<int>();
-                second = args[1].As<int>();
+                first = args[0].As<long>();
+                second = args[1].As<long>();
             }));
 
             module.Run("f(1, 2)");

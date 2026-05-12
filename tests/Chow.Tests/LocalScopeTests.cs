@@ -10,7 +10,7 @@ namespace Chow.Tests
         // Helpers
         // ------------------------------------------------------------------------------------------------------------
 
-        static TaggedUnion Int(int value) => new TaggedUnion(value);
+        static TaggedUnion Int(long value) => new TaggedUnion(value);
 
         // ============================================================================================================
         // A. Construction

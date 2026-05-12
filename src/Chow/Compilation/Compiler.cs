@@ -618,7 +618,7 @@ namespace Chow.Interpreter.Compilation
             {
                 case LiteralDataType.Integer:
                     // Cases for LiteralDataType like this should not fail unless the Parser is bugged
-                    if (literalNode.Value is int intVal)
+                    if (literalNode.Value is long intVal)
                     {
                         constUnion = new TaggedUnion(intVal);
                     }

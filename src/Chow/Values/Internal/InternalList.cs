@@ -79,7 +79,7 @@ namespace Chow.Interpreter.Values.Internal
                 throw new ArgumentException($"Argument 0 must be of type {Tag.Int}, but was {args[0].Tag}");
             }
 
-            int idx = args[0].IntegerValue;
+            int idx = (int)args[0].IntegerValue;
 
             if (idx < 0)
             {
@@ -112,7 +112,7 @@ namespace Chow.Interpreter.Values.Internal
                 {
                     throw new ArgumentException($"Argument 0 must be of type {Tag.Int}, but was {args[0].Tag}");
                 }
-                index = args[0].IntegerValue;
+                index = (int)args[0].IntegerValue;
                 if (index < 0)
                 {
                     index = _elements.Count + index;
@@ -354,7 +354,7 @@ namespace Chow.Interpreter.Values.Internal
             {
                 throw new ArgumentException($"slice indices must be integers or None, got {union.Tag}");
             }
-            return union.IntegerValue;
+            return (int)union.IntegerValue;
         }
 
         public override string ToString()

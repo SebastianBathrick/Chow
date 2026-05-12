@@ -36,9 +36,9 @@ module["float"] = new ChowDynamic((ChowValue val) =>
     {
         return new ChowFloat(val.As<float>());
     }
-    if (val.Is<int>())
+    if (val.Is<long>())
     {
-        return new ChowFloat((float)val.As<int>());
+        return new ChowFloat((double)val.As<long>());
     }
     if (val.Is<bool>())
     {
@@ -62,21 +62,21 @@ module["str"] = new ChowDynamic((ChowValue val) =>
 
 module["int"] = new ChowDynamic((ChowValue val) =>
 {
-    if (val.Is<int>())
+    if (val.Is<long>())
     {
-        return new ChowInt(val.As<int>());
+        return new ChowInt(val.As<long>());
     }
     if (val.Is<float>())
     {
-        return new ChowInt((int)val.As<float>());
+        return new ChowInt((long)val.As<float>());
     }
     if (val.Is<bool>())
     {
-        return new ChowInt(val.As<int>());
+        return new ChowInt(val.As<long>());
     }
     if (val is ChowStr s)
     {
-        if (int.TryParse(s.Value, out int parsed))
+        if (long.TryParse(s.Value, out long parsed))
         {
             return new ChowInt(parsed);
         }
@@ -95,9 +95,9 @@ module["bool"] = new ChowDynamic((ChowValue val) =>
     {
         return new ChowBool(val.As<bool>());
     }
-    if (val.Is<int>())
+    if (val.Is<long>())
     {
-        return new ChowBool(val.As<int>() != 0);
+        return new ChowBool(val.As<long>() != 0);
     }
     if (val.Is<float>())
     {
@@ -176,9 +176,9 @@ module["type"] = new ChowDynamic((ChowValue val) =>
 
 module["abs"] = new ChowDynamic((ChowValue val) =>
 {
-    if (val.Is<int>())
+    if (val.Is<long>())
     {
-        return (ChowValue)new ChowInt(Math.Abs(val.As<int>()));
+        return (ChowValue)new ChowInt(Math.Abs(val.As<long>()));
     }
     if (val.Is<float>())
     {
@@ -186,24 +186,24 @@ module["abs"] = new ChowDynamic((ChowValue val) =>
     }
     if (val.Is<bool>())
     {
-        return (ChowValue)new ChowInt(val.As<int>());
+        return (ChowValue)new ChowInt(val.As<long>());
     }
     throw new InvalidOperationException($"bad operand type for abs(): '{ChowTypeName(val)}'");
 });
 
 module["round"] = new ChowDynamic((ChowValue val) =>
 {
-    if (val.Is<int>())
+    if (val.Is<long>())
     {
-        return new ChowInt(val.As<int>());
+        return new ChowInt(val.As<long>());
     }
     if (val.Is<float>())
     {
-        return new ChowInt((int)Math.Round((double)val.As<float>(), MidpointRounding.ToEven));
+        return new ChowInt((long)Math.Round((double)val.As<float>(), MidpointRounding.ToEven));
     }
     if (val.Is<bool>())
     {
-        return new ChowInt(val.As<int>());
+        return new ChowInt(val.As<long>());
     }
     throw new InvalidOperationException($"type {ChowTypeName(val)} doesn't define __round__ method");
 });
@@ -431,7 +431,7 @@ static string ChowTypeName(ChowValue val)
     {
         return "bool";
     }
-    if (val.Is<int>())
+    if (val.Is<long>())
     {
         return "int";
     }
@@ -460,14 +460,14 @@ static string ChowTypeName(ChowValue val)
 
 static bool ChowIsNumeric(ChowValue val)
 {
-    return val.Is<int>() || val.Is<float>() || val.Is<bool>();
+    return val.Is<long>() || val.Is<float>() || val.Is<bool>();
 }
 
 static double ChowAsDouble(ChowValue val)
 {
-    if (val.Is<int>())
+    if (val.Is<long>())
     {
-        return val.As<int>();
+        return val.As<long>();
     }
     if (val.Is<float>())
     {
@@ -475,7 +475,7 @@ static double ChowAsDouble(ChowValue val)
     }
     if (val.Is<bool>())
     {
-        return val.As<int>();
+        return val.As<long>();
     }
     throw new InvalidOperationException("Value is not numeric");
 }

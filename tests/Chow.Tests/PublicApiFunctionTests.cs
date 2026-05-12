@@ -93,7 +93,7 @@ namespace Chow.Tests
 
             moduleB.Run("f()");
 
-            Assert.That(hookB.Values[hookB.Values.Count - 1].As<int>(), Is.EqualTo(99));
+            Assert.That(hookB.Values[hookB.Values.Count - 1].As<long>(), Is.EqualTo(99));
         }
 
         [Test]
@@ -110,7 +110,7 @@ namespace Chow.Tests
 
             moduleB.Run("get()");
 
-            Assert.That(hookB.Values[hookB.Values.Count - 1].As<int>(), Is.EqualTo(7));
+            Assert.That(hookB.Values[hookB.Values.Count - 1].As<long>(), Is.EqualTo(7));
         }
 
         // ============================================================================================================
@@ -139,7 +139,7 @@ namespace Chow.Tests
             module.Run("f()");
 
             ChowValue lastValue = hook.Values[hook.Values.Count - 1];
-            Assert.That(lastValue.As<int>(), Is.EqualTo(42));
+            Assert.That(lastValue.As<long>(), Is.EqualTo(42));
         }
 
         // ============================================================================================================
@@ -156,7 +156,7 @@ namespace Chow.Tests
             module["g"] = fValue;
             module.Run("g()");
 
-            Assert.That(hook.Values[hook.Values.Count - 1].As<int>(), Is.EqualTo(5));
+            Assert.That(hook.Values[hook.Values.Count - 1].As<long>(), Is.EqualTo(5));
         }
     }
 }

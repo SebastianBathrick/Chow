@@ -19,9 +19,9 @@ namespace Chow.Interpreter.Values
                 return (DataType)(object)_val;
             }
 
-            if (typeof(DataType) == typeof(int))
+            if (typeof(DataType) == typeof(long))
             {
-                return (DataType)(object)(_val ? 1 : 0);
+                return (DataType)(object)(_val ? 1L : 0L);
             }
 
             if (typeof(DataType) == typeof(double))

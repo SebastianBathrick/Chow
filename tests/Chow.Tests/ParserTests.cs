@@ -108,7 +108,7 @@ namespace Chow.Tests
         public void BuildSyntaxTree_Literal_AssignsLiteralTokenLineNumber()
         {
             Node result = ParseTokens(
-                Token(TokenType.LiteralInt, "42", 7, 42),
+                Token(TokenType.LiteralInt, "42", 7, 42L),
                 Token(TokenType.EndOfCode, string.Empty, 7));
 
             Assert.That(result.LineNum, Is.EqualTo(7));
@@ -118,7 +118,7 @@ namespace Chow.Tests
         public void LiteralNode_ToString_IncludesLineNumber()
         {
             Node result = ParseTokens(
-                Token(TokenType.LiteralInt, "42", 7, 42),
+                Token(TokenType.LiteralInt, "42", 7, 42L),
                 Token(TokenType.EndOfCode, string.Empty, 7));
 
             Assert.That(result.ToString(), Is.EqualTo("42 line=7"));
@@ -174,9 +174,9 @@ namespace Chow.Tests
         public void BuildSyntaxTree_BinaryOperation_AssignsOperatorTokenLineNumber()
         {
             Node result = ParseTokens(
-                Token(TokenType.LiteralInt, "1", 2, 1),
+                Token(TokenType.LiteralInt, "1", 2, 1L),
                 Token(TokenType.SymbolPlus, "+", 3),
-                Token(TokenType.LiteralInt, "2", 4, 2),
+                Token(TokenType.LiteralInt, "2", 4, 2L),
                 Token(TokenType.EndOfCode, string.Empty, 4));
 
             Assert.That(result.LineNum, Is.EqualTo(3));
@@ -186,9 +186,9 @@ namespace Chow.Tests
         public void ExpressionOperationNode_ToString_IncludesLineNumber()
         {
             Node result = ParseTokens(
-                Token(TokenType.LiteralInt, "1", 2, 1),
+                Token(TokenType.LiteralInt, "1", 2, 1L),
                 Token(TokenType.SymbolPlus, "+", 3),
-                Token(TokenType.LiteralInt, "2", 4, 2),
+                Token(TokenType.LiteralInt, "2", 4, 2L),
                 Token(TokenType.EndOfCode, string.Empty, 4));
 
             Assert.That(result.ToString(), Is.EqualTo("[Add line=3\n  1 line=2\n  2 line=4\n]"));
@@ -280,11 +280,11 @@ namespace Chow.Tests
         public void BuildSyntaxTree_LeftAssociativeOperations_AssignEachOperatorLineNumber()
         {
             Node result = ParseTokens(
-                Token(TokenType.LiteralInt, "5", 1, 5),
+                Token(TokenType.LiteralInt, "5", 1, 5L),
                 Token(TokenType.SymbolMinus, "-", 2),
-                Token(TokenType.LiteralInt, "2", 3, 2),
+                Token(TokenType.LiteralInt, "2", 3, 2L),
                 Token(TokenType.SymbolMinus, "-", 4),
-                Token(TokenType.LiteralInt, "1", 5, 1),
+                Token(TokenType.LiteralInt, "1", 5, 1L),
                 Token(TokenType.EndOfCode, string.Empty, 5));
 
             ExprNode outer = AssertBinary(result, ExprOperator.Subtract);
@@ -339,7 +339,7 @@ namespace Chow.Tests
         {
             Node result = ParseTokens(
                 Token(TokenType.SymbolMinus, "-", 6),
-                Token(TokenType.LiteralInt, "5", 7, 5),
+                Token(TokenType.LiteralInt, "5", 7, 5L),
                 Token(TokenType.EndOfCode, string.Empty, 7));
 
             Assert.That(result.LineNum, Is.EqualTo(6));
@@ -524,7 +524,7 @@ namespace Chow.Tests
             // Token stream: x = <newline> [ 1 ]  with `[` on line 3
             Node result = ParseTokens(
                 Token(TokenType.SymbolLeftBracket, "[", 3),
-                Token(TokenType.LiteralInt, "1", 3, 1),
+                Token(TokenType.LiteralInt, "1", 3, 1L),
                 Token(TokenType.SymbolRightBracket, "]", 3),
                 Token(TokenType.EndOfCode, string.Empty, 3));
             Assert.That(result.LineNum, Is.EqualTo(3));

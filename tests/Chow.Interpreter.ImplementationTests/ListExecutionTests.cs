@@ -54,9 +54,9 @@ namespace Chow.Interpreter.ImplementationTests
             module.Run("[1, 2, 3]");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
-            Assert.That(list[0].As<int>(), Is.EqualTo(1));
-            Assert.That(list[1].As<int>(), Is.EqualTo(2));
-            Assert.That(list[2].As<int>(), Is.EqualTo(3));
+            Assert.That(list[0].As<long>(), Is.EqualTo(1));
+            Assert.That(list[1].As<long>(), Is.EqualTo(2));
+            Assert.That(list[2].As<long>(), Is.EqualTo(3));
         }
 
         [Test]
@@ -68,7 +68,7 @@ namespace Chow.Interpreter.ImplementationTests
             Assert.That(outer.Count, Is.EqualTo(2));
             ChowList inner0 = (ChowList)outer[0];
             Assert.That(inner0.Count, Is.EqualTo(2));
-            Assert.That(inner0[0].As<int>(), Is.EqualTo(1));
+            Assert.That(inner0[0].As<long>(), Is.EqualTo(1));
         }
 
         // ============================================================================================================
@@ -80,7 +80,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
             module.Run("[10, 20, 30][1]");
-            Assert.That(Last(hook).As<int>(), Is.EqualTo(20));
+            Assert.That(Last(hook).As<long>(), Is.EqualTo(20));
         }
 
         [Test]
@@ -88,7 +88,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
             module.Run("[10, 20, 30][-1]");
-            Assert.That(Last(hook).As<int>(), Is.EqualTo(30));
+            Assert.That(Last(hook).As<long>(), Is.EqualTo(30));
         }
 
         [Test]
@@ -108,8 +108,8 @@ namespace Chow.Interpreter.ImplementationTests
             (ChowModule module, CaptureExprHook hook) = NewModule();
             module.Run("a = [1, 2, 3]\na[0] = 9\na");
             ChowList list = LastList(hook);
-            Assert.That(list[0].As<int>(), Is.EqualTo(9));
-            Assert.That(list[1].As<int>(), Is.EqualTo(2));
+            Assert.That(list[0].As<long>(), Is.EqualTo(9));
+            Assert.That(list[1].As<long>(), Is.EqualTo(2));
         }
 
         [Test]
@@ -118,7 +118,7 @@ namespace Chow.Interpreter.ImplementationTests
             (ChowModule module, CaptureExprHook hook) = NewModule();
             module.Run("a = [1, 2, 3]\na[-1] = 9\na");
             ChowList list = LastList(hook);
-            Assert.That(list[2].As<int>(), Is.EqualTo(9));
+            Assert.That(list[2].As<long>(), Is.EqualTo(9));
         }
 
         // ============================================================================================================
@@ -132,8 +132,8 @@ namespace Chow.Interpreter.ImplementationTests
             module.Run("[10, 20, 30, 40][1:3]");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(2));
-            Assert.That(list[0].As<int>(), Is.EqualTo(20));
-            Assert.That(list[1].As<int>(), Is.EqualTo(30));
+            Assert.That(list[0].As<long>(), Is.EqualTo(20));
+            Assert.That(list[1].As<long>(), Is.EqualTo(30));
         }
 
         [Test]
@@ -152,8 +152,8 @@ namespace Chow.Interpreter.ImplementationTests
             module.Run("[1, 2, 3][::-1]");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
-            Assert.That(list[0].As<int>(), Is.EqualTo(3));
-            Assert.That(list[2].As<int>(), Is.EqualTo(1));
+            Assert.That(list[0].As<long>(), Is.EqualTo(3));
+            Assert.That(list[2].As<long>(), Is.EqualTo(1));
         }
 
         [Test]
@@ -163,9 +163,9 @@ namespace Chow.Interpreter.ImplementationTests
             module.Run("[0, 1, 2, 3, 4][::2]");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
-            Assert.That(list[0].As<int>(), Is.EqualTo(0));
-            Assert.That(list[1].As<int>(), Is.EqualTo(2));
-            Assert.That(list[2].As<int>(), Is.EqualTo(4));
+            Assert.That(list[0].As<long>(), Is.EqualTo(0));
+            Assert.That(list[1].As<long>(), Is.EqualTo(2));
+            Assert.That(list[2].As<long>(), Is.EqualTo(4));
         }
 
         // ============================================================================================================
@@ -179,7 +179,7 @@ namespace Chow.Interpreter.ImplementationTests
             module.Run("a = [1]\na.append(2)\na");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(2));
-            Assert.That(list[1].As<int>(), Is.EqualTo(2));
+            Assert.That(list[1].As<long>(), Is.EqualTo(2));
         }
 
         [Test]
@@ -187,7 +187,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
             module.Run("a = [1, 2, 3]\na.pop()");
-            Assert.That(Last(hook).As<int>(), Is.EqualTo(3));
+            Assert.That(Last(hook).As<long>(), Is.EqualTo(3));
         }
 
         [Test]
@@ -196,8 +196,8 @@ namespace Chow.Interpreter.ImplementationTests
             (ChowModule module, CaptureExprHook hook) = NewModule();
             module.Run("a = [1, 2, 3]\na.reverse()\na");
             ChowList list = LastList(hook);
-            Assert.That(list[0].As<int>(), Is.EqualTo(3));
-            Assert.That(list[2].As<int>(), Is.EqualTo(1));
+            Assert.That(list[0].As<long>(), Is.EqualTo(3));
+            Assert.That(list[2].As<long>(), Is.EqualTo(1));
         }
 
         [Test]
@@ -207,8 +207,8 @@ namespace Chow.Interpreter.ImplementationTests
             module.Run("a = [1]\nf = a.append\nf(2)\nf(3)\na");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
-            Assert.That(list[1].As<int>(), Is.EqualTo(2));
-            Assert.That(list[2].As<int>(), Is.EqualTo(3));
+            Assert.That(list[1].As<long>(), Is.EqualTo(2));
+            Assert.That(list[2].As<long>(), Is.EqualTo(3));
         }
 
         // ============================================================================================================
@@ -240,8 +240,8 @@ namespace Chow.Interpreter.ImplementationTests
             module.Run("[1] + [2, 3]");
             ChowList list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
-            Assert.That(list[0].As<int>(), Is.EqualTo(1));
-            Assert.That(list[2].As<int>(), Is.EqualTo(3));
+            Assert.That(list[0].As<long>(), Is.EqualTo(1));
+            Assert.That(list[2].As<long>(), Is.EqualTo(3));
         }
 
         [Test]
@@ -308,7 +308,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
             module.Run("if []:\n    1\nelse:\n    2");
-            Assert.That(Last(hook).As<int>(), Is.EqualTo(2));
+            Assert.That(Last(hook).As<long>(), Is.EqualTo(2));
         }
 
         [Test]
@@ -316,7 +316,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
             module.Run("if [0]:\n    1\nelse:\n    2");
-            Assert.That(Last(hook).As<int>(), Is.EqualTo(1));
+            Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
         }
 
         // ============================================================================================================
@@ -351,7 +351,7 @@ namespace Chow.Interpreter.ImplementationTests
             list.Internal.Add(new Chow.Interpreter.Values.Internal.TaggedUnion(42));
             module["x"] = list;
             module.Run("x[0]");
-            Assert.That(Last(hook).As<int>(), Is.EqualTo(42));
+            Assert.That(Last(hook).As<long>(), Is.EqualTo(42));
         }
 
         [Test]
@@ -361,7 +361,7 @@ namespace Chow.Interpreter.ImplementationTests
             module.Run("x = [1, 2, 3]");
             ChowList list = (ChowList)module["x"];
             Assert.That(list.Count, Is.EqualTo(3));
-            Assert.That(list[1].As<int>(), Is.EqualTo(2));
+            Assert.That(list[1].As<long>(), Is.EqualTo(2));
         }
 
         // ============================================================================================================

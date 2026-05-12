@@ -41,9 +41,9 @@ namespace Chow.Interpreter.Values.Internal
                 return new TaggedUnion(value.As<bool>());
             }
 
-            if (value.Is<int>())
+            if (value.Is<long>())
             {
-                return new TaggedUnion(value.As<int>());
+                return new TaggedUnion(value.As<long>());
             }
 
             if (value.Is<double>())

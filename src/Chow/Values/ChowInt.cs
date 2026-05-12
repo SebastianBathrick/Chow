@@ -2,16 +2,16 @@ namespace Chow.Interpreter.Values
 {
     public class ChowInt : ChowValue
     {
-        private int _val;
+        private long _val;
 
-        public ChowInt(int val)
+        public ChowInt(long val)
         {
             _val = val;
         }
 
         public override DataType As<DataType>()
         {
-            if (typeof(DataType) == typeof(int))
+            if (typeof(DataType) == typeof(long))
             {
                 return (DataType)(object)_val;
             }
@@ -31,7 +31,7 @@ namespace Chow.Interpreter.Values
 
         public override bool Is<DataType>()
         {
-            return typeof(DataType) == typeof(int);
+            return typeof(DataType) == typeof(long);
         }
 
         public override string ToString() => _val.ToString();

@@ -490,7 +490,7 @@ namespace Chow.Interpreter.Tokens
                 }
                 else
                 {
-                    literal = int.Parse(lexeme, CultureInfo.InvariantCulture);
+                    literal = long.Parse(lexeme, CultureInfo.InvariantCulture);
                 }
             }
             catch (OverflowException)

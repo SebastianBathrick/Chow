@@ -16,7 +16,7 @@ namespace Chow.Interpreter.Syntax.Trees.Expressions
             {
                 _type = LiteralDataType.None;
             }
-            else if (value is int)
+            else if (value is long)
             {
                 _type = LiteralDataType.Integer;
             }

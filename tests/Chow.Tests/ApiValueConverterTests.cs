@@ -119,7 +119,7 @@ namespace Chow.Tests
             Assert.Multiple(() =>
             {
                 Assert.That(result, Is.TypeOf<ChowInt>());
-                Assert.That(result.As<int>(), Is.EqualTo(7));
+                Assert.That(result.As<long>(), Is.EqualTo(7));
             });
         }
 
@@ -195,7 +195,7 @@ namespace Chow.Tests
             var roundTripped = ApiValueConverter.ToApiClassObj(
                 ApiValueConverter.ToTaggedUnion(new ChowInt(123)));
 
-            Assert.That(roundTripped.As<int>(), Is.EqualTo(123));
+            Assert.That(roundTripped.As<long>(), Is.EqualTo(123));
         }
 
         [Test]

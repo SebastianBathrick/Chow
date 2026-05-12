@@ -5,13 +5,13 @@ namespace Chow.Interpreter.Values.Internal
     struct TaggedUnion
     {
         const double DEFAULT_FLOAT_VALUE = 0.0;
-        const int DEFAULT_INT_VALUE = 0;
+        const long DEFAULT_INT_VALUE = 0L;
         const bool DEFAULT_BOOL_VALUE = false;
         const object DEFAULT_NULL_VALUE = null;
 
         // TODO: Test whether using explicit struct layouts meaningly affects performance
         Tag _type;
-        int _int;
+        long _longInt;
         double _doubleFloat;
         bool _bool;
         object _obj;
@@ -39,7 +39,7 @@ namespace Chow.Interpreter.Values.Internal
                     case Tag.Boolean:
                         return _bool;
                     case Tag.Int:
-                        return _int != 0;
+                        return _longInt != 0;
                     case Tag.Float:
                         return _doubleFloat != 0.0;
                     case Tag.Str:
@@ -54,17 +54,17 @@ namespace Chow.Interpreter.Values.Internal
             }
         }
 
-        public int IntegerValue
+        public long IntegerValue
         {
             get
             {
                 ValidateTaggedUnionType(Tag.Int);
-                return _int;
+                return _longInt;
             }
             set
             {
                 ValidateTaggedUnionType(Tag.Int);
-                _int = value;
+                _longInt = value;
             }
         }
 
@@ -149,7 +149,7 @@ namespace Chow.Interpreter.Values.Internal
         private TaggedUnion(Tag type)
         {
             _type = type;
-            _int = DEFAULT_INT_VALUE;
+            _longInt = DEFAULT_INT_VALUE;
             _doubleFloat = DEFAULT_FLOAT_VALUE;
             _bool = DEFAULT_BOOL_VALUE;
             _obj = DEFAULT_NULL_VALUE;
@@ -160,9 +160,9 @@ namespace Chow.Interpreter.Values.Internal
             _doubleFloat = value;
         }
 
-        public TaggedUnion(int value) : this(Tag.Int)
+        public TaggedUnion(long value) : this(Tag.Int)
         {
-            _int = value;
+            _longInt = value;
         }
 
         public TaggedUnion(string value) : this(Tag.Str)
@@ -311,11 +311,11 @@ namespace Chow.Interpreter.Values.Internal
             // FUTURE: list-specific carve-out. Future container types add their own carve-outs.
             if (left.IsList && right.IsInt)
             {
-                return new TaggedUnion(InternalList.Repeat((InternalList)left._obj, right.IntegerValue));
+                return new TaggedUnion(InternalList.Repeat((InternalList)left._obj, (int)right.IntegerValue));
             }
             if (left.IsInt && right.IsList)
             {
-                return new TaggedUnion(InternalList.Repeat((InternalList)right._obj, left.IntegerValue));
+                return new TaggedUnion(InternalList.Repeat((InternalList)right._obj, (int)left.IntegerValue));
             }
             ThrowIfObjectOperands(left, right);
             // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
@@ -353,8 +353,8 @@ namespace Chow.Interpreter.Values.Internal
             // Python semantics: result has the sign of the divisor.
             if (BothAreBoolean(left, right))
             {
-                int a = BoolAsInt(left);
-                int b = BoolAsInt(right);
+                long a = BoolAsInt(left);
+                long b = BoolAsInt(right);
                 return new TaggedUnion(((a % b) + b) % b);
             }
             if (EitherIsFloat(left, right))
@@ -364,8 +364,8 @@ namespace Chow.Interpreter.Values.Internal
                 return new TaggedUnion(((l % r) + r) % r);
             }
 
-            int ai = left.IntegerValue;
-            int bi = right.IntegerValue;
+            long ai = left.IntegerValue;
+            long bi = right.IntegerValue;
             return new TaggedUnion(((ai % bi) + bi) % bi);
         }
 
@@ -377,14 +377,14 @@ namespace Chow.Interpreter.Values.Internal
             // Python semantics: floors toward negative infinity.
             if (BothAreBoolean(left, right))
             {
-                return new TaggedUnion((int)Math.Floor(BoolAsInt(left) / (double)BoolAsInt(right)));
+                return new TaggedUnion((long)Math.Floor(BoolAsInt(left) / (double)BoolAsInt(right)));
             }
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion(Math.Floor(AsFloat(left) / AsFloat(right)));
             }
 
-            return new TaggedUnion((int)Math.Floor(left.IntegerValue / (double)right.IntegerValue));
+            return new TaggedUnion((long)Math.Floor(left.IntegerValue / (double)right.IntegerValue));
         }
 
         public static TaggedUnion Power(TaggedUnion left, TaggedUnion right)
@@ -395,20 +395,20 @@ namespace Chow.Interpreter.Values.Internal
             // Python semantics: float if either operand is float, or if exponent is negative.
             if (BothAreBoolean(left, right))
             {
-                return new TaggedUnion((int)Math.Pow(BoolAsInt(left), BoolAsInt(right)));
+                return new TaggedUnion((long)Math.Pow(BoolAsInt(left), BoolAsInt(right)));
             }
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion(Math.Pow(AsFloat(left), AsFloat(right)));
             }
 
-            int exp = right.IntegerValue;
+            long exp = right.IntegerValue;
             if (exp < 0)
             {
                 return new TaggedUnion(Math.Pow(left.IntegerValue, exp));
             }
 
-            return new TaggedUnion((int)Math.Pow(left.IntegerValue, exp));
+            return new TaggedUnion((long)Math.Pow(left.IntegerValue, exp));
         }
 
         public static TaggedUnion operator |(TaggedUnion left, TaggedUnion right)
@@ -430,7 +430,7 @@ namespace Chow.Interpreter.Values.Internal
             switch (left._type)
             {
                 case Tag.Int:
-                    return left._int == right._int;
+                    return left._longInt == right._longInt;
                 case Tag.Float:
                     return left._doubleFloat == right._doubleFloat;
                 case Tag.Boolean:
@@ -527,9 +527,9 @@ namespace Chow.Interpreter.Values.Internal
             return left.IsBoolean && right.IsBoolean;
         }
 
-        static int BoolAsInt(TaggedUnion union)
+        static long BoolAsInt(TaggedUnion union)
         {
-            return union.BooleanValue ? 1 : 0;
+            return union.BooleanValue ? 1L : 0L;
         }
 
         static void ThrowIfObjectOperands(TaggedUnion left, TaggedUnion right)
@@ -577,7 +577,7 @@ namespace Chow.Interpreter.Values.Internal
             switch (_type)
             {
                 case Tag.Int:
-                    return _int.GetHashCode();
+                    return _longInt.GetHashCode();
                 case Tag.Float:
                     return _doubleFloat.GetHashCode();
                 case Tag.Boolean:
@@ -612,7 +612,7 @@ namespace Chow.Interpreter.Values.Internal
                 return $"TaggedUnion(type={_type}, value={_obj})";
             }
 
-            return $"TaggedUnion(type={_type}, value={_int})";
+            return $"TaggedUnion(type={_type}, value={_longInt})";
         }
 
         void ValidateTaggedUnionType(Tag desiredType)
