@@ -4,13 +4,11 @@ namespace Chow.Interpreter.Exceptions
     {
         const string EXCEPTION_ALIAS = "KeyError";
 
-        string _keyRepr;
-
-        public string KeyRepr => _keyRepr;
+        public string KeyRepr { get; }
 
         public DictKeyException(string keyRepr, int lineNumber = -1) : base(EXCEPTION_ALIAS, keyRepr, lineNumber)
         {
-            _keyRepr = keyRepr;
+            KeyRepr = keyRepr;
         }
     }
 }

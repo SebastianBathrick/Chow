@@ -6,14 +6,12 @@ namespace Chow.Interpreter.Values
     {
         const string NONE_STRING = "None";
 
-        static readonly ChowValue _instance = new ChowNone();
-
-        internal static ChowValue Instance => _instance;
+        internal static ChowValue Instance { get; } = new ChowNone();
 
         // Only one instance of ChowNone should exist
         ChowNone()
         {
-            if (_instance == null)
+            if (Instance == null)
             {
                 return;
             }

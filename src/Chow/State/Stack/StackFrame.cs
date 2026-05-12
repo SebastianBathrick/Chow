@@ -11,32 +11,29 @@ namespace Chow.Interpreter.State.Stack
     {
         const int INIT_INSTR_IDX = 0;
 
-        Chunk _chunk;
-        Scope _scope;
-
         // TODO: Start using "instr" to abbreviate "instruction"
         int _instrIdx;
 
         /// <summary>The bytecode chunk this frame is executing.</summary>
-        public Chunk Chunk => _chunk;
+        public Chunk Chunk { get; }
 
         /// <summary>The frame's scope: a <see cref="ModuleScope"/> for the module frame, a <see cref="LocalScope"/> for any function frame.</summary>
-        public Scope Scope => _scope;
+        public Scope Scope { get; }
 
         /// <summary>The instruction at the current pointer.</summary>
-        public Instruction CurrentInstr => _chunk[_instrIdx];
+        public Instruction CurrentInstr => Chunk[_instrIdx];
 
         /// <summary>True while the instruction pointer has not reached the end of the chunk.</summary>
-        public bool IsInstrToRun => _chunk.InstructionCount != _instrIdx;
+        public bool IsInstrToRun => Chunk.InstructionCount != _instrIdx;
 
         /// <summary>Source line number associated with the current instruction.</summary>
-        public int CurrentLineNum => _chunk.GetInstructionLine(_instrIdx);
+        public int CurrentLineNum => Chunk.GetInstructionLine(_instrIdx);
 
         /// <summary>Creates a frame positioned at the first instruction.</summary>
         public StackFrame(Chunk chunk, Scope scope)
         {
-            _chunk = chunk;
-            _scope = scope;
+            Chunk = chunk;
+            Scope = scope;
             _instrIdx = INIT_INSTR_IDX;
         }
 

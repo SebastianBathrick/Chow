@@ -5,13 +5,11 @@ namespace Chow.Interpreter.SyntaxTrees
     {
         const int ROOT_NODE_LINE = 1;
 
-        readonly List<Node> _statements;
+        public List<Node> Statements { get; }
 
-        public List<Node> Statements => _statements;
-        
         public TreeRootNode(List<Node> statements) : base(ROOT_NODE_LINE)
         {
-            _statements = statements;
+            Statements = statements;
         }
 
         public override string ToString()

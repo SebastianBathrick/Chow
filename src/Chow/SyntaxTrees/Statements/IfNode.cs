@@ -2,28 +2,26 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
 {
     class IfNode : Node
     {
-        readonly Node _expr;
-        readonly Node _block;
-        readonly Node _branch;
+        public Node Expr { get; }
 
-        public Node Expr => _expr;
-        public Node Block => _block;
-        public Node Branch => _branch;
+        public Node Block { get; }
+
+        public Node Branch { get; }
 
         public IfNode(Node expr, Node block, Node branch, int line) : base(line)
         {
-            _expr = expr;
-            _block = block;
-            _branch = branch;
+            Expr = expr;
+            Block = block;
+            Branch = branch;
         }
 
         public override string ToString()
         {
-            var result = $"if {_expr}\n{{\n{_block}\n}}";
+            var result = $"if {Expr}\n{{\n{Block}\n}}";
 
-            if (_branch != null)
+            if (Branch != null)
             {
-                result += $"\n{_branch}";
+                result += $"\n{Branch}";
             }
 
             return result;

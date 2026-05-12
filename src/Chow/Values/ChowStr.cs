@@ -2,20 +2,18 @@ namespace Chow.Interpreter.Values
 {
     public class ChowStr : ChowValue
     {
-        readonly string _val;
-
-        public string Value => _val;
+        public string Value { get; }
 
         public ChowStr(string val)
         {
-            _val = val;
+            Value = val;
         }
 
         public override TDataType As<TDataType>()
         {
             if (typeof(TDataType) == typeof(bool))
             {
-                return (TDataType)(object)(_val.Length != 0);
+                return (TDataType)(object)(Value.Length != 0);
             }
 
             throw new InvalidCastException(GetType(), typeof(TDataType), this);
@@ -26,6 +24,6 @@ namespace Chow.Interpreter.Values
             return false;
         }
 
-        public override string ToString() => _val;
+        public override string ToString() => Value;
     }
 }

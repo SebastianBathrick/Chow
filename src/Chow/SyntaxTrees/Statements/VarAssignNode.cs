@@ -2,21 +2,19 @@
 {
     class VarAssignNode : Node
     {
-        readonly string _name;
-        readonly Node _expr;
+        public string Name { get; }
 
-        public string Name => _name;
-        public Node Expression => _expr;
+        public Node Expression { get; }
 
         public VarAssignNode(string name, Node expr, int line) : base(line)
         {
-            _name = name;
-            _expr = expr;
+            Name = name;
+            Expression = expr;
         }
 
         public override string ToString()
         {
-            return $"VariableAssignment({_name}, {_expr}) line={LineNumber}";
+            return $"VariableAssignment({Name}, {Expression}) line={LineNumber}";
         }
     }
 }

@@ -2,18 +2,16 @@
 {
     class ExprStatementNode : Node
     {
-        readonly Node _expr;
-
-        public Node Expression => _expr;
+        public Node Expression { get; }
 
         public ExprStatementNode(Node expr, int line) : base(line)
         {
-            _expr = expr;
+            Expression = expr;
         }
 
         public override string ToString()
         {
-            return _expr.ToString();
+            return Expression.ToString();
         }
     }
 }

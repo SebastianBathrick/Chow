@@ -2,21 +2,19 @@
 {
     class BranchStmntNode : Node
     {
-        readonly Node _expr;
-        readonly Node _block;
-        readonly Node _branch;
+        public Node Branch { get; }
 
-        public Node Branch => _branch;
-        public Node Expr => _expr;
-        public Node Block => _block;
+        public Node Expr { get; }
 
-        public bool IsElse => _expr == null;
+        public Node Block { get; }
+
+        public bool IsElse => Expr == null;
 
         public BranchStmntNode(Node expr, Node block, Node branch, int line) : base(line)
         {
-            _expr = expr;
-            _block = block;
-            _branch = branch;
+            Expr = expr;
+            Block = block;
+            Branch = branch;
         }
 
 
@@ -26,16 +24,16 @@
 
             if (IsElse)
             {
-                result = $"else\n{{\n{_block}\n}}";
+                result = $"else\n{{\n{Block}\n}}";
             }
             else
             {
-                result = $"elif {_expr}\n{{\n{_block}\n}}";
+                result = $"elif {Expr}\n{{\n{Block}\n}}";
             }
 
-            if (_branch != null)
+            if (Branch != null)
             {
-                result += $"\n{_branch}";
+                result += $"\n{Branch}";
             }
 
             return result;

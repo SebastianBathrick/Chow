@@ -2,21 +2,19 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
 {
     class WhileNode : Node
     {
-        readonly Node _expr;
-        readonly Node _block;
+        public Node Expr { get; }
 
-        public Node Expr => _expr;
-        public Node Block => _block;
+        public Node Block { get; }
 
         public WhileNode(Node expr, Node block, int line) : base(line)
         {
-            _expr = expr;
-            _block = block;
+            Expr = expr;
+            Block = block;
         }
 
         public override string ToString()
         {
-            return $"while {_expr}\n{{\n{_block}\n}}";
+            return $"while {Expr}\n{{\n{Block}\n}}";
         }
     }
 }

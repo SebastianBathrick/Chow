@@ -2,13 +2,11 @@ namespace Chow.Interpreter.SyntaxTrees
 {
     abstract class Node
     {
-        readonly int _lineNumber;
-
-        public int LineNumber => _lineNumber;
+        public int LineNumber { get; }
 
         protected Node(int line)
         {
-            _lineNumber = line;
+            LineNumber = line;
         }
 
         public abstract override string ToString();

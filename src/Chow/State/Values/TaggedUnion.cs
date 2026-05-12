@@ -11,7 +11,6 @@ namespace Chow.Interpreter.State.Values
         const object DEFAULT_NULL_VALUE = null;
 
         // TODO: Test whether using explicit struct layouts meaningly affects performance
-        Tag _type;
         long _longInt;
         double _doubleFloat;
         bool _bool;
@@ -20,22 +19,22 @@ namespace Chow.Interpreter.State.Values
         public static TaggedUnion Empty = new TaggedUnion(Tag.Empty);
         public static TaggedUnion None = new TaggedUnion(Tag.None);
 
-        public Tag Tag => _type;
+        public Tag Tag { get; }
 
-        public bool IsEmpty => _type == Tag.Empty;
-        public bool IsInt => _type == Tag.Int;
-        public bool IsFloat => _type == Tag.Float;
-        public bool IsString => _type == Tag.Str;
-        public bool IsBoolean => _type == Tag.Boolean;
-        public bool IsObject => _type == Tag.Object;
-        public bool IsList => _type == Tag.List;
-        public bool IsDict => _type == Tag.Dict;
+        public bool IsEmpty => Tag == Tag.Empty;
+        public bool IsInt => Tag == Tag.Int;
+        public bool IsFloat => Tag == Tag.Float;
+        public bool IsString => Tag == Tag.Str;
+        public bool IsBoolean => Tag == Tag.Boolean;
+        public bool IsObject => Tag == Tag.Object;
+        public bool IsList => Tag == Tag.List;
+        public bool IsDict => Tag == Tag.Dict;
 
         public bool IsTruthy
         {
             get
             {
-                switch (_type)
+                switch (Tag)
                 {
                     case Tag.Boolean:
                         return _bool;
@@ -89,7 +88,7 @@ namespace Chow.Interpreter.State.Values
             {
                 if (!IsString)
                 {
-                    throw new InvalidOperationException($"String access attempt but union's type is {_type}");
+                    throw new InvalidOperationException($"String access attempt but union's type is {Tag}");
                 }
                 return (string)_obj;
             }
@@ -129,7 +128,7 @@ namespace Chow.Interpreter.State.Values
             {
                 if (!IsList)
                 {
-                    throw new InvalidOperationException($"List access attempt but union's type is {_type}");
+                    throw new InvalidOperationException($"List access attempt but union's type is {Tag}");
                 }
                 return (InternalList)_obj;
             }
@@ -141,7 +140,7 @@ namespace Chow.Interpreter.State.Values
             {
                 if (!IsDict)
                 {
-                    throw new InvalidOperationException($"Dict access attempt but union's type is {_type}");
+                    throw new InvalidOperationException($"Dict access attempt but union's type is {Tag}");
                 }
                 return (InternalDict)_obj;
             }
@@ -149,7 +148,7 @@ namespace Chow.Interpreter.State.Values
 
         TaggedUnion(Tag type)
         {
-            _type = type;
+            Tag = type;
             _longInt = DEFAULT_INT_VALUE;
             _doubleFloat = DEFAULT_FLOAT_VALUE;
             _bool = DEFAULT_BOOL_VALUE;
@@ -219,7 +218,7 @@ namespace Chow.Interpreter.State.Values
 
         public object GetTaggedValue()
         {
-            switch (_type)
+            switch (Tag)
             {
                 case Tag.Int:
                     return _longInt;
@@ -235,7 +234,7 @@ namespace Chow.Interpreter.State.Values
                 case Tag.None:
                     return null;
                 default:
-                    throw new InvalidOperationException($"Cannot get value of TaggedUnion with type {_type}");
+                    throw new InvalidOperationException($"Cannot get value of TaggedUnion with type {Tag}");
             }
         }
 
@@ -253,7 +252,7 @@ namespace Chow.Interpreter.State.Values
             if (!IsObject)
             {
                 // TODO: Replace with TypeErrorException once implemented
-                throw new InvalidOperationException($"'{_type}' object is not callable");
+                throw new InvalidOperationException($"'{Tag}' object is not callable");
             }
 
             switch (_obj)
@@ -466,17 +465,17 @@ namespace Chow.Interpreter.State.Values
             {
                 return new TaggedUnion(InternalDict.Merge((InternalDict)left._obj, (InternalDict)right._obj));
             }
-            throw new InvalidOperationException($"unsupported operand type(s) for |: '{left._type}' and '{right._type}'");
+            throw new InvalidOperationException($"unsupported operand type(s) for |: '{left.Tag}' and '{right.Tag}'");
         }
 
         public static bool operator ==(TaggedUnion left, TaggedUnion right)
         {
-            if (left._type != right._type)
+            if (left.Tag != right.Tag)
             {
                 return false;
             }
 
-            switch (left._type)
+            switch (left.Tag)
             {
                 case Tag.Int:
                     return left._longInt == right._longInt;
@@ -623,7 +622,7 @@ namespace Chow.Interpreter.State.Values
 
         public override int GetHashCode()
         {
-            switch (_type)
+            switch (Tag)
             {
                 case Tag.Int:
                     return _longInt.GetHashCode();
@@ -635,7 +634,7 @@ namespace Chow.Interpreter.State.Values
                 case Tag.Object:
                     return _obj?.GetHashCode() ?? 0;
                 default:
-                    return _type.GetHashCode();
+                    return Tag.GetHashCode();
             }
         }
 
@@ -643,41 +642,41 @@ namespace Chow.Interpreter.State.Values
         {
             if (IsEmpty)
             {
-                return $"TaggedUnion(type={_type})";
+                return $"TaggedUnion(type={Tag})";
             }
 
             if (IsFloat)
             {
-                return $"TaggedUnion(type={_type}, value={_doubleFloat})";
+                return $"TaggedUnion(type={Tag}, value={_doubleFloat})";
             }
 
             if (IsBoolean)
             {
-                return $"TaggedUnion(type={_type}, value={_bool})";
+                return $"TaggedUnion(type={Tag}, value={_bool})";
             }
 
             if (IsObject || IsString)
             {
-                return $"TaggedUnion(type={_type}, value={_obj})";
+                return $"TaggedUnion(type={Tag}, value={_obj})";
             }
 
-            return $"TaggedUnion(type={_type}, value={_longInt})";
+            return $"TaggedUnion(type={Tag}, value={_longInt})";
         }
 
         void ValidateTaggedUnionType(Tag desiredType)
         {
-            if (_type == desiredType)
+            if (Tag == desiredType)
             {
                 return;
             }
 
             // TODO: Replace this branch with actual coercion (bool<->int<->float) once implemented.
-            if (IsCoercibleNumeric(desiredType) && IsCoercibleNumeric(_type))
+            if (IsCoercibleNumeric(desiredType) && IsCoercibleNumeric(Tag))
             {
-                throw new NotImplementedException($"{desiredType} access on union of type {_type} requires coercion that is not yet implemented.");
+                throw new NotImplementedException($"{desiredType} access on union of type {Tag} requires coercion that is not yet implemented.");
             }
 
-            throw new InvalidOperationException($"{desiredType} access attempt but union's type is {_type}");
+            throw new InvalidOperationException($"{desiredType} access attempt but union's type is {Tag}");
         }
 
         // TODO: Temporary helper used only by the coercion-not-implemented guard. Remove with that guard.

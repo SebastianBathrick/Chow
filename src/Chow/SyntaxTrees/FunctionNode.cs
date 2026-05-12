@@ -3,26 +3,22 @@ namespace Chow.Interpreter.SyntaxTrees
 {
     class FunctionNode : Node
     {
-        readonly string _name;
-        readonly List<Node> _params;
-        readonly Node _body;
+        public string Name { get; }
 
-        public string Name => _name;
+        public List<Node> Params { get; }
 
-        public List<Node> Params => _params;
-
-        public Node Body => _body;
+        public Node Body { get; }
 
         public FunctionNode(string name, List<Node> paramList, Node body, int line) : base(line)
         {
-            _name = name;
-            _params = paramList;
-            _body = body;
+            Name = name;
+            Params = paramList;
+            Body = body;
         }
 
         public override string ToString()
         {
-            return $"def {_name}({string.Join(", ", _params)}) {{\n{_body}\n}}";
+            return $"def {Name}({string.Join(", ", Params)}) {{\n{Body}\n}}";
         }
     }
 }

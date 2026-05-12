@@ -3,9 +3,8 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     class LiteralNode : Node
     {
-        readonly object _val;
+        public object Value { get; }
 
-        public object Value => _val;
         public LiteralDataType Type { get; }
 
         public LiteralNode(object value, int lineNumber) : base(lineNumber)
@@ -35,12 +34,12 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
                 throw new ArgumentException($"Unsupported literal type: {value.GetType().Name}", nameof(value));
             }
 
-            _val = value;
+            Value = value;
         }
 
         public override string ToString()
         {
-            return $"{_val} line={LineNumber}";
+            return $"{Value} line={LineNumber}";
         }
     }
 }

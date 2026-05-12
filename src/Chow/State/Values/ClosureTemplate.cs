@@ -9,24 +9,20 @@ namespace Chow.Interpreter.State.Values
     /// </summary>
     sealed class ClosureTemplate
     {
-        readonly Chunk _chunk;
-        readonly string _name;
-        readonly int _paramCount;
-
         /// <summary>The compiled bytecode of the function body.</summary>
-        public Chunk Chunk => _chunk;
+        public Chunk Chunk { get; }
 
         /// <summary>The function name as written in source.</summary>
-        public string Name => _name;
+        public string Name { get; }
 
         /// <summary>Declared positional-parameter count.</summary>
-        public int ParamCount => _paramCount;
+        public int ParamCount { get; }
 
         public ClosureTemplate(Chunk chunk, string name, int paramCount)
         {
-            _chunk = chunk;
-            _name = name;
-            _paramCount = paramCount;
+            Chunk = chunk;
+            Name = name;
+            ParamCount = paramCount;
         }
     }
 }

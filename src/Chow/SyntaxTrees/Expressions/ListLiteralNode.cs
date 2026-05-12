@@ -3,24 +3,22 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     class ListLiteralNode : Node
     {
-        readonly List<Node> _elements;
-
-        public List<Node> Elements => _elements;
+        public List<Node> Elements { get; }
 
         public ListLiteralNode(List<Node> elements, int line) : base(line)
         {
-            _elements = elements;
+            Elements = elements;
         }
 
         public override string ToString()
         {
-            if (_elements.Count == 0)
+            if (Elements.Count == 0)
             {
                 return $"[List line={LineNumber}]";
             }
 
             var body = string.Empty;
-            foreach (var element in _elements)
+            foreach (var element in Elements)
             {
                 body += "\n" + IndentChildren(element.ToString());
             }

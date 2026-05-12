@@ -2,19 +2,17 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     class ExprNode : Node
     {
-        readonly ExprOperator _operator;
-        readonly Node _l;
-        readonly Node _r;
+        public ExprOperator Operator { get; }
 
-        public ExprOperator Operator => _operator;
-        public Node Left => _l;
-        public Node Right => _r;
+        public Node Left { get; }
+
+        public Node Right { get; }
 
         public ExprNode(ExprOperator opType, Node l, Node r, int line) : base(line)
         {
-            _operator = opType;
-            _l = l;
-            _r = r;
+            Operator = opType;
+            Left = l;
+            Right = r;
         }
 
         /// <summary>
@@ -22,22 +20,22 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
         /// </summary>
         public ExprNode(ExprOperator opType, Node l, int line) : base(line)
         {
-            _operator = opType;
-            _l = l;
-            _r = null;
+            Operator = opType;
+            Left = l;
+            Right = null;
         }
 
         public override string ToString()
         {
-            var indentedLeft = IndentChildren(_l.ToString());
+            var indentedLeft = IndentChildren(Left.ToString());
 
-            if (_r == null)
+            if (Right == null)
             {
-                return $"[{_operator} line={LineNumber}\n{indentedLeft}\n]";
+                return $"[{Operator} line={LineNumber}\n{indentedLeft}\n]";
             }
 
-            var indentedRight = IndentChildren(_r.ToString());
-            return $"[{_operator} line={LineNumber}\n{indentedLeft}\n{indentedRight}\n]";
+            var indentedRight = IndentChildren(Right.ToString());
+            return $"[{Operator} line={LineNumber}\n{indentedLeft}\n{indentedRight}\n]";
         }
 
         static string IndentChildren(string nodeString)

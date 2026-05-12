@@ -4,13 +4,11 @@ namespace Chow.Interpreter.Exceptions
 {
     sealed class ParserEx : Exception
     {
-        int _lineNum;
-
-        public int LineNum => _lineNum;
+        public int LineNum { get; }
 
         public ParserEx(string msg, int lineNum) : base($"[line {lineNum}] Error: {msg}")
         {
-            _lineNum = lineNum;
+            LineNum = lineNum;
         }
     }
 }

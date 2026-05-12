@@ -2,22 +2,20 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     class AttrAccessNode : Node
     {
-        readonly Node _target;
-        readonly string _attrName;
+        public Node Target { get; }
 
-        public Node Target => _target;
-        public string AttrName => _attrName;
+        public string AttrName { get; }
 
         public AttrAccessNode(Node target, string attrName, int line) : base(line)
         {
-            _target = target;
-            _attrName = attrName;
+            Target = target;
+            AttrName = attrName;
         }
 
         public override string ToString()
         {
-            var indentedTarget = IndentChildren(_target.ToString());
-            return $"[AttrAccess line={LineNumber} attr={_attrName}\n{indentedTarget}\n]";
+            var indentedTarget = IndentChildren(Target.ToString());
+            return $"[AttrAccess line={LineNumber} attr={AttrName}\n{indentedTarget}\n]";
         }
 
         static string IndentChildren(string nodeString)

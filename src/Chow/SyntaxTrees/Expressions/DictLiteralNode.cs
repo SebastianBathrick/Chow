@@ -3,30 +3,28 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     class DictLiteralNode : Node
     {
-        readonly List<Node> _keys;
-        readonly List<Node> _values;
+        public List<Node> Keys { get; }
 
-        public List<Node> Keys => _keys;
-        public List<Node> Values => _values;
+        public List<Node> Values { get; }
 
         public DictLiteralNode(List<Node> keys, List<Node> values, int line) : base(line)
         {
-            _keys = keys;
-            _values = values;
+            Keys = keys;
+            Values = values;
         }
 
         public override string ToString()
         {
-            if (_keys.Count == 0)
+            if (Keys.Count == 0)
             {
                 return $"[Dict line={LineNumber}]";
             }
 
             var body = string.Empty;
-            for (var i = 0; i < _keys.Count; i++)
+            for (var i = 0; i < Keys.Count; i++)
             {
-                body += "\n" + IndentChildren(_keys[i].ToString());
-                body += "\n" + IndentChildren(_values[i].ToString());
+                body += "\n" + IndentChildren(Keys[i].ToString());
+                body += "\n" + IndentChildren(Values[i].ToString());
             }
             return $"[Dict line={LineNumber}{body}\n]";
         }

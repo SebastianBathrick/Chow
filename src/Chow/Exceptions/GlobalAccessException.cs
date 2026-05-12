@@ -6,13 +6,11 @@ namespace Chow.Interpreter.Exceptions
     {
         const string EXCEPTION_ALIAS = "Global Access Error";
 
-        string _name;
-
-        public string Name => _name;
+        public string Name { get; }
 
         public GlobalAccessException(string name, string msg) : base($"{EXCEPTION_ALIAS}: {msg}")
         {
-            _name = name;
+            Name = name;
         }
     }
 }
