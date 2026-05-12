@@ -1,6 +1,7 @@
 using Chow.Interpreter;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Hooks;
+using Chow.Interpreter.State.Values;
 using Chow.Interpreter.Values;
 using System.Collections.Generic;
 
@@ -421,8 +422,8 @@ namespace Chow.Interpreter.ImplementationTests
             (var module, var hook) = NewModule();
             var dict = new ChowDict();
             dict.Internal.Add(
-                new Chow.Interpreter.Values.Internal.TaggedUnion(1),
-                new Chow.Interpreter.Values.Internal.TaggedUnion(42));
+                new TaggedUnion(1),
+                new TaggedUnion(42));
             module["x"] = dict;
             module.Execute("x[1]");
             Assert.That(Last(hook).As<long>(), Is.EqualTo(42));

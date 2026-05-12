@@ -1,6 +1,5 @@
 using Chow.Interpreter;
 using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Syntax;
 using Chow.Interpreter.SyntaxTrees;
 using Chow.Interpreter.SyntaxTrees.Expressions;
 using Chow.Interpreter.SyntaxTrees.Statements;
