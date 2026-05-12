@@ -1,6 +1,6 @@
 <Solution>
-  <Project Path="src/Chow.Cli/Chow.Repl.csproj" />
-  <Project Path="src/Chow/Chow.Interpreter.csproj" />
-  <Project Path="tests/Chow.Interpreter.ImplementationTests/Chow.Interpreter.ImplementationTests.csproj" Id="5999df96-29b6-4f96-8cd0-479e1c4cf0da" />
-  <Project Path="tests/Chow.Tests/Chow.Tests.csproj" />
+  <Project Path="src/Chow.Interpreter/Chow.Interpreter.csproj" />
+  <Project Path="src/Chow/Chow.csproj" />
+  <Project Path="tests/Chow.Interpreter.ImplTests/Chow.Interpreter.ImplementationTests.csproj" />
+  <Project Path="tests/Chow.Interpreter.Tests/Chow.Tests.csproj" />
 </Solution>
