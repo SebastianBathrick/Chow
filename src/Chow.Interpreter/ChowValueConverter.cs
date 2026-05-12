@@ -13,33 +13,25 @@ namespace Chow.Interpreter
                 throw new ArgumentNullException(nameof(value));
             }
 
-            // TODO: Refactor to make this a switch
-            if (value.IsNone)
+            switch (value)
             {
-                return TaggedUnion.None;
+                case var noneValue when noneValue.IsNone:
+                    return TaggedUnion.None;
+                case ChowStr strValue:
+                    return new TaggedUnion(strValue.Value);
+                case ChowList listValue:
+                    return new TaggedUnion(listValue.Internal);
+                case ChowDict dictValue:
+                    return new TaggedUnion(dictValue.Internal);
+                case ChowDynamic dynamicValue:
+                    return new TaggedUnion(dynamicValue.Value);
+                default:
+                    return ToPrimitiveTaggedUnion(value);
             }
+        }
 
-            if (value is ChowStr strValue)
-            {
-                return new TaggedUnion(strValue.Value);
-            }
-
-            if (value is ChowList listValue)
-            {
-                return new TaggedUnion(listValue.Internal);
-            }
-
-            if (value is ChowDict dictValue)
-            {
-                return new TaggedUnion(dictValue.Internal);
-            }
-
-            if (value is ChowDynamic dynamicValue)
-            {
-                return new TaggedUnion(dynamicValue.Value);
-            }
-            
-            // TODO: Split this method into two publically exposed methods
+        static TaggedUnion ToPrimitiveTaggedUnion(ChowValue value)
+        {
             if (value.Is<bool>())
             {
                 return new TaggedUnion(value.As<bool>());
