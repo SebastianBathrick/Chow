@@ -130,7 +130,7 @@ namespace Chow.Interpreter.ImplementationTests
             int captured = 0;
             module["bump"] = new Chow.Interpreter.Values.ChowDynamic((System.Action)(() => { captured = 1; }));
 
-            module.Execute("bump()");
+            module.Run("bump()");
 
             Assert.That(captured, Is.EqualTo(1));
         }

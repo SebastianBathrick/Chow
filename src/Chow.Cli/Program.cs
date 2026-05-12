@@ -249,7 +249,7 @@ if (args.Length > 0)
         try
         {
             string src = File.ReadAllText(arg);
-            module.Execute(src);
+            module.Run(src);
         }
         catch (Exception ex)
         {
@@ -262,7 +262,7 @@ if (args.Length > 0)
 
     try
     {
-        module.Execute(arg);
+        module.Run(arg);
     }
     catch (Exception ex)
     {
@@ -279,7 +279,7 @@ while (true)
     try
     {
         var srcCode = string.Join(NEWLINE_CHAR, GetLineList(START_INDICATOR, TRAILING_INDICATOR));
-        module.Execute(srcCode);
+        module.Run(srcCode);
     }
     catch (Exception ex)
     {

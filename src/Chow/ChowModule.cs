@@ -41,7 +41,7 @@ namespace Chow.Interpreter
             }
         }
 
-        public void Execute(string sourceCode)
+        public void Run(string sourceCode)
         {
             // Run source code with an environment if this instance has executed code before
             // Otherwise, environment will be null and a new environment will be created for the source code to run in

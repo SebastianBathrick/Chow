@@ -44,7 +44,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void While_CounterLoop_RunsConditionTimes()
         {
             (ChowModule module, _) = NewModule();
-            module.Execute("x = 0\nwhile x < 5:\n    x = x + 1");
+            module.Run("x = 0\nwhile x < 5:\n    x = x + 1");
             Assert.That(module["x"].As<int>(), Is.EqualTo(5));
         }
 
@@ -52,7 +52,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void While_ConditionFalseAtEntry_BodyNeverRuns()
         {
             (ChowModule module, _) = NewModule();
-            module.Execute("x = 10\nwhile x < 5:\n    x = x + 1");
+            module.Run("x = 10\nwhile x < 5:\n    x = x + 1");
             Assert.That(module["x"].As<int>(), Is.EqualTo(10));
         }
 
@@ -70,7 +70,7 @@ namespace Chow.Interpreter.ImplementationTests
                 "    x = x + 1\n" +
                 "    if x == 3:\n" +
                 "        break";
-            module.Execute(src);
+            module.Run(src);
             Assert.That(module["x"].As<int>(), Is.EqualTo(3));
         }
 
@@ -78,7 +78,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Break_OutsideLoop_ThrowsAtCompileTime()
         {
             (ChowModule module, _) = NewModule();
-            Assert.Throws<ParserEx>(() => module.Execute("break"));
+            Assert.Throws<ParserEx>(() => module.Run("break"));
         }
 
         // ============================================================================================================
@@ -97,7 +97,7 @@ namespace Chow.Interpreter.ImplementationTests
                 "    if x == 3:\n" +
                 "        continue\n" +
                 "    total = total + x";
-            module.Execute(src);
+            module.Run(src);
             // 1 + 2 + 4 + 5 = 12 (x == 3 skipped)
             Assert.That(module["total"].As<int>(), Is.EqualTo(12));
         }
@@ -106,7 +106,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Continue_OutsideLoop_ThrowsAtCompileTime()
         {
             (ChowModule module, _) = NewModule();
-            Assert.Throws<ParserEx>(() => module.Execute("continue"));
+            Assert.Throws<ParserEx>(() => module.Run("continue"));
         }
 
         // ============================================================================================================
@@ -128,7 +128,7 @@ namespace Chow.Interpreter.ImplementationTests
                 "        total = total + 1\n" +
                 "        j = j + 1\n" +
                 "    i = i + 1";
-            module.Execute(src);
+            module.Run(src);
             // inner adds 2 per outer iter; outer runs 3 times -> 6
             Assert.Multiple(() =>
             {
@@ -145,7 +145,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void While_LoopVariable_VisibleAfterLoopExits()
         {
             (ChowModule module, _) = NewModule();
-            module.Execute("i = 0\nwhile i < 4:\n    i = i + 1");
+            module.Run("i = 0\nwhile i < 4:\n    i = i + 1");
             Assert.That(module["i"].As<int>(), Is.EqualTo(4));
         }
 
@@ -157,7 +157,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void While_ExprStmntInBody_HookFiresEachIteration()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("i = 0\nwhile i < 3:\n    i\n    i = i + 1");
+            module.Run("i = 0\nwhile i < 3:\n    i\n    i = i + 1");
             Assert.That(hook.Values.Count, Is.EqualTo(3));
             Assert.Multiple(() =>
             {

@@ -20,8 +20,6 @@
 - If, elif, and else statements
 - Interop variable/function API
 - Callable interop/non-interop functions
-- Closures (functions can be declared in any block)
-
 
 ## Tests
 399/399 passing tests

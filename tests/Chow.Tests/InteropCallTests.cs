@@ -24,7 +24,7 @@ namespace Chow.Tests
             bool called = false;
             module["f"] = new ChowDynamic((Action)(() => { called = true; }));
 
-            module.Execute("f()");
+            module.Run("f()");
 
             Assert.That(called, Is.True);
         }
@@ -35,7 +35,7 @@ namespace Chow.Tests
             var module = MakeModule();
             module["f"] = new ChowDynamic((Func<ChowValue>)(() => new ChowInt(42)));
 
-            module.Execute("x = f()");
+            module.Run("x = f()");
 
             ChowValue result = module["x"];
             Assert.That(result.As<int>(), Is.EqualTo(42));
@@ -51,7 +51,7 @@ namespace Chow.Tests
             var module = MakeModule();
             module["f"] = new ChowDynamic((Func<ChowValue, ChowValue>)(v => new ChowInt(v.As<int>() + 1)));
 
-            module.Execute("x = f(10)");
+            module.Run("x = f(10)");
 
             Assert.That(module["x"].As<int>(), Is.EqualTo(11));
         }
@@ -63,7 +63,7 @@ namespace Chow.Tests
             int received = -1;
             module["f"] = new ChowDynamic((Action<ChowValue>)(v => { received = v.As<int>(); }));
 
-            module.Execute("f(99)");
+            module.Run("f(99)");
 
             Assert.That(received, Is.EqualTo(99));
         }
@@ -79,7 +79,7 @@ namespace Chow.Tests
             module["f"] = new ChowDynamic((Func<ChowValue[], ChowValue>)(args =>
                 new ChowInt(args[0].As<int>() * 10 + args[1].As<int>())));
 
-            module.Execute("x = f(3, 7)");
+            module.Run("x = f(3, 7)");
 
             Assert.That(module["x"].As<int>(), Is.EqualTo(37));
         }
@@ -95,7 +95,7 @@ namespace Chow.Tests
                 second = args[1].As<int>();
             }));
 
-            module.Execute("f(1, 2)");
+            module.Run("f(1, 2)");
 
             Assert.Multiple(() =>
             {
@@ -114,7 +114,7 @@ namespace Chow.Tests
             var module = MakeModule();
             module["f"] = new ChowDynamic(new object());
 
-            Assert.Throws<InvalidOperationException>(() => module.Execute("f()"));
+            Assert.Throws<InvalidOperationException>(() => module.Run("f()"));
         }
     }
 }

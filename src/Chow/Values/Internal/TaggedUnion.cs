@@ -12,7 +12,7 @@ namespace Chow.Interpreter.Values.Internal
         // TODO: Test whether using explicit struct layouts meaningly affects performance
         Tag _type;
         int _int;
-        double _float;
+        double _doubleFloat;
         bool _bool;
         object _obj;
 
@@ -41,7 +41,7 @@ namespace Chow.Interpreter.Values.Internal
                     case Tag.Int:
                         return _int != 0;
                     case Tag.Float:
-                        return _float != 0.0;
+                        return _doubleFloat != 0.0;
                     case Tag.Str:
                         return ((string)_obj).Length > 0;
                     case Tag.List:
@@ -73,12 +73,12 @@ namespace Chow.Interpreter.Values.Internal
             get
             {
                 ValidateTaggedUnionType(Tag.Float);
-                return _float;
+                return _doubleFloat;
             }
             set
             {
                 ValidateTaggedUnionType(Tag.Float);
-                _float = value;
+                _doubleFloat = value;
             }
         }
 
@@ -150,72 +150,44 @@ namespace Chow.Interpreter.Values.Internal
         {
             _type = type;
             _int = DEFAULT_INT_VALUE;
-            _float = DEFAULT_FLOAT_VALUE;
+            _doubleFloat = DEFAULT_FLOAT_VALUE;
             _bool = DEFAULT_BOOL_VALUE;
             _obj = DEFAULT_NULL_VALUE;
         }
 
-        public TaggedUnion(double value)
+        public TaggedUnion(double value) : this(Tag.Float)
         {
-            _float = value;
-            _type = Tag.Float;
-            _bool = DEFAULT_BOOL_VALUE;
-            _obj = DEFAULT_NULL_VALUE;
-            _int = DEFAULT_INT_VALUE;
+            _doubleFloat = value;
         }
 
-        public TaggedUnion(int value)
+        public TaggedUnion(int value) : this(Tag.Int)
         {
             _int = value;
-            _type = Tag.Int;
-            _float = DEFAULT_FLOAT_VALUE;
-            _bool = DEFAULT_BOOL_VALUE;
-            _obj = DEFAULT_NULL_VALUE;
         }
 
-        public TaggedUnion(string value)
+        public TaggedUnion(string value) : this(Tag.Str)
         {
             _obj = value;
-            _type = Tag.Str;
-            _int = DEFAULT_INT_VALUE;
-            _float = DEFAULT_FLOAT_VALUE;
-            _bool = DEFAULT_BOOL_VALUE;
         }
 
-        public TaggedUnion(bool value)
+        public TaggedUnion(bool value) : this(Tag.Boolean)
         {
             _bool = value;
-            _type = Tag.Boolean;
-            _int = DEFAULT_INT_VALUE;
-            _float = DEFAULT_FLOAT_VALUE;
-            _obj = DEFAULT_NULL_VALUE;
         }
 
-        public TaggedUnion(object value)
+        public TaggedUnion(object value) : this(Tag.Object)
         {
             _obj = value;
-            _type = Tag.Object;
-            _int = DEFAULT_INT_VALUE;
-            _float = DEFAULT_FLOAT_VALUE;
-            _bool = DEFAULT_BOOL_VALUE;
         }
 
-        public TaggedUnion(InternalList list)
+        public TaggedUnion(InternalList list) : this(Tag.List)
         {
             _obj = list;
-            _type = Tag.List;
-            _int = DEFAULT_INT_VALUE;
-            _float = DEFAULT_FLOAT_VALUE;
-            _bool = DEFAULT_BOOL_VALUE;
         }
 
-        public TaggedUnion(InternalDict dict)
+        public TaggedUnion(InternalDict dict) : this(Tag.Dict)
         {
             _obj = dict;
-            _type = Tag.Dict;
-            _int = DEFAULT_INT_VALUE;
-            _float = DEFAULT_FLOAT_VALUE;
-            _bool = DEFAULT_BOOL_VALUE;
         }
 
         /// <summary>
@@ -460,7 +432,7 @@ namespace Chow.Interpreter.Values.Internal
                 case Tag.Int:
                     return left._int == right._int;
                 case Tag.Float:
-                    return left._float == right._float;
+                    return left._doubleFloat == right._doubleFloat;
                 case Tag.Boolean:
                     return left._bool == right._bool;
                 case Tag.Str:
@@ -607,7 +579,7 @@ namespace Chow.Interpreter.Values.Internal
                 case Tag.Int:
                     return _int.GetHashCode();
                 case Tag.Float:
-                    return _float.GetHashCode();
+                    return _doubleFloat.GetHashCode();
                 case Tag.Boolean:
                     return _bool.GetHashCode();
                 case Tag.Str:
@@ -627,7 +599,7 @@ namespace Chow.Interpreter.Values.Internal
 
             if (IsFloat)
             {
-                return $"TaggedUnion(type={_type}, value={_float})";
+                return $"TaggedUnion(type={_type}, value={_doubleFloat})";
             }
 
             if (IsBoolean)

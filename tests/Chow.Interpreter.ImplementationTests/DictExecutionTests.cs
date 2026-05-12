@@ -43,7 +43,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void EmptyDictLiteral_ProducesZeroEntryDict()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{}");
+            module.Run("{}");
             Assert.That(LastDict(hook).Count, Is.EqualTo(0));
         }
 
@@ -51,7 +51,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void DictLiteral_SinglePair_StoresValue()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{1: 'a'}[1]");
+            module.Run("{1: 'a'}[1]");
             Assert.That(Last(hook).ToString(), Is.EqualTo("a"));
         }
 
@@ -59,7 +59,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void DictLiteral_PreservesInsertionOrder()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{3: 'a', 1: 'b', 2: 'c'}");
+            module.Run("{3: 'a', 1: 'b', 2: 'c'}");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{3: 'a', 1: 'b', 2: 'c'}"));
         }
 
@@ -67,7 +67,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void DictLiteral_MixedKeyTypes_Allowed()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{1: 'i', 'k': 's', None: 'n'}");
+            module.Run("{1: 'i', 'k': 's', None: 'n'}");
             Assert.That(LastDict(hook).Count, Is.EqualTo(3));
         }
 
@@ -75,7 +75,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void DictLiteral_NestedDict_ParsesAndExecutes()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{1: {2: 'inner'}}");
+            module.Run("{1: {2: 'inner'}}");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: {2: 'inner'}}"));
         }
 
@@ -83,7 +83,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void DictLiteral_ContainingList_ParsesAndExecutes()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{1: [10, 20]}");
+            module.Run("{1: [10, 20]}");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: [10, 20]}"));
         }
 
@@ -91,7 +91,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void ListLiteral_ContainingDict_ParsesAndExecutes()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("[{1: 'a'}, {2: 'b'}]");
+            module.Run("[{1: 'a'}, {2: 'b'}]");
             Assert.That(Last(hook).ToString(), Is.EqualTo("[{1: 'a'}, {2: 'b'}]"));
         }
 
@@ -103,7 +103,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Subscript_ExistingKey_ReadsValue()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{1: 10, 2: 20}[2]");
+            module.Run("{1: 10, 2: 20}[2]");
             Assert.That(Last(hook).As<int>(), Is.EqualTo(20));
         }
 
@@ -111,14 +111,14 @@ namespace Chow.Interpreter.ImplementationTests
         public void Subscript_MissingKey_ThrowsKeyError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("{1: 10}[99]"), Throws.TypeOf<ChowKeyErrorException>());
+            Assert.That(() => module.Run("{1: 10}[99]"), Throws.TypeOf<ChowKeyErrorException>());
         }
 
         [Test]
         public void Subscript_UnhashableKey_ThrowsTypeError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("{1: 10}[[1]]"), Throws.TypeOf<ChowTypeErrorException>());
+            Assert.That(() => module.Run("{1: 10}[[1]]"), Throws.TypeOf<ChowTypeErrorException>());
         }
 
         // ============================================================================================================
@@ -129,7 +129,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void SubscriptAssign_NewKey_AppendsInInsertionOrder()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("d = {1: 'a'}\nd[2] = 'b'\nd");
+            module.Run("d = {1: 'a'}\nd[2] = 'b'\nd");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: 'a', 2: 'b'}"));
         }
 
@@ -137,7 +137,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void SubscriptAssign_ExistingKey_OverwritesAndPreservesPosition()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("d = {1: 'a', 2: 'b'}\nd[1] = 'z'\nd");
+            module.Run("d = {1: 'a', 2: 'b'}\nd[1] = 'z'\nd");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: 'z', 2: 'b'}"));
         }
 
@@ -149,7 +149,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_GetPresent_ReturnsValue()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{1: 'a'}.get(1)");
+            module.Run("{1: 'a'}.get(1)");
             Assert.That(Last(hook).ToString(), Is.EqualTo("a"));
         }
 
@@ -157,7 +157,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_GetMissingNoDefault_ReturnsNone()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{1: 'a'}.get(99)");
+            module.Run("{1: 'a'}.get(99)");
             Assert.That(Last(hook).IsNone, Is.True);
         }
 
@@ -165,7 +165,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_GetMissingWithDefault_ReturnsDefault()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{1: 'a'}.get(99, 'fallback')");
+            module.Run("{1: 'a'}.get(99, 'fallback')");
             Assert.That(Last(hook).ToString(), Is.EqualTo("fallback"));
         }
 
@@ -173,7 +173,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_Clear_EmptiesDict()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("d = {1: 'a', 2: 'b'}\nd.clear()\nd");
+            module.Run("d = {1: 'a', 2: 'b'}\nd.clear()\nd");
             Assert.That(LastDict(hook).Count, Is.EqualTo(0));
         }
 
@@ -181,7 +181,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_PopPresent_RemovesAndReturnsValue()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("d = {1: 'a', 2: 'b'}\nd.pop(1)");
+            module.Run("d = {1: 'a', 2: 'b'}\nd.pop(1)");
             Assert.That(Last(hook).ToString(), Is.EqualTo("a"));
         }
 
@@ -189,14 +189,14 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_PopMissingNoDefault_ThrowsKeyError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("{1: 'a'}.pop(99)"), Throws.TypeOf<ChowKeyErrorException>());
+            Assert.That(() => module.Run("{1: 'a'}.pop(99)"), Throws.TypeOf<ChowKeyErrorException>());
         }
 
         [Test]
         public void MethodCall_PopMissingWithDefault_ReturnsDefault()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{1: 'a'}.pop(99, 'fallback')");
+            module.Run("{1: 'a'}.pop(99, 'fallback')");
             Assert.That(Last(hook).ToString(), Is.EqualTo("fallback"));
         }
 
@@ -204,7 +204,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_Update_MergesRightWinsAndAppendsNewKeys()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("d = {1: 'a', 2: 'b'}\nd.update({2: 'z', 3: 'c'})\nd");
+            module.Run("d = {1: 'a', 2: 'b'}\nd.update({2: 'z', 3: 'c'})\nd");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: 'a', 2: 'z', 3: 'c'}"));
         }
 
@@ -212,7 +212,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_SetDefaultPresent_ReturnsExisting()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("d = {1: 'a'}\nd.setdefault(1, 'z')");
+            module.Run("d = {1: 'a'}\nd.setdefault(1, 'z')");
             Assert.That(Last(hook).ToString(), Is.EqualTo("a"));
         }
 
@@ -220,7 +220,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void MethodCall_SetDefaultMissing_InsertsAndReturnsDefault()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("d = {1: 'a'}\nd.setdefault(2, 'b')\nd");
+            module.Run("d = {1: 'a'}\nd.setdefault(2, 'b')\nd");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: 'a', 2: 'b'}"));
         }
 
@@ -228,7 +228,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void BoundMethod_StoredInVariable_StillBoundToOriginalDict()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("d = {}\nf = d.setdefault\nf(1, 'a')\nf(2, 'b')\nd");
+            module.Run("d = {}\nf = d.setdefault\nf(1, 'a')\nf(2, 'b')\nd");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: 'a', 2: 'b'}"));
         }
 
@@ -240,14 +240,14 @@ namespace Chow.Interpreter.ImplementationTests
         public void Attribute_Unknown_ThrowsAttributeError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("{}.fake"), Throws.TypeOf<ChowAttributeErrorException>());
+            Assert.That(() => module.Run("{}.fake"), Throws.TypeOf<ChowAttributeErrorException>());
         }
 
         [Test]
         public void AttributeAssign_OnDict_ThrowsAttributeError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("d = {}\nd.x = 1"), Throws.TypeOf<ChowAttributeErrorException>());
+            Assert.That(() => module.Run("d = {}\nd.x = 1"), Throws.TypeOf<ChowAttributeErrorException>());
         }
 
         // ============================================================================================================
@@ -258,7 +258,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Merge_TwoDicts_RightWinsAndPreservesOrder()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{1: 'a', 2: 'b'} | {2: 'z', 3: 'c'}");
+            module.Run("{1: 'a', 2: 'b'} | {2: 'z', 3: 'c'}");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: 'a', 2: 'z', 3: 'c'}"));
         }
 
@@ -266,7 +266,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Merge_NonDictOperand_Throws()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("{1: 'a'} | 5"), Throws.InstanceOf<System.Exception>());
+            Assert.That(() => module.Run("{1: 'a'} | 5"), Throws.InstanceOf<System.Exception>());
         }
 
         // ============================================================================================================
@@ -277,7 +277,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Equality_EqualDicts_True()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{1: 'a', 2: 'b'} == {2: 'b', 1: 'a'}");
+            module.Run("{1: 'a', 2: 'b'} == {2: 'b', 1: 'a'}");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -285,7 +285,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Equality_DifferentValues_False()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{1: 'a'} == {1: 'b'}");
+            module.Run("{1: 'a'} == {1: 'b'}");
             Assert.That(Last(hook).As<bool>(), Is.False);
         }
 
@@ -293,7 +293,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Equality_NestedDicts_Recursive()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{1: {2: 'x'}} == {1: {2: 'x'}}");
+            module.Run("{1: {2: 'x'}} == {1: {2: 'x'}}");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -301,7 +301,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Inequality_DifferentDicts_True()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{1: 'a'} != {1: 'b'}");
+            module.Run("{1: 'a'} != {1: 'b'}");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -313,7 +313,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Truthiness_EmptyDict_IsFalsy()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("if {}:\n    1\nelse:\n    2");
+            module.Run("if {}:\n    1\nelse:\n    2");
             Assert.That(Last(hook).As<int>(), Is.EqualTo(2));
         }
 
@@ -321,7 +321,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Truthiness_NonEmptyDict_IsTruthy()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("if {1: 'a'}:\n    1\nelse:\n    2");
+            module.Run("if {1: 'a'}:\n    1\nelse:\n    2");
             Assert.That(Last(hook).As<int>(), Is.EqualTo(1));
         }
 
@@ -333,7 +333,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void In_DictPresentKey_True()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("1 in {1: 'a'}");
+            module.Run("1 in {1: 'a'}");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -341,7 +341,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void In_DictAbsentKey_False()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("99 in {1: 'a'}");
+            module.Run("99 in {1: 'a'}");
             Assert.That(Last(hook).As<bool>(), Is.False);
         }
 
@@ -349,7 +349,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void NotIn_DictAbsentKey_True()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("99 not in {1: 'a'}");
+            module.Run("99 not in {1: 'a'}");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -357,7 +357,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void In_ListPresentElement_True()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("2 in [1, 2, 3]");
+            module.Run("2 in [1, 2, 3]");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -365,7 +365,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void In_ListAbsentElement_False()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("9 in [1, 2, 3]");
+            module.Run("9 in [1, 2, 3]");
             Assert.That(Last(hook).As<bool>(), Is.False);
         }
 
@@ -373,7 +373,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void NotIn_ListAbsentElement_True()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("9 not in [1, 2, 3]");
+            module.Run("9 not in [1, 2, 3]");
             Assert.That(Last(hook).As<bool>(), Is.True);
         }
 
@@ -381,14 +381,14 @@ namespace Chow.Interpreter.ImplementationTests
         public void In_UnhashableKeyAgainstDict_ThrowsTypeError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("[1] in {1: 'a'}"), Throws.TypeOf<ChowTypeErrorException>());
+            Assert.That(() => module.Run("[1] in {1: 'a'}"), Throws.TypeOf<ChowTypeErrorException>());
         }
 
         [Test]
         public void In_NonIterableRightOperand_ThrowsTypeError()
         {
             (ChowModule module, _) = NewModule();
-            Assert.That(() => module.Execute("1 in 5"), Throws.TypeOf<ChowTypeErrorException>());
+            Assert.That(() => module.Run("1 in 5"), Throws.TypeOf<ChowTypeErrorException>());
         }
 
         // ============================================================================================================
@@ -399,7 +399,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Repr_EmptyDict_FormatsAsBraces()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{}");
+            module.Run("{}");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{}"));
         }
 
@@ -407,7 +407,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Repr_StringValues_SingleQuoted()
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
-            module.Execute("{1: 'a', 2: 'b'}");
+            module.Run("{1: 'a', 2: 'b'}");
             Assert.That(Last(hook).ToString(), Is.EqualTo("{1: 'a', 2: 'b'}"));
         }
 
@@ -424,7 +424,7 @@ namespace Chow.Interpreter.ImplementationTests
                 new Chow.Interpreter.Values.Internal.TaggedUnion(1),
                 new Chow.Interpreter.Values.Internal.TaggedUnion(42));
             module["x"] = dict;
-            module.Execute("x[1]");
+            module.Run("x[1]");
             Assert.That(Last(hook).As<int>(), Is.EqualTo(42));
         }
 
@@ -432,7 +432,7 @@ namespace Chow.Interpreter.ImplementationTests
         public void Api_SourceCreatesDict_ReadableViaHost()
         {
             ChowModule module = new ChowModule();
-            module.Execute("x = {1: 'a', 2: 'b'}");
+            module.Run("x = {1: 'a', 2: 'b'}");
             ChowDict dict = (ChowDict)module["x"];
             Assert.That(dict.Count, Is.EqualTo(2));
             Assert.That(dict[new ChowInt(1)].ToString(), Is.EqualTo("a"));

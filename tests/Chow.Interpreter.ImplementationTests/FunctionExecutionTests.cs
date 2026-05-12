@@ -45,8 +45,8 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
 
-            module.Execute("def f():\n    return 1");
-            module.Execute("f()");
+            module.Run("def f():\n    return 1");
+            module.Run("f()");
 
             Assert.That(Last(hook).As<int>(), Is.EqualTo(1));
         }
@@ -60,8 +60,8 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
 
-            module.Execute("def add(a, b):\n    return a + b");
-            module.Execute("add(3, 4)");
+            module.Run("def add(a, b):\n    return a + b");
+            module.Run("add(3, 4)");
 
             Assert.That(Last(hook).As<int>(), Is.EqualTo(7));
         }
@@ -81,8 +81,8 @@ namespace Chow.Interpreter.ImplementationTests
                 "        return 1\n" +
                 "    return n * fact(n - 1)";
 
-            module.Execute(defSource);
-            module.Execute("fact(5)");
+            module.Run(defSource);
+            module.Run("fact(5)");
 
             Assert.That(Last(hook).As<int>(), Is.EqualTo(120));
         }
@@ -96,8 +96,8 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
 
-            module.Execute("def noop():\n    x = 1");
-            module.Execute("noop()");
+            module.Run("def noop():\n    x = 1");
+            module.Run("noop()");
 
             Assert.That(Last(hook).IsNone, Is.True);
         }
@@ -117,8 +117,8 @@ namespace Chow.Interpreter.ImplementationTests
                 "        return\n" +
                 "    return n";
 
-            module.Execute(defSource);
-            module.Execute("early(-1)");
+            module.Run(defSource);
+            module.Run("early(-1)");
 
             Assert.That(Last(hook).IsNone, Is.True);
         }
@@ -134,8 +134,8 @@ namespace Chow.Interpreter.ImplementationTests
                 "        return\n" +
                 "    return n";
 
-            module.Execute(defSource);
-            module.Execute("early(5)");
+            module.Run(defSource);
+            module.Run("early(5)");
 
             Assert.That(Last(hook).As<int>(), Is.EqualTo(5));
         }
@@ -149,10 +149,10 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
 
-            module.Execute("x = 10");
-            module.Execute("def get():\n    return x");
-            module.Execute("x = 20");
-            module.Execute("get()");
+            module.Run("x = 10");
+            module.Run("def get():\n    return x");
+            module.Run("x = 20");
+            module.Run("get()");
 
             Assert.That(Last(hook).As<int>(), Is.EqualTo(20));
         }
@@ -173,8 +173,8 @@ namespace Chow.Interpreter.ImplementationTests
                 "        return x\n" +
                 "    return inner()";
 
-            module.Execute(defSource);
-            module.Execute("outer()");
+            module.Run(defSource);
+            module.Run("outer()");
 
             Assert.That(Last(hook).As<int>(), Is.EqualTo(1));
         }
@@ -195,9 +195,9 @@ namespace Chow.Interpreter.ImplementationTests
                 "        return x\n" +
                 "    return f";
 
-            module.Execute(defSource);
-            module.Execute("g = make()");
-            module.Execute("g()");
+            module.Run(defSource);
+            module.Run("g = make()");
+            module.Run("g()");
 
             Assert.That(Last(hook).As<int>(), Is.EqualTo(5));
         }
@@ -219,8 +219,8 @@ namespace Chow.Interpreter.ImplementationTests
                 "    x = countdown(n - 1)\n" +
                 "    return n + x";
 
-            module.Execute(defSource);
-            module.Execute("countdown(3)");
+            module.Run(defSource);
+            module.Run("countdown(3)");
 
             // 3 + (2 + (1 + 0)) = 6
             Assert.That(Last(hook).As<int>(), Is.EqualTo(6));
@@ -235,9 +235,9 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook _) = NewModule();
 
-            module.Execute("def f(a):\n    return a");
+            module.Run("def f(a):\n    return a");
 
-            Assert.Throws<ChowTypeErrorException>(() => module.Execute("f(1, 2)"));
+            Assert.Throws<ChowTypeErrorException>(() => module.Run("f(1, 2)"));
         }
 
         // ============================================================================================================
@@ -249,8 +249,8 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
 
-            module.Execute("def square(n):\n    return n * n");
-            module.Execute("square(7)");
+            module.Run("def square(n):\n    return n * n");
+            module.Run("square(7)");
 
             Assert.That(Last(hook).As<int>(), Is.EqualTo(49));
         }
@@ -265,12 +265,12 @@ namespace Chow.Interpreter.ImplementationTests
             (ChowModule moduleA, CaptureExprHook _) = NewModule();
             (ChowModule moduleB, CaptureExprHook hookB) = NewModule();
 
-            moduleA.Execute("def f():\n    return 42");
+            moduleA.Run("def f():\n    return 42");
 
             ChowValue fValue = moduleA["f"];
             moduleB["f"] = fValue;
 
-            moduleB.Execute("f()");
+            moduleB.Run("f()");
 
             Assert.That(Last(hookB).As<int>(), Is.EqualTo(42));
         }
@@ -293,8 +293,8 @@ namespace Chow.Interpreter.ImplementationTests
                 "        return c()\n" +
                 "    return b()";
 
-            module.Execute(defSource);
-            module.Execute("a()");
+            module.Run(defSource);
+            module.Run("a()");
 
             Assert.That(Last(hook).As<int>(), Is.EqualTo(1));
         }
@@ -308,9 +308,9 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
 
-            module.Execute("def f():\n    return 1");
-            module.Execute("g = f");
-            module.Execute("g()");
+            module.Run("def f():\n    return 1");
+            module.Run("g = f");
+            module.Run("g()");
 
             Assert.That(Last(hook).As<int>(), Is.EqualTo(1));
         }
@@ -324,9 +324,9 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (ChowModule module, CaptureExprHook hook) = NewModule();
 
-            module.Execute("def apply(fn):\n    return fn()");
-            module.Execute("def one():\n    return 1");
-            module.Execute("apply(one)");
+            module.Run("def apply(fn):\n    return fn()");
+            module.Run("def one():\n    return 1");
+            module.Run("apply(one)");
 
             Assert.That(Last(hook).As<int>(), Is.EqualTo(1));
         }
