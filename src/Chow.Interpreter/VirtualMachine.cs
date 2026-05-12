@@ -56,11 +56,11 @@ namespace Chow.Interpreter
                         break;
 
                     case OperationCode.Exponentiate:
-                        ExecuteBinaryOperation((l, r) => TaggedUnion.Power(l, r));
+                        ExecuteBinaryOperation(TaggedUnion.Power);
                         break;
 
                     case OperationCode.FloorDivide:
-                        ExecuteBinaryOperation((l, r) => TaggedUnion.FloorDivide(l, r));
+                        ExecuteBinaryOperation(TaggedUnion.FloorDivide);
                         break;
 
                     case OperationCode.Negate:
@@ -331,14 +331,9 @@ namespace Chow.Interpreter
         {
             var operand = _valStack.Pop();
 
-            if (operand.IsFloat)
-            {
-                _valStack.Push(new TaggedUnion(-operand.FloatValue));
-            }
-            else
-            {
-                _valStack.Push(new TaggedUnion(-operand.IntegerValue));
-            }
+            _valStack.Push(operand.IsFloat 
+                ? new TaggedUnion(-operand.FloatValue) 
+                : new TaggedUnion(-operand.IntegerValue));
         }
 
         void ExecuteNot()

@@ -72,8 +72,10 @@ namespace Chow.Interpreter
             ConsumeToken(TokenType.Newline, "Expected newline after ':'.");
 
             var indentTkn = ConsumeToken(TokenType.Indent, "Expected indented block body.");
-            var stmnts = new List<Node>();
-            stmnts.Add(ParseStmnt());
+            var stmnts = new List<Node>
+            {
+                ParseStmnt()
+            };
 
             TryConsumeType(TokenType.Newline);
 
