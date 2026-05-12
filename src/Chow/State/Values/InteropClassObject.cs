@@ -1,164 +1,85 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using Chow.Interpreter.Exceptions;
-using System.Collections.ObjectModel;
-using System.Text;
-using System.Reflection;
-using System.Linq;
 
 namespace Chow.Interpreter.State.Values
 {
-    abstract class InteropClassObject
+    internal abstract class InteropClassObject
     {
-        // These methods are delegates that are defined build-time, and child classes should not create new delegates runtime
-        readonly Dictionary<string, Delegate> _methodMap;
-        readonly Dictionary<string, TaggedUnion> _fieldMap;
-        readonly bool _isAttrsReadOnly;
+        readonly Dictionary<string, Func<TaggedUnion[], TaggedUnion>> _methods;
+        readonly Dictionary<string, Field> _fields;
 
         public abstract string ClassName { get; }
 
-        protected InteropClassObject(bool isAttrsReadOnly = false)
+        protected InteropClassObject()
         {
-            _methodMap = new Dictionary<string, Delegate>();
-            _fieldMap = new Dictionary<string, TaggedUnion>();
-            _isAttrsReadOnly = isAttrsReadOnly;
+            _methods = new Dictionary<string, Func<TaggedUnion[], TaggedUnion>>();
+            _fields = new Dictionary<string, Field>();
 
-            var initMethods = GetInitMethods();
-
-            foreach (var initMethod in initMethods)
+            foreach (var entry in GetInitMethods())
             {
-                _methodMap.Add(initMethod.name, initMethod.methodDelegate);
+                _methods.Add(entry.name, entry.fn);
             }
 
-            var initFields = GetInitFields();
-
-            foreach (var initField in initFields)
+            foreach (var entry in GetInitFields())
             {
-                _fieldMap.Add(initField.name, initField.fieldValue);
-            }
-        }
-
-        protected abstract (string name, Delegate methodDelegate)[] GetInitMethods();
-
-        protected abstract (string name, TaggedUnion fieldValue)[] GetInitFields();
-
-        public TaggedUnion GetAttributeValue(string name)
-        {
-            ValidateAttributeExists(name);
-
-            if (!_methodMap.ContainsKey(name))
-            {
-                return _fieldMap[name];
-            }
-            var methodDelegate = _methodMap[name];
-
-            // There's logic to invoke this elsewhere
-            return TaggedUnion.CreateWithValue(methodDelegate);
-        }
-
-        public void ReassignAttribute(string name, TaggedUnion value)
-        {
-            ValidateAttributeExists(name);
-
-            // Call ContainsKey even though in the validation method we did that for clarity
-            if (_methodMap.ContainsKey(name))
-            {
-                // Set to null, because it is being overridden to not be an interop method defined in THIS class
-                // This still could be an interop method, but at this point, the TaggedUnion is of an unknown type
-                _methodMap[name] = null;
-            }
-
-            // If it was a method, it is now a field because it is no longer associated with the build-time delegate
-            _fieldMap[name] = value;
-        }
-
-        public TaggedUnion CallMethod(string name, params object[] args)
-        {
-            ValidateMethodExists(name);
-
-            var method = _methodMap[name];
-            var methodInfo = method.GetMethodInfo();
-            var paramCount = methodInfo.GetParameters().Length;
-            var isVoid = methodInfo.ReturnType == typeof(void);
-            TaggedUnion returnVal = TaggedUnion.None;
-
-            if (args == null && paramCount > 0)
-            {
-                var pluralOrNon = paramCount == 1 ? "argument" : "arguments";
-                throw new TypeException($"{ClassName}.{name} takes exactly {paramCount} {pluralOrNon} ({paramCount} given)");
-            }
-
-            if (paramCount == 0)
-            {
-                if (isVoid)
+                if (_methods.ContainsKey(entry.name))
                 {
-                    // As with any other void function, methods will return None, so don't reassign returnVal
-                    method.DynamicInvoke();
+                    throw new InvalidOperationException(
+                        $"'{ClassName}' declares '{entry.name}' as both a method and a field");
                 }
-                else
-                {
-                    var returnObj = method.DynamicInvoke();
-
-                    if (returnObj != null)
-                    {
-                        returnVal = TaggedUnion.CreateWithValue(returnObj);
-                    }
-                }
+                _fields.Add(entry.name, entry.field);
             }
-            else
-            {
-                if (isVoid)
-                {
-                    method.DynamicInvoke(args);
-                }
-                else
-                {
-                    var returnObj = method.DynamicInvoke(args);
-
-                    if (returnObj != null)
-                    {
-                        returnVal = TaggedUnion.CreateWithValue(returnObj);
-                    }
-                }
-            }
-
-            return returnVal;
         }
 
-        void ValidateAttributeExists(string name)
+        // NOTE: called from base ctor BEFORE subclass ctor body runs. Subclass overrides MUST NOT
+        // depend on subclass-only field initialization here. Lambdas that close over `this` are
+        // safe because they execute later (after construction). Plain values are not.
+        protected abstract IEnumerable<(string name, Func<TaggedUnion[], TaggedUnion> fn)> GetInitMethods();
+        protected abstract IEnumerable<(string name, Field field)> GetInitFields();
+
+        public bool HasAttribute(string name)
         {
-            // Interop class objects CAN'T have attributes declared at runtime.
-            // However, attributes can be reassigned if the read-only flag is set to false
-            if (!_fieldMap.ContainsKey(name) && !_methodMap.ContainsKey(name))
-            {
-                throw new AttributeException($"'{ClassName}' object has no attribute '{name}'");
-            }
-
-            if (_isAttrsReadOnly)
-            {
-                throw new AttributeException($"'{ClassName}' object attribute '{name}' is read-only");
-            }
+            return _fields.ContainsKey(name) || _methods.ContainsKey(name);
         }
 
-        void ValidateMethodExists(string name)
+        public bool IsWritableField(string name)
         {
-            if (!_methodMap.ContainsKey(name))
-            {
-                throw new AttributeException($"'{ClassName}' object has no method '{name}'");
-            }
+            return _fields.TryGetValue(name, out var f) && f.Set != null;
         }
 
-        void ValidateArgumentCount(string methodName, bool isNull, int expectedCount, int givenCount)
+        public TaggedUnion GetAttribute(string name)
         {
-            if (isNull && expectedCount == 0)
+            if (_fields.TryGetValue(name, out var f))
             {
-                return;
+                return f.Get();
             }
-
-            if (expectedCount != givenCount)
+            if (_methods.TryGetValue(name, out var m))
             {
-                var pluralOrNon = expectedCount == 1 ? "argument" : "arguments";
-                throw new TypeException($"{ClassName}.{methodName} takes exactly {expectedCount} {pluralOrNon} ({givenCount} given)");
+                return new TaggedUnion((object)m);
+            }
+            throw new InvalidOperationException($"contract violation: '{ClassName}' has no attribute '{name}'");
+        }
+
+        public void SetAttribute(string name, TaggedUnion value)
+        {
+            if (!_fields.TryGetValue(name, out var f) || f.Set == null)
+            {
+                throw new InvalidOperationException(
+                    $"contract violation: '{ClassName}.{name}' is not a writable field");
+            }
+            f.Set(value);
+        }
+
+        protected readonly struct Field
+        {
+            public readonly Func<TaggedUnion> Get;
+            public readonly Action<TaggedUnion> Set;
+
+            public Field(Func<TaggedUnion> get, Action<TaggedUnion> set)
+            {
+                Get = get;
+                Set = set;
             }
         }
+    }
 }

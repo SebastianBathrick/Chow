@@ -14,5 +14,12 @@ namespace Chow.Interpreter.Exceptions
             TypeName = typeName;
             AttrName = attrName;
         }
+
+        public AttributeException(string typeName, string attrName, int lineNumber, string message)
+            : base(EXCEPTION_ALIAS, message, lineNumber)
+        {
+            TypeName = typeName;
+            AttrName = attrName;
+        }
     }
 }

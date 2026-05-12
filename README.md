@@ -1,36 +1,32 @@
 # Chow
 
 ## Current Features
-- Pythonic Syntax
-- REPL csproj
-- Floating-point data type
-- Integer data type
-- Boolean data type
-- String data type
-- Function data type (defined in source code)
-- Object data type (allows for interop objects)
-- Arithmetic Expressions
-- Comparison Expressions
-- Logic Expressions
-- Nested expressions
-- Top-level statements
-- Expression statements
-- Variable declaration statements
-- Variable assignment statements
-- If, elif, and else statements
-- Interop variable/function API
-- Callable interop/non-interop functions
+- Pythonic syntax
+- REPL (`Chow.Cli`, assembly `chw`)
+- Data types: `int`, `float`, `bool`, `str`, `None`, list, dict, function (source-defined)
+- Opaque object passthrough — arbitrary host objects can be assigned to Chow globals and round-tripped back unchanged
+- Internal extension point (`InteropClassObject`) for adding built-in "class-like" types with attribute/method dispatch (used internally; not part of the public host API yet)
+- Arithmetic, comparison, and logical expressions (with chained comparisons)
+- Membership (`in` / `not in`) on lists and dicts
+- Top-level statements and expression statements
+- Variable declaration and assignment; attribute assignment (`obj.attr = v`); subscript assignment (`a[k] = v`)
+- `if` / `elif` / `else`
+- `while` loops with `break` and `continue`
+- `def` (function declaration) with closures
+- List and dict literals, indexing, slicing, and built-in methods
+- Host interop API: expose variables and callable functions to Chow source
+- Expression-statement hook for REPL-style output
 
 ## Tests
-444/444 passing tests
+456/456 passing tests
 
 ## Small TODOs
-- Get rid of "is dirty" flags in major classes (redundant)
 - Remove top-level return statements (not needed)
 - Add ChowSyntaxErrorException and use it for top-level return statements
 - Add float literals starting with decimals
-- Have the output on the REPL start at cursor positon 0 instead of 3
+- Have the output on the REPL start at cursor position 0 instead of 3
 - Ensure negated primaries starting with "-" and "not" are flagged as such
+- Add user-defined `class X:` syntax (separate from `InteropClassObject`, which is host-defined)
 
 ## Behavior to Investigate
 REPL output:
@@ -64,10 +60,12 @@ Expected output:
 
 ## Operators
 - **Arithmetic:** `+`, `-`, `*`, `/`, `//`, `%`, `**`
-- **Comparison:** `==`, `!=`, `<`, `>`, `<=`, `>=`
-- **Logical:** `and`, `or`, `not`
+- **Comparison:** `==`, `!=`, `<`, `>`, `<=`, `>=` (chained: `a < b < c` desugars to `a < b and b < c`)
+- **Logical:** `and`, `or`, `not` (short-circuiting)
+- **Membership:** `in`, `not in` (lists, dicts)
 - **Unary:** `-x`, `not x`
-- **Assignment:** `=`
+- **Dict merge:** `|` (only on dicts; right-hand keys win)
+- **Assignment:** `=` (variable, attribute, subscript)
 - **Attribute access:** `obj.name`
 - **Subscript:** `seq[i]`, `seq[start:stop:step]`
 - **Call:** `f(args)`
@@ -150,9 +148,33 @@ print(f())          # 99
 ## Expression Statements
 ```python
 # The expression will be evaluated and ignored
-# To access the result of an evaluated expression, create a child class of `IExprStatementHook`.
+# To access the result of an evaluated expression, register an `IExpressionStatementHook`.
 9 + 10
 ```
+
+## While Loops
+```python
+i = 0
+while i < 5:
+    print(i)
+    i = i + 1
+
+# `break` exits the nearest loop
+while True:
+    if i > 10:
+        break
+    i = i + 1
+
+# `continue` jumps back to the loop condition
+i = 0
+while i < 5:
+    i = i + 1
+    if i == 3:
+        continue
+    print(i)   # prints 1, 2, 4, 5
+```
+
+`break` and `continue` outside a loop are caught at compile time. Variables first assigned inside a loop body are not visible after the loop exits — block bodies have their own scope (see CLAUDE.md "Scoping" for details).
 
 ## Lists
 
@@ -348,10 +370,10 @@ module["count"] = new ChowInt(42);
 
 // Chow -> Host (after Execute)
 module.Execute("result = count * 2");
-int doubled = module["result"].As<int>();
+int doubled = module.GetGlobal("result").As<int>();
 ```
 
-Reading an unset name throws `ChowApiNameErrorException`.
+The `ChowModule` indexer's getter returns the raw `object` boxed inside the `TaggedUnion` (`long`/`double`/`bool`/`string`/etc.). Prefer `GetGlobal(name)` when you want a typed `ChowValue` to call `.As<T>()` / pattern-match against. Reading an unset name throws `GlobalAccessException`.
 
 ## Exposing functions
 Wrap a delegate in `ChowDynamic`. Supported signatures:
@@ -389,24 +411,25 @@ module["log"] = new ChowDynamic((ChowValue v) => Console.WriteLine(v));
 ```csharp
 val.IsNone               // None check
 val.Is<int>()            // tag check
-val.As<int>()            // tag-typed cast (int / float / bool)
+val.As<int>()            // tag-typed cast (int / float / bool / long / double)
 val is ChowStr  s        // string pattern match: s.Value
 val is ChowList l        // list pattern match: l.Count, l[i]
-val is ChowDynamic d     // arbitrary host object: d.Value
+val is ChowDict d        // dict pattern match
+val is ChowDynamic dyn   // arbitrary host object: dyn.Value
 ```
 
 ## Expression statement hook
-To access the result of an evaluated expression statement, create a child class of `IExprStatementHook`. The example below is used by Chow.Repl:
+To access the result of an evaluated expression statement, implement `IExpressionStatementHook`. The example below is used by `Chow.Cli`:
 
 ```csharp
 using Chow.Interpreter.Hooks;
 using Chow.Interpreter.Values;
 
-class PrintExprStatementHook : IExprStatementHook
+class PrintExprStatementHook : IExpressionStatementHook
 {
-    // This is called after each expression statement is evaluated
-    // The 'value' parameter contains the result of the evaluated expression
-    public void Invoke(ChowValue value) => Console.WriteLine(value);
+    // Called after each expression statement is evaluated.
+    // `value` is the result of the evaluated expression (cast from `object` to `ChowValue`).
+    public void Invoke(object value = null) => Console.WriteLine((ChowValue)value);
 }
 ```
 Add an instance of the hook to a `ChowModule` object and execute your Chow source code:

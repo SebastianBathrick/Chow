@@ -542,17 +542,42 @@ namespace Chow.Interpreter
                 return;
             }
 
+            if (target.Tag == Tag.Object && target.ObjectValue is InteropClassObject ico)
+            {
+                if (!ico.HasAttribute(attrName))
+                {
+                    throw new Exceptions.AttributeException(ico.ClassName, attrName, GetCurrentLineNumber());
+                }
+                _valStack.Push(ico.GetAttribute(attrName));
+                return;
+            }
+
             throw new Exceptions.AttributeException(target.Tag.ToString().ToLowerInvariant(), attrName, GetCurrentLineNumber());
         }
 
         void ExecuteSetAttr()
         {
             var attrName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
-            _valStack.Pop(); // value
-
+            var value = _valStack.Pop();
             var target = _valStack.Pop();
 
-            // FUTURE: class instances assign here.
+            if (target.Tag == Tag.Object && target.ObjectValue is InteropClassObject ico)
+            {
+                if (!ico.HasAttribute(attrName))
+                {
+                    throw new Exceptions.AttributeException(ico.ClassName, attrName, GetCurrentLineNumber());
+                }
+                if (!ico.IsWritableField(attrName))
+                {
+                    // Method names and read-only fields both land here.
+                    throw new Exceptions.AttributeException(
+                        ico.ClassName, attrName, GetCurrentLineNumber(),
+                        $"'{ico.ClassName}' object attribute '{attrName}' is read-only");
+                }
+                ico.SetAttribute(attrName, value);
+                return;
+            }
+
             string typeName;
             switch (target.Tag)
             {

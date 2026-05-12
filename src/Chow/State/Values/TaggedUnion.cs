@@ -48,6 +48,9 @@ namespace Chow.Interpreter.State.Values
                         return ((InternalList)_obj).Count > 0;
                     case Tag.Dict:
                         return ((InternalDict)_obj).Count > 0;
+                    case Tag.Object:
+                        // Python defaults instances to truthy; match that for InteropClassObject and friends.
+                        return _obj != null;
                     default:
                         return false;
                 }
