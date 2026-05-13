@@ -23,6 +23,8 @@ namespace Chow.Interpreter
                     return new TaggedUnion(listValue.Internal);
                 case ChowDict dictValue:
                     return new TaggedUnion(dictValue.Internal);
+                case ChowFunction functionValue:
+                    return new TaggedUnion(functionValue.Value);
                 case ChowDynamic dynamicValue:
                     return new TaggedUnion(dynamicValue.Value);
                 default:
@@ -69,6 +71,11 @@ namespace Chow.Interpreter
                 case Tag.Dict:
                     return new ChowDict(taggedUnion.DictValue);
                 case Tag.Object:
+                    if (taggedUnion.ObjectValue is Closure)
+                    {
+                        return new ChowFunction(taggedUnion.ObjectValue);
+                    }
+
                     return new ChowDynamic(taggedUnion.ObjectValue);
                 default:
                     throw new InvalidOperationException();
