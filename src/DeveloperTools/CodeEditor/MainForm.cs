@@ -8,6 +8,20 @@ public partial class MainForm : Form
     const string FileExtension = ".chw";
     const string FileFilter = "Chow files (*.chw)|*.chw";
     const string UntitledName = "Untitled";
+    const string DefaultZoomText = "Zoom 100%";
+
+    static readonly string[] ZoomOptions =
+    {
+        "Zoom 25%",
+        "Zoom 50%",
+        "Zoom 75%",
+        "Zoom 90%",
+        "Zoom 100%",
+        "Zoom 110%",
+        "Zoom 125%",
+        "Zoom 150%",
+        "Zoom 175%"
+    };
 
     enum EditorState
     {
@@ -16,8 +30,17 @@ public partial class MainForm : Form
         Stopping
     }
 
+    enum EditorLogLevel
+    {
+        None,
+        Information,
+        Debug
+    }
+
     Process? _runProcess;
     string? _runTempFilePath;
+    long? _lastExecutionDurationMs;
+    ToolStripComboBox? _zoomComboBox;
     string? _currentFilePath;
     bool _isDirty;
     bool _isLoadingDocument;
@@ -27,8 +50,10 @@ public partial class MainForm : Form
     public MainForm()
     {
         InitializeComponent();
+        _zoomComboBox = FindZoomComboBox();
         WireEvents();
         ConfigureDialogs();
+        ConfigureZoomComboBox();
         SetState(EditorState.Idle);
         UpdateTitle();
     }
@@ -42,13 +67,36 @@ public partial class MainForm : Form
         openToolStripMenuItem.Click += openToolStripMenuItem_Click;
         saveToolStripMenuItem.Click += saveToolStripMenuItem_Click;
         saveAsToolStripMenuItem.Click += saveAsToolStripMenuItem_Click;
+        exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
         stopToolStripMenuItem.Click += stopToolStripMenuItem_Click;
         copyOutputToolStripMenuItem.Click += copyOutputToolStripMenuItem_Click;
         copyInputToolStripMenuItem.Click += copyInputToolStripMenuItem_Click;
         clearOutputToolStripMenuItem.Click += clearOutputToolStripMenuItem_Click;
         clearInputToolStripMenuItem.Click += clearInputToolStripMenuItem_Click;
+        logLevelComboBox.SelectedIndexChanged += logLevelComboBox_SelectedIndexChanged;
+        if (_zoomComboBox != null)
+        {
+            _zoomComboBox.SelectedIndexChanged += zoomComboBox_SelectedIndexChanged;
+        }
+
         inputTextArea.TextChanged += inputTextArea_TextChanged;
         FormClosing += MainForm_FormClosing;
+    }
+
+    void ConfigureZoomComboBox()
+    {
+        if (_zoomComboBox == null)
+        {
+            ApplyZoom(DefaultZoomText);
+            return;
+        }
+
+        _zoomComboBox.Items.Clear();
+        _zoomComboBox.Items.AddRange(ZoomOptions);
+        _zoomComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        _zoomComboBox.MaxDropDownItems = ZoomOptions.Length;
+        _zoomComboBox.SelectedItem = DefaultZoomText;
+        ApplyZoom(DefaultZoomText);
     }
 
     void ConfigureDialogs()
@@ -67,6 +115,13 @@ public partial class MainForm : Form
         saveFileDialog.OverwritePrompt = true;
         saveFileDialog.FileName = string.Empty;
         saveFileDialog.Title = "Save Chow File";
+
+        logLevelComboBox.Items.Clear();
+        logLevelComboBox.Items.Add("Logs Disabled");
+        logLevelComboBox.Items.Add("Information");
+        logLevelComboBox.Items.Add("Debug");
+        logLevelComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        logLevelComboBox.SelectedIndex = 0;
     }
 
     private void newToolStripMenuItem_Click(object sender, EventArgs e)
@@ -78,6 +133,7 @@ public partial class MainForm : Form
 
         LoadDocumentText(string.Empty, null);
         outputTextArea.Clear();
+        UpdateGuiState();
     }
 
     private void openToolStripMenuItem_Click(object? sender, EventArgs e)
@@ -104,6 +160,7 @@ public partial class MainForm : Form
             var text = File.ReadAllText(path, Encoding.UTF8);
             LoadDocumentText(text, path);
             outputTextArea.Clear();
+            UpdateGuiState();
         }
         catch (Exception ex)
         {
@@ -129,8 +186,9 @@ public partial class MainForm : Form
         }
 
         _isStoppingExecution = false;
+        _lastExecutionDurationMs = null;
         SetState(EditorState.Running);
-        AppendOutputLine("Starting module...");
+        AppendEditorLog(EditorLogLevel.Information, "Starting module...");
 
         var tempFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}{FileExtension}");
         _runTempFilePath = tempFilePath;
@@ -145,7 +203,7 @@ public partial class MainForm : Form
             process.OutputDataReceived += (_, args) => AppendProcessOutput(args.Data);
             process.ErrorDataReceived += (_, args) => AppendProcessOutput(args.Data);
 
-            AppendOutputLine("Running module...");
+            AppendEditorLog(EditorLogLevel.Information, "Running module...");
 
             process.Start();
             process.BeginOutputReadLine();
@@ -156,15 +214,17 @@ public partial class MainForm : Form
 
             if (_isStoppingExecution)
             {
-                AppendOutputLine("Execution stopped.");
+                AppendEditorLog(EditorLogLevel.Information, "Execution stopped.");
             }
             else if (process.ExitCode == 0)
             {
-                AppendOutputLine("Execution complete.");
+                AppendEditorLog(EditorLogLevel.Information, "Execution complete.");
+                AppendDebugExecutionDuration();
             }
             else
             {
-                AppendOutputLine($"Execution failed with exit code {process.ExitCode}.");
+                AppendEditorLog(EditorLogLevel.Information, $"Execution failed with exit code {process.ExitCode}.");
+                AppendDebugExecutionDuration();
             }
         }
         catch (Exception ex)
@@ -178,6 +238,11 @@ public partial class MainForm : Form
             _isStoppingExecution = false;
             SetState(EditorState.Idle);
         }
+    }
+
+    private void exitToolStripMenuItem_Click(object? sender, EventArgs e)
+    {
+        Close();
     }
 
     private void stopToolStripMenuItem_Click(object? sender, EventArgs e)
@@ -198,6 +263,20 @@ public partial class MainForm : Form
 
         _isDirty = true;
         UpdateTitle();
+        UpdateGuiState();
+    }
+
+    private void logLevelComboBox_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        UpdateGuiState();
+    }
+
+    private void zoomComboBox_SelectedIndexChanged(object? sender, EventArgs e)
+    {
+        if (_zoomComboBox?.SelectedItem is string selectedZoom)
+        {
+            ApplyZoom(selectedZoom);
+        }
     }
 
     private void copyOutputToolStripMenuItem_Click(object? sender, EventArgs e)
@@ -219,11 +298,13 @@ public partial class MainForm : Form
     private void clearOutputToolStripMenuItem_Click(object? sender, EventArgs e)
     {
         outputTextArea.Clear();
+        UpdateGuiState();
     }
 
     private void clearInputToolStripMenuItem_Click(object? sender, EventArgs e)
     {
         inputTextArea.Clear();
+        UpdateGuiState();
     }
 
     private void MainForm_FormClosing(object? sender, FormClosingEventArgs e)
@@ -316,6 +397,7 @@ public partial class MainForm : Form
             _currentFilePath = path;
             _isDirty = false;
             UpdateTitle();
+            UpdateGuiState();
             return true;
         }
         catch (Exception ex)
@@ -340,6 +422,7 @@ public partial class MainForm : Form
         _currentFilePath = filePath;
         _isDirty = false;
         UpdateTitle();
+        UpdateGuiState();
     }
 
     void StopExecution()
@@ -377,6 +460,11 @@ public partial class MainForm : Form
         process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
         process.StartInfo.ArgumentList.Add(Program.RunWorkerArgument);
         process.StartInfo.ArgumentList.Add(tempFilePath);
+        if (CurrentLogLevel == EditorLogLevel.Debug)
+        {
+            process.StartInfo.ArgumentList.Add(Program.DebugDurationArgument);
+        }
+
         return process;
     }
 
@@ -411,15 +499,26 @@ public partial class MainForm : Form
     {
         var isIdle = _state == EditorState.Idle;
         var isRunning = _state == EditorState.Running;
+        var hasInput = inputTextArea.TextLength > 0;
+        var hasFile = _currentFilePath != null;
 
         inputTextArea.Enabled = isIdle;
         executeToolStripMenuItem.Enabled = isIdle;
         stopToolStripMenuItem.Enabled = isRunning;
-        newToolStripMenuItem.Enabled = isIdle;
+        newToolStripMenuItem.Enabled = isIdle && (hasFile || hasInput);
         openToolStripMenuItem.Enabled = isIdle;
-        saveToolStripMenuItem.Enabled = isIdle;
-        saveAsToolStripMenuItem.Enabled = isIdle;
-        clearInputToolStripMenuItem.Enabled = isIdle;
+        saveToolStripMenuItem.Enabled = isIdle && hasFile;
+        saveAsToolStripMenuItem.Enabled = isIdle && (hasFile || hasInput);
+        exitToolStripMenuItem.Enabled = true;
+        clearInputToolStripMenuItem.Enabled = isIdle && hasInput;
+        copyInputToolStripMenuItem.Enabled = hasInput;
+        clearOutputToolStripMenuItem.Enabled = outputTextArea.TextLength > 0;
+        copyOutputToolStripMenuItem.Enabled = outputTextArea.TextLength > 0;
+        logLevelComboBox.Enabled = isIdle;
+        if (_zoomComboBox != null)
+        {
+            _zoomComboBox.Enabled = true;
+        }
     }
 
     void AppendProcessOutput(string? text)
@@ -429,7 +528,46 @@ public partial class MainForm : Form
             return;
         }
 
+        if (TryCaptureExecutionDuration(text))
+        {
+            return;
+        }
+
         AppendOutputLine(text);
+    }
+
+    void AppendEditorLog(EditorLogLevel minimumLevel, string text)
+    {
+        if (CurrentLogLevel >= minimumLevel)
+        {
+            AppendOutputLine(text);
+        }
+    }
+
+    void AppendDebugExecutionDuration()
+    {
+        if (CurrentLogLevel != EditorLogLevel.Debug || !_lastExecutionDurationMs.HasValue)
+        {
+            return;
+        }
+
+        AppendOutputLine($"Execution time: {_lastExecutionDurationMs.Value} ms");
+    }
+
+    bool TryCaptureExecutionDuration(string text)
+    {
+        if (!text.StartsWith(Program.ExecutionDurationPrefix, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var rawDuration = text.Substring(Program.ExecutionDurationPrefix.Length);
+        if (long.TryParse(rawDuration, out var durationMs))
+        {
+            _lastExecutionDurationMs = durationMs;
+        }
+
+        return true;
     }
 
     void AppendOutputLine(string text)
@@ -465,6 +603,7 @@ public partial class MainForm : Form
         outputTextArea.AppendText(text);
         outputTextArea.SelectionStart = outputTextArea.TextLength;
         outputTextArea.ScrollToCaret();
+        UpdateGuiState();
     }
 
     bool HasUnsavedChanges()
@@ -486,5 +625,66 @@ public partial class MainForm : Form
     void ShowError(string message)
     {
         MessageBox.Show(this, message, "CodeEditor", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+
+    void ApplyZoom(string zoomText)
+    {
+        var zoomFactor = ParseZoomFactor(zoomText);
+        inputTextArea.ZoomFactor = zoomFactor;
+        outputTextArea.ZoomFactor = zoomFactor;
+    }
+
+    static float ParseZoomFactor(string zoomText)
+    {
+        var percentText = zoomText
+            .Replace("Zoom", string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace("%", string.Empty, StringComparison.Ordinal)
+            .Trim();
+
+        if (!float.TryParse(percentText, out var percent))
+        {
+            return 1.0F;
+        }
+
+        return percent / 100.0F;
+    }
+
+    ToolStripComboBox? FindZoomComboBox()
+    {
+        var comboBoxes = menuStrip.Items.OfType<ToolStripComboBox>().ToArray();
+        var namedZoomComboBox = comboBoxes.FirstOrDefault(comboBox =>
+            comboBox.Name?.Contains("zoom", StringComparison.OrdinalIgnoreCase) == true);
+
+        if (namedZoomComboBox != null)
+        {
+            return namedZoomComboBox;
+        }
+
+        var nonLogComboBoxes = comboBoxes
+            .Where(comboBox => !ReferenceEquals(comboBox, logLevelComboBox))
+            .ToArray();
+
+        return nonLogComboBoxes.Length == 1 ? nonLogComboBoxes[0] : null;
+    }
+
+    private void zoomComboBox_Click(object sender, EventArgs e)
+    {
+
+    }
+
+    EditorLogLevel CurrentLogLevel
+    {
+        get
+        {
+            switch (logLevelComboBox.SelectedItem as string)
+            {
+                case "Information":
+                    return EditorLogLevel.Information;
+                case "Debug":
+                    return EditorLogLevel.Debug;
+                default:
+                    return EditorLogLevel.None;
+            }
+        }
     }
 }

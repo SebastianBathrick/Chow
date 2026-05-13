@@ -1,18 +1,22 @@
 using Chow.Interpreter;
 using Chow.Interpreter.Values;
+using System.Diagnostics;
 
 namespace CodeEditor;
 
 static class Program
 {
     public const string RunWorkerArgument = "--run-chow-worker";
+    public const string DebugDurationArgument = "--debug-duration";
+    public const string ExecutionDurationPrefix = "__CODEEDITOR_EXECUTION_MS__:";
 
     [STAThread]
     static int Main(string[] args)
     {
-        if (args.Length == 2 && args[0] == RunWorkerArgument)
+        if (args.Length >= 2 && args[0] == RunWorkerArgument)
         {
-            return RunChowWorker(args[1]);
+            var includeExecutionDuration = args.Length >= 3 && args[2] == DebugDurationArgument;
+            return RunChowWorker(args[1], includeExecutionDuration);
         }
 
         ApplicationConfiguration.Initialize();
@@ -20,7 +24,7 @@ static class Program
         return 0;
     }
 
-    static int RunChowWorker(string filePath)
+    static int RunChowWorker(string filePath, bool includeExecutionDuration)
     {
         try
         {
@@ -32,13 +36,34 @@ static class Program
                     throw new InvalidOperationException("input() is not supported in CodeEditor."))
             };
 
-            module.Execute(source);
-            return 0;
+            var stopwatch = Stopwatch.StartNew();
+            try
+            {
+                module.Execute(source);
+                stopwatch.Stop();
+                WriteExecutionDuration(includeExecutionDuration, stopwatch.ElapsedMilliseconds);
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                Console.Error.WriteLine(ex);
+                WriteExecutionDuration(includeExecutionDuration, stopwatch.ElapsedMilliseconds);
+                return 1;
+            }
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine(ex);
             return 1;
+        }
+    }
+
+    static void WriteExecutionDuration(bool includeExecutionDuration, long elapsedMilliseconds)
+    {
+        if (includeExecutionDuration)
+        {
+            Console.Error.WriteLine($"{ExecutionDurationPrefix}{elapsedMilliseconds}");
         }
     }
 }

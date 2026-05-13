@@ -48,6 +48,8 @@ partial class MainForm
         codeToolStripMenuItem = new ToolStripMenuItem();
         executeToolStripMenuItem = new ToolStripMenuItem();
         stopToolStripMenuItem = new ToolStripMenuItem();
+        logLevelComboBox = new ToolStripComboBox();
+        zoomComboBox = new ToolStripComboBox();
         IoSplitContainer = new SplitContainer();
         inputTextArea = new RichTextBox();
         outputTextArea = new RichTextBox();
@@ -63,10 +65,10 @@ partial class MainForm
         // menuStrip
         // 
         menuStrip.ImageScalingSize = new Size(20, 20);
-        menuStrip.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, editToolStripMenuItem, codeToolStripMenuItem });
+        menuStrip.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, editToolStripMenuItem, codeToolStripMenuItem, logLevelComboBox, zoomComboBox });
         menuStrip.Location = new Point(0, 0);
         menuStrip.Name = "menuStrip";
-        menuStrip.Size = new Size(782, 28);
+        menuStrip.Size = new Size(782, 32);
         menuStrip.TabIndex = 1;
         menuStrip.Text = "menuStrip1";
         // 
@@ -74,60 +76,60 @@ partial class MainForm
         // 
         fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newToolStripMenuItem, toolStripSeparator1, openToolStripMenuItem, toolStripSeparator2, saveToolStripMenuItem, saveAsToolStripMenuItem, toolStripSeparator3, exitToolStripMenuItem });
         fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-        fileToolStripMenuItem.Size = new Size(46, 24);
+        fileToolStripMenuItem.Size = new Size(46, 28);
         fileToolStripMenuItem.Text = "File";
         // 
         // newToolStripMenuItem
         // 
         newToolStripMenuItem.Name = "newToolStripMenuItem";
-        newToolStripMenuItem.Size = new Size(224, 26);
+        newToolStripMenuItem.Size = new Size(143, 26);
         newToolStripMenuItem.Text = "New";
         newToolStripMenuItem.Click += newToolStripMenuItem_Click;
         // 
         // toolStripSeparator1
         // 
         toolStripSeparator1.Name = "toolStripSeparator1";
-        toolStripSeparator1.Size = new Size(221, 6);
+        toolStripSeparator1.Size = new Size(140, 6);
         // 
         // openToolStripMenuItem
         // 
         openToolStripMenuItem.Name = "openToolStripMenuItem";
-        openToolStripMenuItem.Size = new Size(224, 26);
+        openToolStripMenuItem.Size = new Size(143, 26);
         openToolStripMenuItem.Text = "Open";
         // 
         // toolStripSeparator2
         // 
         toolStripSeparator2.Name = "toolStripSeparator2";
-        toolStripSeparator2.Size = new Size(221, 6);
+        toolStripSeparator2.Size = new Size(140, 6);
         // 
         // saveToolStripMenuItem
         // 
         saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-        saveToolStripMenuItem.Size = new Size(224, 26);
+        saveToolStripMenuItem.Size = new Size(143, 26);
         saveToolStripMenuItem.Text = "Save";
         // 
         // saveAsToolStripMenuItem
         // 
         saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-        saveAsToolStripMenuItem.Size = new Size(224, 26);
+        saveAsToolStripMenuItem.Size = new Size(143, 26);
         saveAsToolStripMenuItem.Text = "Save As";
         // 
         // toolStripSeparator3
         // 
         toolStripSeparator3.Name = "toolStripSeparator3";
-        toolStripSeparator3.Size = new Size(221, 6);
+        toolStripSeparator3.Size = new Size(140, 6);
         // 
         // exitToolStripMenuItem
         // 
         exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-        exitToolStripMenuItem.Size = new Size(224, 26);
+        exitToolStripMenuItem.Size = new Size(143, 26);
         exitToolStripMenuItem.Text = "Exit";
         // 
         // editToolStripMenuItem
         // 
         editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { copyOutputToolStripMenuItem, copyInputToolStripMenuItem, editToolStripSeparator, clearOutputToolStripMenuItem, clearInputToolStripMenuItem });
         editToolStripMenuItem.Name = "editToolStripMenuItem";
-        editToolStripMenuItem.Size = new Size(49, 24);
+        editToolStripMenuItem.Size = new Size(49, 28);
         editToolStripMenuItem.Text = "Edit";
         // 
         // copyOutputToolStripMenuItem
@@ -163,7 +165,7 @@ partial class MainForm
         // 
         codeToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { executeToolStripMenuItem, stopToolStripMenuItem });
         codeToolStripMenuItem.Name = "codeToolStripMenuItem";
-        codeToolStripMenuItem.Size = new Size(80, 24);
+        codeToolStripMenuItem.Size = new Size(80, 28);
         codeToolStripMenuItem.Text = "Interpret";
         codeToolStripMenuItem.Click += toolStripMenuItem1_Click;
         // 
@@ -179,6 +181,21 @@ partial class MainForm
         stopToolStripMenuItem.Name = "stopToolStripMenuItem";
         stopToolStripMenuItem.Size = new Size(160, 26);
         stopToolStripMenuItem.Text = "■ Stop";
+        // 
+        // logLevelComboBox
+        // 
+        logLevelComboBox.Items.AddRange(new object[] { "Logs Disabled", "Informaton", "Debugging" });
+        logLevelComboBox.MaxDropDownItems = 3;
+        logLevelComboBox.Name = "logLevelComboBox";
+        logLevelComboBox.Size = new Size(121, 28);
+        logLevelComboBox.ToolTipText = "Select severity level for editor logs";
+        // 
+        // zoomComboBox
+        // 
+        zoomComboBox.Items.AddRange(new object[] { "Zoom 25%", "Zoom 50%", "Zoom 75%", "Zoom 90%", "Zoom 100%", "Zoom 110%", "Zoom 125%", "Zoom 150%", "Zoom 175%" });
+        zoomComboBox.Name = "zoomComboBox";
+        zoomComboBox.Size = new Size(121, 28);
+        zoomComboBox.Click += zoomComboBox_Click;
         // 
         // IoSplitContainer
         // 
@@ -199,7 +216,10 @@ partial class MainForm
         // 
         // inputTextArea
         // 
+        inputTextArea.AcceptsTab = true;
+        inputTextArea.DetectUrls = false;
         inputTextArea.Dock = DockStyle.Fill;
+        inputTextArea.EnableAutoDragDrop = true;
         inputTextArea.Location = new Point(0, 0);
         inputTextArea.Name = "inputTextArea";
         inputTextArea.Size = new Size(379, 413);
@@ -209,12 +229,13 @@ partial class MainForm
         // outputTextArea
         // 
         outputTextArea.Dock = DockStyle.Fill;
+        outputTextArea.Enabled = false;
         outputTextArea.Location = new Point(0, 0);
         outputTextArea.Name = "outputTextArea";
         outputTextArea.ReadOnly = true;
         outputTextArea.Size = new Size(375, 413);
         outputTextArea.TabIndex = 0;
-        outputTextArea.Text = "";
+        outputTextArea.Text = " ";
         // 
         // openFileDialog
         // 
@@ -266,4 +287,6 @@ partial class MainForm
     private ToolStripSeparator toolStripSeparator2;
     private ToolStripSeparator toolStripSeparator3;
     private ToolStripMenuItem exitToolStripMenuItem;
+    private ToolStripComboBox logLevelComboBox;
+    private ToolStripComboBox zoomComboBox;
 }
