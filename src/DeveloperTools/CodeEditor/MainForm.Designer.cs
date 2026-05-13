@@ -64,11 +64,12 @@ partial class MainForm
         // 
         // menuStrip
         // 
+        menuStrip.BackColor = SystemColors.MenuBar;
         menuStrip.ImageScalingSize = new Size(20, 20);
         menuStrip.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, editToolStripMenuItem, codeToolStripMenuItem, logLevelComboBox, zoomComboBox });
         menuStrip.Location = new Point(0, 0);
         menuStrip.Name = "menuStrip";
-        menuStrip.Size = new Size(782, 32);
+        menuStrip.Size = new Size(782, 28);
         menuStrip.TabIndex = 1;
         menuStrip.Text = "menuStrip1";
         // 
@@ -76,7 +77,7 @@ partial class MainForm
         // 
         fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newToolStripMenuItem, toolStripSeparator1, openToolStripMenuItem, toolStripSeparator2, saveToolStripMenuItem, saveAsToolStripMenuItem, toolStripSeparator3, exitToolStripMenuItem });
         fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-        fileToolStripMenuItem.Size = new Size(46, 28);
+        fileToolStripMenuItem.Size = new Size(46, 24);
         fileToolStripMenuItem.Text = "File";
         // 
         // newToolStripMenuItem
@@ -129,7 +130,7 @@ partial class MainForm
         // 
         editToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { copyOutputToolStripMenuItem, copyInputToolStripMenuItem, editToolStripSeparator, clearOutputToolStripMenuItem, clearInputToolStripMenuItem });
         editToolStripMenuItem.Name = "editToolStripMenuItem";
-        editToolStripMenuItem.Size = new Size(49, 28);
+        editToolStripMenuItem.Size = new Size(49, 24);
         editToolStripMenuItem.Text = "Edit";
         // 
         // copyOutputToolStripMenuItem
@@ -165,7 +166,7 @@ partial class MainForm
         // 
         codeToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { executeToolStripMenuItem, stopToolStripMenuItem });
         codeToolStripMenuItem.Name = "codeToolStripMenuItem";
-        codeToolStripMenuItem.Size = new Size(80, 28);
+        codeToolStripMenuItem.Size = new Size(80, 24);
         codeToolStripMenuItem.Text = "Interpret";
         codeToolStripMenuItem.Click += toolStripMenuItem1_Click;
         // 
@@ -184,17 +185,24 @@ partial class MainForm
         // 
         // logLevelComboBox
         // 
+        logLevelComboBox.BackColor = SystemColors.ControlLightLight;
+        logLevelComboBox.Font = new Font("Microsoft Sans Serif", 7.8F, FontStyle.Italic);
+        logLevelComboBox.ForeColor = SystemColors.WindowText;
         logLevelComboBox.Items.AddRange(new object[] { "Logs Disabled", "Informaton", "Debugging" });
+        logLevelComboBox.Margin = new Padding(5, 0, 1, 0);
         logLevelComboBox.MaxDropDownItems = 3;
         logLevelComboBox.Name = "logLevelComboBox";
-        logLevelComboBox.Size = new Size(121, 28);
+        logLevelComboBox.Size = new Size(121, 24);
         logLevelComboBox.ToolTipText = "Select severity level for editor logs";
         // 
         // zoomComboBox
         // 
+        zoomComboBox.BackColor = SystemColors.ControlLightLight;
+        zoomComboBox.Font = new Font("Microsoft Sans Serif", 7.8F, FontStyle.Italic);
         zoomComboBox.Items.AddRange(new object[] { "Zoom 25%", "Zoom 50%", "Zoom 75%", "Zoom 90%", "Zoom 100%", "Zoom 110%", "Zoom 125%", "Zoom 150%", "Zoom 175%" });
+        zoomComboBox.Margin = new Padding(5, 0, 1, 0);
         zoomComboBox.Name = "zoomComboBox";
-        zoomComboBox.Size = new Size(121, 28);
+        zoomComboBox.Size = new Size(121, 24);
         zoomComboBox.Click += zoomComboBox_Click;
         // 
         // IoSplitContainer
@@ -217,6 +225,7 @@ partial class MainForm
         // inputTextArea
         // 
         inputTextArea.AcceptsTab = true;
+        inputTextArea.BackColor = SystemColors.ControlLightLight;
         inputTextArea.DetectUrls = false;
         inputTextArea.Dock = DockStyle.Fill;
         inputTextArea.EnableAutoDragDrop = true;
@@ -228,6 +237,7 @@ partial class MainForm
         // 
         // outputTextArea
         // 
+        outputTextArea.BackColor = SystemColors.Control;
         outputTextArea.Dock = DockStyle.Fill;
         outputTextArea.Enabled = false;
         outputTextArea.Location = new Point(0, 0);
@@ -245,6 +255,7 @@ partial class MainForm
         // 
         AutoScaleDimensions = new SizeF(8F, 20F);
         AutoScaleMode = AutoScaleMode.Font;
+        BackColor = SystemColors.Window;
         ClientSize = new Size(782, 453);
         Controls.Add(IoSplitContainer);
         Controls.Add(menuStrip);

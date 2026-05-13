@@ -50,6 +50,7 @@ public partial class MainForm : Form
     public MainForm()
     {
         InitializeComponent();
+        outputTextArea.Clear();
         _zoomComboBox = FindZoomComboBox();
         WireEvents();
         ConfigureDialogs();
@@ -203,7 +204,7 @@ public partial class MainForm : Form
             process.OutputDataReceived += (_, args) => AppendProcessOutput(args.Data);
             process.ErrorDataReceived += (_, args) => AppendProcessOutput(args.Data);
 
-            AppendEditorLog(EditorLogLevel.Information, "Running module...");
+            AppendEditorLog(EditorLogLevel.Information, "Running module...\n");
 
             process.Start();
             process.BeginOutputReadLine();
@@ -214,16 +215,16 @@ public partial class MainForm : Form
 
             if (_isStoppingExecution)
             {
-                AppendEditorLog(EditorLogLevel.Information, "Execution stopped.");
+                AppendEditorLog(EditorLogLevel.Information, "\nExecution stopped.");
             }
             else if (process.ExitCode == 0)
             {
-                AppendEditorLog(EditorLogLevel.Information, "Execution complete.");
+                AppendEditorLog(EditorLogLevel.Information, "\nExecution complete.");
                 AppendDebugExecutionDuration();
             }
             else
             {
-                AppendEditorLog(EditorLogLevel.Information, $"Execution failed with exit code {process.ExitCode}.");
+                AppendEditorLog(EditorLogLevel.Information, $"\nExecution failed with exit code {process.ExitCode}.");
                 AppendDebugExecutionDuration();
             }
         }
@@ -540,7 +541,7 @@ public partial class MainForm : Form
     {
         if (CurrentLogLevel >= minimumLevel)
         {
-            AppendOutputLine(text);
+            AppendOutputLine(text, FontStyle.Italic);
         }
     }
 
@@ -572,6 +573,11 @@ public partial class MainForm : Form
 
     void AppendOutputLine(string text)
     {
+        AppendOutputLine(text, FontStyle.Regular);
+    }
+
+    void AppendOutputLine(string text, FontStyle fontStyle)
+    {
         if (IsDisposed)
         {
             return;
@@ -586,7 +592,7 @@ public partial class MainForm : Form
 
             try
             {
-                BeginInvoke(new Action(() => AppendOutputLine(text)));
+                BeginInvoke(new Action(() => AppendOutputLine(text, fontStyle)));
             }
             catch (InvalidOperationException)
             {
@@ -600,7 +606,11 @@ public partial class MainForm : Form
             outputTextArea.AppendText(Environment.NewLine);
         }
 
+        using var outputFont = new Font(outputTextArea.Font, fontStyle);
+        outputTextArea.SelectionLength = 0;
+        outputTextArea.SelectionFont = outputFont;
         outputTextArea.AppendText(text);
+        outputTextArea.SelectionFont = outputTextArea.Font;
         outputTextArea.SelectionStart = outputTextArea.TextLength;
         outputTextArea.ScrollToCaret();
         UpdateGuiState();
