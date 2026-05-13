@@ -32,9 +32,13 @@ partial class MainForm
         menuStrip = new MenuStrip();
         fileToolStripMenuItem = new ToolStripMenuItem();
         newToolStripMenuItem = new ToolStripMenuItem();
+        toolStripSeparator1 = new ToolStripSeparator();
         openToolStripMenuItem = new ToolStripMenuItem();
+        toolStripSeparator2 = new ToolStripSeparator();
         saveToolStripMenuItem = new ToolStripMenuItem();
         saveAsToolStripMenuItem = new ToolStripMenuItem();
+        toolStripSeparator3 = new ToolStripSeparator();
+        exitToolStripMenuItem = new ToolStripMenuItem();
         editToolStripMenuItem = new ToolStripMenuItem();
         copyOutputToolStripMenuItem = new ToolStripMenuItem();
         copyInputToolStripMenuItem = new ToolStripMenuItem();
@@ -68,7 +72,7 @@ partial class MainForm
         // 
         // fileToolStripMenuItem
         // 
-        fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newToolStripMenuItem, openToolStripMenuItem, saveToolStripMenuItem, saveAsToolStripMenuItem });
+        fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { newToolStripMenuItem, toolStripSeparator1, openToolStripMenuItem, toolStripSeparator2, saveToolStripMenuItem, saveAsToolStripMenuItem, toolStripSeparator3, exitToolStripMenuItem });
         fileToolStripMenuItem.Name = "fileToolStripMenuItem";
         fileToolStripMenuItem.Size = new Size(46, 24);
         fileToolStripMenuItem.Text = "File";
@@ -76,27 +80,48 @@ partial class MainForm
         // newToolStripMenuItem
         // 
         newToolStripMenuItem.Name = "newToolStripMenuItem";
-        newToolStripMenuItem.Size = new Size(143, 26);
+        newToolStripMenuItem.Size = new Size(224, 26);
         newToolStripMenuItem.Text = "New";
         newToolStripMenuItem.Click += newToolStripMenuItem_Click;
+        // 
+        // toolStripSeparator1
+        // 
+        toolStripSeparator1.Name = "toolStripSeparator1";
+        toolStripSeparator1.Size = new Size(221, 6);
         // 
         // openToolStripMenuItem
         // 
         openToolStripMenuItem.Name = "openToolStripMenuItem";
-        openToolStripMenuItem.Size = new Size(143, 26);
+        openToolStripMenuItem.Size = new Size(224, 26);
         openToolStripMenuItem.Text = "Open";
+        // 
+        // toolStripSeparator2
+        // 
+        toolStripSeparator2.Name = "toolStripSeparator2";
+        toolStripSeparator2.Size = new Size(221, 6);
         // 
         // saveToolStripMenuItem
         // 
         saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-        saveToolStripMenuItem.Size = new Size(143, 26);
+        saveToolStripMenuItem.Size = new Size(224, 26);
         saveToolStripMenuItem.Text = "Save";
         // 
         // saveAsToolStripMenuItem
         // 
         saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-        saveAsToolStripMenuItem.Size = new Size(143, 26);
+        saveAsToolStripMenuItem.Size = new Size(224, 26);
         saveAsToolStripMenuItem.Text = "Save As";
+        // 
+        // toolStripSeparator3
+        // 
+        toolStripSeparator3.Name = "toolStripSeparator3";
+        toolStripSeparator3.Size = new Size(221, 6);
+        // 
+        // exitToolStripMenuItem
+        // 
+        exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+        exitToolStripMenuItem.Size = new Size(224, 26);
+        exitToolStripMenuItem.Text = "Exit";
         // 
         // editToolStripMenuItem
         // 
@@ -138,8 +163,8 @@ partial class MainForm
         // 
         codeToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { executeToolStripMenuItem, stopToolStripMenuItem });
         codeToolStripMenuItem.Name = "codeToolStripMenuItem";
-        codeToolStripMenuItem.Size = new Size(58, 24);
-        codeToolStripMenuItem.Text = "Code";
+        codeToolStripMenuItem.Size = new Size(80, 24);
+        codeToolStripMenuItem.Text = "Interpret";
         codeToolStripMenuItem.Click += toolStripMenuItem1_Click;
         // 
         // executeToolStripMenuItem
@@ -237,4 +262,8 @@ partial class MainForm
     private ToolStripMenuItem clearInputToolStripMenuItem;
     private OpenFileDialog openFileDialog;
     private SaveFileDialog saveFileDialog;
+    private ToolStripSeparator toolStripSeparator1;
+    private ToolStripSeparator toolStripSeparator2;
+    private ToolStripSeparator toolStripSeparator3;
+    private ToolStripMenuItem exitToolStripMenuItem;
 }
