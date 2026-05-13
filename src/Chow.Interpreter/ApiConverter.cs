@@ -4,7 +4,7 @@ using System;
 
 namespace Chow.Interpreter
 {
-    static class ChowValueConverter
+    static class ApiConverter
     {
         public static TaggedUnion ToTaggedUnion(ChowValue value)
         {
@@ -32,19 +32,19 @@ namespace Chow.Interpreter
 
         static TaggedUnion ToPrimitiveTaggedUnion(ChowValue value)
         {
-            if (value.Is<bool>())
+            if (value.IsType<bool>())
             {
-                return new TaggedUnion(value.As<bool>());
+                return new TaggedUnion(value.AsType<bool>());
             }
 
-            if (value.Is<long>())
+            if (value.IsType<long>())
             {
-                return new TaggedUnion(value.As<long>());
+                return new TaggedUnion(value.AsType<long>());
             }
 
-            if (value.Is<double>())
+            if (value.IsType<double>())
             {
-                return new TaggedUnion(value.As<double>());
+                return new TaggedUnion(value.AsType<double>());
             }
 
             throw new NotImplementedException();

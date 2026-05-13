@@ -303,16 +303,16 @@ namespace Chow.Interpreter.State.Values
                     return methodDelegate(allArgs);
 
                 case Func<ChowValue> funcNoArg:
-                    return ChowValueConverter.ToTaggedUnion(funcNoArg());
+                    return ApiConverter.ToTaggedUnion(funcNoArg());
                 case Func<ChowValue, ChowValue> funcOneArg:
-                    return ChowValueConverter.ToTaggedUnion(funcOneArg(ChowValueConverter.ToChowValue(singleArg.Value)));
+                    return ApiConverter.ToTaggedUnion(funcOneArg(ApiConverter.ToChowValue(singleArg.Value)));
                 case Func<ChowValue[], ChowValue> funcManyArgs:
-                    return ChowValueConverter.ToTaggedUnion(funcManyArgs(BuildArgArray(args)));
+                    return ApiConverter.ToTaggedUnion(funcManyArgs(BuildArgArray(args)));
                 case Action action:
                     action();
                     return None;
                 case Action<ChowValue> actionOneArg:
-                    actionOneArg(ChowValueConverter.ToChowValue(singleArg.Value));
+                    actionOneArg(ApiConverter.ToChowValue(singleArg.Value));
                     return None;
                 case Action<ChowValue[]> actionManyArgs:
                     actionManyArgs(BuildArgArray(args));
@@ -327,7 +327,7 @@ namespace Chow.Interpreter.State.Values
             var result = new ChowValue[args.Length];
             for (var i = 0; i < args.Length; i++)
             {
-                result[i] = ChowValueConverter.ToChowValue(args[i]);
+                result[i] = ApiConverter.ToChowValue(args[i]);
             }
             return result;
         }

@@ -20,7 +20,12 @@
 ## Tests
 456/456 passing tests
 
+## Big TODOs
+- Refactor the Scope class to remove the stack system
+- Move logic for wrapping values in tagged union to ApiConverter
+
 ## Small TODOs
+- Refactor ChowValue to remove ToString()
 - Remove top-level return statements (not needed)
 - Add ChowSyntaxErrorException and use it for top-level return statements
 - Add float literals starting with decimals

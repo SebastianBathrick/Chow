@@ -9,7 +9,7 @@ namespace Chow.Interpreter.Values
             Value = val;
         }
 
-        public override TDataType As<TDataType>()
+        public override TDataType AsType<TDataType>()
         {
             if (typeof(TDataType) == typeof(bool))
             {
@@ -19,7 +19,7 @@ namespace Chow.Interpreter.Values
             throw new InvalidCastException(GetType(), typeof(TDataType), this);
         }
 
-        public override bool Is<TDataType>()
+        public override bool IsType<TDataType>()
         {
             return false;
         }

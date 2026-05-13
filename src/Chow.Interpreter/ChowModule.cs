@@ -38,7 +38,7 @@ namespace Chow.Interpreter
                 {
                     // Get value inside ChowValue because ChowValues objects CANNOT be stored inside a TaggedUnion
                     // TODO: Add error checking to ensure that the object field in TaggedUnion can never be a ChowValue
-                    varUnion = ChowValueConverter.ToTaggedUnion(chowVal);
+                    varUnion = ApiConverter.ToTaggedUnion(chowVal);
                 }
                 else
                 {
@@ -64,7 +64,7 @@ namespace Chow.Interpreter
             var varUnion = _moduleScope.GetVariableValue(name);
 
             // Extracts the value from the TaggedUnion and converts it to a ChowValue to return
-            return ChowValueConverter.ToChowValue(varUnion);
+            return ApiConverter.ToChowValue(varUnion);
         }
 
         public void SetGlobal(string name, ChowValue value)
@@ -82,7 +82,7 @@ namespace Chow.Interpreter
             }
 
             // Extracts the value from ChowValue and creates a new TaggedUnion containing the value & appropriate tag
-            var varUnion = ChowValueConverter.ToTaggedUnion(value);
+            var varUnion = ApiConverter.ToTaggedUnion(value);
 
             // Method either assigns a new value to an existing variable, or declares & initializes a new variable
             _moduleScope.AssignVariableValue(name, varUnion);

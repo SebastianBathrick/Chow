@@ -19,12 +19,12 @@ namespace Chow.Interpreter.Values
             throw new InvalidOperationException("Only one instance of ChowNone should exist.");
         }
 
-        public override TDataType As<TDataType>()
+        public override TDataType AsType<TDataType>()
         {
             throw new InvalidCastException(GetType(), typeof(TDataType), this);
         }
 
-        public override bool Is<TDataType>()
+        public override bool IsType<TDataType>()
         {
             return false;
         }

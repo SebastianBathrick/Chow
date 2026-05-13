@@ -9,7 +9,7 @@ namespace Chow.Interpreter.Values
         public int Count => Internal.Count;
 
         public ChowValue this[ChowValue key]
-            => ChowValueConverter.ToChowValue(Internal[ChowValueConverter.ToTaggedUnion(key)]);
+            => ApiConverter.ToChowValue(Internal[ApiConverter.ToTaggedUnion(key)]);
 
         public ChowDict()
         {
@@ -26,7 +26,7 @@ namespace Chow.Interpreter.Values
             Internal = wrapped;
         }
 
-        public override TDataType As<TDataType>()
+        public override TDataType AsType<TDataType>()
         {
             if (typeof(TDataType) == typeof(bool))
             {
@@ -36,7 +36,7 @@ namespace Chow.Interpreter.Values
             throw new InvalidCastException(GetType(), typeof(TDataType), this);
         }
 
-        public override bool Is<TDataType>()
+        public override bool IsType<TDataType>()
         {
             return false;
         }
