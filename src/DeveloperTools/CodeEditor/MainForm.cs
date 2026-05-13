@@ -55,6 +55,7 @@ public partial class MainForm : Form
         WireEvents();
         ConfigureDialogs();
         ConfigureZoomComboBox();
+        ConfigureKeyboardShortcuts();
         SetState(EditorState.Idle);
         UpdateTitle();
     }
@@ -100,6 +101,15 @@ public partial class MainForm : Form
         ApplyZoom(DefaultZoomText);
     }
 
+    void ConfigureKeyboardShortcuts()
+    {
+        newToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.N;
+        openToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.O;
+        saveToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.S;
+        executeToolStripMenuItem.ShortcutKeys = Keys.F5;
+        clearOutputToolStripMenuItem.ShortcutKeys = Keys.Control | Keys.L;
+    }
+
     void ConfigureDialogs()
     {
         openFileDialog.Filter = FileFilter;
@@ -127,6 +137,11 @@ public partial class MainForm : Form
 
     private void newToolStripMenuItem_Click(object sender, EventArgs e)
     {
+        CreateNewDocument();
+    }
+
+    void CreateNewDocument()
+    {
         if (!ConfirmSaveIfNeeded())
         {
             return;
@@ -138,6 +153,11 @@ public partial class MainForm : Form
     }
 
     private void openToolStripMenuItem_Click(object? sender, EventArgs e)
+    {
+        OpenDocument();
+    }
+
+    void OpenDocument()
     {
         if (!ConfirmSaveIfNeeded())
         {
@@ -251,6 +271,58 @@ public partial class MainForm : Form
         StopExecution();
     }
 
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        switch (keyData)
+        {
+            case Keys.Control | Keys.S:
+                if (_state == EditorState.Idle && (_currentFilePath != null || inputTextArea.TextLength > 0))
+                {
+                    SaveDocument();
+                }
+                return true;
+
+            case Keys.Control | Keys.N:
+                if (newToolStripMenuItem.Enabled)
+                {
+                    CreateNewDocument();
+                }
+                return true;
+
+            case Keys.Control | Keys.O:
+                if (_state == EditorState.Idle)
+                {
+                    OpenDocument();
+                }
+                return true;
+
+            case Keys.Control | Keys.Enter:
+            case Keys.F5:
+                ExecuteOrStop();
+                return true;
+
+            case Keys.Control | Keys.L:
+                ClearOutput();
+                return true;
+
+            default:
+                return base.ProcessCmdKey(ref msg, keyData);
+        }
+    }
+
+    void ExecuteOrStop()
+    {
+        switch (_state)
+        {
+            case EditorState.Idle:
+                executeToolStripMenuItem_Click(this, EventArgs.Empty);
+                break;
+            case EditorState.Running:
+                StopExecution();
+                break;
+        }
+    }
+
     private void toolStripMenuItem1_Click(object sender, EventArgs e)
     {
     }
@@ -297,6 +369,11 @@ public partial class MainForm : Form
     }
 
     private void clearOutputToolStripMenuItem_Click(object? sender, EventArgs e)
+    {
+        ClearOutput();
+    }
+
+    void ClearOutput()
     {
         outputTextArea.Clear();
         UpdateGuiState();
