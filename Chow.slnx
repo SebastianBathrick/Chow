@@ -1,7 +1,7 @@
 <Solution>
   <Project Path="src/Chow.Interpreter/Chow.Interpreter.csproj" />
   <Project Path="src/Chow/Chow.csproj" />
-  <Project Path="src/DeveloperTools/WindowsEditor/WindowsEditor.csproj" />
+  <Project Path="src/DeveloperTools/CodeEditor/CodeEditor.csproj" />
   <Project Path="tests/Chow.Interpreter.ImplTests/Chow.Interpreter.ImplTests.csproj" />
   <Project Path="tests/Chow.Interpreter.Tests/Chow.Interpreter.Tests.csproj" />
 </Solution>
