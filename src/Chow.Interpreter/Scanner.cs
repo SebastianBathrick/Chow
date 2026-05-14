@@ -178,7 +178,7 @@ namespace Chow.Interpreter
                 if (CurrChar == '\t')
                 {
                     // Tab rounds column up to the next multiple of TAB_SIZE (Python rule)
-                    indentColumn = ((indentColumn / TAB_SIZE) + 1) * TAB_SIZE;
+                    indentColumn = (indentColumn / TAB_SIZE + 1) * TAB_SIZE;
                 }
                 else
                 {
@@ -540,7 +540,7 @@ namespace Chow.Interpreter
 
         static bool IsAlphaChar(char checkChar)
         {
-            return (checkChar >= 'a' && checkChar <= 'z') || (checkChar >= 'A' && checkChar <= 'Z');
+            return checkChar >= 'a' && checkChar <= 'z' || checkChar >= 'A' && checkChar <= 'Z';
         }
 
         static bool IsIndentChar(char checkChar)

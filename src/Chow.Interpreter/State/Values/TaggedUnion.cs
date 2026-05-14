@@ -435,18 +435,18 @@ namespace Chow.Interpreter.State.Values
             {
                 var a = BoolAsInt(left);
                 var b = BoolAsInt(right);
-                return new TaggedUnion(((a % b) + b) % b);
+                return new TaggedUnion((a % b + b) % b);
             }
             if (EitherIsFloat(left, right))
             {
                 var l = AsFloat(left);
                 var r = AsFloat(right);
-                return new TaggedUnion(((l % r) + r) % r);
+                return new TaggedUnion((l % r + r) % r);
             }
 
             var ai = left.IntegerValue;
             var bi = right.IntegerValue;
-            return new TaggedUnion(((ai % bi) + bi) % bi);
+            return new TaggedUnion((ai % bi + bi) % bi);
         }
 
         public static TaggedUnion FloorDivide(TaggedUnion left, TaggedUnion right)
@@ -630,7 +630,7 @@ namespace Chow.Interpreter.State.Values
                 return;
             }
 
-            var otherIsNumeric = leftBool ? (right.IsInt || right.IsFloat) : (left.IsInt || left.IsFloat);
+            var otherIsNumeric = leftBool ? right.IsInt || right.IsFloat : left.IsInt || left.IsFloat;
             if (otherIsNumeric)
             {
                 throw new NotImplementedException("Mixed boolean and numeric operands are not yet implemented.");

@@ -90,6 +90,14 @@ namespace Chow.Interpreter
 
         #endregion
 
+        public void ImportBuiltIns()
+        {
+            foreach ((string name, object obj) func in BuiltIns.GetFunctions())
+            {
+                this[func.name] = func.obj;
+            }
+        }
+        
         public void Execute(string sourceCode)
         {
             // Source code that is null, empty, or whitespace is treated the same by the Scanner (it does a null check)
@@ -110,7 +118,6 @@ namespace Chow.Interpreter
             _moduleScope = vm.EvaluateChunk();
         }
         
-
         #region Helper Methods
 
         void ValidateGlobalExists(string name)
@@ -155,7 +162,7 @@ namespace Chow.Interpreter
 
         static bool IsLetter(char c)
         {
-            return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+            return c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z';
         }
 
         #endregion
