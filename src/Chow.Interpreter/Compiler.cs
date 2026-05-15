@@ -364,7 +364,7 @@ namespace Chow.Interpreter
             }
 
             // JumpIfFalse lands at the start of the next branch (or END if no branch)
-            _chunk.PatchInstruction(jumpFalseIdx, _chunk.InstructionCount);
+            _chunk.PatchInstructionOperand(jumpFalseIdx, _chunk.InstructionCount);
 
             if (ifNode.Branch != null)
             {
@@ -374,7 +374,7 @@ namespace Chow.Interpreter
             // Patch every JumpPastBranches in this chain to land at END (current count)
             foreach (var idx in _pendingEndJumps)
             {
-                _chunk.PatchInstruction(idx, _chunk.InstructionCount);
+                _chunk.PatchInstructionOperand(idx, _chunk.InstructionCount);
             }
 
             _pendingEndJumps = saved;
@@ -405,11 +405,11 @@ namespace Chow.Interpreter
 
             // Condition-false exit and any `break` jumps land here, after the backward Loop.
             var exitIdx = _chunk.InstructionCount;
-            _chunk.PatchInstruction(exitJumpIdx, exitIdx);
+            _chunk.PatchInstructionOperand(exitJumpIdx, exitIdx);
 
             foreach (var idx in loopContext.PendingBreaks)
             {
-                _chunk.PatchInstruction(idx, exitIdx);
+                _chunk.PatchInstructionOperand(idx, exitIdx);
             }
         }
 
@@ -460,7 +460,7 @@ namespace Chow.Interpreter
                 _pendingEndJumps.Add(_chunk.InstructionCount - 1);
             }
 
-            _chunk.PatchInstruction(jumpFalseIdx, _chunk.InstructionCount);
+            _chunk.PatchInstructionOperand(jumpFalseIdx, _chunk.InstructionCount);
 
             if (node.Branch != null)
             {
@@ -515,7 +515,7 @@ namespace Chow.Interpreter
             CompileTargetNode(exprNode.Right);
 
             // Land just past the right-hand bytecode
-            _chunk.PatchInstruction(patchIdx, _chunk.InstructionCount);
+            _chunk.PatchInstructionOperand(patchIdx, _chunk.InstructionCount);
         }
 
         static OperationCode GetExpressionOperationCode(ExprNode exprNode)

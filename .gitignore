@@ -455,3 +455,11 @@ BytecodeTransformations.md
 .idea/.idea.Chow/.idea/indexLayout.xml
 .idea/.idea.Chow/.idea/vcs.xml
 skills-lock.json
+.aiignore
+.junie/memory/errors.md
+.junie/memory/feedback.md
+.junie/memory/language.json
+.junie/memory/memory.version
+.junie/memory/tasks.md
+.aiignore
+.aiignore

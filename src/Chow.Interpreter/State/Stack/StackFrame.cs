@@ -27,7 +27,7 @@ namespace Chow.Interpreter.State.Stack
         public bool IsInstrToRun => Chunk.InstructionCount != _instrIdx;
 
         /// <summary>Source line number associated with the current instruction.</summary>
-        public int CurrentLineNum => Chunk.GetInstructionLine(_instrIdx);
+        public int CurrentLineNum => Chunk.GetInstructionLineIndex(_instrIdx);
 
         /// <summary>Creates a frame positioned at the first instruction.</summary>
         public StackFrame(Chunk chunk, IScope scope)
