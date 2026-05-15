@@ -13,13 +13,15 @@ using System;
 
 namespace Chow.Interpreter
 {
-    class Compiler
+    sealed class Compiler
     {
         readonly Chunk _chunk;
         readonly Node _root;
         readonly Stack<LoopContext> _loopContextStack;
 
         List<int> _pendingEndJumps;
+
+        #region Primary Methods
 
         public Compiler(Node root)
         {
@@ -28,8 +30,6 @@ namespace Chow.Interpreter
             _pendingEndJumps = new List<int>();
             _loopContextStack = new Stack<LoopContext>();
         }
-
-        #region Primary Methods
 
         public Chunk CompileRoot()
         {
@@ -222,7 +222,7 @@ namespace Chow.Interpreter
 
         #endregion
 
-        #region Statement Compile Methods
+        #region Statement Methods
 
         void CompileBlockNode(BlockNode blockNode)
         {
@@ -486,7 +486,7 @@ namespace Chow.Interpreter
 
         #endregion
 
-        #region Expression Compile Methods
+        #region Expression Methods
 
         void CompileCall(CallNode callNode)
         {

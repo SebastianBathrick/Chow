@@ -23,13 +23,15 @@ namespace Chow.Interpreter
     /// After this point, the client should discard the Parser instance, because it will be considered dirty.
     /// </para>
     /// </summary>
-    class Parser
+    sealed class Parser
     {
         readonly List<Token> _tokens;
         int _tokenIdx;
 
         Token CurrentToken => _tokens[_tokenIdx];
         Token PreviousToken => _tokens[_tokenIdx - 1];
+
+        #region Primary Methods
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Parser"/> class with the tokens to analyze.
@@ -39,8 +41,6 @@ namespace Chow.Interpreter
         {
             _tokens = tokens;
         }
-
-        #region Primary Methods
 
         /// <summary>
         /// Performs syntax analysis on the tokens provided to this Parser instance and builds an abstract syntax tree.
