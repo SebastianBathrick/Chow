@@ -4,14 +4,13 @@ using System.Collections.Generic;
 namespace Chow.Interpreter.State.Scopes
 {
     /// <summary>
-    /// Base class for all runtime variable scopes. Stores bindings in a flat dictionary backed by a
-    /// name stack with boundary sentinels, which together support nested-block enter/exit within a
-    /// single scope. Subclasses (<see cref="ModuleScope"/>, <see cref="LocalScope"/>) differentiate
-    /// the role of the scope in the LEGB lookup chain.
+    /// Base class for all runtime variable scopes. Stores bindings in a flat dictionary backed by a name stack with
+    /// boundary sentinels, which together support nested-block enter/exit within a single scope. Subclasses (<see
+    /// cref="ModuleScope"/>, <see cref="LocalScope"/>) differentiate the role of the scope in the LEGB lookup chain.
     /// </summary>
     /// <remarks>
-    /// No source identifier can start with <c>&lt;</c>, so <c>SCOPE_BOUNDARY_ELEMENT</c> never
-    /// collides with a real variable name.
+    /// No source identifier can start with <c>&lt;</c>, so <c>SCOPE_BOUNDARY_ELEMENT</c> never collides with a real
+    /// variable name.
     /// </remarks>
     abstract class Scope : IScope
     {
@@ -21,9 +20,6 @@ namespace Chow.Interpreter.State.Scopes
         readonly Stack<string> _varNames;
         readonly Dictionary<string, TaggedUnion> _varMap;
         int _scopeDepth;
-
-        /// <summary>True when no nested block has been entered (scope depth is 0).</summary>
-        public bool IsOutermostDepth => _scopeDepth == OUTERMOST_SCOPE_DEPTH;
 
         /// <inheritdoc/>
         public virtual IScope ParentOrNull => null;

@@ -108,16 +108,6 @@ namespace Chow.Interpreter.Bytecode
         #region Variable Name Methods
 
         /// <summary>
-        /// Determines whether the provided name has been registered as a variable name in this Chunk.
-        /// </summary>
-        /// <param name="name">The variable name to check for.</param>
-        /// <returns><c>true</c> if the name is registered; otherwise, <c>false</c>.</returns>
-        public bool IsVariableName(string name)
-        {
-            return _varNames.Contains(name);
-        }
-
-        /// <summary>
         /// Returns the variable name stored at the provided operand index.
         /// </summary>
         /// <param name="operand">The operand index of the variable name to retrieve.</param>
@@ -158,106 +148,6 @@ namespace Chow.Interpreter.Bytecode
             var operand = _varNames.Count;
             _varNames.Add(varName);
             return operand;
-        }
-
-        #endregion
-
-        #region ToString Methods
-
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-
-            sb.AppendLine("Constants:");
-            for (var i = 0; i < _constants.Count; i++)
-            {
-                sb.Append("  ");
-                sb.Append(i);
-                sb.Append(": ");
-                AppendConstant(sb, _constants[i]);
-                sb.AppendLine();
-            }
-
-            sb.AppendLine("Variables:");
-            for (var i = 0; i < _varNames.Count; i++)
-            {
-                sb.Append("  ");
-                sb.Append(i);
-                sb.Append(": ");
-                sb.Append(_varNames[i]);
-                sb.AppendLine();
-            }
-
-            sb.AppendLine("Operations:");
-            for (var i = 0; i < _instructions.Count; i++)
-            {
-                var op = _instructions[i];
-
-                sb.Append("  ");
-                sb.Append(i);
-                sb.Append(": ");
-                sb.Append(op.Code);
-
-                if (op.Operand != -1)
-                {
-                    sb.Append(' ');
-                    sb.Append(op.Operand);
-                    sb.Append(" (");
-                    AppendOperandTarget(sb, op);
-                    sb.Append(')');
-                }
-
-                if (i < _instructions.Count - 1)
-                {
-                    sb.AppendLine();
-                }
-            }
-
-            return sb.ToString();
-        }
-
-        static void AppendConstant(StringBuilder sb, TaggedUnion constant)
-        {
-            if (constant.IsInt)
-            {
-                sb.Append("Int=");
-                sb.Append(constant.IntegerValue);
-            }
-            else if (constant.IsFloat)
-            {
-                sb.Append("Float=");
-                sb.Append(constant.FloatValue);
-            }
-            else if (constant.IsString)
-            {
-                sb.Append("String=");
-                sb.Append(constant.StringValue);
-            }
-            else if (constant.IsBoolean)
-            {
-                sb.Append("Bool=");
-                sb.Append(constant.BooleanValue);
-            }
-            else if (constant.IsList)
-            {
-                sb.Append("List=");
-                sb.Append(constant.ListValue);
-            }
-        }
-
-        void AppendOperandTarget(StringBuilder sb, Instruction op)
-        {
-            switch (op.Code)
-            {
-                case OperationCode.PushConstant:
-                    AppendConstant(sb, _constants[op.Operand]);
-                    break;
-                case OperationCode.AssignOrDeclareVariable:
-                case OperationCode.PushVariableValue:
-                    sb.Append("Var=");
-                    sb.Append(_varNames[op.Operand]);
-                    break;
-            }
         }
 
         #endregion

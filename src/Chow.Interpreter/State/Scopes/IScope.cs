@@ -4,9 +4,6 @@ namespace Chow.Interpreter.State.Scopes
 {
     internal interface IScope
     {
-        /// <summary>True when no nested block has been entered (scope depth is 0).</summary>
-        bool IsOutermostDepth { get; }
-
         /// <summary>
         /// The enclosing scope used for LEGB chain walking, or <c>null</c> at the top of the chain.
         /// Returns <c>null</c> by default; overridden by <see cref="LocalScope"/>.

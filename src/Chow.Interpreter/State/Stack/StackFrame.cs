@@ -4,8 +4,8 @@ using Chow.Interpreter.State.Scopes;
 namespace Chow.Interpreter.State.Stack
 {
     /// <summary>
-    /// One slot on the <see cref="CallStack"/>. Pairs a <see cref="Chunk"/> being executed
-    /// with its associated <see cref="Scope"/> and tracks the current instruction pointer.
+    /// One slot on the <see cref="CallStack"/>. Pairs a <see cref="Chunk"/> being executed with its associated
+    /// <see cref="Scope"/> and tracks the current instruction pointer.
     /// </summary>
     class StackFrame
     {

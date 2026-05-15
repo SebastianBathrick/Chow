@@ -1,5 +1,9 @@
 namespace Chow.Interpreter.Bytecode
 {
+    /// <summary>
+    /// Represents an <see cref="Instruction"/>'s operation code, which is mapped to the logic inside the
+    /// <see cref="Interpreter.VirtualMachine"/> class.
+    /// </summary>
     enum OperationCode
     {
         Add,
