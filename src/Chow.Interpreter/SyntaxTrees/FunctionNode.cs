@@ -2,7 +2,7 @@
 using Chow.Interpreter.SyntaxTrees.Scope;
 namespace Chow.Interpreter.SyntaxTrees
 {
-    class FunctionNode : Node
+    sealed class FunctionNode : Node
     {
         public string Name { get; }
 

@@ -1,22 +1,21 @@
 ﻿namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    class BranchStatementNode : Node
+    sealed class BranchStatementNode : Node
     {
         public Node Branch { get; }
 
-        public Node Expr { get; }
+        public Node Expression { get; }
 
         public Node Block { get; }
 
-        public bool IsElse => Expr == null;
+        public bool IsElse => Expression == null;
 
         public BranchStatementNode(Node expr, Node block, Node branch, int line) : base(line)
         {
-            Expr = expr;
+            Expression = expr;
             Block = block;
             Branch = branch;
         }
-
 
         public override string ToString()
         {
@@ -28,7 +27,7 @@
             }
             else
             {
-                result = $"elif {Expr}\n{{\n{Block}\n}}";
+                result = $"elif {Expression}\n{{\n{Block}\n}}";
             }
 
             if (Branch != null)

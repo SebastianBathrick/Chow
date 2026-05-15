@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Subscripts
 {
-    class SubscriptNode : Node
+    sealed class SubscriptNode : Node
     {
         public Node Target { get; }
 

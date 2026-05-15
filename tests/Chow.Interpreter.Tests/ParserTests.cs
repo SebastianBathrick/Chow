@@ -886,7 +886,7 @@ namespace Chow.Interpreter.Tests
             Assert.That(stmt, Is.InstanceOf<AttributeAssignNode>());
             var assign = (AttributeAssignNode)stmt;
             AssertName(assign.Target, "a");
-            Assert.That(assign.AttrName, Is.EqualTo("b"));
+            Assert.That(assign.AttributeName, Is.EqualTo("b"));
             AssertName(assign.Expression, "x");
         }
 
@@ -903,7 +903,7 @@ namespace Chow.Interpreter.Tests
         {
             var stmt = ParseStmt("a.b.c = x");
             var assign = (AttributeAssignNode)stmt;
-            Assert.That(assign.AttrName, Is.EqualTo("c"));
+            Assert.That(assign.AttributeName, Is.EqualTo("c"));
             AssertAttr(assign.Target, "b");
         }
 
@@ -912,7 +912,7 @@ namespace Chow.Interpreter.Tests
         {
             var stmt = ParseStmt("a[0].b = x");
             var assign = (AttributeAssignNode)stmt;
-            Assert.That(assign.AttrName, Is.EqualTo("b"));
+            Assert.That(assign.AttributeName, Is.EqualTo("b"));
             AssertSubscript(assign.Target);
         }
 
@@ -956,7 +956,7 @@ namespace Chow.Interpreter.Tests
             var ifNode = (IfStatementNode)stmt;
             Assert.Multiple(() =>
             {
-                Assert.That(ifNode.Expr, Is.InstanceOf<LiteralNode>());
+                Assert.That(ifNode.Expression, Is.InstanceOf<LiteralNode>());
                 Assert.That(ifNode.Block, Is.InstanceOf<BlockNode>());
                 Assert.That(ifNode.Branch, Is.Null);
             });
@@ -979,7 +979,7 @@ namespace Chow.Interpreter.Tests
             var whileNode = (WhileStatementNode)stmt;
             Assert.Multiple(() =>
             {
-                Assert.That(whileNode.Expr, Is.InstanceOf<LiteralNode>());
+                Assert.That(whileNode.Expression, Is.InstanceOf<LiteralNode>());
                 Assert.That(whileNode.Block, Is.InstanceOf<BlockNode>());
             });
         }

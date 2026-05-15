@@ -181,7 +181,7 @@ namespace Chow.Interpreter.ImplTests
                     return null;
                 }
                 case IfStatementNode ifNode:
-                    return TryFindRead(ifNode.Expr, name)
+                    return TryFindRead(ifNode.Expression, name)
                         ?? TryFindRead(ifNode.Block, name)
                         ?? TryFindRead(ifNode.Branch, name);
                 default:

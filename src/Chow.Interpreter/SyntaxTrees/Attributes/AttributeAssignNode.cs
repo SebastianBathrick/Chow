@@ -1,23 +1,23 @@
 namespace Chow.Interpreter.SyntaxTrees.Attributes
 {
-    class AttributeAssignNode : Node
+    sealed class AttributeAssignNode : Node
     {
         public Node Target { get; }
 
-        public string AttrName { get; }
+        public string AttributeName { get; }
 
         public Node Expression { get; }
 
-        public AttributeAssignNode(Node target, string attrName, Node expr, int line) : base(line)
+        public AttributeAssignNode(Node target, string attributeName, Node expr, int line) : base(line)
         {
             Target = target;
-            AttrName = attrName;
+            AttributeName = attributeName;
             Expression = expr;
         }
 
         public override string ToString()
         {
-            return $"AttrAssign({Target}.{AttrName}, {Expression}) line={LineNumber}";
+            return $"AttrAssign({Target}.{AttributeName}, {Expression}) line={LineNumber}";
         }
     }
 }

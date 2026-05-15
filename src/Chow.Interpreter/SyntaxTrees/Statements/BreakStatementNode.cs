@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    class BreakStatementNode : Node
+    sealed class BreakStatementNode : Node
     {
         public BreakStatementNode(int line) : base(line)
         {

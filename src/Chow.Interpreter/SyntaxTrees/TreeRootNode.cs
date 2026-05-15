@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 namespace Chow.Interpreter.SyntaxTrees
 {
-    class TreeRootNode : Node
+    sealed class TreeRootNode : Node
     {
         const int ROOT_NODE_LINE = 1;
 

@@ -1,8 +1,8 @@
 namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    class IfStatementNode : Node
+    sealed class IfStatementNode : Node
     {
-        public Node Expr { get; }
+        public Node Expression { get; }
 
         public Node Block { get; }
 
@@ -10,14 +10,14 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
 
         public IfStatementNode(Node expr, Node block, Node branch, int line) : base(line)
         {
-            Expr = expr;
+            Expression = expr;
             Block = block;
             Branch = branch;
         }
 
         public override string ToString()
         {
-            var result = $"if {Expr}\n{{\n{Block}\n}}";
+            var result = $"if {Expression}\n{{\n{Block}\n}}";
 
             if (Branch != null)
             {

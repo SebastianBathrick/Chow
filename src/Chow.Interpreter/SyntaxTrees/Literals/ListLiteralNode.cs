@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 namespace Chow.Interpreter.SyntaxTrees.Literals
 {
-    class ListLiteralNode : Node
+    sealed class ListLiteralNode : Node
     {
         public List<Node> Elements { get; }
 

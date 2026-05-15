@@ -7,9 +7,9 @@ namespace Chow.Interpreter.SyntaxTrees.Scope
     /// </summary>
     sealed class NonlocalDeclarationNode : Node
     {
-        public IReadOnlyList<string> Names { get; }
+        public List<string> Names { get; }
 
-        public NonlocalDeclarationNode(IReadOnlyList<string> names, int line) : base(line)
+        public NonlocalDeclarationNode(List<string> names, int line) : base(line)
         {
             Names = names;
         }

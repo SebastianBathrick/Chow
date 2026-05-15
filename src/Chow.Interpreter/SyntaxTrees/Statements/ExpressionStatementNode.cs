@@ -1,6 +1,6 @@
 ﻿namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    class ExpressionStatementNode : Node
+    sealed class ExpressionStatementNode : Node
     {
         public Node Expression { get; }
 

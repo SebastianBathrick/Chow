@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    class ForStatementNode : Node
+    sealed class ForStatementNode : Node
     {
         public NameNode Target { get; }
 

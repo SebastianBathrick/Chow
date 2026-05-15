@@ -7,9 +7,9 @@ namespace Chow.Interpreter.SyntaxTrees.Scope
     /// </summary>
     sealed class GlobalDeclarationNode : Node
     {
-        public IReadOnlyList<string> Names { get; }
+        public List<string> Names { get; }
 
-        public GlobalDeclarationNode(IReadOnlyList<string> names, int line) : base(line)
+        public GlobalDeclarationNode(List<string> names, int line) : base(line)
         {
             Names = names;
         }

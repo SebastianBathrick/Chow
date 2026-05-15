@@ -669,7 +669,7 @@ namespace Chow.Interpreter
             }
 
             ConsumeToken(TokenType.SymbolRightCurly, "Expected '}' to close dict literal.");
-            return new ListDictNode(keys, values, leftCurly.lineNum);
+            return new DictLiteralNode(keys, values, leftCurly.lineNum);
         }
 
         void ParseDictEntry(List<Node> keys, List<Node> values)

@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    class ContinueStatementNode : Node
+    sealed class ContinueStatementNode : Node
     {
         public ContinueStatementNode(int line) : base(line)
         {

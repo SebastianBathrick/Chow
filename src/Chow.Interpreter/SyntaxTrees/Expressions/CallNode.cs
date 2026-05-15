@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-namespace Chow.Interpreter.SyntaxTrees.Statements
+namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
-    class CallNode : Node
+    sealed class CallNode : Node
     {
         public Node CallName { get; }
 

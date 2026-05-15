@@ -1,6 +1,6 @@
 ﻿namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    class ReturnStatementNode : Node
+    sealed class ReturnStatementNode : Node
     {
         /// <summary>
         /// Node representing the expression to be evaluated and returned by the return statement or null.

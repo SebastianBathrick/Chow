@@ -1,13 +1,13 @@
 using System;
 namespace Chow.Interpreter.SyntaxTrees.Literals
 {
-    class LiteralNode : Node
+    sealed class LiteralNode : Node
     {
         public object Value { get; }
 
         public LiteralDataType Type { get; }
 
-        public LiteralNode(object value, int lineNumber) : base(lineNumber)
+        public LiteralNode(object value, int line) : base(line)
         {
             if (value == null)
             {

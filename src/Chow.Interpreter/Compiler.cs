@@ -175,7 +175,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case ListDictNode dictLiteralNode:
+                case DictLiteralNode dictLiteralNode:
                 {
                     CompileDictLiteral(dictLiteralNode);
                     break;
@@ -315,7 +315,7 @@ namespace Chow.Interpreter
 
             // TODO: Check if we can avoid using a new list here and just clear the existing one
             _pendingEndJumps = new List<int>();
-            CompileTargetNode(ifStatementNode.Expr);
+            CompileTargetNode(ifStatementNode.Expression);
 
             _chunk.AddInstruction(OperationCode.JumpIfFalse, ifStatementNode.LineNumber);
             var jumpFalseIdx = _chunk.InstructionCount - 1;
@@ -354,7 +354,7 @@ namespace Chow.Interpreter
                 return;
             }
 
-            CompileTargetNode(node.Expr);
+            CompileTargetNode(node.Expression);
             _chunk.AddInstruction(OperationCode.JumpIfFalse, node.LineNumber);
 
             var jumpFalseIdx = _chunk.InstructionCount - 1;
@@ -379,7 +379,7 @@ namespace Chow.Interpreter
             // loopStart marks the start of the condition; both `continue` and the bottom-of-body JumpToLoopStart op target it.
             var loopStartIdx = _chunk.InstructionCount;
 
-            CompileTargetNode(whileStatementNode.Expr);
+            CompileTargetNode(whileStatementNode.Expression);
 
             _chunk.AddInstruction(OperationCode.JumpIfFalse, whileStatementNode.LineNumber);
             var exitJumpIdx = _chunk.InstructionCount - 1;
@@ -566,7 +566,6 @@ namespace Chow.Interpreter
                     {
                         constUnion = new TaggedUnion(intVal);
                     }
-
                     break;
                 }
 
@@ -576,7 +575,6 @@ namespace Chow.Interpreter
                     {
                         constUnion = new TaggedUnion(floatVal);
                     }
-
                     break;
                 }
 
@@ -586,7 +584,6 @@ namespace Chow.Interpreter
                     {
                         constUnion = new TaggedUnion(boolVal);
                     }
-
                     break;
                 }
 
@@ -602,7 +599,6 @@ namespace Chow.Interpreter
                     {
                         constUnion = new TaggedUnion(strVal);
                     }
-
                     break;
                 }
 
@@ -634,7 +630,7 @@ namespace Chow.Interpreter
             _chunk.AddInstruction(OperationCode.PushNewInternalList, node.LineNumber, node.Elements.Count);
         }
 
-        void CompileDictLiteral(ListDictNode node)
+        void CompileDictLiteral(DictLiteralNode node)
         {
             for (var i = 0; i < node.Keys.Count; i++)
             {
@@ -702,7 +698,7 @@ namespace Chow.Interpreter
             CompileTargetNode(node.Target);
             CompileTargetNode(node.Expression);
 
-            var varNameIdx = _chunk.RegisterVariableName(node.AttrName);
+            var varNameIdx = _chunk.RegisterVariableName(node.AttributeName);
             _chunk.AddInstruction(OperationCode.SetInteropObjectAttribute, node.LineNumber, varNameIdx);
         }
 

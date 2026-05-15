@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
-    class ExpressionNode : Node
+    sealed class ExpressionNode : Node
     {
         public ExpressionOperator Operator { get; }
 
@@ -8,20 +8,20 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 
         public Node Right { get; }
 
-        public ExpressionNode(ExpressionOperator opType, Node l, Node r, int line) : base(line)
+        public ExpressionNode(ExpressionOperator opType, Node left, Node right, int line) : base(line)
         {
             Operator = opType;
-            Left = l;
-            Right = r;
+            Left = left;
+            Right = right;
         }
 
         /// <summary>
         /// Initializes a node representing a negated expression (using unary minus or logical not).
         /// </summary>
-        public ExpressionNode(ExpressionOperator opType, Node l, int line) : base(line)
+        public ExpressionNode(ExpressionOperator opType, Node left, int line) : base(line)
         {
             Operator = opType;
-            Left = l;
+            Left = left;
             Right = null;
         }
 

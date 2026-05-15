@@ -1,7 +1,7 @@
 ﻿using Chow.Interpreter.SyntaxTrees.Scope;
 namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    class VariableAssignStatementNode : Node
+    sealed class VariableAssignStatementNode : Node
     {
         public string Name { get; }
 

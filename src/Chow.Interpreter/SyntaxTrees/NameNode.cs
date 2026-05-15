@@ -1,7 +1,7 @@
 using Chow.Interpreter.SyntaxTrees.Scope;
 namespace Chow.Interpreter.SyntaxTrees
 {
-    class NameNode : Node
+    sealed class NameNode : Node
     {
         public string Name { get; }
 

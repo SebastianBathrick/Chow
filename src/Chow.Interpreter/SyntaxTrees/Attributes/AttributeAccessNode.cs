@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Attributes
 {
-    class AttributeAccessNode : Node
+    sealed class AttributeAccessNode : Node
     {
         public Node Target { get; }
 

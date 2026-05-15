@@ -143,7 +143,7 @@ namespace Chow.Interpreter
 
                 case IfStatementNode ifNode:
                 {
-                    PreScan(ifNode.Expr);
+                    PreScan(ifNode.Expression);
                     PreScan(ifNode.Block);
                     PreScan(ifNode.Branch);
                     break;
@@ -151,7 +151,7 @@ namespace Chow.Interpreter
 
                 case BranchStatementNode branchNode:
                 {
-                    PreScan(branchNode.Expr);
+                    PreScan(branchNode.Expression);
                     PreScan(branchNode.Block);
                     PreScan(branchNode.Branch);
                     break;
@@ -159,7 +159,7 @@ namespace Chow.Interpreter
 
                 case WhileStatementNode whileNode:
                 {
-                    PreScan(whileNode.Expr);
+                    PreScan(whileNode.Expression);
                     PreScan(whileNode.Block);
                     break;
                 }
@@ -212,7 +212,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case ListDictNode dictNode:
+                case DictLiteralNode dictNode:
                 {
                     for (var i = 0; i < dictNode.Keys.Count; i++)
                     {
@@ -319,7 +319,7 @@ namespace Chow.Interpreter
 
                 case IfStatementNode ifNode:
                 {
-                    Annotate(ifNode.Expr);
+                    Annotate(ifNode.Expression);
                     Annotate(ifNode.Block);
                     Annotate(ifNode.Branch);
                     break;
@@ -327,7 +327,7 @@ namespace Chow.Interpreter
 
                 case BranchStatementNode branchNode:
                 {
-                    Annotate(branchNode.Expr);
+                    Annotate(branchNode.Expression);
                     Annotate(branchNode.Block);
                     Annotate(branchNode.Branch);
                     break;
@@ -335,7 +335,7 @@ namespace Chow.Interpreter
 
                 case WhileStatementNode whileNode:
                 {
-                    Annotate(whileNode.Expr);
+                    Annotate(whileNode.Expression);
                     Annotate(whileNode.Block);
                     break;
                 }
@@ -387,7 +387,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case ListDictNode dictNode:
+                case DictLiteralNode dictNode:
                 {
                     for (var i = 0; i < dictNode.Keys.Count; i++)
                     {
