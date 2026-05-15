@@ -102,89 +102,131 @@ namespace Chow.Interpreter
             switch (targetNode)
             {
                 case BlockNode blockNode:
+                {
                     CompileBlockNode(blockNode);
                     break;
+                }
 
                 case LiteralNode literalNode:
+                {
                     CompileLiteral(literalNode);
                     break;
+                }
 
                 case ExprNode exprNode:
+                {
                     CompileExpression(exprNode);
                     break;
+                }
 
                 case VarAssignNode varAssignNode:
+                {
                     CompileVarAssign(varAssignNode);
                     break;
+                }
 
                 case NameNode varFactorNode:
+                {
                     CompileVarFactor(varFactorNode);
                     break;
+                }
 
                 case ReturnNode returnNode:
+                {
                     // If it returns early, still parse the remaining code in the chunk for debugging (subject to change)
                     CompileReturn(returnNode);
                     break;
+                }
 
                 case ExprStatementNode exprStmtNode:
+                {
                     CompileExprStmnt(exprStmtNode);
                     break;
+                }
 
                 case IfNode ifNode:
+                {
                     CompileIfStmnt(ifNode);
                     break;
+                }
 
                 case BranchStmntNode branchNode:
+                {
                     CompileBranchStmnt(branchNode);
                     break;
+                }
 
                 case WhileNode whileNode:
+                {
                     CompileWhileStmnt(whileNode);
                     break;
+                }
 
                 case BreakNode breakNode:
+                {
                     CompileBreakStmnt(breakNode);
                     break;
+                }
 
                 case ContinueNode continueNode:
+                {
                     CompileContinueStmnt(continueNode);
                     break;
+                }
 
                 case FunctionNode funcNode:
+                {
                     CompileFuncDeclaration(funcNode);
                     break;
+                }
 
                 case CallNode callNode:
+                {
                     CompileCall(callNode);
                     break;
+                }
 
                 case ListLiteralNode listLiteralNode:
+                {
                     // TODO: Check if CompileListLiteral & CompileDictLiteral should be grouped with all the other literals
                     CompileListLiteral(listLiteralNode);
                     break;
+                }
 
                 case DictLiteralNode dictLiteralNode:
+                {
                     CompileDictLiteral(dictLiteralNode);
                     break;
+                }
 
                 case SubscriptNode subscrNode:
+                {
                     CompileSubscript(subscrNode);
                     break;
+                }
 
                 case AttrAccessNode attrAccessNode:
+                {
                     CompileAttrAccess(attrAccessNode);
                     break;
+                }
 
                 case SubscriptAssignNode subscrAssignNode:
+                {
                     CompileSubscriptAssign(subscrAssignNode);
                     break;
+                }
 
                 case AttrAssignNode attrAssignNode:
+                {
                     CompileAttrAssign(attrAssignNode);
                     break;
+                }
 
                 default:
+                {
                     throw new InvalidOperationException();
+                }
             }
         }
 
@@ -525,79 +567,117 @@ namespace Chow.Interpreter
             switch (exprNode.Operator)
             {
                 case ExprOperator.Add:
+                {
                     opCode = OperationCode.Add;
                     break;
+                }
 
                 case ExprOperator.Subtract:
+                {
                     opCode = OperationCode.Subtract;
                     break;
+                }
 
                 case ExprOperator.Multiply:
+                {
                     opCode = OperationCode.Multiply;
                     break;
+                }
 
                 case ExprOperator.Divide:
+                {
                     opCode = OperationCode.Divide;
                     break;
+                }
 
                 case ExprOperator.Modulus:
+                {
                     opCode = OperationCode.Modulus;
                     break;
+                }
 
                 case ExprOperator.Exponentiate:
+                {
                     opCode = OperationCode.Exponentiate;
                     break;
+                }
 
                 case ExprOperator.FloorDivide:
+                {
                     opCode = OperationCode.FloorDivide;
                     break;
+                }
 
                 case ExprOperator.Negate:
+                {
                     opCode = OperationCode.Negate;
                     break;
+                }
 
                 case ExprOperator.Equal:
+                {
                     opCode = OperationCode.Equal;
                     break;
+                }
 
                 case ExprOperator.NotEqual:
+                {
                     opCode = OperationCode.NotEqual;
                     break;
+                }
 
                 case ExprOperator.Less:
+                {
                     opCode = OperationCode.Less;
                     break;
+                }
 
                 case ExprOperator.Greater:
+                {
                     opCode = OperationCode.Greater;
                     break;
+                }
 
                 case ExprOperator.LessEqual:
+                {
                     opCode = OperationCode.LessEqual;
                     break;
+                }
 
                 case ExprOperator.GreaterEqual:
+                {
                     opCode = OperationCode.GreaterEqual;
                     break;
+                }
 
                 case ExprOperator.Not:
+                {
                     opCode = OperationCode.Not;
                     break;
+                }
 
                 case ExprOperator.BinaryOr:
+                {
                     opCode = OperationCode.BinaryOr;
                     break;
+                }
 
                 case ExprOperator.In:
+                {
                     opCode = OperationCode.In;
                     break;
+                }
 
                 case ExprOperator.NotIn:
+                {
                     opCode = OperationCode.NotIn;
                     break;
+                }
 
                 default:
+                {
                     throw new NotImplementedException(nameof(exprNode.Operator));
+                }
             }
 
             return opCode;
@@ -611,40 +691,56 @@ namespace Chow.Interpreter
             switch (literalNode.Type)
             {
                 case LiteralDataType.Integer:
+                {
                     // Cases for LiteralDataType like this should not fail unless the Parser is bugged
                     if (literalNode.Value is long intVal)
                     {
                         constUnion = new TaggedUnion(intVal);
                     }
+
                     break;
+                }
 
                 case LiteralDataType.Float:
+                {
                     if (literalNode.Value is double floatVal)
                     {
                         constUnion = new TaggedUnion(floatVal);
                     }
+
                     break;
+                }
 
                 case LiteralDataType.Boolean:
+                {
                     if (literalNode.Value is bool boolVal)
                     {
                         constUnion = new TaggedUnion(boolVal);
                     }
+
                     break;
+                }
 
                 case LiteralDataType.None:
+                {
                     constUnion = TaggedUnion.None;
                     break;
+                }
 
                 case LiteralDataType.String:
+                {
                     if (literalNode.Value is string strVal)
                     {
                         constUnion = new TaggedUnion(strVal);
                     }
+
                     break;
+                }
 
                 default:
+                {
                     throw new NotImplementedException($"Compilation of literal type {literalNode.Type} is not implemented.");
+                }
             }
 
             if (constUnion.IsEmpty)

@@ -601,10 +601,13 @@ namespace Chow.Interpreter
             switch (container.Tag)
             {
                 case Tag.Dict:
+                {
                     found = container.DictValue.ContainsKey(needle);
                     break;
-                
+                }
+
                 case Tag.List:
+                {
                     var list = container.ListValue;
 
                     for (var i = 0; i < list.Count && !found; i++)
@@ -613,9 +616,12 @@ namespace Chow.Interpreter
                     }
 
                     break;
+                }
 
                 default:
+                {
                     throw new TypeException($"argument of type '{container.Tag}' is not iterable");
+                }
             }
 
             _valStack.Push(new TaggedUnion(negate ? !found : found));
@@ -634,6 +640,7 @@ namespace Chow.Interpreter
             switch (target.Tag)
             {
                 case Tag.Dict:
+                {
                     try
                     {
                         _valStack.Push(target.DictValue[index]);
@@ -642,14 +649,19 @@ namespace Chow.Interpreter
                     {
                         throw new DictKeyException(ex.KeyRepr, GetCurrentLineNumber());
                     }
+
                     return;
+                }
                 case Tag.List:
+                {
                     if (index.Tag != Tag.Int)
                     {
                         throw new TypeException($"list indices must be integers, not {index.Tag}");
                     }
+
                     _valStack.Push(target.ListValue[(int)index.IntegerValue]);
                     return;
+                }
             }
 
             throw new TypeException($"'{ParseDataTypeName(target.Tag)}' object is not subscriptable");
@@ -680,10 +692,13 @@ namespace Chow.Interpreter
             switch (target.Tag)
             {
                 case Tag.Dict:
+                {
                     target.DictValue[index] = value;
                     return;
+                }
 
                 case Tag.List:
+                {
                     if (index.Tag != Tag.Int)
                     {
                         throw new TypeException($"list indices must be integers, not {index.Tag}");
@@ -691,6 +706,7 @@ namespace Chow.Interpreter
 
                     target.ListValue[(int)index.IntegerValue] = value;
                     return;
+                }
             }
 
             throw new TypeException($"'{ParseDataTypeName(target.Tag)}' object does not support item assignment");

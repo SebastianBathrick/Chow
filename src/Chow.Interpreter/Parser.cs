@@ -124,22 +124,34 @@ namespace Chow.Interpreter
             switch (CurrToken.type)
             {
                 case TokenType.KeywordReturn:
+                {
                     return ParseReturn();
+                }
 
                 case TokenType.KeywordIf:
+                {
                     return ParseIf();
+                }
 
                 case TokenType.KeywordDef:
+                {
                     return ParseFunction();
+                }
 
                 case TokenType.KeywordWhile:
+                {
                     return ParseWhile();
+                }
 
                 case TokenType.KeywordBreak:
+                {
                     return ParseBreak();
+                }
 
                 case TokenType.KeywordContinue:
+                {
                     return ParseContinue();
+                }
             }
 
             if (!IsPrimaryToken())
@@ -462,17 +474,25 @@ namespace Chow.Interpreter
                 switch (CurrToken.type)
                 {
                     case TokenType.SymbolDot:
+                    {
                         node = ParseAttrAccessTail(node);
                         break;
+                    }
                     case TokenType.SymbolLeftBracket:
+                    {
                         node = ParseSubscriptTail(node);
                         break;
+                    }
                     case TokenType.SymbolLeftParen:
+                    {
                         node = ParseInvokeTail(node);
                         break;
+                    }
                     default:
+                    {
                         isDone = true;
                         break;
+                    }
                 }
             }
             while (!isDone);
@@ -610,43 +630,61 @@ namespace Chow.Interpreter
             switch (CurrToken.type)
             {
                 case TokenType.Identifier:
+                {
                     var idTkn = CurrToken;
                     ConsumeToken();
                     return new NameNode(idTkn.lexeme, idTkn.lineNum);
+                }
 
                 case TokenType.LiteralInt:
                 case TokenType.LiteralFloat:
                 case TokenType.LiteralStr:
+                {
                     var numTkn = CurrToken;
                     ConsumeToken();
                     return new LiteralNode(numTkn.literal, numTkn.lineNum);
+                }
 
                 case TokenType.KeywordNone:
+                {
                     ConsumeToken(TokenType.KeywordNone);
                     return new LiteralNode(value: null, PrevTkn.lineNum);
+                }
 
                 case TokenType.KeywordTrue:
+                {
                     ConsumeToken(TokenType.KeywordTrue);
                     return new LiteralNode(value: true, PrevTkn.lineNum);
+                }
 
                 case TokenType.KeywordFalse:
+                {
                     ConsumeToken(TokenType.KeywordFalse);
                     return new LiteralNode(value: false, PrevTkn.lineNum);
+                }
 
                 case TokenType.SymbolLeftParen:
+                {
                     ConsumeToken();
                     var inner = ParseExpr();
                     ConsumeToken(TokenType.SymbolRightParen);
                     return inner;
+                }
 
                 case TokenType.SymbolLeftBracket:
+                {
                     return ParseListLiteral();
+                }
 
                 case TokenType.SymbolLeftCurly:
+                {
                     return ParseDictLiteral();
+                }
 
                 default:
+                {
                     throw new ParserEx("Expected expression.", CurrToken.lineNum);
+                }
             }
         }
 
@@ -730,58 +768,94 @@ namespace Chow.Interpreter
             switch (type)
             {
                 case TokenType.SymbolPlus:
+                {
                     return ExprOperator.Add;
+                }
 
                 case TokenType.SymbolMinus:
+                {
                     return ExprOperator.Subtract;
+                }
 
                 case TokenType.SymbolMultiply:
+                {
                     return ExprOperator.Multiply;
+                }
 
                 case TokenType.SymbolDivide:
+                {
                     return ExprOperator.Divide;
+                }
 
                 case TokenType.SymbolPercent:
+                {
                     return ExprOperator.Modulus;
+                }
 
                 case TokenType.SymbolExponent:
+                {
                     return ExprOperator.Exponentiate;
+                }
 
                 case TokenType.SymbolFloorDivide:
+                {
                     return ExprOperator.FloorDivide;
+                }
 
                 case TokenType.SymbolEqualTo:
+                {
                     return ExprOperator.Equal;
+                }
 
                 case TokenType.SymbolNotEqual:
+                {
                     return ExprOperator.NotEqual;
+                }
 
                 case TokenType.SymbolLess:
+                {
                     return ExprOperator.Less;
+                }
 
                 case TokenType.SymbolGreater:
+                {
                     return ExprOperator.Greater;
+                }
 
                 case TokenType.SymbolLessEqual:
+                {
                     return ExprOperator.LessEqual;
+                }
 
                 case TokenType.SymbolGreaterEqual:
+                {
                     return ExprOperator.GreaterEqual;
+                }
 
                 case TokenType.KeywordAnd:
+                {
                     return ExprOperator.And;
+                }
 
                 case TokenType.KeywordOr:
+                {
                     return ExprOperator.Or;
+                }
 
                 case TokenType.SymbolPipe:
+                {
                     return ExprOperator.BinaryOr;
+                }
 
                 case TokenType.KeywordIn:
+                {
                     return ExprOperator.In;
+                }
 
                 default:
+                {
                     throw new InvalidOperationException();
+                }
             }
         }
 

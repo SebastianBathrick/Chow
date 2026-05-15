@@ -603,11 +603,14 @@ namespace Chow.Interpreter
             switch (CurrChar)
             {
                 case '\n':
+                {
                     // Unix/Linux/macOS newline
                     MoveToNextChar();
                     break;
+                }
 
                 case '\r':
+                {
                     // Older Mac newline (if not followed by \n)
                     MoveToNextChar();
 
@@ -618,6 +621,7 @@ namespace Chow.Interpreter
                     }
 
                     break;
+                }
             }
 
             _isLineBegin = true;
