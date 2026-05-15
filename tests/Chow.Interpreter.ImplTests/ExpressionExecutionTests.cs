@@ -15,7 +15,7 @@ namespace Chow.Interpreter.ImplTests
             var root = parser.BuildTree();
             var compiler = new Compiler(root);
             var chunk = compiler.CompileRoot();
-            var vm = new VirtualMachine(chunk, new GlobalScope());
+            var vm = new VirtualMachine(chunk, new Scope());
 
             vm.EvaluateChunk();
 

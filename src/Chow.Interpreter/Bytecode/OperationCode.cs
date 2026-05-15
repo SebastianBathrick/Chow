@@ -31,8 +31,6 @@ namespace Chow.Interpreter.Bytecode
         JumpIfFalse,
         JumpPastElseBranches,
         JumpToLoopStart,
-        IncScopeDepth,
-        DecScopeDepth,
         CallFunction,
         PushNewClosureFromTemplate,
         PushNewInternalList,

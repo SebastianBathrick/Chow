@@ -26,7 +26,10 @@ namespace Chow.Interpreter.State.Stack
         public bool IsInstrToRun => CurrFrame.IsInstrToRun;
 
         /// <summary>The current frame's scope. Captured by <c>PushNewClosureFromTemplate</c> at runtime.</summary>
-        public IScope CurrentScope => CurrFrame.Scope;
+        public Scope CurrentScope => CurrFrame.Scope;
+
+        /// <summary>The module-level scope (the bottom of every LEGB chain). Future <c>global</c>-targeted ops route directly here.</summary>
+        public Scope ModuleScope => _moduleLvl.Scope;
 
         /// <summary>Source line number associated with the current frame's pointer.</summary>
         public int CurrentLineNum => CurrFrame.CurrentLineNum;
@@ -50,7 +53,7 @@ namespace Chow.Interpreter.State.Stack
         /// <summary>Creates a call stack rooted at a single module frame.</summary>
         /// <param name="moduleChunk">The compiled bytecode for the module being executed.</param>
         /// <param name="moduleScope">The module scope to operate against; persists across <c>ChowModule.Execute</c> calls.</param>
-        public CallStack(Chunk moduleChunk, IScope moduleScope)
+        public CallStack(Chunk moduleChunk, Scope moduleScope)
         {
             _moduleLvl = new StackFrame(moduleChunk, moduleScope);
             _callFrames = new Stack<StackFrame>();
@@ -117,26 +120,14 @@ namespace Chow.Interpreter.State.Stack
             CurrFrame.JumpToInstr(instrIdx);
         }
 
-        /// <summary>Enters a nested block within the current frame's scope.</summary>
-        public void EnterNestedScope()
-        {
-            CurrFrame.Scope.EnterNestedScope();
-        }
-
-        /// <summary>Exits the innermost nested block within the current frame's scope.</summary>
-        public void ExitNestedScope()
-        {
-            CurrFrame.Scope.ExitNestedScope();
-        }
-
         /// <summary>
-        /// Pushes a new function frame for <paramref name="func"/>. A fresh <see cref="LocalScope"/>
+        /// Pushes a new function frame for <paramref name="func"/>. A fresh <see cref="Scope"/>
         /// is allocated with its parent set to the closure's captured enclosing scope, becoming the
         /// L of LEGB for the duration of the call.
         /// </summary>
         public void EnterFunctionCall(Closure func)
         {
-            var frameScope = new LocalScope(func.Enclosing);
+            var frameScope = new Scope(func.Enclosing);
             var newFrame = new StackFrame(func.Chunk, frameScope);
             _callFrames.Push(newFrame);
         }

@@ -314,7 +314,7 @@ namespace Chow.Interpreter
         void CompileBlockNode(BlockNode blockNode)
         {
             // Python has no block scope: names assigned inside an `if`/`while` body
-            // belong to the enclosing function or module scope, so no Inc/DecScopeDepth.
+            // belong to the enclosing function or module scope.
             foreach (var statement in blockNode.Statements)
             {
                 CompileTargetNode(statement);

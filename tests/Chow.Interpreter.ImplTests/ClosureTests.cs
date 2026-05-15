@@ -17,7 +17,7 @@ namespace Chow.Interpreter.ImplTests
         public void Constructor_SetsChunk()
         {
             var chunk = new Chunk();
-            var module = new GlobalScope();
+            var module = new Scope();
             var closure = new Closure(chunk, module, "f", 0);
 
             Assert.That(closure.Chunk, Is.SameAs(chunk));
@@ -26,7 +26,7 @@ namespace Chow.Interpreter.ImplTests
         [Test]
         public void Constructor_SetsName()
         {
-            var closure = new Closure(new Chunk(), new GlobalScope(), "myFunc", 0);
+            var closure = new Closure(new Chunk(), new Scope(), "myFunc", 0);
 
             Assert.That(closure.Name, Is.EqualTo("myFunc"));
         }
@@ -34,7 +34,7 @@ namespace Chow.Interpreter.ImplTests
         [Test]
         public void Constructor_SetsParamCount()
         {
-            var closure = new Closure(new Chunk(), new GlobalScope(), "f", 3);
+            var closure = new Closure(new Chunk(), new Scope(), "f", 3);
 
             Assert.That(closure.ParamCount, Is.EqualTo(3));
         }
@@ -42,7 +42,7 @@ namespace Chow.Interpreter.ImplTests
         [Test]
         public void Constructor_SetsEnclosing()
         {
-            var module = new GlobalScope();
+            var module = new Scope();
             var closure = new Closure(new Chunk(), module, "f", 0);
 
             Assert.That(closure.Enclosing, Is.SameAs(module));
@@ -55,7 +55,7 @@ namespace Chow.Interpreter.ImplTests
         [Test]
         public void Enclosing_IsSameRef_NotCopy_WithModuleScope()
         {
-            var module = new GlobalScope();
+            var module = new Scope();
             var closure = new Closure(new Chunk(), module, "f", 0);
 
             Assert.That(closure.Enclosing, Is.SameAs(module));
@@ -64,7 +64,7 @@ namespace Chow.Interpreter.ImplTests
         [Test]
         public void Enclosing_IsSameRef_WithLocalScope()
         {
-            var local = new LocalScope(new GlobalScope());
+            var local = new Scope(new Scope());
             var closure = new Closure(new Chunk(), local, "f", 0);
 
             Assert.That(closure.Enclosing, Is.SameAs(local));
@@ -73,7 +73,7 @@ namespace Chow.Interpreter.ImplTests
         [Test]
         public void Mutation_OfCapturedScope_IsVisibleViaClosure()
         {
-            var module = new GlobalScope();
+            var module = new Scope();
             var closure = new Closure(new Chunk(), module, "f", 0);
 
             module.AssignVariableValue("x", Int(42));
@@ -88,7 +88,7 @@ namespace Chow.Interpreter.ImplTests
         [Test]
         public void Rebinding_CapturedName_IsVisibleViaClosure()
         {
-            var module = new GlobalScope();
+            var module = new Scope();
             module.AssignVariableValue("x", Int(1));
             var closure = new Closure(new Chunk(), module, "f", 0);
 
@@ -105,7 +105,7 @@ namespace Chow.Interpreter.ImplTests
         public void TwoClosures_SameInputs_AreDistinctRefs()
         {
             var sharedChunk = new Chunk();
-            var sharedScope = new GlobalScope();
+            var sharedScope = new Scope();
 
             var a = new Closure(sharedChunk, sharedScope, "f", 0);
             var b = new Closure(sharedChunk, sharedScope, "f", 0);
@@ -117,8 +117,8 @@ namespace Chow.Interpreter.ImplTests
         public void TwoClosures_DifferentScopes_HaveDistinctEnclosings()
         {
             var sharedChunk = new Chunk();
-            var scopeA = new GlobalScope();
-            var scopeB = new GlobalScope();
+            var scopeA = new Scope();
+            var scopeB = new Scope();
 
             var a = new Closure(sharedChunk, scopeA, "f", 0);
             var b = new Closure(sharedChunk, scopeB, "f", 0);

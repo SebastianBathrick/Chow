@@ -8,6 +8,7 @@ using System;
 
 namespace Chow.Interpreter
 {
+    // TODO: Do big refactor to where the API will create a new module when the current one is null.
     /// <summary>
     /// The primary entry point for embedding the Chow interpreter. Manages a persistent global scope
     /// across multiple <see cref="Execute"/> calls so that variables and functions defined in one call
@@ -15,7 +16,7 @@ namespace Chow.Interpreter
     /// </summary>
     public class ChowModule
     {
-        IScope _globalScope;
+        Scope _globalScope;
 
         #region Global Scope Access
 
@@ -55,7 +56,7 @@ namespace Chow.Interpreter
 
                 if (_globalScope == null)
                 {
-                    _globalScope = new GlobalScope();
+                    _globalScope = new Scope();
                 }
 
                 var varUnion = ApiConverter.ToTaggedUnion(value);
@@ -114,7 +115,7 @@ namespace Chow.Interpreter
 
             if (_globalScope == null)
             {
-                _globalScope = new GlobalScope();
+                _globalScope = new Scope();
             }
 
             // Extracts the value from ChowValue and creates a new TaggedUnion containing the value & appropriate tag
@@ -212,7 +213,7 @@ namespace Chow.Interpreter
 
         #region Helper Methods
 
-        static void ValidateGlobalExists(string name, IScope globalScope)
+        static void ValidateGlobalExists(string name, Scope globalScope)
         {
             ValidateGlobalName(name);
 

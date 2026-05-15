@@ -10,14 +10,14 @@ namespace Chow.Interpreter.ImplementationTests
     {
         static TaggedUnion Int(long v) => new TaggedUnion(v);
 
-        static (CallStack stack, GlobalScope module) NewStack()
+        static (CallStack stack, Scope module) NewStack()
         {
-            var module = new GlobalScope();
+            var module = new Scope();
             var stack = new CallStack(new Chunk(), module);
             return (stack, module);
         }
 
-        static Closure NewClosure(IScope enclosing, int paramCount = 0)
+        static Closure NewClosure(Scope enclosing, int paramCount = 0)
         {
             return new Closure(new Chunk(), enclosing, "f", paramCount);
         }
@@ -68,13 +68,13 @@ namespace Chow.Interpreter.ImplementationTests
         }
 
         [Test]
-        public void EnterFunctionCall_NewFrameScope_IsLocalScope()
+        public void EnterFunctionCall_NewFrameScope_IsFreshScope()
         {
             (var stack, var module) = NewStack();
 
             stack.EnterFunctionCall(NewClosure(module));
 
-            Assert.That(stack.CurrentScope, Is.InstanceOf<LocalScope>());
+            Assert.That(stack.CurrentScope, Is.Not.SameAs(module));
         }
 
         [Test]

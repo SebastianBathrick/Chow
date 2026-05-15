@@ -12,7 +12,7 @@ namespace Chow.Interpreter
     {
         #region Fields
 
-        readonly IScope _globalScope;
+        readonly Scope _globalScope;
         readonly CallStack _callStack;
         readonly Stack<TaggedUnion> _valStack;
 
@@ -28,15 +28,15 @@ namespace Chow.Interpreter
 
         #region Constructors
 
-        public VirtualMachine(Chunk chunk, IScope globalScope)
+        public VirtualMachine(Chunk chunk, Scope globalScope)
             : this(globalScope, chunk)
         {
         }
 
         // Chunk is null when the client is exclusively calling a closure
-        public VirtualMachine(IScope globalScope = null, Chunk chunk = null)
+        public VirtualMachine(Scope globalScope = null, Chunk chunk = null)
         {
-            _globalScope = globalScope ?? new GlobalScope();
+            _globalScope = globalScope ?? new Scope();
             _callStack = new CallStack(chunk ?? new Chunk(), _globalScope);
             _valStack = new Stack<TaggedUnion>();
         }
@@ -45,7 +45,7 @@ namespace Chow.Interpreter
 
         #region Public API
         
-        public IScope EvaluateChunk()
+        public Scope EvaluateChunk()
         {
             while (_callStack.IsInstrToRun)
             {
@@ -238,23 +238,6 @@ namespace Chow.Interpreter
                         // Unconditional backward jump emitted at the bottom of a loop body (and for `continue`)
                         _callStack.JumpToInstr(CurrentOperation.Operand);
                         continue;
-                    }
-
-                    #endregion
-
-                    #region Scope (Needs Refactor)
-
-                    // TODO: Refactor as the scope management system has changed to be more akin to Python's, without block scopes
-                    case OperationCode.IncScopeDepth:
-                    {
-                        _callStack.EnterNestedScope();
-                        break;
-                    }
-
-                    case OperationCode.DecScopeDepth:
-                    {
-                        _callStack.ExitNestedScope();
-                        break;
                     }
 
                     #endregion

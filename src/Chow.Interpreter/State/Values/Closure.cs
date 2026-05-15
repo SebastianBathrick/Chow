@@ -18,7 +18,7 @@ namespace Chow.Interpreter.State.Values
         public Chunk Chunk { get; }
 
         /// <summary>The scope active when <c>def</c> executed; used as the parent of the call's local scope.</summary>
-        public IScope Enclosing { get; }
+        public Scope Enclosing { get; }
 
         /// <summary>The function name as written in source. Used for diagnostics and stack traces.</summary>
         public string Name { get; }
@@ -27,7 +27,7 @@ namespace Chow.Interpreter.State.Values
         public int ParamCount { get; }
 
         /// <summary>Constructs a closure. All fields are readonly; closures are immutable once built.</summary>
-        public Closure(Chunk chunk, IScope enclosing, string name, int paramCount)
+        public Closure(Chunk chunk, Scope enclosing, string name, int paramCount)
         {
             Chunk = chunk;
             Enclosing = enclosing;

@@ -4,82 +4,40 @@ using System.Collections.Generic;
 namespace Chow.Interpreter.State.Scopes
 {
     /// <summary>
-    /// Base class for all runtime variable scopes. Stores bindings in a flat dictionary backed by a name stack with
-    /// boundary sentinels, which together support nested-block enter/exit within a single scope. Subclasses (<see
-    /// cref="GlobalScope"/>, <see cref="LocalScope"/>) differentiate the role of the scope in the LEGB lookup chain.
+    /// A flat variable-binding store linked to an optional parent for LEGB chain walking. Used for both module-level
+    /// scope (no parent) and per-function-call scope (parent = the closure's captured enclosing scope). Block bodies
+    /// share their enclosing scope — Chow matches Python's function-level scoping.
     /// </summary>
-    /// <remarks>
-    /// No source identifier can start with <c>&lt;</c>, so <c>SCOPE_BOUNDARY_ELEMENT</c> never collides with a real
-    /// variable name.
-    /// </remarks>
-    abstract class Scope : IScope
+    sealed class Scope
     {
-        const string SCOPE_BOUNDARY_ELEMENT = "<SCOPE_BOUNDARY>";
-        const int OUTERMOST_SCOPE_DEPTH = 0;
-
-        readonly Stack<string> _varNames;
         readonly Dictionary<string, TaggedUnion> _varMap;
-        int _scopeDepth;
 
-        /// <inheritdoc/>
-        public virtual IScope ParentOrNull => null;
+        /// <summary>The enclosing scope used for LEGB chain walking, or <c>null</c> at the top of the chain.</summary>
+        public Scope ParentOrNull { get; }
 
-        protected Scope()
+        /// <summary>Creates a scope with the given parent (pass <c>null</c> for the module-level scope).</summary>
+        public Scope(Scope parentOrNull = null)
         {
+            ParentOrNull = parentOrNull;
             _varMap = new Dictionary<string, TaggedUnion>();
-            _scopeDepth = OUTERMOST_SCOPE_DEPTH;
-
-            // The bottom of the stack represents the outermost scope (which will never be popped)
-            _varNames = new Stack<string>();
-            _varNames.Push(SCOPE_BOUNDARY_ELEMENT);
         }
 
-        /// <inheritdoc/>
+        /// <summary>True if <paramref name="name"/> is bound in this scope. Does not consult <see cref="ParentOrNull"/>.</summary>
         public bool IsVariableDefined(string name)
         {
             return _varMap.ContainsKey(name);
         }
 
-        /// <inheritdoc/>
-        public void EnterNestedScope()
-        {
-            _scopeDepth++;
-            _varNames.Push(SCOPE_BOUNDARY_ELEMENT);
-        }
-
-        /// <inheritdoc/>
-        public void ExitNestedScope()
-        {
-            // Pop the name of the variable declared last OR the boundary element if no variables were declared in the current scope
-            var popName = _varNames.Pop();
-
-            // Pop until the boundary element has been popped (either popped or is below the name of the first variable in the scope)
-            while (popName != SCOPE_BOUNDARY_ELEMENT)
-            {
-                // Remove variable name and its assigned value from the map
-                _varMap.Remove(popName);
-
-                // Pop another variable name OR the scope boundary element if there's no more variables left in the scope
-                popName = _varNames.Pop();
-            }
-
-            _scopeDepth--;
-        }
-
-        /// <inheritdoc/>
+        /// <summary>
+        /// Binds <paramref name="name"/> to <paramref name="value"/> in this scope. Creates the binding
+        /// if it does not exist; otherwise overwrites it in place.
+        /// </summary>
         public void AssignVariableValue(string name, TaggedUnion value)
         {
-            // First-time assignment also declares: track the name in the current scope
-            // so it gets removed from the value map when the scope exits.
-            if (!_varMap.ContainsKey(name))
-            {
-                _varNames.Push(name);
-            }
-
             _varMap[name] = value;
         }
 
-        /// <inheritdoc/>
+        /// <summary>Returns the value bound to <paramref name="name"/> in this scope. Throws if undefined.</summary>
         public TaggedUnion GetVariableValue(string name)
         {
             return _varMap[name];
