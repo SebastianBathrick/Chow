@@ -29,12 +29,10 @@ static class Program
         try
         {
             var source = File.ReadAllText(filePath);
-            var module = new ChowModule
-            {
-                ["print"] = (Action<ChowValue>)(value => Console.WriteLine(value)),
-                ["input"] = (Func<ChowValue>)(() =>
-                    throw new InvalidOperationException("input() is not supported in CodeEditor."))
-            };
+            var module = new ChowModule();
+            module.ImportBuiltIns();
+            module["input"] = (Func<ChowValue>)(() =>
+                throw new InvalidOperationException("input() is not supported in CodeEditor."));
 
             var stopwatch = Stopwatch.StartNew();
             try

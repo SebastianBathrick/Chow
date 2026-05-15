@@ -27,9 +27,7 @@ namespace Chow.Interpreter
 
         public Chunk CompileRoot()
         {
-            var treeRoot = _root as TreeRootNode;
-
-            if (treeRoot == null)
+            if (!(_root is TreeRootNode treeRoot))
             {
                 throw new InvalidOperationException();
             }
@@ -44,9 +42,7 @@ namespace Chow.Interpreter
 
         Chunk CompileFuncBody()
         {
-            var funcNode = _root as FunctionNode;
-
-            if (funcNode == null)
+            if (!(_root is FunctionNode funcNode))
             {
                 throw new InvalidOperationException();
             }
