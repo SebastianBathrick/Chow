@@ -1,5 +1,4 @@
 using Chow.Interpreter;
-using Chow.Interpreter.Values;
 using System.Diagnostics;
 
 namespace CodeEditor;
@@ -30,8 +29,6 @@ static class Program
         {
             var source = File.ReadAllText(filePath);
             var module = new ChowModule();
-            module.SetBuiltInValue(BuiltInType.Input, (Func<ChowValue>)(() =>
-                throw new InvalidOperationException("input() is not supported in CodeEditor.")));
 
             var stopwatch = Stopwatch.StartNew();
             try

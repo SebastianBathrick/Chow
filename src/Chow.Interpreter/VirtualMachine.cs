@@ -593,24 +593,7 @@ namespace Chow.Interpreter
 
         void CallInteropFunction(int argCount, TaggedUnion calleeUnion, TaggedUnion[] args)
         {
-            // Interop dispatch with already-popped values.
-            TaggedUnion result;
-
-            // TODO: Refactor the MakeInteropCall method to avoid all these separate argument cases
-            if (argCount == 0)
-            {
-                result = calleeUnion.MakeInteropCall(null, null);
-            }
-            else if (argCount == 1)
-            {
-                result = calleeUnion.MakeInteropCall(args[0], null);
-            }
-            else
-            {
-                result = calleeUnion.MakeInteropCall(null, args);
-            }
-
-            _valStack.Push(result);
+            _valStack.Push(calleeUnion.MakeInteropCall(args));
         }
 
         void PushClosureStackFrame(int argCount, Closure closure, TaggedUnion[] args)
@@ -822,16 +805,6 @@ namespace Chow.Interpreter
                     _valStack.Push(dict[attrName]);
                     return;
                 }
-                case Tag.Object when target.ObjectValue is InteropClassObject ico:
-                {
-                    if (!ico.HasAttribute(attrName))
-                    {
-                        throw new AttributeException(ParseDataTypeName(target.Tag), attrName, GetCurrentLineNumber());
-                    }
-
-                    _valStack.Push(ico.GetAttribute(attrName));
-                    return;
-                }
             }
 
             throw new AttributeException(ParseDataTypeName(target.Tag), attrName, GetCurrentLineNumber());
@@ -839,30 +812,11 @@ namespace Chow.Interpreter
 
         void SetInteropObjectAttribute()
         {
-            // Lists and dicts are not included because their attributes are readonly
             var attrName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
-            var value = _valStack.Pop();
+            _valStack.Pop();
             var target = _valStack.Pop();
 
-            if (target.Tag != Tag.Object || !(target.ObjectValue is InteropClassObject interopObject))
-            {
-                throw new AttributeException(ParseDataTypeName(target.Tag), attrName, GetCurrentLineNumber());
-            }
-
-            if (interopObject.CanSetAttribute(attrName))
-            {
-                interopObject.SetAttribute(attrName, value);
-                return;
-            }
-
-            if (!interopObject.HasAttribute(attrName))
-            {
-                throw new AttributeException(interopObject.ClassName, attrName, GetCurrentLineNumber());
-            }
-
-                // Method names and read-only fields land here.
-            throw new AttributeException(interopObject.ClassName, attrName, GetCurrentLineNumber(),
-                    $"'{interopObject.ClassName}' object attribute '{attrName}' is read-only");
+            throw new AttributeException(ParseDataTypeName(target.Tag), attrName, GetCurrentLineNumber());
         }
 
         #endregion

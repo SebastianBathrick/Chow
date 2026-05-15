@@ -1,55 +1,29 @@
 using Chow.Interpreter.State.Values;
-using Chow.Interpreter.Values;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 
 namespace Chow.Interpreter
 {
-    /// <summary>
-    /// Stable identifiers for the standard built-in functions. Hosts use these with
-    /// <see cref="ChowModule.SetBuiltInActive"/>, <see cref="ChowModule.SetBuiltInValue"/>, and
-    /// <see cref="ChowModule.IsBuiltInActive"/> to sandbox or override individual built-ins.
-    /// </summary>
-    public enum BuiltInType
+    internal enum BuiltInType
     {
-        /// <summary><c>print(value)</c> — writes <c>value</c> to standard output and returns <c>None</c>.</summary>
         Print,
-        /// <summary><c>input()</c> — reads a line from standard input and returns it as a string.</summary>
         Input,
-        /// <summary><c>float(value)</c> — converts a number or numeric string to a float.</summary>
         Float,
-        /// <summary><c>str(value)</c> — converts any value to its string representation.</summary>
         Str,
-        /// <summary><c>int(value)</c> — converts a number, bool, or numeric string to an int (truncating floats).</summary>
         Int,
-        /// <summary><c>bool(value)</c> — converts a value to a bool using Python truthiness rules.</summary>
         Bool,
-        /// <summary><c>list()</c> / <c>list(iterable)</c> — constructs a list (empty or a copy of the argument).</summary>
         List,
-        /// <summary><c>dict()</c> / <c>dict(mapping)</c> — constructs a dict (empty or a copy of the argument).</summary>
         Dict,
-        /// <summary><c>len(value)</c> — returns the length of a string, list, or dict.</summary>
         Len,
-        /// <summary><c>type(value)</c> — returns the Python-style type name as a string.</summary>
         Type,
-        /// <summary><c>abs(value)</c> — returns the absolute value of a number.</summary>
         Abs,
-        /// <summary><c>round(value)</c> — rounds to the nearest integer using banker's rounding.</summary>
         Round,
-        /// <summary><c>min(a, b)</c> — returns the smaller of two numbers.</summary>
         Min,
-        /// <summary><c>max(a, b)</c> — returns the larger of two numbers.</summary>
         Max,
-        /// <summary><c>range(stop)</c> / <c>range(start, stop)</c> / <c>range(start, stop, step)</c> — produces a lazy integer sequence.</summary>
         Range,
     }
 
-    /// <summary>
-    /// Internal source-of-truth table for the standard built-ins: maps each <see cref="BuiltInType"/> to its
-    /// source-language name and default implementation. Hosts do not interact with this class directly —
-    /// the table is consumed by <see cref="ChowModule"/> at construction to seed the module's global scope.
-    /// </summary>
     internal static class BuiltIns
     {
         static readonly Dictionary<BuiltInType, string> _names = new Dictionary<BuiltInType, string>
@@ -71,23 +45,24 @@ namespace Chow.Interpreter
             { BuiltInType.Range, "range" },
         };
 
-        static readonly Dictionary<BuiltInType, object> _defaults = new Dictionary<BuiltInType, object>
+        static readonly Dictionary<BuiltInType, Func<TaggedUnion[], TaggedUnion>> _defaults =
+            new Dictionary<BuiltInType, Func<TaggedUnion[], TaggedUnion>>
         {
-            { BuiltInType.Print, (Func<ChowValue, ChowValue>)Print          },
-            { BuiltInType.Input, (Func<ChowValue>)Input                     },
-            { BuiltInType.Float, (Func<ChowValue, ChowValue>)Float          },
-            { BuiltInType.Str,   (Func<ChowValue, ChowValue>)Str            },
-            { BuiltInType.Int,   (Func<ChowValue, ChowValue>)Int            },
-            { BuiltInType.Bool,  (Func<ChowValue, ChowValue>)Bool           },
-            { BuiltInType.List,  (Func<TaggedUnion[], TaggedUnion>)List     },
-            { BuiltInType.Dict,  (Func<TaggedUnion[], TaggedUnion>)Dict     },
-            { BuiltInType.Len,   (Func<ChowValue, ChowValue>)Len            },
-            { BuiltInType.Type,  (Func<ChowValue, ChowValue>)Type           },
-            { BuiltInType.Abs,   (Func<ChowValue, ChowValue>)Abs            },
-            { BuiltInType.Round, (Func<ChowValue, ChowValue>)Round          },
-            { BuiltInType.Min,   (Func<TaggedUnion[], TaggedUnion>)Min      },
-            { BuiltInType.Max,   (Func<TaggedUnion[], TaggedUnion>)Max      },
-            { BuiltInType.Range, (Func<TaggedUnion[], TaggedUnion>)Range    },
+            { BuiltInType.Print, Print },
+            { BuiltInType.Input, Input },
+            { BuiltInType.Float, Float },
+            { BuiltInType.Str,   Str   },
+            { BuiltInType.Int,   Int   },
+            { BuiltInType.Bool,  Bool  },
+            { BuiltInType.List,  List  },
+            { BuiltInType.Dict,  Dict  },
+            { BuiltInType.Len,   Len   },
+            { BuiltInType.Type,  Type  },
+            { BuiltInType.Abs,   Abs   },
+            { BuiltInType.Round, Round },
+            { BuiltInType.Min,   Min   },
+            { BuiltInType.Max,   Max   },
+            { BuiltInType.Range, Range },
         };
 
         public static IEnumerable<BuiltInType> AllTypes => _names.Keys;
@@ -97,19 +72,22 @@ namespace Chow.Interpreter
             return _names[type];
         }
 
-        public static object DefaultOf(BuiltInType type)
+        public static Func<TaggedUnion[], TaggedUnion> DefaultOf(BuiltInType type)
         {
             return _defaults[type];
         }
 
-        static ChowValue Print(ChowValue val)
+        static TaggedUnion Print(TaggedUnion[] args)
         {
-            Console.WriteLine(val);
-            return ChowValue.None;
+            RequireArity("print", args, 1);
+            Console.WriteLine(FormatForPrint(args[0]));
+            return TaggedUnion.None;
         }
 
-        static ChowValue Input()
+        static TaggedUnion Input(TaggedUnion[] args)
         {
+            RequireArity("input", args, 0);
+
             var input = Console.ReadLine();
 
             if (input == null)
@@ -117,254 +95,229 @@ namespace Chow.Interpreter
                 input = string.Empty;
             }
 
-            return new ChowStr(input);
+            return new TaggedUnion(input);
         }
 
-        static ChowValue Float(ChowValue val)
+        static TaggedUnion Float(TaggedUnion[] args)
         {
-            if (val.IsType<double>())
-            {
-                return new ChowFloat(val.AsType<double>());
-            }
+            RequireArity("float", args, 1);
+            var val = args[0];
 
-            if (val.IsType<long>())
+            switch (val.Tag)
             {
-                return new ChowFloat(val.AsType<long>());
-            }
-
-            if (val.IsType<bool>())
-            {
-                return new ChowFloat(val.AsType<double>());
-            }
-
-            if (val is ChowStr str)
-            {
-                double parsed;
-                if (double.TryParse(str.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out parsed))
+                case Tag.Float:
                 {
-                    return new ChowFloat(parsed);
+                    return val;
                 }
-
-                throw new InvalidOperationException($"could not convert string to float: '{str.Value}'");
-            }
-
-            throw new InvalidOperationException($"float() argument must be a string or a number, not '{ChowTypeName(val)}'");
-        }
-
-        static ChowValue Str(ChowValue val)
-        {
-            return new ChowStr(val.ToString());
-        }
-
-        static ChowValue Int(ChowValue val)
-        {
-            if (val.IsType<long>())
-            {
-                return new ChowInt(val.AsType<long>());
-            }
-
-            if (val.IsType<double>())
-            {
-                return new ChowInt((long)val.AsType<double>());
-            }
-
-            if (val.IsType<bool>())
-            {
-                return new ChowInt(val.AsType<long>());
-            }
-
-            if (val is ChowStr str)
-            {
-                long parsed;
-                if (long.TryParse(str.Value, out parsed))
+                case Tag.Int:
                 {
-                    return new ChowInt(parsed);
+                    return new TaggedUnion((double)val.IntegerValue);
                 }
-
-                throw new InvalidOperationException($"invalid literal for int() with base 10: '{str.Value}'");
+                case Tag.Boolean:
+                {
+                    return new TaggedUnion(val.BooleanValue ? 1.0 : 0.0);
+                }
+                case Tag.Str:
+                {
+                    double parsed;
+                    if (double.TryParse(val.StringValue, NumberStyles.Float, CultureInfo.InvariantCulture, out parsed))
+                    {
+                        return new TaggedUnion(parsed);
+                    }
+                    throw new InvalidOperationException($"could not convert string to float: '{val.StringValue}'");
+                }
             }
 
-            throw new InvalidOperationException($"int() argument must be a string, a bytes-like object or a real number, not '{ChowTypeName(val)}'");
+            throw new InvalidOperationException($"float() argument must be a string or a number, not '{TagTypeName(val.Tag)}'");
         }
 
-        static ChowValue Bool(ChowValue val)
+        static TaggedUnion Str(TaggedUnion[] args)
         {
-            if (val.IsNone)
+            RequireArity("str", args, 1);
+            return new TaggedUnion(FormatForPrint(args[0]));
+        }
+
+        static TaggedUnion Int(TaggedUnion[] args)
+        {
+            RequireArity("int", args, 1);
+            var val = args[0];
+
+            switch (val.Tag)
             {
-                return new ChowBool(false);
+                case Tag.Int:
+                {
+                    return val;
+                }
+                case Tag.Float:
+                {
+                    return new TaggedUnion((long)val.FloatValue);
+                }
+                case Tag.Boolean:
+                {
+                    return new TaggedUnion(val.BooleanValue ? 1L : 0L);
+                }
+                case Tag.Str:
+                {
+                    long parsed;
+                    if (long.TryParse(val.StringValue, out parsed))
+                    {
+                        return new TaggedUnion(parsed);
+                    }
+                    throw new InvalidOperationException($"invalid literal for int() with base 10: '{val.StringValue}'");
+                }
             }
 
-            if (val.IsType<bool>())
-            {
-                return new ChowBool(val.AsType<bool>());
-            }
+            throw new InvalidOperationException($"int() argument must be a string, a bytes-like object or a real number, not '{TagTypeName(val.Tag)}'");
+        }
 
-            if (val.IsType<long>())
-            {
-                return new ChowBool(val.AsType<long>() != 0);
-            }
-
-            if (val.IsType<double>())
-            {
-                return new ChowBool(val.AsType<double>() != 0.0);
-            }
-
-            if (val is ChowStr str)
-            {
-                return new ChowBool(str.Value.Length != 0);
-            }
-
-            if (val is ChowList list)
-            {
-                return new ChowBool(list.Count != 0);
-            }
-
-            if (val is ChowDict dict)
-            {
-                return new ChowBool(dict.Count != 0);
-            }
-
-            throw new InvalidOperationException($"bool() argument not supported for type '{ChowTypeName(val)}'");
+        static TaggedUnion Bool(TaggedUnion[] args)
+        {
+            RequireArity("bool", args, 1);
+            return new TaggedUnion(args[0].IsTruthy);
         }
 
         static TaggedUnion List(TaggedUnion[] args)
         {
-            return ApiConverter.ToTaggedUnion(List(ToChowValues(args)));
-        }
+            var argCount = args == null ? 0 : args.Length;
 
-        static ChowValue List(ChowValue[] args)
-        {
-            if (args.Length == 0)
+            if (argCount == 0)
             {
-                return new ChowList();
+                return new TaggedUnion(new InternalList());
             }
 
-            if (args.Length == 1)
+            if (argCount == 1)
             {
-                if (args[0] is ChowList list)
+                if (args[0].Tag == Tag.List)
                 {
-                    return new ChowList(list);
+                    return new TaggedUnion(InternalList.Concat(args[0].ListValue, new InternalList()));
                 }
-
-                throw new InvalidOperationException($"'{ChowTypeName(args[0])}' object is not iterable");
+                throw new InvalidOperationException($"'{TagTypeName(args[0].Tag)}' object is not iterable");
             }
 
-            throw new InvalidOperationException($"list expected at most 1 argument, got {args.Length}");
+            throw new InvalidOperationException($"list expected at most 1 argument, got {argCount}");
         }
 
         static TaggedUnion Dict(TaggedUnion[] args)
         {
-            return ApiConverter.ToTaggedUnion(Dict(ToChowValues(args)));
-        }
+            var argCount = args == null ? 0 : args.Length;
 
-        static ChowValue Dict(ChowValue[] args)
-        {
-            if (args.Length == 0)
+            if (argCount == 0)
             {
-                return new ChowDict();
+                return new TaggedUnion(new InternalDict());
             }
 
-            if (args.Length == 1)
+            if (argCount == 1)
             {
-                if (args[0] is ChowDict dict)
+                if (args[0].Tag == Tag.Dict)
                 {
-                    return new ChowDict(dict);
+                    return new TaggedUnion(InternalDict.Merge(args[0].DictValue, new InternalDict()));
                 }
-
-                throw new InvalidOperationException($"'{ChowTypeName(args[0])}' object is not iterable");
+                throw new InvalidOperationException($"'{TagTypeName(args[0].Tag)}' object is not iterable");
             }
 
-            throw new InvalidOperationException($"dict expected at most 1 argument, got {args.Length}");
+            throw new InvalidOperationException($"dict expected at most 1 argument, got {argCount}");
         }
 
-        static ChowValue Len(ChowValue val)
+        static TaggedUnion Len(TaggedUnion[] args)
         {
-            if (val is ChowStr str)
+            RequireArity("len", args, 1);
+            var val = args[0];
+
+            switch (val.Tag)
             {
-                return new ChowInt(str.Value.Length);
+                case Tag.Str:
+                {
+                    return new TaggedUnion((long)val.StringValue.Length);
+                }
+                case Tag.List:
+                {
+                    return new TaggedUnion((long)val.ListValue.Count);
+                }
+                case Tag.Dict:
+                {
+                    return new TaggedUnion((long)val.DictValue.Count);
+                }
             }
 
-            if (val is ChowList list)
-            {
-                return new ChowInt(list.Count);
-            }
-
-            if (val is ChowDict dict)
-            {
-                return new ChowInt(dict.Count);
-            }
-
-            throw new InvalidOperationException($"object of type '{ChowTypeName(val)}' has no len()");
+            throw new InvalidOperationException($"object of type '{TagTypeName(val.Tag)}' has no len()");
         }
 
-        static ChowValue Type(ChowValue val)
+        static TaggedUnion Type(TaggedUnion[] args)
         {
-            return new ChowStr(ChowTypeName(val));
+            RequireArity("type", args, 1);
+            return new TaggedUnion(TagTypeName(args[0].Tag));
         }
 
-        static ChowValue Abs(ChowValue val)
+        static TaggedUnion Abs(TaggedUnion[] args)
         {
-            if (val.IsType<long>())
+            RequireArity("abs", args, 1);
+            var val = args[0];
+
+            switch (val.Tag)
             {
-                return new ChowInt(Math.Abs(val.AsType<long>()));
+                case Tag.Int:
+                {
+                    return new TaggedUnion(Math.Abs(val.IntegerValue));
+                }
+                case Tag.Float:
+                {
+                    return new TaggedUnion(Math.Abs(val.FloatValue));
+                }
+                case Tag.Boolean:
+                {
+                    return new TaggedUnion(val.BooleanValue ? 1L : 0L);
+                }
             }
 
-            if (val.IsType<double>())
-            {
-                return new ChowFloat(Math.Abs(val.AsType<double>()));
-            }
-
-            if (val.IsType<bool>())
-            {
-                return new ChowInt(val.AsType<long>());
-            }
-
-            throw new InvalidOperationException($"bad operand type for abs(): '{ChowTypeName(val)}'");
+            throw new InvalidOperationException($"bad operand type for abs(): '{TagTypeName(val.Tag)}'");
         }
 
-        static ChowValue Round(ChowValue val)
+        static TaggedUnion Round(TaggedUnion[] args)
         {
-            if (val.IsType<long>())
+            RequireArity("round", args, 1);
+            var val = args[0];
+
+            switch (val.Tag)
             {
-                return new ChowInt(val.AsType<long>());
+                case Tag.Int:
+                {
+                    return val;
+                }
+                case Tag.Float:
+                {
+                    return new TaggedUnion((long)Math.Round(val.FloatValue, MidpointRounding.ToEven));
+                }
+                case Tag.Boolean:
+                {
+                    return new TaggedUnion(val.BooleanValue ? 1L : 0L);
+                }
             }
 
-            if (val.IsType<double>())
-            {
-                return new ChowInt((long)Math.Round(val.AsType<double>(), MidpointRounding.ToEven));
-            }
-
-            if (val.IsType<bool>())
-            {
-                return new ChowInt(val.AsType<long>());
-            }
-
-            throw new InvalidOperationException($"type {ChowTypeName(val)} doesn't define __round__ method");
+            throw new InvalidOperationException($"type {TagTypeName(val.Tag)} doesn't define __round__ method");
         }
 
         static TaggedUnion Min(TaggedUnion[] args)
         {
-            return ApiConverter.ToTaggedUnion(Min(ToChowValues(args)));
-        }
+            RequireArity("min", args, 2);
 
-        static ChowValue Min(ChowValue[] args)
-        {
-            if (args.Length != 2)
-            {
-                throw new InvalidOperationException($"min() expected 2 arguments, got {args.Length}");
-            }
-
-            if (!ChowIsNumeric(args[0]) || !ChowIsNumeric(args[1]))
+            if (!IsNumeric(args[0]) || !IsNumeric(args[1]))
             {
                 throw new InvalidOperationException("min() arguments must be numbers");
             }
 
-            return ChowAsDouble(args[0]) <= ChowAsDouble(args[1]) ? args[0] : args[1];
+            return AsDouble(args[0]) <= AsDouble(args[1]) ? args[0] : args[1];
         }
 
         static TaggedUnion Max(TaggedUnion[] args)
         {
-            return ApiConverter.ToTaggedUnion(Max(ToChowValues(args)));
+            RequireArity("max", args, 2);
+
+            if (!IsNumeric(args[0]) || !IsNumeric(args[1]))
+            {
+                throw new InvalidOperationException("max() arguments must be numbers");
+            }
+
+            return AsDouble(args[0]) >= AsDouble(args[1]) ? args[0] : args[1];
         }
 
         static TaggedUnion Range(TaggedUnion[] args)
@@ -409,16 +362,82 @@ namespace Chow.Interpreter
 
         static long RequireRangeInt(TaggedUnion arg, int position)
         {
-            // Python's range only accepts integers, not floats. Match that behavior.
             if (arg.Tag != Tag.Int)
             {
-                throw new InvalidOperationException($"'{TagToTypeName(arg.Tag)}' object cannot be interpreted as an integer");
+                throw new InvalidOperationException($"'{TagTypeName(arg.Tag)}' object cannot be interpreted as an integer");
             }
 
             return arg.IntegerValue;
         }
 
-        static string TagToTypeName(Tag tag)
+        static void RequireArity(string name, TaggedUnion[] args, int expected)
+        {
+            var actual = args == null ? 0 : args.Length;
+
+            if (actual != expected)
+            {
+                throw new InvalidOperationException($"{name}() expected {expected} arguments, got {actual}");
+            }
+        }
+
+        static bool IsNumeric(TaggedUnion val)
+        {
+            return val.Tag == Tag.Int || val.Tag == Tag.Float || val.Tag == Tag.Boolean;
+        }
+
+        static double AsDouble(TaggedUnion val)
+        {
+            switch (val.Tag)
+            {
+                case Tag.Int:
+                {
+                    return val.IntegerValue;
+                }
+                case Tag.Float:
+                {
+                    return val.FloatValue;
+                }
+                case Tag.Boolean:
+                {
+                    return val.BooleanValue ? 1.0 : 0.0;
+                }
+            }
+
+            throw new InvalidOperationException("Value is not numeric");
+        }
+
+        static string FormatForPrint(TaggedUnion val)
+        {
+            switch (val.Tag)
+            {
+                case Tag.None:
+                {
+                    return "None";
+                }
+                case Tag.Boolean:
+                {
+                    return val.BooleanValue ? "True" : "False";
+                }
+                case Tag.Int:
+                {
+                    return val.IntegerValue.ToString(CultureInfo.InvariantCulture);
+                }
+                case Tag.Float:
+                {
+                    return val.FloatValue.ToString(CultureInfo.InvariantCulture);
+                }
+                case Tag.Str:
+                {
+                    return val.StringValue;
+                }
+                default:
+                {
+                    return val.GetTaggedValue()?.ToString() ?? string.Empty;
+                }
+            }
+        }
+
+        static string TagTypeName(Tag tag)
         {
             switch (tag)
             {
@@ -459,113 +478,6 @@ namespace Chow.Interpreter
                     return tag.ToString().ToLowerInvariant();
                 }
             }
-        }
-
-        static ChowValue Max(ChowValue[] args)
-        {
-            if (args.Length != 2)
-            {
-                throw new InvalidOperationException($"max() expected 2 arguments, got {args.Length}");
-            }
-
-            if (!ChowIsNumeric(args[0]) || !ChowIsNumeric(args[1]))
-            {
-                throw new InvalidOperationException("max() arguments must be numbers");
-            }
-
-            return ChowAsDouble(args[0]) >= ChowAsDouble(args[1]) ? args[0] : args[1];
-        }
-
-        static ChowValue[] ToChowValues(TaggedUnion[] args)
-        {
-            if (args == null)
-            {
-                return new ChowValue[0];
-            }
-
-            var result = new ChowValue[args.Length];
-            for (var i = 0; i < args.Length; i++)
-            {
-                result[i] = ApiConverter.ToChowValue(args[i]);
-            }
-
-            return result;
-        }
-
-        static string ChowTypeName(ChowValue val)
-        {
-            // TODO: Centralize type names, so that they're not hardcoded in multiple places
-            if (val.IsNone)
-            {
-                return "NoneType";
-            }
-
-            if (val.IsType<bool>())
-            {
-                return "bool";
-            }
-
-            if (val.IsType<long>())
-            {
-                return "int";
-            }
-
-            if (val.IsType<double>())
-            {
-                return "float";
-            }
-
-            if (val is ChowStr)
-            {
-                return "str";
-            }
-
-            if (val is ChowList)
-            {
-                return "list";
-            }
-
-            if (val is ChowDict)
-            {
-                return "dict";
-            }
-
-            if (val is ChowRange)
-            {
-                return "range";
-            }
-
-            if (val is ChowDynamic dynamic && dynamic.Value != null)
-            {
-                return dynamic.Value.GetType().Name;
-            }
-
-            return "object";
-        }
-
-        static bool ChowIsNumeric(ChowValue val)
-        {
-            return val.IsType<long>() || val.IsType<double>() || val.IsType<bool>();
-        }
-
-        static double ChowAsDouble(ChowValue val)
-        {
-            if (val.IsType<long>())
-            {
-                return val.AsType<long>();
-            }
-
-            if (val.IsType<double>())
-            {
-                return val.AsType<double>();
-            }
-
-            if (val.IsType<bool>())
-            {
-                return val.AsType<long>();
-            }
-
-            throw new InvalidOperationException("Value is not numeric");
         }
     }
 }

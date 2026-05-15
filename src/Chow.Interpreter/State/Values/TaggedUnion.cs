@@ -1,4 +1,3 @@
-using Chow.Interpreter.Values;
 using System;
 
 namespace Chow.Interpreter.State.Values
@@ -73,7 +72,6 @@ namespace Chow.Interpreter.State.Values
                     case Tag.Range:
                         return ((InternalRange)_obj).Count > 0;
                     case Tag.Object:
-                        // Python defaults instances to truthy; match that for InteropClassObject and friends.
                         return _obj != null;
                     default:
                         return false;
@@ -298,76 +296,19 @@ namespace Chow.Interpreter.State.Values
             }
         }
 
-        /// <summary>
-        ///  Makes call to a value that is not a function declared in Chow source code, but instead a client-provided 
-        ///  delegate types that optionally accept <see cref="ChowValue"/> parameters and can return a <see cref="ChowValue"/>.
-        /// </summary>
-        /// <param name="singleArg">The first argument used for the call or null.</param>
-        /// <param name="args">An array of additional arguments for the call or null.</param>
-        /// <returns>The TaggedUnion result of the call. If the interop function returns void, the result is a None value.</returns>
-        /// <exception cref="InvalidOperationException">If the object is not callable.</exception>
-        /// <remarks><paramref name="singleArg"/> is its own parameter so that a new array does not have to be created for a single element.</remarks>
-        public TaggedUnion MakeInteropCall(TaggedUnion? singleArg, TaggedUnion[] args)
+        public TaggedUnion MakeInteropCall(TaggedUnion[] args)
         {
             if (!IsObject)
             {
-                // TODO: Replace with TypeErrorException once implemented
                 throw new InvalidOperationException($"'{Tag}' object is not callable");
             }
 
-            switch (_obj)
+            if (_obj is Func<TaggedUnion[], TaggedUnion> methodDelegate)
             {
-                // FUTURE: this delegate case also serves class-bound methods (closure pre-binding `self`).
-                case Func<TaggedUnion[], TaggedUnion> methodDelegate:
-                    TaggedUnion[] allArgs;
-                    if (singleArg.HasValue)
-                    {
-                        allArgs = new[] { singleArg.Value };
-                    }
-                    else
-                    {
-                        allArgs = args ?? Array.Empty<TaggedUnion>();
-                    }
-                    return methodDelegate(allArgs);
-
-                case Func<ChowValue> funcNoArg:
-                    return ApiConverter.ToTaggedUnion(funcNoArg());
-                case Func<ChowValue, ChowValue> funcOneArg:
-                    return ApiConverter.ToTaggedUnion(funcOneArg(ApiConverter.ToChowValue(singleArg.Value)));
-                case Func<ChowValue[], ChowValue> funcManyArgs:
-                    return ApiConverter.ToTaggedUnion(funcManyArgs(BuildArgArray(singleArg, args)));
-                case Action action:
-                    action();
-                    return None;
-                case Action<ChowValue> actionOneArg:
-                    actionOneArg(ApiConverter.ToChowValue(singleArg.Value));
-                    return None;
-                case Action<ChowValue[]> actionManyArgs:
-                    actionManyArgs(BuildArgArray(singleArg, args));
-                    return None;
-                default:
-                    throw new InvalidOperationException($"Object of type '{_obj.GetType().Name}' is not callable");
-            }
-        }
-
-        static ChowValue[] BuildArgArray(TaggedUnion? singleArg, TaggedUnion[] args)
-        {
-            if (singleArg.HasValue)
-            {
-                return new[] { ApiConverter.ToChowValue(singleArg.Value) };
+                return methodDelegate(args ?? Array.Empty<TaggedUnion>());
             }
 
-            if (args == null)
-            {
-                return new ChowValue[0];
-            }
-
-            var result = new ChowValue[args.Length];
-            for (var i = 0; i < args.Length; i++)
-            {
-                result[i] = ApiConverter.ToChowValue(args[i]);
-            }
-            return result;
+            throw new InvalidOperationException($"Object of type '{_obj.GetType().Name}' is not callable");
         }
 
         // TODO: Refactor operator overloads to create less new TaggedUnions by using helper functions that only use the
