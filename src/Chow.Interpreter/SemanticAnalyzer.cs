@@ -164,6 +164,16 @@ namespace Chow.Interpreter
                     break;
                 }
 
+                case ForStatementNode forNode:
+                {
+                    PreScan(forNode.Iterable);
+                    // Loop variable is an assignment target; record it as a binding in this scope.
+                    RecordBinding(forNode.Target.Name, forNode.Target.LineNumber);
+                    PreScan(forNode.Block);
+                    PreScan(forNode.ElseBranch);
+                    break;
+                }
+
                 case ReturnStatementNode returnNode:
                 {
                     PreScan(returnNode.Expression);
@@ -327,6 +337,15 @@ namespace Chow.Interpreter
                 {
                     Annotate(whileNode.Expr);
                     Annotate(whileNode.Block);
+                    break;
+                }
+
+                case ForStatementNode forNode:
+                {
+                    Annotate(forNode.Iterable);
+                    forNode.Target.Resolution = ResolveName(forNode.Target.Name);
+                    Annotate(forNode.Block);
+                    Annotate(forNode.ElseBranch);
                     break;
                 }
 

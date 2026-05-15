@@ -41,6 +41,8 @@ namespace Chow.Interpreter
         Min,
         /// <summary><c>max(a, b)</c> — returns the larger of two numbers.</summary>
         Max,
+        /// <summary><c>range(stop)</c> / <c>range(start, stop)</c> / <c>range(start, stop, step)</c> — produces a lazy integer sequence.</summary>
+        Range,
     }
 
     /// <summary>
@@ -66,6 +68,7 @@ namespace Chow.Interpreter
             { BuiltInType.Round, "round" },
             { BuiltInType.Min,   "min"   },
             { BuiltInType.Max,   "max"   },
+            { BuiltInType.Range, "range" },
         };
 
         static readonly Dictionary<BuiltInType, object> _defaults = new Dictionary<BuiltInType, object>
@@ -84,6 +87,7 @@ namespace Chow.Interpreter
             { BuiltInType.Round, (Func<ChowValue, ChowValue>)Round          },
             { BuiltInType.Min,   (Func<TaggedUnion[], TaggedUnion>)Min      },
             { BuiltInType.Max,   (Func<TaggedUnion[], TaggedUnion>)Max      },
+            { BuiltInType.Range, (Func<TaggedUnion[], TaggedUnion>)Range    },
         };
 
         public static IEnumerable<BuiltInType> AllTypes => _names.Keys;
@@ -363,6 +367,100 @@ namespace Chow.Interpreter
             return ApiConverter.ToTaggedUnion(Max(ToChowValues(args)));
         }
 
+        static TaggedUnion Range(TaggedUnion[] args)
+        {
+            var argCount = args == null ? 0 : args.Length;
+
+            if (argCount == 0 || argCount > 3)
+            {
+                throw new InvalidOperationException($"range expected 1 to 3 arguments, got {argCount}");
+            }
+
+            long start;
+            long stop;
+            long step;
+
+            if (argCount == 1)
+            {
+                start = 0;
+                stop = RequireRangeInt(args[0], 0);
+                step = 1;
+            }
+            else if (argCount == 2)
+            {
+                start = RequireRangeInt(args[0], 0);
+                stop = RequireRangeInt(args[1], 1);
+                step = 1;
+            }
+            else
+            {
+                start = RequireRangeInt(args[0], 0);
+                stop = RequireRangeInt(args[1], 1);
+                step = RequireRangeInt(args[2], 2);
+
+                if (step == 0)
+                {
+                    throw new InvalidOperationException("range() arg 3 must not be zero");
+                }
+            }
+
+            return new TaggedUnion(new InternalRange(start, stop, step));
+        }
+
+        static long RequireRangeInt(TaggedUnion arg, int position)
+        {
+            // Python's range only accepts integers, not floats. Match that behavior.
+            if (arg.Tag != Tag.Int)
+            {
+                throw new InvalidOperationException($"'{TagToTypeName(arg.Tag)}' object cannot be interpreted as an integer");
+            }
+
+            return arg.IntegerValue;
+        }
+
+        static string TagToTypeName(Tag tag)
+        {
+            switch (tag)
+            {
+                case Tag.None:
+                {
+                    return "NoneType";
+                }
+                case Tag.Boolean:
+                {
+                    return "bool";
+                }
+                case Tag.Int:
+                {
+                    return "int";
+                }
+                case Tag.Float:
+                {
+                    return "float";
+                }
+                case Tag.Str:
+                {
+                    return "str";
+                }
+                case Tag.List:
+                {
+                    return "list";
+                }
+                case Tag.Dict:
+                {
+                    return "dict";
+                }
+                case Tag.Range:
+                {
+                    return "range";
+                }
+                default:
+                {
+                    return tag.ToString().ToLowerInvariant();
+                }
+            }
+        }
+
         static ChowValue Max(ChowValue[] args)
         {
             if (args.Length != 2)
@@ -430,6 +528,11 @@ namespace Chow.Interpreter
             if (val is ChowDict)
             {
                 return "dict";
+            }
+
+            if (val is ChowRange)
+            {
+                return "range";
             }
 
             if (val is ChowDynamic dynamic && dynamic.Value != null)

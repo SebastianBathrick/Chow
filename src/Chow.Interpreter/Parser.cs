@@ -75,7 +75,7 @@ namespace Chow.Interpreter
                     continue;
                 }
 
-                var hasBlock = newStatement is FunctionNode || newStatement is IfStatementNode || newStatement is WhileStatementNode;
+                var hasBlock = newStatement is FunctionNode || newStatement is IfStatementNode || newStatement is WhileStatementNode || newStatement is ForStatementNode;
 
                 if (hasBlock)
                 {
@@ -145,6 +145,11 @@ namespace Chow.Interpreter
                 case TokenType.KeywordWhile:
                 {
                     return ParseWhileStatement();
+                }
+
+                case TokenType.KeywordFor:
+                {
+                    return ParseForStatement();
                 }
 
                 case TokenType.KeywordBreak:
@@ -287,6 +292,32 @@ namespace Chow.Interpreter
             var block = ParseBlock();
 
             return new WhileStatementNode(expr, block, line);
+        }
+
+        Node ParseForStatement()
+        {
+            var line = CurrToken.lineNum;
+            ConsumeToken(TokenType.KeywordFor, "Expected 'for' keyword.");
+
+            var targetToken = ConsumeToken(TokenType.Identifier, "Expected loop variable name after 'for'.");
+            var target = new NameNode(targetToken.lexeme, targetToken.lineNum);
+
+            ConsumeToken(TokenType.KeywordIn, "Expected 'in' after loop variable.");
+
+            var iterable = ParseExpression();
+            var block = ParseBlock();
+
+            BranchStatementNode elseBranch = null;
+
+            if (IsTokenType(TokenType.KeywordElse))
+            {
+                var elseLine = CurrToken.lineNum;
+                ConsumeToken();
+                var elseBlock = ParseBlock();
+                elseBranch = new BranchStatementNode(expr: null, block: elseBlock, branch: null, line: elseLine);
+            }
+
+            return new ForStatementNode(target, iterable, block, elseBranch, line);
         }
 
         Node ParseBreakStatement()

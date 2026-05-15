@@ -47,8 +47,10 @@ namespace Chow.Interpreter.State.Values
         public bool IsObject => Tag == Tag.Object;
         
         public bool IsList => Tag == Tag.List;
-        
+
         public bool IsDict => Tag == Tag.Dict;
+
+        public bool IsRange => Tag == Tag.Range;
         
                 public bool IsTruthy
         {
@@ -68,6 +70,8 @@ namespace Chow.Interpreter.State.Values
                         return ((InternalList)_obj).Count > 0;
                     case Tag.Dict:
                         return ((InternalDict)_obj).Count > 0;
+                    case Tag.Range:
+                        return ((InternalRange)_obj).Count > 0;
                     case Tag.Object:
                         // Python defaults instances to truthy; match that for InteropClassObject and friends.
                         return _obj != null;
@@ -169,6 +173,18 @@ namespace Chow.Interpreter.State.Values
             }
         }
 
+        public InternalRange RangeValue
+        {
+            get
+            {
+                if (!IsRange)
+                {
+                    throw new InvalidOperationException($"Range access attempt but union's type is {Tag}");
+                }
+                return (InternalRange)_obj;
+            }
+        }
+
         
         #endregion
         
@@ -217,7 +233,12 @@ namespace Chow.Interpreter.State.Values
         {
             _obj = dict;
         }
-        
+
+        public TaggedUnion(InternalRange range) : this(Tag.Range)
+        {
+            _obj = range;
+        }
+
         #endregion
 
 
@@ -247,6 +268,8 @@ namespace Chow.Interpreter.State.Values
                     return new TaggedUnion(list);
                 case InternalDict dict:
                     return new TaggedUnion(dict);
+                case InternalRange range:
+                    return new TaggedUnion(range);
                 default:
                     return new TaggedUnion(value);
             }
@@ -266,6 +289,7 @@ namespace Chow.Interpreter.State.Values
                 case Tag.Object:
                 case Tag.List:
                 case Tag.Dict:
+                case Tag.Range:
                     return _obj;
                 case Tag.None:
                     return null;
@@ -535,6 +559,8 @@ namespace Chow.Interpreter.State.Values
                     return InternalList.ElementsEqual((InternalList)left._obj, (InternalList)right._obj);
                 case Tag.Dict:
                     return InternalDict.ElementsEqual((InternalDict)left._obj, (InternalDict)right._obj);
+                case Tag.Range:
+                    return ReferenceEquals(left._obj, right._obj);
                 case Tag.Object:
                     return ReferenceEquals(left._obj, right._obj);
                 default:
@@ -628,7 +654,7 @@ namespace Chow.Interpreter.State.Values
 
         static void ThrowIfObjectOperands(TaggedUnion left, TaggedUnion right)
         {
-            if (left.IsObject || right.IsObject || left.IsString || right.IsString || left.IsList || right.IsList || left.IsDict || right.IsDict)
+            if (left.IsObject || right.IsObject || left.IsString || right.IsString || left.IsList || right.IsList || left.IsDict || right.IsDict || left.IsRange || right.IsRange)
             {
                 throw new InvalidOperationException("Object operands are not supported for this operation.");
             }
@@ -678,6 +704,7 @@ namespace Chow.Interpreter.State.Values
                     return _bool.GetHashCode();
                 case Tag.Str:
                 case Tag.Object:
+                case Tag.Range:
                     return _obj?.GetHashCode() ?? 0;
                 default:
                     return Tag.GetHashCode();
@@ -701,7 +728,7 @@ namespace Chow.Interpreter.State.Values
                 return $"TaggedUnion(type={Tag}, value={_bool})";
             }
 
-            if (IsObject || IsString)
+            if (IsObject || IsString || IsList || IsDict || IsRange)
             {
                 return $"TaggedUnion(type={Tag}, value={_obj})";
             }

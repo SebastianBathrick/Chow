@@ -41,6 +41,10 @@ namespace Chow.Interpreter
                 {
                     return new TaggedUnion(dictValue.Internal);
                 }
+                case ChowRange rangeValue:
+                {
+                    return new TaggedUnion(rangeValue.Internal);
+                }
                 case ChowFunction functionValue:
                 {
                     return new TaggedUnion(functionValue.Value);
@@ -111,6 +115,10 @@ namespace Chow.Interpreter
                 case Tag.Dict:
                 {
                     return new ChowDict(taggedUnion.DictValue);
+                }
+                case Tag.Range:
+                {
+                    return new ChowRange(taggedUnion.RangeValue);
                 }
                 case Tag.Object:
                 {

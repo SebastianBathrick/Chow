@@ -47,5 +47,8 @@ namespace Chow.Interpreter.Bytecode
         BinaryOr,
         In,
         NotIn,
+        GetIterator,
+        ForIterNextOrJump,
+        Pop,
     }
 }

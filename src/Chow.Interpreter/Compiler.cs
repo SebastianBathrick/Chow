@@ -167,6 +167,12 @@ namespace Chow.Interpreter
                     break;
                 }
 
+                case ForStatementNode forNode:
+                {
+                    CompileForStatement(forNode);
+                    break;
+                }
+
                 case BreakStatementNode breakNode:
                 {
                     CompileBreakStatement(breakNode);
@@ -514,8 +520,60 @@ namespace Chow.Interpreter
 
             var loopContext = _loopContextStack.Peek();
 
+            // For-loops keep the iterator on the stack across iterations; `break` must discard it before jumping.
+            if (loopContext.HasIteratorOnStack)
+            {
+                _chunk.AddInstruction(OperationCode.Pop, breakStatementNode.LineNumber);
+            }
+
             _chunk.AddInstruction(OperationCode.JumpPastElseBranches, breakStatementNode.LineNumber);
             loopContext.PendingBreaks.Add(_chunk.InstructionCount - 1);
+        }
+
+        void CompileForStatement(ForStatementNode forNode)
+        {
+            // 1. Push iterable, convert to iterator. Iterator stays on the stack for the loop's lifetime.
+            CompileTargetNode(forNode.Iterable);
+            _chunk.AddInstruction(OperationCode.GetIterator, forNode.LineNumber);
+
+            // 2. Loop head: ForIterNextOrJump peeks the iterator; on success pushes the next value, on exhaustion pops + jumps.
+            var loopStartIdx = _chunk.InstructionCount;
+            _chunk.AddInstruction(OperationCode.ForIterNextOrJump, forNode.LineNumber);
+            var exitJumpIdx = _chunk.InstructionCount - 1;
+
+            // 3. Bind the freshly pushed value to the loop variable.
+            var targetNameIdx = _chunk.RegisterVariableName(forNode.Target.Name);
+            _chunk.AddInstruction(GetScopeAssignOpCode(forNode.Target.Resolution), forNode.Target.LineNumber, targetNameIdx);
+
+            var loopContext = new LoopContext
+            {
+                LoopStartIdx = loopStartIdx,
+                HasIteratorOnStack = true,
+            };
+
+            _loopContextStack.Push(loopContext);
+            CompileTargetNode(forNode.Block);
+            _loopContextStack.Pop();
+
+            // 4. Bottom of body jumps back to ForIterNextOrJump. Iterator is still on the stack.
+            _chunk.AddInstruction(OperationCode.JumpToLoopStart, forNode.LineNumber, loopStartIdx);
+
+            // 5. Natural exhaustion lands here (ForIterNextOrJump already popped the iterator before jumping).
+            //    The optional else-block runs only on natural exhaustion; `break` skips it.
+            _chunk.PatchInstructionOperand(exitJumpIdx, _chunk.InstructionCount);
+
+            if (forNode.ElseBranch != null)
+            {
+                CompileTargetNode(forNode.ElseBranch);
+            }
+
+            // 6. `break` jumps land here, past the else-block.
+            var exitIdx = _chunk.InstructionCount;
+
+            foreach (var idx in loopContext.PendingBreaks)
+            {
+                _chunk.PatchInstructionOperand(idx, exitIdx);
+            }
         }
 
         void CompileContinueStatement(ContinueStatementNode continueStatementNode)
@@ -804,6 +862,8 @@ namespace Chow.Interpreter
         sealed class LoopContext
         {
             public int LoopStartIdx;
+            // True for `for` loops; the iterator sits on the stack across iterations, so `break` must Pop before jumping.
+            public bool HasIteratorOnStack;
             public readonly List<int> PendingBreaks = new List<int>();
         }
 

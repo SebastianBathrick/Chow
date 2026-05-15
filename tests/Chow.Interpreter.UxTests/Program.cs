@@ -5,14 +5,21 @@ ChowModule module = new ChowModule();
 
 var code =
     """
-    def add(x, y):
-        print("Adding")
-        return x + y
-
+    counter = 0 
+    
+    # start is called once before the first execution of update after the behavior is created
+    def start():
+    	global game_object
+    	print("start called")
+    
+    # update is called once per frame
+    def update():
+    	global game_object, counter
+    	counter += 1
+    	if counter == 120:
+    		print("120 frames hit!")
+    		counter = 0
     """;
 
 module.Execute(code);
-module.Execute("print(add(1, 2))");
-var result = module.CallFunction("add", 1, 3000);
-Console.WriteLine(result);
 

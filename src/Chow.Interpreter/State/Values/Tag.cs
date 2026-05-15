@@ -11,5 +11,6 @@ namespace Chow.Interpreter.State.Values
         Object,
         List,
         Dict,
+        Range,
     }
 }

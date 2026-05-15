@@ -241,6 +241,36 @@ namespace Chow.Interpreter
                         continue;
                     }
 
+                    case OperationCode.GetIterator:
+                    {
+                        var source = _valStack.Pop();
+                        var iter = IteratorFactory.GetIterator(source);
+                        _valStack.Push(new TaggedUnion((object)iter));
+                        break;
+                    }
+
+                    case OperationCode.ForIterNextOrJump:
+                    {
+                        // Peek the iterator (kept on stack for the whole loop); push next value or jump to exhaust target.
+                        var iter = (IChowIterator)_valStack.Peek().ObjectValue;
+
+                        if (iter.TryMoveNext(out var current))
+                        {
+                            _valStack.Push(current);
+                            break;
+                        }
+
+                        _valStack.Pop();
+                        _callStack.JumpToInstr(CurrentOperation.Operand);
+                        continue;
+                    }
+
+                    case OperationCode.Pop:
+                    {
+                        _valStack.Pop();
+                        break;
+                    }
+
                     #endregion
 
                     #region Push/Pop
