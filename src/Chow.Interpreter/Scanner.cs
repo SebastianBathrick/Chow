@@ -61,14 +61,14 @@ namespace Chow.Interpreter
             // If source code is null, emit end of code token, so it can be treated as if it were an empty string or whitespace
             if (_sourceCode == null)
             {
-                AddEndOfCodeToken();
+                AddNewToken(TokenType.EndOfCode, string.Empty, _lineNum);
                 return _tokenList;
             }
 
             // Skip to the first line that does not start with whitespace, a comment, or newline character
             SkipToFirstLexeme();
 
-            while (IsCharToScan())
+            while (IsCharToScan)
             {
                 RunScanIteration();
             }
@@ -80,7 +80,7 @@ namespace Chow.Interpreter
 
             // Add dedent tokens for each block nested within the top-level to mark their end
             AddLastDedentsTokens();
-            AddEndOfCodeToken();
+            AddNewToken(TokenType.EndOfCode, string.Empty, _lineNum);
 
             return _tokenList;
         }
@@ -89,12 +89,13 @@ namespace Chow.Interpreter
         {
             if (_isLineBegin)
             {
-                if (IsLineAndIndentLogicEnabled())
+                // If there are opening bracket(s) then indentation and newlines will be ignored
+                if (_openingBrackets.Count == 0)
                 {
                     ScanIndentToken();
                 }
 
-                if (!IsCharToScan())
+                if (!IsCharToScan)
                 {
                     return;
                 }
@@ -139,7 +140,7 @@ namespace Chow.Interpreter
         {
             var startIdx = _charIdx;
 
-            while (IsCharToScan() && IsNameTrailChar(CurrChar))
+            while (IsCharToScan && IsNameTrailChar(CurrChar))
             {
                 MoveToNextChar();
             }
@@ -171,7 +172,7 @@ namespace Chow.Interpreter
         {
             var indentColumn = ScanIndentColumn();
 
-            if (!IsCharToScan() || IsNewlineChar(CurrChar) || IsCommentPrefix(CurrChar))
+            if (!IsCharToScan || IsNewlineChar(CurrChar) || IsCommentPrefix(CurrChar))
             {
                 return;
             }
@@ -184,12 +185,12 @@ namespace Chow.Interpreter
         {
             var indentColumn = 0;
 
-            while (IsCharToScan() && IsFormFeedChar(CurrChar))
+            while (IsCharToScan && IsFormFeedChar(CurrChar))
             {
                 MoveToNextChar();
             }
 
-            while (IsCharToScan() && IsIndentChar(CurrChar))
+            while (IsCharToScan && IsIndentChar(CurrChar))
             {
                 if (CurrChar == '\t')
                 {
@@ -361,55 +362,42 @@ namespace Chow.Interpreter
                 case '[':
                     {
                         tokenType = TokenType.SymbolLeftBracket;
-                        _openingBrackets.Push('[');
+                        PushOpeningBracket('[');
                         break;
                     }
 
-                // TODO: Refactor to reduce repeated closing bracket logic
                 case ']':
                     {
                         tokenType = TokenType.SymbolRightBracket;
-
-                        if (_openingBrackets.Count == 0 || _openingBrackets.Pop() != '[')
-                        {
-                            throw new ScannerEx("Unexpected ']'", _lineNum);
-                        }
+                        PopClosingBracket(']', '[');
                         break;
                     }
 
                 case '{':
                     {
                         tokenType = TokenType.SymbolLeftCurly;
-                        _openingBrackets.Push('{');
+                        PushOpeningBracket('{');
                         break;
                     }
 
                 case '}':
                     {
                         tokenType = TokenType.SymbolRightCurly;
-
-                        if (_openingBrackets.Count == 0 || _openingBrackets.Pop() != '{')
-                        {
-                            throw new ScannerEx("Unexpected '}'", _lineNum);
-                        }
+                        PopClosingBracket('}', '{');
                         break;
                     }
 
                 case '(':
                     {
                         tokenType = TokenType.SymbolLeftParen;
-                        _openingBrackets.Push('(');
+                        PushOpeningBracket('(');
                         break;
                     }
 
                 case ')':
                     {
                         tokenType = TokenType.SymbolRightParen;
-
-                        if (_openingBrackets.Count == 0 || _openingBrackets.Pop() != '(')
-                        {
-                            throw new ScannerEx("Unexpected ')'", _lineNum);
-                        }
+                        PopClosingBracket(')', '(');
                         break;
                     }
 
@@ -445,38 +433,40 @@ namespace Chow.Interpreter
             // Move past digits before any decimal point (if any)
             MoveToNextChar();
 
-            while (IsCharToScan() && IsDigitChar(CurrChar))
+            while (IsCharToScan && IsDigitChar(CurrChar))
             {
                 MoveToNextChar();
             }
 
             // If there is a decimal point, move past it and any following digits
-            var isFloat = IsCharToScan() && CurrChar == '.';
+            var isFloat = IsCharToScan && CurrChar == '.';
 
             if (isFloat)
             {
-                MoveToNextChar();
-
-                while (IsCharToScan() && IsDigitChar(CurrChar))
-                {
-                    MoveToNextChar();
-                }
+                ScanFloatTrailingDigits();
             }
 
             var len = _charIdx - startIdx;
             var lexeme = _sourceCode.Substring(startIdx, len);
             var numTokenType = isFloat ? TokenType.LiteralFloat : TokenType.LiteralInt;
-            object literal;
-
-            literal = ParseNumericLiteral(isFloat, lexeme, numTokenType);
+            var literal = ParseNumericLiteral(isFloat, lexeme, numTokenType);
 
             AddNewToken(numTokenType, lexeme, _lineNum, literal);
         }
-        
+        void ScanFloatTrailingDigits()
+        {
+            MoveToNextChar();
+
+            while (IsCharToScan && IsDigitChar(CurrChar))
+            {
+                MoveToNextChar();
+            }
+        }
+
         static object ParseNumericLiteral(bool isFloat, string lexeme, TokenType numTokenType)
         {
-
             object literal;
+            
             try
             {
                 if (isFloat)
@@ -509,7 +499,7 @@ namespace Chow.Interpreter
 
             var contentStartIdx = _charIdx;
 
-            while (IsCharToScan() && CurrChar != quoteChar)
+            while (IsCharToScan && CurrChar != quoteChar)
             {
                 if (IsNewlineChar(CurrChar))
                 {
@@ -519,7 +509,7 @@ namespace Chow.Interpreter
                 MoveToNextChar();
             }
 
-            if (!IsCharToScan())
+            if (!IsCharToScan)
             {
                 throw new ScannerEx("Unterminated string literal", _lineNum);
             }
@@ -537,10 +527,7 @@ namespace Chow.Interpreter
 
         #region Char Pointer Methods
 
-        bool IsCharToScan()
-        {
-            return _charIdx < _sourceCode.Length;
-        }
+        bool IsCharToScan => _charIdx < _sourceCode.Length;
 
         void MoveToNextChar()
         {
@@ -623,7 +610,7 @@ namespace Chow.Interpreter
                     // Older Mac newline (if not followed by \n)
                     MoveToNextChar();
 
-                    if (IsCharToScan() && CurrChar == '\n')
+                    if (IsCharToScan && CurrChar == '\n')
                     {
                         // Windows/MS-DOS newline
                         MoveToNextChar();
@@ -639,7 +626,7 @@ namespace Chow.Interpreter
 
         void SkipToFirstLexeme()
         {
-            while (IsCharToScan())
+            while (IsCharToScan)
             {
                 if (IsIndentChar(CurrChar))
                 {
@@ -666,21 +653,25 @@ namespace Chow.Interpreter
 
         void SkipRemainingLineChars()
         {
-            while (IsCharToScan() && !IsNewlineChar(CurrChar))
+            while (IsCharToScan && !IsNewlineChar(CurrChar))
             {
                 MoveToNextChar();
             }
         }
 
-        void AddEndOfCodeToken()
+        void PushOpeningBracket(char bracket)
         {
-            AddNewToken(TokenType.EndOfCode, string.Empty, _lineNum);
+            _openingBrackets.Push(bracket);
         }
 
-        bool IsLineAndIndentLogicEnabled()
+        void PopClosingBracket(char closingChar, char expectedOpening)
         {
-            return _openingBrackets.Count == 0;
+            if (_openingBrackets.Count == 0 || _openingBrackets.Pop() != expectedOpening)
+            {
+                throw new ScannerEx($"Unexpected '{closingChar}'", _lineNum);
+            }
         }
+
         void AddNewToken(TokenType type, string lexeme, int lineNum, object literal = null)
         {
             _tokenList.Add(new Token(type, lexeme, lineNum, literal));
