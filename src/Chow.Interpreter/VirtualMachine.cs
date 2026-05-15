@@ -257,6 +257,30 @@ namespace Chow.Interpreter
                         break;
                     }
 
+                    case OperationCode.PopAndAssignToGlobal:
+                    {
+                        PopAndAssignToGlobal();
+                        break;
+                    }
+
+                    case OperationCode.PushGlobalValue:
+                    {
+                        PushGlobalValue();
+                        break;
+                    }
+
+                    case OperationCode.PopAndAssignToNonlocal:
+                    {
+                        PopAndAssignToNonlocal();
+                        break;
+                    }
+
+                    case OperationCode.PushNonlocalValue:
+                    {
+                        PushNonlocalValue();
+                        break;
+                    }
+
                     case OperationCode.PushNewInternalList:
                     {
                         PushNewInternalList(CurrentOperation.Operand);
@@ -410,6 +434,42 @@ namespace Chow.Interpreter
             var assignVal = _valStack.Pop();
 
             _callStack.AssignVariableValue(name, assignVal);
+        }
+
+        void PushGlobalValue()
+        {
+            var varName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+
+            if (!_callStack.IsGlobalDefined(varName))
+            {
+                throw new UndefinedNameException(varName, GetCurrentLineNumber());
+            }
+
+            _valStack.Push(_callStack.GetGlobal(varName));
+        }
+
+        void PopAndAssignToGlobal()
+        {
+            var name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            var assignVal = _valStack.Pop();
+
+            _callStack.AssignToGlobal(name, assignVal);
+        }
+
+        void PushNonlocalValue()
+        {
+            // Semantic analysis guarantees an enclosing function binding exists; the CallStack
+            // helper throws KeyNotFoundException if that invariant is violated.
+            var varName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            _valStack.Push(_callStack.GetNonlocal(varName));
+        }
+
+        void PopAndAssignToNonlocal()
+        {
+            var name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            var assignVal = _valStack.Pop();
+
+            _callStack.AssignToNonlocal(name, assignVal);
         }
 
         void PushNewInternalList(int elementCount)

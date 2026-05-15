@@ -20,6 +20,7 @@ namespace Chow.Interpreter.Tokens
             { "with", TokenType.KeywordWith },
             { "as", TokenType.KeywordAs },
             { "global", TokenType.KeywordGlobal },
+            { "nonlocal", TokenType.KeywordNonlocal },
             { "if", TokenType.KeywordIf },
             { "else", TokenType.KeywordElse },
             { "elif", TokenType.KeywordElif },

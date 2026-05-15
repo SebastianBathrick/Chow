@@ -44,7 +44,7 @@ namespace Chow.Interpreter
         /// <returns>A <see cref="Node"/> representing the root of the completed abstract syntax tree.</returns>
         public Node BuildTree()
         {
-            var stmnts = new List<Node>();
+            var topLevelStatements = new List<Node>();
             var isComplete = IsTokenType(TokenType.EndOfCode);
 
             // Even code contains no statements, it is still vali
@@ -59,8 +59,8 @@ namespace Chow.Interpreter
                 }
 
                 // This will throw an exception if the current token is not the start of a statement
-                var stmnt = ParseStmnt();
-                stmnts.Add(stmnt);
+                var newStatement = ParseStatement();
+                topLevelStatements.Add(newStatement);
 
                 isComplete = IsTokenType(TokenType.EndOfCode);
 
@@ -71,9 +71,9 @@ namespace Chow.Interpreter
                     continue;
                 }
 
-                var isStmntWithBlock = stmnt is FunctionNode || stmnt is IfNode || stmnt is WhileNode;
+                var hasBlock = newStatement is FunctionNode || newStatement is IfNode || newStatement is WhileNode;
 
-                if (isStmntWithBlock)
+                if (hasBlock)
                 {
                     TryConsumeType(TokenType.Newline);
                     continue;
@@ -83,7 +83,7 @@ namespace Chow.Interpreter
             }
 
             ConsumeToken(TokenType.EndOfCode, "Expected end of code.");
-            return new TreeRootNode(stmnts);
+            return new TreeRootNode(topLevelStatements);
         }
         Node ParseBlock()
         {
@@ -91,9 +91,9 @@ namespace Chow.Interpreter
             ConsumeToken(TokenType.Newline, "Expected newline after ':'.");
 
             var indentTkn = ConsumeToken(TokenType.Indent, "Expected indented block body.");
-            var stmnts = new List<Node>
+            var statements = new List<Node>
             {
-                ParseStmnt()
+                ParseStatement()
             };
 
             TryConsumeType(TokenType.Newline);
@@ -106,20 +106,20 @@ namespace Chow.Interpreter
                 }
                 else
                 {
-                    stmnts.Add(ParseStmnt());
+                    statements.Add(ParseStatement());
                     TryConsumeType(TokenType.Newline);
                 }
             }
 
             ConsumeToken(TokenType.Dedent, "Expected dedent to close block.");
-            return new BlockNode(stmnts, indentTkn.lineNum);
+            return new BlockNode(statements, indentTkn.lineNum);
         }
 
         #endregion
 
         #region Statement Methods
 
-        Node ParseStmnt()
+        Node ParseStatement()
         {
             switch (CurrToken.type)
             {
@@ -152,6 +152,16 @@ namespace Chow.Interpreter
                 {
                     return ParseContinue();
                 }
+
+                case TokenType.KeywordGlobal:
+                {
+                    return ParseGlobalDeclaration();
+                }
+
+                case TokenType.KeywordNonlocal:
+                {
+                    return ParseNonlocalDecl();
+                }
             }
 
             if (!IsPrimaryToken())
@@ -160,7 +170,7 @@ namespace Chow.Interpreter
             }
 
             // Parse expression first; if an '=' follows, convert the LHS into the appropriate assignment node.
-            // Otherwise this is a standalone expression statement (result discarded or routed to hook).
+            // Otherwise, this is a standalone expression statement (result discarded or routed to hook).
             var startLine = CurrToken.lineNum;
             var lhs = ParseExpr();
 
@@ -179,17 +189,21 @@ namespace Chow.Interpreter
             switch (target)
             {
                 case NameNode nameNode:
+                {
                     return new VarAssignNode(nameNode.Name, value, line);
 
-                case SubscriptNode subscrNode:
-                    return new SubscriptAssignNode(subscrNode.Target, subscrNode.Index, value, line);
-
-                case AttrAccessNode attrNode:
-                    return new AttrAssignNode(attrNode.Target, attrNode.AttrName, value, line);
-
-                default:
-                    throw new ParserEx("Invalid assignment target.", line);
+                }
+                case SubscriptNode subscriptNode:
+                {
+                    return new SubscriptAssignNode(subscriptNode.Target, subscriptNode.Index, value, line);
+                }
+                case AttributeAccessNode attrNode:
+                {
+                    return new AttributeAssignNode(attrNode.Target, attrNode.AttrName, value, line);
+                }
             }
+
+            throw new ParserEx("Invalid assignment target.", line);
         }
 
         Node ParseFunction()
@@ -294,6 +308,37 @@ namespace Chow.Interpreter
             var expr = IsPrimaryToken() ? ParseExpr() : null;
 
             return new ReturnNode(expr, line);
+        }
+
+        Node ParseGlobalDeclaration()
+        {
+            var line = CurrToken.lineNum;
+            ConsumeToken(TokenType.KeywordGlobal, "Expected 'global' keyword.");
+            var names = ParseDeclNameList("global");
+            return new GlobalDeclNode(names, line);
+        }
+
+        Node ParseNonlocalDecl()
+        {
+            var line = CurrToken.lineNum;
+            ConsumeToken(TokenType.KeywordNonlocal, "Expected 'nonlocal' keyword.");
+            var names = ParseDeclNameList("nonlocal");
+            return new NonlocalDeclNode(names, line);
+        }
+
+        List<string> ParseDeclNameList(string keyword)
+        {
+            var names = new List<string>();
+            var firstTkn = ConsumeToken(TokenType.Identifier, $"Expected identifier after '{keyword}'.");
+            names.Add(firstTkn.lexeme);
+
+            while (TryConsumeType(TokenType.SymbolComma))
+            {
+                var nameTkn = ConsumeToken(TokenType.Identifier, $"Expected identifier after ',' in '{keyword}' declaration.");
+                names.Add(nameTkn.lexeme);
+            }
+
+            return names;
         }
 
         #endregion
@@ -505,7 +550,7 @@ namespace Chow.Interpreter
             var dotTkn = ConsumeToken(TokenType.SymbolDot, "Expected '.'.");
             var nameTkn = ConsumeToken(TokenType.Identifier, "Expected attribute name after '.'.");
 
-            return new AttrAccessNode(targ, nameTkn.lexeme, dotTkn.lineNum);
+            return new AttributeAccessNode(targ, nameTkn.lexeme, dotTkn.lineNum);
         }
 
         Node ParseSubscriptTail(Node targ)

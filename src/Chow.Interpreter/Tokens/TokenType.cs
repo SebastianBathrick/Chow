@@ -122,6 +122,9 @@ namespace Chow.Interpreter.Tokens
         /// <summary>Keyword: <c>global</c>.</summary>
         KeywordGlobal,
 
+        /// <summary>Keyword: <c>nonlocal</c>.</summary>
+        KeywordNonlocal,
+
         /// <summary>Keyword: <c>if</c>.</summary>
         KeywordIf,
 

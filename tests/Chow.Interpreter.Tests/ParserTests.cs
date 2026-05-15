@@ -427,10 +427,10 @@ namespace Chow.Interpreter.Tests
             return (SliceNode)node;
         }
 
-        static AttrAccessNode AssertAttr(Node node, string expectedName)
+        static AttributeAccessNode AssertAttr(Node node, string expectedName)
         {
-            Assert.That(node, Is.InstanceOf<AttrAccessNode>());
-            var attr = (AttrAccessNode)node;
+            Assert.That(node, Is.InstanceOf<AttributeAccessNode>());
+            var attr = (AttributeAccessNode)node;
             Assert.That(attr.AttrName, Is.EqualTo(expectedName));
             return attr;
         }
@@ -879,8 +879,8 @@ namespace Chow.Interpreter.Tests
         public void ParseStmt_AttributeAssignment_ProducesAttrAssignNode()
         {
             var stmt = ParseStmt("a.b = x");
-            Assert.That(stmt, Is.InstanceOf<AttrAssignNode>());
-            var assign = (AttrAssignNode)stmt;
+            Assert.That(stmt, Is.InstanceOf<AttributeAssignNode>());
+            var assign = (AttributeAssignNode)stmt;
             AssertName(assign.Target, "a");
             Assert.That(assign.AttrName, Is.EqualTo("b"));
             AssertName(assign.Expression, "x");
@@ -898,7 +898,7 @@ namespace Chow.Interpreter.Tests
         public void ParseStmt_ChainedAttrAssign_AttrAssignWrapsAttrAccess()
         {
             var stmt = ParseStmt("a.b.c = x");
-            var assign = (AttrAssignNode)stmt;
+            var assign = (AttributeAssignNode)stmt;
             Assert.That(assign.AttrName, Is.EqualTo("c"));
             AssertAttr(assign.Target, "b");
         }
@@ -907,7 +907,7 @@ namespace Chow.Interpreter.Tests
         public void ParseStmt_SubscriptThenAttrAssign_AttrAssignWrapsSubscript()
         {
             var stmt = ParseStmt("a[0].b = x");
-            var assign = (AttrAssignNode)stmt;
+            var assign = (AttributeAssignNode)stmt;
             Assert.That(assign.AttrName, Is.EqualTo("b"));
             AssertSubscript(assign.Target);
         }
@@ -1016,6 +1016,85 @@ namespace Chow.Interpreter.Tests
             var stmt = ParseStmt("continue");
 
             Assert.That(stmt, Is.InstanceOf<ContinueNode>());
+        }
+
+        // ------------------------------------------------------------------------------------------------------------
+        // Global / nonlocal declarations
+        // ------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void ParseStmt_GlobalDecl_SingleName_ReturnsGlobalDeclNodeWithOneName()
+        {
+            var stmt = ParseStmt("global x");
+
+            Assert.That(stmt, Is.InstanceOf<GlobalDeclNode>());
+            var decl = (GlobalDeclNode)stmt;
+            Assert.Multiple(() =>
+            {
+                Assert.That(decl.Names.Count, Is.EqualTo(1));
+                Assert.That(decl.Names[0], Is.EqualTo("x"));
+                Assert.That(decl.LineNumber, Is.EqualTo(1));
+            });
+        }
+
+        [Test]
+        public void ParseStmt_GlobalDecl_MultipleNames_ReturnsAllNamesInOrder()
+        {
+            var stmt = ParseStmt("global a, b, c");
+
+            var decl = (GlobalDeclNode)stmt;
+            Assert.That(decl.Names, Is.EqualTo(new[] { "a", "b", "c" }));
+        }
+
+        [Test]
+        public void ParseStmt_NonlocalDecl_SingleName_ReturnsNonlocalDeclNodeWithOneName()
+        {
+            var stmt = ParseStmt("nonlocal x");
+
+            Assert.That(stmt, Is.InstanceOf<NonlocalDeclNode>());
+            var decl = (NonlocalDeclNode)stmt;
+            Assert.Multiple(() =>
+            {
+                Assert.That(decl.Names.Count, Is.EqualTo(1));
+                Assert.That(decl.Names[0], Is.EqualTo("x"));
+            });
+        }
+
+        [Test]
+        public void ParseStmt_NonlocalDecl_MultipleNames_ReturnsAllNamesInOrder()
+        {
+            var stmt = ParseStmt("nonlocal a, b");
+
+            var decl = (NonlocalDeclNode)stmt;
+            Assert.That(decl.Names, Is.EqualTo(new[] { "a", "b" }));
+        }
+
+        [TestCase("global")]
+        [TestCase("nonlocal")]
+        public void ParseStmt_DeclWithNoName_ThrowsParserException(string source)
+        {
+            Assert.That(() => ParseStmt(source), Throws.TypeOf<ParserEx>());
+        }
+
+        [TestCase("global a,")]
+        [TestCase("nonlocal a,\n")]
+        public void ParseStmt_DeclWithTrailingComma_ThrowsParserException(string source)
+        {
+            Assert.That(() => ParseStmt(source), Throws.TypeOf<ParserEx>());
+        }
+
+        [Test]
+        public void ParseStmt_GlobalDecl_ToStringContainsKeywordAndNames()
+        {
+            var stmt = ParseStmt("global a, b");
+            Assert.That(stmt.ToString(), Is.EqualTo("global a, b"));
+        }
+
+        [Test]
+        public void ParseStmt_NonlocalDecl_ToStringContainsKeywordAndNames()
+        {
+            var stmt = ParseStmt("nonlocal a, b");
+            Assert.That(stmt.ToString(), Is.EqualTo("nonlocal a, b"));
         }
 
         // ------------------------------------------------------------------------------------------------------------

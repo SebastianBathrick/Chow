@@ -215,6 +215,9 @@ namespace Chow.Interpreter
             var parser = new Parser(tokens);
             var syntaxTreeRoot = parser.BuildTree();
 
+            var semanticAnalyzer = new SemanticAnalyzer(syntaxTreeRoot);
+            semanticAnalyzer.Analyze();
+
             var compiler = new Compiler(syntaxTreeRoot);
             var chunk = compiler.CompileRoot();
 

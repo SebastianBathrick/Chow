@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    class AttrAssignNode : Node
+    class AttributeAssignNode : Node
     {
         public Node Target { get; }
 
@@ -8,7 +8,7 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
 
         public Node Expression { get; }
 
-        public AttrAssignNode(Node target, string attrName, Node expr, int line) : base(line)
+        public AttributeAssignNode(Node target, string attrName, Node expr, int line) : base(line)
         {
             Target = target;
             AttrName = attrName;

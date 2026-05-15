@@ -62,12 +62,76 @@ namespace Chow.Interpreter.State.Stack
         /// <summary>
         /// Binds <paramref name="name"/> to <paramref name="value"/> in the current frame's scope.
         /// At module level this writes to the module scope; inside a function call it writes to
-        /// that call's local scope (Python local-by-default). Does not rebind enclosing or module
-        /// names from inside a function — that requires the not-yet-supported <c>global</c>/<c>nonlocal</c>.
+        /// that call's local scope (Python local-by-default). The <c>global</c>/<c>nonlocal</c>
+        /// targeted variants <see cref="AssignToGlobal"/> and <see cref="AssignToNonlocal"/>
+        /// rebind enclosing or module names.
         /// </summary>
         public void AssignVariableValue(string name, TaggedUnion value)
         {
             CurrFrame.Scope.AssignVariableValue(name, value);
+        }
+
+        /// <summary>
+        /// Binds <paramref name="name"/> to <paramref name="value"/> directly in the module scope,
+        /// bypassing the current frame's local scope. Used by the <c>global</c>-targeted opcodes.
+        /// </summary>
+        public void AssignToGlobal(string name, TaggedUnion value)
+        {
+            ModuleScope.AssignVariableValue(name, value);
+        }
+
+        /// <summary>
+        /// Reads <paramref name="name"/> directly from the module scope, bypassing any local or
+        /// enclosing scopes. Used by the <c>global</c>-targeted read opcode.
+        /// </summary>
+        public TaggedUnion GetGlobal(string name)
+        {
+            return ModuleScope.GetVariableValue(name);
+        }
+
+        /// <summary>True if <paramref name="name"/> is bound in the module scope.</summary>
+        public bool IsGlobalDefined(string name)
+        {
+            return ModuleScope.IsVariableDefined(name);
+        }
+
+        /// <summary>
+        /// Binds <paramref name="name"/> to <paramref name="value"/> in the nearest enclosing
+        /// function scope that already defines <paramref name="name"/>. The module scope is
+        /// excluded from the walk. Throws <see cref="KeyNotFoundException"/> if no such scope
+        /// exists; semantic analysis is expected to prevent this at compile time.
+        /// </summary>
+        public void AssignToNonlocal(string name, TaggedUnion value)
+        {
+            var scope = FindNonlocalScope(name);
+            scope.AssignVariableValue(name, value);
+        }
+
+        /// <summary>
+        /// Reads <paramref name="name"/> from the nearest enclosing function scope that defines
+        /// it. The module scope is excluded from the walk. Throws <see cref="KeyNotFoundException"/>
+        /// if no such scope exists; semantic analysis is expected to prevent this at compile time.
+        /// </summary>
+        public TaggedUnion GetNonlocal(string name)
+        {
+            var scope = FindNonlocalScope(name);
+            return scope.GetVariableValue(name);
+        }
+
+        // Walks ParentOrNull from CurrFrame.Scope upward, stopping before the module scope
+        // (compared by reference against _moduleLvl.Scope), and returns the first scope that
+        // defines `name`. Throws KeyNotFoundException if none does.
+        Scope FindNonlocalScope(string name)
+        {
+            for (var s = CurrFrame.Scope.ParentOrNull; s != null && !ReferenceEquals(s, _moduleLvl.Scope); s = s.ParentOrNull)
+            {
+                if (s.IsVariableDefined(name))
+                {
+                    return s;
+                }
+            }
+
+            throw new KeyNotFoundException($"No enclosing scope binds nonlocal '{name}'");
         }
 
         /// <summary>

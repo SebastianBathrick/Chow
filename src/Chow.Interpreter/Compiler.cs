@@ -80,9 +80,10 @@ namespace Chow.Interpreter
             _chunk.AddInstruction(OperationCode.PushNewClosureFromTemplate, funcNode.LineNumber);
 
             // Functions work like variables, can be reassigned, and be passed around as values.
-            // This method represents something similar in concept to PopAndAssignToVariable, but for functions.
+            // The binding is subject to global/nonlocal resolution stamped on the FunctionNode
+            // by SemanticAnalysis.
             var varNameIdx = _chunk.RegisterVariableName(funcNode.Name);
-            _chunk.AddInstruction(OperationCode.PopAndAssignToVariable, funcNode.LineNumber, varNameIdx);
+            _chunk.AddInstruction(GetAssignOpCode(funcNode.Resolution), funcNode.LineNumber, varNameIdx);
         }
 
         void CompileCall(CallNode callNode)
@@ -223,6 +224,14 @@ namespace Chow.Interpreter
                     break;
                 }
 
+                case GlobalDeclNode _:
+                case NonlocalDeclNode _:
+                {
+                    // Declarations are compile-time directives consumed by SemanticAnalysis;
+                    // they emit no bytecode.
+                    break;
+                }
+
                 default:
                 {
                     throw new InvalidOperationException();
@@ -326,25 +335,26 @@ namespace Chow.Interpreter
         void CompileVarAssign(VarAssignNode varAssignNode)
         {
             /* [NOTE]
-             * 
-             * Assume that before compilation, variable semantics have been verified, and there are no name 
-             * conflicts, and no unknown identifiers. Semantic analysis occurs between parsing and compilation.
-             * 
+             *
+             * Variable semantics have been verified by SemanticAnalysis between parsing and
+             * compilation. The Resolution stamp on this node selects which opcode is emitted:
+             * Local → PopAndAssignToVariable, Global → PopAndAssignToGlobal,
+             * Nonlocal → PopAndAssignToNonlocal.
+             *
              * [HOW VARIABLE ASSIGNMENTS WORK]
-             * 
-             * Assignments and declarations share syntax because the virtual machine handles them similarly due to 
-             * dynamic typing. Here is how the VirtualMachine runs an assignment operation: 
-             * 
-             * 1. Pop a value off the stack representing the new/initial value for the variable. The new/initial value 
+             *
+             * Assignments and declarations share syntax because the virtual machine handles them similarly due to
+             * dynamic typing. Here is how the VirtualMachine runs an assignment operation:
+             *
+             * 1. Pop a value off the stack representing the new/initial value for the variable. The new/initial value
              *    is stored in a TaggedUnion and represents an expression evaluated at runtime. This can be of any type.
-             *    
-             * 2. Use the current Operation.Operand to get the variable's name stored as a string inside Chunk during 
-             *    compile-time (i.e., the compilation logic code below). It's stored this way so Operations don't have 
+             *
+             * 2. Use the current Operation.Operand to get the variable's name stored as a string inside Chunk during
+             *    compile-time (i.e., the compilation logic code below). It's stored this way so Operations don't have
              *    to store the identifiers themselves.
-             *    
-             * 3. Maps the new/initial value to the variable name in VirtualMachine's Dictionary<string, TaggedUnion> 
-             *    field. If the name is already a key in the dictionary, then overwrite the existing value with the 
-             *    new/initial value. 
+             *
+             * 3. Routes the assign through CallStack to the scope selected by the opcode: the current frame's scope
+             *    for Local, the module scope for Global, or the nearest enclosing function scope for Nonlocal.
              */
 
             CompileTargetNode(varAssignNode.Expression);
@@ -352,14 +362,52 @@ namespace Chow.Interpreter
             // If a variable with the same name already exists in the chunk, the index of the existing variable will be returned.
             // Otherwise, the new variable will be added to the chunk and its new index will be returned.
             var varNameIdx = _chunk.RegisterVariableName(varAssignNode.Name);
-            _chunk.AddInstruction(OperationCode.PopAndAssignToVariable, varAssignNode.LineNumber, varNameIdx);
+            _chunk.AddInstruction(GetAssignOpCode(varAssignNode.Resolution), varAssignNode.LineNumber, varNameIdx);
         }
 
         void CompileVarFactor(NameNode varFactorNode)
         {
             // Register to have its own constant in case the variable with this name is declared in a previous environment
             var varNameIdx = _chunk.RegisterVariableName(varFactorNode.Name);
-            _chunk.AddInstruction(OperationCode.PushVariableValue, varFactorNode.LineNumber, varNameIdx);
+            _chunk.AddInstruction(GetReadOpCode(varFactorNode.Resolution), varFactorNode.LineNumber, varNameIdx);
+        }
+
+        static OperationCode GetAssignOpCode(ScopeKind resolution)
+        {
+            switch (resolution)
+            {
+                case ScopeKind.Global:
+                {
+                    return OperationCode.PopAndAssignToGlobal;
+                }
+                case ScopeKind.Nonlocal:
+                {
+                    return OperationCode.PopAndAssignToNonlocal;
+                }
+                default:
+                {
+                    return OperationCode.PopAndAssignToVariable;
+                }
+            }
+        }
+
+        static OperationCode GetReadOpCode(ScopeKind resolution)
+        {
+            switch (resolution)
+            {
+                case ScopeKind.Global:
+                {
+                    return OperationCode.PushGlobalValue;
+                }
+                case ScopeKind.Nonlocal:
+                {
+                    return OperationCode.PushNonlocalValue;
+                }
+                default:
+                {
+                    return OperationCode.PushVariableValue;
+                }
+            }
         }
 
         void CompileReturn(ReturnNode returnNode)
