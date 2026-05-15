@@ -5,11 +5,11 @@ using System.Collections.Generic;
 using Chow.Interpreter.SyntaxTrees;
 using Chow.Interpreter.SyntaxTrees.Expressions;
 using Chow.Interpreter.SyntaxTrees.Statements;
-using System;
 using Chow.Interpreter.SyntaxTrees.Attributes;
 using Chow.Interpreter.SyntaxTrees.Literals;
 using Chow.Interpreter.SyntaxTrees.Scope;
 using Chow.Interpreter.SyntaxTrees.Subscripts;
+using System;
 
 namespace Chow.Interpreter
 {
@@ -18,7 +18,7 @@ namespace Chow.Interpreter
         readonly Chunk _chunk;
         readonly Node _root;
         readonly Stack<LoopContext> _loopContextStack;
-        
+
         List<int> _pendingEndJumps;
 
         public Compiler(Node root)
@@ -28,6 +28,8 @@ namespace Chow.Interpreter
             _pendingEndJumps = new List<int>();
             _loopContextStack = new Stack<LoopContext>();
         }
+
+        #region Primary Methods
 
         public Chunk CompileRoot()
         {
@@ -50,14 +52,14 @@ namespace Chow.Interpreter
             {
                 throw new InvalidOperationException();
             }
-            
+
             // Caller pushes args left-to-right; bind in reverse so positional order matches when popping
             for (var i = funcNode.Params.Count - 1; i >= 0; i--)
             {
                 var param = (NameNode)funcNode.Params[i];
-                var pramConstIdx = _chunk.RegisterVariableName(param.Name);
+                var paramNameIdx = _chunk.RegisterVariableName(param.Name);
 
-                _chunk.AddInstruction(OperationCode.PopAndAssignToVariable, param.LineNumber, pramConstIdx);
+                _chunk.AddInstruction(OperationCode.PopAndAssignToVariable, param.LineNumber, paramNameIdx);
             }
 
             CompileTargetNode(funcNode.Body);
@@ -69,37 +71,6 @@ namespace Chow.Interpreter
             _chunk.AddInstruction(OperationCode.PushReturnValue, funcNode.LineNumber);
 
             return _chunk;
-        }
-
-        void CompileFunctionDeclaration(FunctionNode funcNode)
-        {
-            var funcCompiler = new Compiler(funcNode);
-            var funcChunk = funcCompiler.CompileFunctionBody();
-
-            var template = new ClosureTemplate(funcChunk, funcNode.Name, funcNode.Params.Count);
-            var templateIdx = _chunk.RegisterConstant(new TaggedUnion(template));
-
-            // Push template, then runtime PushNewClosureFromTemplate captures the active scope and wraps it as a Closure.
-            _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNumber, templateIdx);
-            _chunk.AddInstruction(OperationCode.PushNewClosureFromTemplate, funcNode.LineNumber);
-
-            // Functions work like variables, can be reassigned, and be passed around as values.
-            // The binding is subject to global/nonlocal resolution stamped on the FunctionNode
-            // by SemanticAnalysis.
-            var varNameIdx = _chunk.RegisterVariableName(funcNode.Name);
-            _chunk.AddInstruction(GetScopeAssignOpCode(funcNode.Resolution), funcNode.LineNumber, varNameIdx);
-        }
-
-        void CompileCall(CallNode callNode)
-        {
-            CompileTargetNode(callNode.CallName);
-
-            foreach (var arg in callNode.Args)
-            {
-                CompileTargetNode(arg);
-            }
-
-            _chunk.AddInstruction(OperationCode.CallFunction, callNode.LineNumber, callNode.Args.Count);
         }
 
         void CompileTargetNode(Node targetNode)
@@ -249,86 +220,9 @@ namespace Chow.Interpreter
             }
         }
 
-        void CompileListLiteral(ListLiteralNode node)
-        {
-            foreach (var element in node.Elements)
-            {
-                CompileTargetNode(element);
-            }
+        #endregion
 
-            _chunk.AddInstruction(OperationCode.PushNewInternalList, node.LineNumber, node.Elements.Count);
-        }
-
-        void CompileDictLiteral(ListDictNode node)
-        {
-            for (var i = 0; i < node.Keys.Count; i++)
-            {
-                CompileTargetNode(node.Keys[i]);
-                CompileTargetNode(node.Values[i]);
-            }
-
-            _chunk.AddInstruction(OperationCode.PushNewInternalDict, node.LineNumber, node.Keys.Count);
-        }
-
-        void CompileSubscript(SubscriptNode node)
-        {
-            CompileTargetNode(node.Target);
-
-            if (node.Index is SubscriptSliceNode sliceNode)
-            {
-                CompileSliceArgument(sliceNode.Start, sliceNode.LineNumber);
-                CompileSliceArgument(sliceNode.Stop, sliceNode.LineNumber);
-                CompileSliceArgument(sliceNode.Step, sliceNode.LineNumber);
-                _chunk.AddInstruction(OperationCode.SubscriptSlice, node.LineNumber);
-            }
-            else
-            {
-                CompileTargetNode(node.Index);
-                _chunk.AddInstruction(OperationCode.Subscript, node.LineNumber);
-            }
-        }
-
-        void CompileSliceArgument(Node argOrNull, int sliceLineNum)
-        {
-            if (argOrNull == null)
-            {
-                var noneIdx = _chunk.RegisterConstant(TaggedUnion.None);
-                _chunk.AddInstruction(OperationCode.PushConstant, sliceLineNum, noneIdx);
-            }
-            else
-            {
-                CompileTargetNode(argOrNull);
-            }
-        }
-
-        void CompileAttributeAccess(AttributeAccessNode node)
-        {
-            CompileTargetNode(node.Target);
-            var varNameIdx = _chunk.RegisterVariableName(node.AttributeName);
-            _chunk.AddInstruction(OperationCode.GetObjectAttribute, node.LineNumber, varNameIdx);
-        }
-
-        void CompileSubscriptAssign(SubscriptAssignNode node)
-        {
-            if (node.Index is SubscriptSliceNode)
-            {
-                throw new NotImplementedException("slice assignment is not implemented");
-            }
-
-            CompileTargetNode(node.Target);
-            CompileTargetNode(node.Index);
-            CompileTargetNode(node.Expression);
-            _chunk.AddInstruction(OperationCode.SubscriptSet, node.LineNumber);
-        }
-
-        void CompileAttributeAssign(AttributeAssignNode node)
-        {
-            CompileTargetNode(node.Target);
-            CompileTargetNode(node.Expression);
-
-            var varNameIdx = _chunk.RegisterVariableName(node.AttrName);
-            _chunk.AddInstruction(OperationCode.SetInteropObjectAttribute, node.LineNumber, varNameIdx);
-        }
+        #region Statement Compile Methods
 
         void CompileBlockNode(BlockNode blockNode)
         {
@@ -338,6 +232,25 @@ namespace Chow.Interpreter
             {
                 CompileTargetNode(statement);
             }
+        }
+
+        void CompileFunctionDeclaration(FunctionNode funcNode)
+        {
+            var funcCompiler = new Compiler(funcNode);
+            var funcChunk = funcCompiler.CompileFunctionBody();
+
+            var template = new ClosureTemplate(funcChunk, funcNode.Name, funcNode.Params.Count);
+            var templateIdx = _chunk.RegisterConstant(new TaggedUnion(template));
+
+            // Push template, then runtime PushNewClosureFromTemplate captures the active scope and wraps it as a Closure.
+            _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNumber, templateIdx);
+            _chunk.AddInstruction(OperationCode.PushNewClosureFromTemplate, funcNode.LineNumber);
+
+            // Functions work like variables, can be reassigned, and be passed around as values.
+            // The binding is subject to global/nonlocal resolution stamped on the FunctionNode
+            // by SemanticAnalysis.
+            var varNameIdx = _chunk.RegisterVariableName(funcNode.Name);
+            _chunk.AddInstruction(GetScopeAssignOpCode(funcNode.Resolution), funcNode.LineNumber, varNameIdx);
         }
 
         void CompileVariableAssign(VariableAssignStatementNode variableAssignStatementNode)
@@ -371,51 +284,6 @@ namespace Chow.Interpreter
             // Otherwise, the new variable will be added to the chunk and its new index will be returned.
             var varNameIdx = _chunk.RegisterVariableName(variableAssignStatementNode.Name);
             _chunk.AddInstruction(GetScopeAssignOpCode(variableAssignStatementNode.Resolution), variableAssignStatementNode.LineNumber, varNameIdx);
-        }
-
-        void CompileVariableFactor(NameNode varFactorNode)
-        {
-            // Register to have its own constant in case the variable with this name is declared in a previous environment
-            var varNameIdx = _chunk.RegisterVariableName(varFactorNode.Name);
-            _chunk.AddInstruction(GetScopeReadOpCode(varFactorNode.Resolution), varFactorNode.LineNumber, varNameIdx);
-        }
-
-        static OperationCode GetScopeAssignOpCode(ScopeType resolution)
-        {
-            switch (resolution)
-            {
-                case ScopeType.Global:
-                {
-                    return OperationCode.PopAndAssignToGlobal;
-                }
-                case ScopeType.Nonlocal:
-                {
-                    return OperationCode.PopAndAssignToNonlocal;
-                }
-                default:
-                {
-                    return OperationCode.PopAndAssignToVariable;
-                }
-            }
-        }
-
-        static OperationCode GetScopeReadOpCode(ScopeType resolution)
-        {
-            switch (resolution)
-            {
-                case ScopeType.Global:
-                {
-                    return OperationCode.PushGlobalValue;
-                }
-                case ScopeType.Nonlocal:
-                {
-                    return OperationCode.PushNonlocalValue;
-                }
-                default:
-                {
-                    return OperationCode.PushVariableValue;
-                }
-            }
         }
 
         void CompileReturnStatement(ReturnStatementNode returnStatementNode)
@@ -470,12 +338,40 @@ namespace Chow.Interpreter
             }
 
             // Patch every JumpPastElseBranches in this chain to land at END (current count)
-            foreach (var idx in _pendingEndJumps)
+            foreach (var jumpIdx in _pendingEndJumps)
             {
-                _chunk.PatchInstructionOperand(idx, _chunk.InstructionCount);
+                _chunk.PatchInstructionOperand(jumpIdx, _chunk.InstructionCount);
             }
 
             _pendingEndJumps = saved;
+        }
+
+        void CompileBranchStatement(BranchStatementNode node)
+        {
+            if (node.IsElse)
+            {
+                CompileTargetNode(node.Block);
+                return;
+            }
+
+            CompileTargetNode(node.Expr);
+            _chunk.AddInstruction(OperationCode.JumpIfFalse, node.LineNumber);
+
+            var jumpFalseIdx = _chunk.InstructionCount - 1;
+            CompileTargetNode(node.Block);
+
+            if (node.Branch != null)
+            {
+                _chunk.AddInstruction(OperationCode.JumpPastElseBranches, node.LineNumber);
+                _pendingEndJumps.Add(_chunk.InstructionCount - 1);
+            }
+
+            _chunk.PatchInstructionOperand(jumpFalseIdx, _chunk.InstructionCount);
+
+            if (node.Branch != null)
+            {
+                CompileTargetNode(node.Branch);
+            }
         }
 
         void CompileWhileStatement(WhileStatementNode whileStatementNode)
@@ -505,29 +401,10 @@ namespace Chow.Interpreter
             var exitIdx = _chunk.InstructionCount;
             _chunk.PatchInstructionOperand(exitJumpIdx, exitIdx);
 
-            foreach (var idx in loopContext.PendingBreaks)
+            foreach (var jumpIdx in loopContext.PendingBreaks)
             {
-                _chunk.PatchInstructionOperand(idx, exitIdx);
+                _chunk.PatchInstructionOperand(jumpIdx, exitIdx);
             }
-        }
-
-        void CompileBreakStatement(BreakStatementNode breakStatementNode)
-        {
-            if (_loopContextStack.Count == 0)
-            {
-                throw new ParserEx("'break' outside loop", breakStatementNode.LineNumber);
-            }
-
-            var loopContext = _loopContextStack.Peek();
-
-            // For-loops keep the iterator on the stack across iterations; `break` must discard it before jumping.
-            if (loopContext.HasIteratorOnStack)
-            {
-                _chunk.AddInstruction(OperationCode.Pop, breakStatementNode.LineNumber);
-            }
-
-            _chunk.AddInstruction(OperationCode.JumpPastElseBranches, breakStatementNode.LineNumber);
-            loopContext.PendingBreaks.Add(_chunk.InstructionCount - 1);
         }
 
         void CompileForStatement(ForStatementNode forNode)
@@ -555,7 +432,7 @@ namespace Chow.Interpreter
             CompileTargetNode(forNode.Block);
             _loopContextStack.Pop();
 
-            // 4. Bottom of body jumps back to ForIterNextOrJump. Iterator is still on the stack.
+            // 4. The bottom of the body jumps back to ForIterNextOrJump. Iterator is still on the stack.
             _chunk.AddInstruction(OperationCode.JumpToLoopStart, forNode.LineNumber, loopStartIdx);
 
             // 5. Natural exhaustion lands here (ForIterNextOrJump already popped the iterator before jumping).
@@ -570,10 +447,29 @@ namespace Chow.Interpreter
             // 6. `break` jumps land here, past the else-block.
             var exitIdx = _chunk.InstructionCount;
 
-            foreach (var idx in loopContext.PendingBreaks)
+            foreach (var jumpIdx in loopContext.PendingBreaks)
             {
-                _chunk.PatchInstructionOperand(idx, exitIdx);
+                _chunk.PatchInstructionOperand(jumpIdx, exitIdx);
             }
+        }
+
+        void CompileBreakStatement(BreakStatementNode breakStatementNode)
+        {
+            if (_loopContextStack.Count == 0)
+            {
+                throw new ParserEx("'break' outside loop", breakStatementNode.LineNumber);
+            }
+
+            var loopContext = _loopContextStack.Peek();
+
+            // For-loops keep the iterator on the stack across iterations; `break` must discard it before jumping.
+            if (loopContext.HasIteratorOnStack)
+            {
+                _chunk.AddInstruction(OperationCode.Pop, breakStatementNode.LineNumber);
+            }
+
+            _chunk.AddInstruction(OperationCode.JumpPastElseBranches, breakStatementNode.LineNumber);
+            loopContext.PendingBreaks.Add(_chunk.InstructionCount - 1);
         }
 
         void CompileContinueStatement(ContinueStatementNode continueStatementNode)
@@ -585,37 +481,30 @@ namespace Chow.Interpreter
             }
 
             var loopContext = _loopContextStack.Peek();
-
             _chunk.AddInstruction(OperationCode.JumpToLoopStart, continueStatementNode.LineNumber, loopContext.LoopStartIdx);
         }
 
-        void CompileBranchStatement(BranchStatementNode node)
+        #endregion
+
+        #region Expression Compile Methods
+
+        void CompileCall(CallNode callNode)
         {
-            if (node.IsElse)
+            CompileTargetNode(callNode.CallName);
+
+            foreach (var arg in callNode.Args)
             {
-                CompileTargetNode(node.Block);
-                return;
+                CompileTargetNode(arg);
             }
 
-            CompileTargetNode(node.Expr);
+            _chunk.AddInstruction(OperationCode.CallFunction, callNode.LineNumber, callNode.Args.Count);
+        }
 
-            _chunk.AddInstruction(OperationCode.JumpIfFalse, node.LineNumber);
-            var jumpFalseIdx = _chunk.InstructionCount - 1;
-
-            CompileTargetNode(node.Block);
-
-            if (node.Branch != null)
-            {
-                _chunk.AddInstruction(OperationCode.JumpPastElseBranches, node.LineNumber);
-                _pendingEndJumps.Add(_chunk.InstructionCount - 1);
-            }
-
-            _chunk.PatchInstructionOperand(jumpFalseIdx, _chunk.InstructionCount);
-
-            if (node.Branch != null)
-            {
-                CompileTargetNode(node.Branch);
-            }
+        void CompileVariableFactor(NameNode varFactorNode)
+        {
+            // Register to have its own constant in case the variable with this name is declared in a previous environment
+            var varNameIdx = _chunk.RegisterVariableName(varFactorNode.Name);
+            _chunk.AddInstruction(GetScopeReadOpCode(varFactorNode.Resolution), varFactorNode.LineNumber, varNameIdx);
         }
 
         void CompileExpression(ExpressionNode expressionNode)
@@ -635,7 +524,7 @@ namespace Chow.Interpreter
                 CompileTargetNode(expressionNode.Right);
             }
 
-            var opCode = GetExpressionOperationCode(expressionNode);
+            var opCode = GetExpressionOpCode(expressionNode);
             _chunk.AddInstruction(opCode, expressionNode.LineNumber);
         }
 
@@ -664,132 +553,8 @@ namespace Chow.Interpreter
             _chunk.PatchInstructionOperand(patchIdx, _chunk.InstructionCount);
         }
 
-        static OperationCode GetExpressionOperationCode(ExpressionNode expressionNode)
-        {
-            OperationCode opCode;
-            
-            switch (expressionNode.Operator)
-            {
-                case ExpressionOperator.Add:
-                {
-                    opCode = OperationCode.Add;
-                    break;
-                }
-
-                case ExpressionOperator.Subtract:
-                {
-                    opCode = OperationCode.Subtract;
-                    break;
-                }
-
-                case ExpressionOperator.Multiply:
-                {
-                    opCode = OperationCode.Multiply;
-                    break;
-                }
-
-                case ExpressionOperator.Divide:
-                {
-                    opCode = OperationCode.Divide;
-                    break;
-                }
-
-                case ExpressionOperator.Modulus:
-                {
-                    opCode = OperationCode.Modulus;
-                    break;
-                }
-
-                case ExpressionOperator.Exponentiate:
-                {
-                    opCode = OperationCode.Exponentiate;
-                    break;
-                }
-
-                case ExpressionOperator.FloorDivide:
-                {
-                    opCode = OperationCode.FloorDivide;
-                    break;
-                }
-
-                case ExpressionOperator.Negate:
-                {
-                    opCode = OperationCode.Negate;
-                    break;
-                }
-
-                case ExpressionOperator.Equal:
-                {
-                    opCode = OperationCode.Equal;
-                    break;
-                }
-
-                case ExpressionOperator.NotEqual:
-                {
-                    opCode = OperationCode.NotEqual;
-                    break;
-                }
-
-                case ExpressionOperator.Less:
-                {
-                    opCode = OperationCode.Less;
-                    break;
-                }
-
-                case ExpressionOperator.Greater:
-                {
-                    opCode = OperationCode.Greater;
-                    break;
-                }
-
-                case ExpressionOperator.LessEqual:
-                {
-                    opCode = OperationCode.LessEqual;
-                    break;
-                }
-
-                case ExpressionOperator.GreaterEqual:
-                {
-                    opCode = OperationCode.GreaterEqual;
-                    break;
-                }
-
-                case ExpressionOperator.Not:
-                {
-                    opCode = OperationCode.Not;
-                    break;
-                }
-
-                case ExpressionOperator.BinaryOr:
-                {
-                    opCode = OperationCode.BinaryOr;
-                    break;
-                }
-
-                case ExpressionOperator.In:
-                {
-                    opCode = OperationCode.In;
-                    break;
-                }
-
-                case ExpressionOperator.NotIn:
-                {
-                    opCode = OperationCode.NotIn;
-                    break;
-                }
-
-                default:
-                {
-                    throw new NotImplementedException(nameof(expressionNode.Operator));
-                }
-            }
-
-            return opCode;
-        }
-
         void CompileLiteral(LiteralNode literalNode)
         {
-
             var constUnion = TaggedUnion.Empty;
 
             switch (literalNode.Type)
@@ -858,6 +623,233 @@ namespace Chow.Interpreter
             var constIdx = _chunk.RegisterConstant(constUnion);
             _chunk.AddInstruction(OperationCode.PushConstant, literalNode.LineNumber, constIdx);
         }
+
+        void CompileListLiteral(ListLiteralNode node)
+        {
+            foreach (var element in node.Elements)
+            {
+                CompileTargetNode(element);
+            }
+
+            _chunk.AddInstruction(OperationCode.PushNewInternalList, node.LineNumber, node.Elements.Count);
+        }
+
+        void CompileDictLiteral(ListDictNode node)
+        {
+            for (var i = 0; i < node.Keys.Count; i++)
+            {
+                CompileTargetNode(node.Keys[i]);
+                CompileTargetNode(node.Values[i]);
+            }
+
+            _chunk.AddInstruction(OperationCode.PushNewInternalDict, node.LineNumber, node.Keys.Count);
+        }
+
+        void CompileSubscript(SubscriptNode node)
+        {
+            CompileTargetNode(node.Target);
+
+            if (node.Index is SubscriptSliceNode sliceNode)
+            {
+                CompileSliceArgument(sliceNode.Start, sliceNode.LineNumber);
+                CompileSliceArgument(sliceNode.Stop, sliceNode.LineNumber);
+                CompileSliceArgument(sliceNode.Step, sliceNode.LineNumber);
+                _chunk.AddInstruction(OperationCode.SubscriptSlice, node.LineNumber);
+            }
+            else
+            {
+                CompileTargetNode(node.Index);
+                _chunk.AddInstruction(OperationCode.Subscript, node.LineNumber);
+            }
+        }
+
+        void CompileSliceArgument(Node argOrNull, int sliceLineNum)
+        {
+            if (argOrNull == null)
+            {
+                var noneIdx = _chunk.RegisterConstant(TaggedUnion.None);
+                _chunk.AddInstruction(OperationCode.PushConstant, sliceLineNum, noneIdx);
+            }
+            else
+            {
+                CompileTargetNode(argOrNull);
+            }
+        }
+
+        void CompileAttributeAccess(AttributeAccessNode node)
+        {
+            CompileTargetNode(node.Target);
+            
+            var varNameIdx = _chunk.RegisterVariableName(node.AttributeName);
+            _chunk.AddInstruction(OperationCode.GetObjectAttribute, node.LineNumber, varNameIdx);
+        }
+
+        void CompileSubscriptAssign(SubscriptAssignNode node)
+        {
+            if (node.Index is SubscriptSliceNode)
+            {
+                throw new NotImplementedException("slice assignment is not implemented");
+            }
+
+            CompileTargetNode(node.Target);
+            CompileTargetNode(node.Index);
+            CompileTargetNode(node.Expression);
+            _chunk.AddInstruction(OperationCode.SubscriptSet, node.LineNumber);
+        }
+
+        void CompileAttributeAssign(AttributeAssignNode node)
+        {
+            CompileTargetNode(node.Target);
+            CompileTargetNode(node.Expression);
+
+            var varNameIdx = _chunk.RegisterVariableName(node.AttrName);
+            _chunk.AddInstruction(OperationCode.SetInteropObjectAttribute, node.LineNumber, varNameIdx);
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        static OperationCode GetScopeAssignOpCode(ScopeType resolution)
+        {
+            switch (resolution)
+            {
+                case ScopeType.Global:
+                {
+                    return OperationCode.PopAndAssignToGlobal;
+                }
+                case ScopeType.Nonlocal:
+                {
+                    return OperationCode.PopAndAssignToNonlocal;
+                }
+                default:
+                {
+                    return OperationCode.PopAndAssignToVariable;
+                }
+            }
+        }
+
+        static OperationCode GetScopeReadOpCode(ScopeType resolution)
+        {
+            switch (resolution)
+            {
+                case ScopeType.Global:
+                {
+                    return OperationCode.PushGlobalValue;
+                }
+                case ScopeType.Nonlocal:
+                {
+                    return OperationCode.PushNonlocalValue;
+                }
+                default:
+                {
+                    return OperationCode.PushVariableValue;
+                }
+            }
+        }
+
+        static OperationCode GetExpressionOpCode(ExpressionNode expressionNode)
+        {
+            switch (expressionNode.Operator)
+            {
+                case ExpressionOperator.Add:
+                {
+                    return OperationCode.Add;
+                }
+
+                case ExpressionOperator.Subtract:
+                {
+                    return OperationCode.Subtract;
+                }
+
+                case ExpressionOperator.Multiply:
+                {
+                    return OperationCode.Multiply;
+                }
+
+                case ExpressionOperator.Divide:
+                {
+                    return OperationCode.Divide;
+                }
+
+                case ExpressionOperator.Modulus:
+                {
+                    return OperationCode.Modulus;
+                }
+
+                case ExpressionOperator.Exponentiate:
+                {
+                    return OperationCode.Exponentiate;
+                }
+
+                case ExpressionOperator.FloorDivide:
+                {
+                    return OperationCode.FloorDivide;
+                }
+
+                case ExpressionOperator.Negate:
+                {
+                    return OperationCode.Negate;
+                }
+
+                case ExpressionOperator.Equal:
+                {
+                    return OperationCode.Equal;
+                }
+
+                case ExpressionOperator.NotEqual:
+                {
+                    return OperationCode.NotEqual;
+                }
+
+                case ExpressionOperator.Less:
+                {
+                    return OperationCode.Less;
+                }
+
+                case ExpressionOperator.Greater:
+                {
+                    return OperationCode.Greater;
+                }
+
+                case ExpressionOperator.LessEqual:
+                {
+                    return OperationCode.LessEqual;
+                }
+
+                case ExpressionOperator.GreaterEqual:
+                {
+                    return OperationCode.GreaterEqual;
+                }
+
+                case ExpressionOperator.Not:
+                {
+                    return OperationCode.Not;
+                }
+
+                case ExpressionOperator.BinaryOr:
+                {
+                    return OperationCode.BinaryOr;
+                }
+
+                case ExpressionOperator.In:
+                {
+                    return OperationCode.In;
+                }
+
+                case ExpressionOperator.NotIn:
+                {
+                    return OperationCode.NotIn;
+                }
+
+                default:
+                {
+                    throw new NotImplementedException(nameof(expressionNode.Operator));
+                }
+            }
+        }
+
+        #endregion
 
         sealed class LoopContext
         {
