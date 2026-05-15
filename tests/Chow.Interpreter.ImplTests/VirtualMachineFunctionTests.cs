@@ -37,18 +37,18 @@ namespace Chow.Interpreter.ImplTests
         }
 
         // ============================================================================================================
-        // A. MakeClosure produces a Closure carrying captured scope
+        // A. CreateClosureFromTemplate produces a Closure carrying captured scope
         // ============================================================================================================
 
         [Test]
         public void MakeClosure_ProducesClosure_WithCapturedScope()
         {
-            // Hand-build a chunk: PushConstant(template) + MakeClosure
+            // Hand-build a chunk: PushConstant(template) + CreateClosureFromTemplate
             var module = new Chunk();
             var template = new ClosureTemplate(new Chunk(), "f", 0);
             var idx = module.RegisterConstant(new TaggedUnion(template));
             module.AddInstruction(OperationCode.PushConstant, LINE, idx);
-            module.AddInstruction(OperationCode.MakeClosure, LINE);
+            module.AddInstruction(OperationCode.CreateClosureFromTemplate, LINE);
 
             var scope = new ModuleScope();
             var vm = new VirtualMachine(module, scope);
@@ -84,7 +84,7 @@ namespace Chow.Interpreter.ImplTests
         public void Call_AfterCall_CallerIPResumesAtNextInstr()
         {
             // After the call, the trailing expression `1 + 2` must execute. If caller IP didn't advance, it loops.
-            // Result on the value stack is whatever the last expression statement produced; PopExprStmntResult
+            // Result on the value stack is whatever the last expression statement produced; PopExpressionStatementResult
             // discards `f()`'s result. The last surviving stack top is the `1 + 2` result (discarded too), so we
             // rely on no infinite loop and on completion.
             var _ = ExecuteSource("def f():\n    return 1\nf()\n1 + 2");

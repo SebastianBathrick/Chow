@@ -53,7 +53,7 @@ namespace Chow.Interpreter
                 var param = (NameNode)funcNode.Params[i];
                 var pramConstIdx = _chunk.RegisterVariableName(param.Name);
 
-                _chunk.AddInstruction(OperationCode.AssignOrDeclareVariable, param.LineNumber, pramConstIdx);
+                _chunk.AddInstruction(OperationCode.VariableAssignOrDeclare, param.LineNumber, pramConstIdx);
             }
 
             CompileTargetNode(funcNode.Body);
@@ -75,14 +75,14 @@ namespace Chow.Interpreter
             var template = new ClosureTemplate(funcChunk, funcNode.Name, funcNode.Params.Count);
             var templateIdx = _chunk.RegisterConstant(new TaggedUnion(template));
 
-            // Push template, then runtime MakeClosure captures the active scope and wraps it as a Closure.
+            // Push template, then runtime CreateClosureFromTemplate captures the active scope and wraps it as a Closure.
             _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNumber, templateIdx);
-            _chunk.AddInstruction(OperationCode.MakeClosure, funcNode.LineNumber);
+            _chunk.AddInstruction(OperationCode.CreateClosureFromTemplate, funcNode.LineNumber);
 
             // Functions work like variables, can be reassigned, and be passed around as values.
-            // This method represents something similar in concept to AssignOrDeclareVariable, but for functions.
+            // This method represents something similar in concept to VariableAssignOrDeclare, but for functions.
             var varNameIdx = _chunk.RegisterVariableName(funcNode.Name);
-            _chunk.AddInstruction(OperationCode.AssignOrDeclareVariable, funcNode.LineNumber, varNameIdx);
+            _chunk.AddInstruction(OperationCode.VariableAssignOrDeclare, funcNode.LineNumber, varNameIdx);
         }
 
         void CompileCall(CallNode callNode)
@@ -195,7 +195,7 @@ namespace Chow.Interpreter
                 CompileTargetNode(element);
             }
 
-            _chunk.AddInstruction(OperationCode.BuildList, node.LineNumber, node.Elements.Count);
+            _chunk.AddInstruction(OperationCode.CreateInternalList, node.LineNumber, node.Elements.Count);
         }
 
         void CompileDictLiteral(DictLiteralNode node)
@@ -206,7 +206,7 @@ namespace Chow.Interpreter
                 CompileTargetNode(node.Values[i]);
             }
 
-            _chunk.AddInstruction(OperationCode.BuildDict, node.LineNumber, node.Keys.Count);
+            _chunk.AddInstruction(OperationCode.CreateInternalDict, node.LineNumber, node.Keys.Count);
         }
 
         void CompileSubscript(SubscriptNode node)
@@ -244,7 +244,7 @@ namespace Chow.Interpreter
         {
             CompileTargetNode(node.Target);
             var varNameIdx = _chunk.RegisterVariableName(node.AttrName);
-            _chunk.AddInstruction(OperationCode.GetAttr, node.LineNumber, varNameIdx);
+            _chunk.AddInstruction(OperationCode.GetVariableAttribute, node.LineNumber, varNameIdx);
         }
 
         void CompileSubscriptAssign(SubscriptAssignNode node)
@@ -266,7 +266,7 @@ namespace Chow.Interpreter
             CompileTargetNode(node.Expression);
 
             var varNameIdx = _chunk.RegisterVariableName(node.AttrName);
-            _chunk.AddInstruction(OperationCode.SetAttr, node.LineNumber, varNameIdx);
+            _chunk.AddInstruction(OperationCode.SetVariableAttribute, node.LineNumber, varNameIdx);
         }
 
         void CompileBlockNode(BlockNode blockNode)
@@ -310,14 +310,14 @@ namespace Chow.Interpreter
             // If a variable with the same name already exists in the chunk, the index of the existing variable will be returned.
             // Otherwise, the new variable will be added to the chunk and its new index will be returned.
             var varNameIdx = _chunk.RegisterVariableName(varAssignNode.Name);
-            _chunk.AddInstruction(OperationCode.AssignOrDeclareVariable, varAssignNode.LineNumber, varNameIdx);
+            _chunk.AddInstruction(OperationCode.VariableAssignOrDeclare, varAssignNode.LineNumber, varNameIdx);
         }
 
         void CompileVarFactor(NameNode varFactorNode)
         {
             // Register to have its own constant in case the variable with this name is declared in a previous environment
             var varNameIdx = _chunk.RegisterVariableName(varFactorNode.Name);
-            _chunk.AddInstruction(OperationCode.PushVariableValue, varFactorNode.LineNumber, varNameIdx);
+            _chunk.AddInstruction(OperationCode.VariablePushValue, varFactorNode.LineNumber, varNameIdx);
         }
 
         void CompileReturn(ReturnNode returnNode)
@@ -339,7 +339,7 @@ namespace Chow.Interpreter
         void CompileExprStmnt(ExprStatementNode exprStmtNode)
         {
             CompileTargetNode(exprStmtNode.Expression);
-            _chunk.AddInstruction(OperationCode.PopExprStmntResult, exprStmtNode.LineNumber);
+            _chunk.AddInstruction(OperationCode.PopExpressionStatementResult, exprStmtNode.LineNumber);
         }
 
         void CompileIfStmnt(IfNode ifNode)
@@ -359,7 +359,7 @@ namespace Chow.Interpreter
             // Only emit a jump-past-branches if there's actually a branch to skip
             if (ifNode.Branch != null)
             {
-                _chunk.AddInstruction(OperationCode.JumpPastBranches, ifNode.LineNumber);
+                _chunk.AddInstruction(OperationCode.JumpPastElseBranches, ifNode.LineNumber);
                 _pendingEndJumps.Add(_chunk.InstructionCount - 1);
             }
 
@@ -371,7 +371,7 @@ namespace Chow.Interpreter
                 CompileTargetNode(ifNode.Branch);
             }
 
-            // Patch every JumpPastBranches in this chain to land at END (current count)
+            // Patch every JumpPastElseBranches in this chain to land at END (current count)
             foreach (var idx in _pendingEndJumps)
             {
                 _chunk.PatchInstructionOperand(idx, _chunk.InstructionCount);
@@ -382,7 +382,7 @@ namespace Chow.Interpreter
 
         void CompileWhileStmnt(WhileNode whileNode)
         {
-            // loopStart marks the start of the condition; both `continue` and the bottom-of-body Loop op target it.
+            // loopStart marks the start of the condition; both `continue` and the bottom-of-body JumpToLoopStart op target it.
             var loopStartIdx = _chunk.InstructionCount;
 
             CompileTargetNode(whileNode.Expr);
@@ -401,9 +401,9 @@ namespace Chow.Interpreter
 
             _loopContextStack.Pop();
 
-            _chunk.AddInstruction(OperationCode.Loop, whileNode.LineNumber, loopStartIdx);
+            _chunk.AddInstruction(OperationCode.JumpToLoopStart, whileNode.LineNumber, loopStartIdx);
 
-            // Condition-false exit and any `break` jumps land here, after the backward Loop.
+            // Condition-false exit and any `break` jumps land here, after the backward JumpToLoopStart.
             var exitIdx = _chunk.InstructionCount;
             _chunk.PatchInstructionOperand(exitJumpIdx, exitIdx);
 
@@ -422,7 +422,7 @@ namespace Chow.Interpreter
 
             var loopContext = _loopContextStack.Peek();
 
-            _chunk.AddInstruction(OperationCode.JumpPastBranches, breakNode.LineNumber);
+            _chunk.AddInstruction(OperationCode.JumpPastElseBranches, breakNode.LineNumber);
             loopContext.PendingBreaks.Add(_chunk.InstructionCount - 1);
         }
 
@@ -436,7 +436,7 @@ namespace Chow.Interpreter
 
             var loopContext = _loopContextStack.Peek();
 
-            _chunk.AddInstruction(OperationCode.Loop, continueNode.LineNumber, loopContext.LoopStartIdx);
+            _chunk.AddInstruction(OperationCode.JumpToLoopStart, continueNode.LineNumber, loopContext.LoopStartIdx);
         }
 
         void CompileBranchStmnt(BranchStmntNode node)
@@ -456,7 +456,7 @@ namespace Chow.Interpreter
 
             if (node.Branch != null)
             {
-                _chunk.AddInstruction(OperationCode.JumpPastBranches, node.LineNumber);
+                _chunk.AddInstruction(OperationCode.JumpPastElseBranches, node.LineNumber);
                 _pendingEndJumps.Add(_chunk.InstructionCount - 1);
             }
 

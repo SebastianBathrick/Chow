@@ -4,7 +4,7 @@ namespace Chow.Interpreter.State.Values
 {
     /// <summary>
     /// Compile-time-only representation of a function. Stored as a constant in the parent chunk
-    /// and consumed by the <c>MakeClosure</c> op at runtime, which combines this template with
+    /// and consumed by the <c>CreateClosureFromTemplate</c> op at runtime, which combines this template with
     /// the currently-active scope to produce a real <see cref="Closure"/>.
     /// </summary>
     sealed class ClosureTemplate

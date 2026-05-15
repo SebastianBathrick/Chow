@@ -327,13 +327,13 @@ namespace Chow.Interpreter.Tests
         {
             PushIntegerConstant(chunk, value);
             var operand = chunk.RegisterVariableName(name);
-            chunk.AddInstruction(OperationCode.AssignOrDeclareVariable, LINE, operand);
+            chunk.AddInstruction(OperationCode.VariableAssignOrDeclare, LINE, operand);
         }
 
         static void EmitLoad(Chunk chunk, string name)
         {
             var operand = chunk.FindVariableName(name);
-            chunk.AddInstruction(OperationCode.PushVariableValue, LINE, operand);
+            chunk.AddInstruction(OperationCode.VariablePushValue, LINE, operand);
         }
 
         [Test]

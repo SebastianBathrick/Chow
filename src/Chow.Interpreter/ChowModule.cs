@@ -122,7 +122,7 @@ namespace Chow.Interpreter
                 }
             }
 
-            var returnedUnion = vm.ExecuteCall(functionName, taggedUnionArgs);
+            var returnedUnion = vm.CallGlobalFunction(functionName, taggedUnionArgs);
             return ApiConverter.ToChowValue(returnedUnion);
         }
         

@@ -25,7 +25,7 @@ namespace Chow.Interpreter.State.Stack
         /// <summary>True while the current frame has instructions remaining.</summary>
         public bool IsInstrToRun => CurrFrame.IsInstrToRun;
 
-        /// <summary>The current frame's scope. Captured by <c>MakeClosure</c> at runtime.</summary>
+        /// <summary>The current frame's scope. Captured by <c>CreateClosureFromTemplate</c> at runtime.</summary>
         public IScope CurrentScope => CurrFrame.Scope;
 
         /// <summary>Source line number associated with the current frame's pointer.</summary>

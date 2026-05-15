@@ -49,7 +49,7 @@ namespace Chow.Interpreter.ImplTests
         }
 
         // ============================================================================================================
-        // A. def emits ClosureTemplate -> MakeClosure -> AssignOrDeclareVariable
+        // A. def emits ClosureTemplate -> CreateClosureFromTemplate -> VariableAssignOrDeclare
         // ============================================================================================================
 
         [Test]
@@ -59,15 +59,15 @@ namespace Chow.Interpreter.ImplTests
 
             var ops = Instructions(chunk);
 
-            // Expect last three of module chunk: PushConstant(template), MakeClosure, AssignOrDeclareVariable(f)
+            // Expect last three of module chunk: PushConstant(template), CreateClosureFromTemplate, VariableAssignOrDeclare(f)
             Assert.That(ops.Count, Is.GreaterThanOrEqualTo(3));
             var n = ops.Count;
 
             Assert.Multiple(() =>
             {
                 Assert.That(ops[n - 3].Code, Is.EqualTo(OperationCode.PushConstant));
-                Assert.That(ops[n - 2].Code, Is.EqualTo(OperationCode.MakeClosure));
-                Assert.That(ops[n - 1].Code, Is.EqualTo(OperationCode.AssignOrDeclareVariable));
+                Assert.That(ops[n - 2].Code, Is.EqualTo(OperationCode.CreateClosureFromTemplate));
+                Assert.That(ops[n - 1].Code, Is.EqualTo(OperationCode.VariableAssignOrDeclare));
             });
         }
 
@@ -193,13 +193,13 @@ namespace Chow.Interpreter.ImplTests
             Assert.Multiple(() =>
             {
                 // Reverse order: c then b then a
-                Assert.That(ops[0].Code, Is.EqualTo(OperationCode.AssignOrDeclareVariable));
+                Assert.That(ops[0].Code, Is.EqualTo(OperationCode.VariableAssignOrDeclare));
                 Assert.That(body.ReadVariableName(ops[0].Operand), Is.EqualTo("c"));
 
-                Assert.That(ops[1].Code, Is.EqualTo(OperationCode.AssignOrDeclareVariable));
+                Assert.That(ops[1].Code, Is.EqualTo(OperationCode.VariableAssignOrDeclare));
                 Assert.That(body.ReadVariableName(ops[1].Operand), Is.EqualTo("b"));
 
-                Assert.That(ops[2].Code, Is.EqualTo(OperationCode.AssignOrDeclareVariable));
+                Assert.That(ops[2].Code, Is.EqualTo(OperationCode.VariableAssignOrDeclare));
                 Assert.That(body.ReadVariableName(ops[2].Operand), Is.EqualTo("a"));
             });
         }
@@ -232,8 +232,8 @@ namespace Chow.Interpreter.ImplTests
             {
                 Assert.That(ops[callIdx].Operand, Is.EqualTo(2));
 
-                // PushVariableValue(add) sits before the two arg evaluations.
-                Assert.That(ops[callIdx - 3].Code, Is.EqualTo(OperationCode.PushVariableValue));
+                // VariablePushValue(add) sits before the two arg evaluations.
+                Assert.That(ops[callIdx - 3].Code, Is.EqualTo(OperationCode.VariablePushValue));
                 Assert.That(chunk.ReadVariableName(ops[callIdx - 3].Operand), Is.EqualTo("add"));
             });
         }

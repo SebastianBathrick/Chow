@@ -41,65 +41,87 @@ namespace Chow.Interpreter
                         _valStack.Push(_callStack.CurrentChunk.ReadConstant(CurrentOperation.Operand));
                         break;
 
+                    #region Binary Operators
+                        
                     case OperationCode.Add:
-                        ExecuteBinaryOperation((l, r) => l + r);
+                        EvaluateBinaryOperation((l, r) => l + r);
                         break;
 
                     case OperationCode.Subtract:
-                        ExecuteBinaryOperation((l, r) => l - r);
+                        EvaluateBinaryOperation((l, r) => l - r);
                         break;
 
                     case OperationCode.Multiply:
-                        ExecuteBinaryOperation((l, r) => l * r);
+                        EvaluateBinaryOperation((l, r) => l * r);
                         break;
 
                     case OperationCode.Divide:
-                        ExecuteBinaryOperation((l, r) => l / r);
+                        EvaluateBinaryOperation((l, r) => l / r);
                         break;
 
                     case OperationCode.Modulus:
-                        ExecuteBinaryOperation((l, r) => l % r);
+                        EvaluateBinaryOperation((l, r) => l % r);
                         break;
 
                     case OperationCode.Exponentiate:
-                        ExecuteBinaryOperation(TaggedUnion.Power);
+                        EvaluateBinaryOperation(TaggedUnion.Power);
                         break;
 
                     case OperationCode.FloorDivide:
-                        ExecuteBinaryOperation(TaggedUnion.FloorDivide);
-                        break;
-
-                    case OperationCode.Negate:
-                        ExecuteNegate();
+                        EvaluateBinaryOperation(TaggedUnion.FloorDivide);
                         break;
 
                     case OperationCode.Equal:
-                        ExecuteBinaryOperation((l, r) => new TaggedUnion(l == r));
+                        EvaluateBinaryOperation((l, r) => new TaggedUnion(l == r));
                         break;
 
                     case OperationCode.NotEqual:
-                        ExecuteBinaryOperation((l, r) => new TaggedUnion(l != r));
+                        EvaluateBinaryOperation((l, r) => new TaggedUnion(l != r));
                         break;
 
                     case OperationCode.Less:
-                        ExecuteBinaryOperation((l, r) => new TaggedUnion(l < r));
+                        EvaluateBinaryOperation((l, r) => new TaggedUnion(l < r));
                         break;
 
                     case OperationCode.Greater:
-                        ExecuteBinaryOperation((l, r) => new TaggedUnion(l > r));
+                        EvaluateBinaryOperation((l, r) => new TaggedUnion(l > r));
                         break;
 
                     case OperationCode.LessEqual:
-                        ExecuteBinaryOperation((l, r) => new TaggedUnion(l <= r));
+                        EvaluateBinaryOperation((l, r) => new TaggedUnion(l <= r));
                         break;
 
                     case OperationCode.GreaterEqual:
-                        ExecuteBinaryOperation((l, r) => new TaggedUnion(l >= r));
+                        EvaluateBinaryOperation((l, r) => new TaggedUnion(l >= r));
                         break;
 
-                    case OperationCode.Not:
-                        ExecuteNot();
+                    case OperationCode.BinaryOr:
+                        EvaluateBinaryOperation((l, r) => l | r);
                         break;
+
+                    case OperationCode.In:
+                        ExecuteIn(negate: false);
+                        break;
+
+                    case OperationCode.NotIn:
+                        ExecuteIn(negate: true);
+                        break;
+
+                    #endregion
+
+                    #region Negation
+
+                    case OperationCode.Not:
+                        EvaluateNot();
+                        break;
+
+                    case OperationCode.Negate:
+                        EvaluateNegation();
+                        break;
+
+                    #endregion
+
+                    #region Jumps
 
                     case OperationCode.JumpIfFalseOrPop:
                         if (!_valStack.Peek().IsTruthy)
@@ -132,16 +154,21 @@ namespace Chow.Interpreter
                         }
                         break;
 
-                    case OperationCode.JumpPastBranches:
+                    case OperationCode.JumpPastElseBranches:
                         // Unconditional jump emitted at the end of a taken if/elif body to skip remaining branches
                         _callStack.JumpToInstr(CurrentOperation.Operand);
                         continue;
 
-                    case OperationCode.Loop:
+                    case OperationCode.JumpToLoopStart:
                         // Unconditional backward jump emitted at the bottom of a loop body (and for `continue`)
                         _callStack.JumpToInstr(CurrentOperation.Operand);
                         continue;
 
+                    #endregion
+
+                    #region Scope (Needs Refactor)
+
+                    // TODO: Refactor as the scope management system has changed to be more akin to Python's, without block scopes
                     case OperationCode.IncScopeDepth:
                         _callStack.EnterNestedScope();
                         break;
@@ -150,26 +177,26 @@ namespace Chow.Interpreter
                         _callStack.ExitNestedScope();
                         break;
 
-                    // Statements
+                    #endregion
 
-                    case OperationCode.AssignOrDeclareVariable:
-                        AssignOrDeclareVariable();
+                    #region Variables
+
+                    case OperationCode.VariableAssignOrDeclare:
+                        PopToAssignToVariable();
                         break;
 
-                    case OperationCode.PushVariableValue:
+                    case OperationCode.VariablePushValue:
                         PushVariableValue();
                         break;
 
-                    case OperationCode.PopExprStmntResult:
-                        _valStack.Pop();
-                        break;
+                    #endregion
 
-                    case OperationCode.MakeClosure:
-                        ExecuteMakeClosure();
+                    case OperationCode.CreateClosureFromTemplate:
+                        PushNewlyTemplatedClosure();
                         break;
 
                     case OperationCode.Call:
-                        if (ExecuteCall(CurrentOperation.Operand))
+                        if (CallGlobalChowFunction(CurrentOperation.Operand))
                         {
                             // A Closure was entered; caller's IP was already advanced and a new frame is active.
                             continue;
@@ -177,13 +204,15 @@ namespace Chow.Interpreter
                         break;
 
                     case OperationCode.ReturnValue:
-                        ExecuteReturnValue();
+                        PushReturnValue();
                         // Caller's IP was advanced before the call; resume the caller without auto-advancing the freshly-restored frame.
                         continue;
 
-                    case OperationCode.BuildList:
-                        ExecuteBuildList(CurrentOperation.Operand);
+                    case OperationCode.PopExpressionStatementResult:
+                        _valStack.Pop();
                         break;
+
+                    #region Subscripts
 
                     case OperationCode.Subscript:
                         ExecuteSubscript();
@@ -197,29 +226,31 @@ namespace Chow.Interpreter
                         ExecuteSubscriptSet();
                         break;
 
-                    case OperationCode.GetAttr:
-                        ExecuteGetAttr();
+                    #endregion
+
+                    #region Attributes
+
+                    case OperationCode.GetVariableAttribute:
+                        GetVariableAttribute();
                         break;
 
-                    case OperationCode.SetAttr:
-                        ExecuteSetAttr();
+                    case OperationCode.SetVariableAttribute:
+                        SetVariableAttribute();
                         break;
 
-                    case OperationCode.BuildDict:
-                        ExecuteBuildDict(CurrentOperation.Operand);
+                    case OperationCode.CreateInternalDict:
+                        PushNewlyBuiltDict(CurrentOperation.Operand);
                         break;
 
-                    case OperationCode.BinaryOr:
-                        ExecuteBinaryOperation((l, r) => l | r);
+                    #endregion
+
+                    #region Internal Data Structures
+
+                    case OperationCode.CreateInternalList:
+                        PushNewlyBuiltList(CurrentOperation.Operand);
                         break;
 
-                    case OperationCode.In:
-                        ExecuteIn(negate: false);
-                        break;
-
-                    case OperationCode.NotIn:
-                        ExecuteIn(negate: true);
-                        break;
+                    #endregion
 
                     default:
                         throw new NotImplementedException($"Execution of {CurrentOperation.Code} is not implemented.");
@@ -231,19 +262,11 @@ namespace Chow.Interpreter
             return _moduleScope;
         }
 
-        void ExecuteMakeClosure()
+        #region Push/Pop Statement Methods
+
+        void PushReturnValue()
         {
-            var templateUnion = _valStack.Pop();
-            var template = (ClosureTemplate)templateUnion.ObjectValue;
-
-            var captured = _callStack.CurrentScope;
-            var closure = new Closure(template.Chunk, captured, template.Name, template.ParamCount);
-
-            _valStack.Push(new TaggedUnion(closure));
-        }
-
-        void ExecuteReturnValue()
-        {
+            // TODO: Revisit this after the scope system is refactored, this push-pop dance will likely be avoidable
             var result = _valStack.Pop();
             _callStack.ExitFunctionCall();
 
@@ -266,7 +289,7 @@ namespace Chow.Interpreter
             _valStack.Push(varValue);
         }
 
-        void AssignOrDeclareVariable()
+        void PopToAssignToVariable()
         {
             // Operand -> name via Chunk; CallStack routes the assign to the current frame's scope.
             var name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
@@ -275,7 +298,11 @@ namespace Chow.Interpreter
             _callStack.AssignVariableValue(name, assignVal);
         }
 
-        public TaggedUnion ExecuteCall(string callVarName, List<TaggedUnion> args)
+        #endregion
+
+        #region Function Call Methods
+
+        public TaggedUnion CallGlobalFunction(string callVarName, List<TaggedUnion> args)
         {
             if (!_callStack.IsVariableDefined(callVarName))
             {
@@ -293,7 +320,7 @@ namespace Chow.Interpreter
             }
 
             var argCount = args == null ? 0 : args.Count;
-            if (ExecuteCall(argCount))
+            if (CallGlobalChowFunction(argCount))
             {
                 EvaluateChunk();
             }
@@ -303,7 +330,7 @@ namespace Chow.Interpreter
 
         // Returns true when a Chow Closure was entered (frame pushed, caller IP already advanced).
         // Returns false for the synchronous interop path, where the result is already on the value stack.
-        bool ExecuteCall(int argCount)
+        bool CallGlobalChowFunction(int argCount)
         {
             var args = new TaggedUnion[argCount];
 
@@ -315,13 +342,13 @@ namespace Chow.Interpreter
 
             if (calleeUnion.Tag == Tag.Object && calleeUnion.ObjectValue is Closure closure)
             {
-                return ExecuteClosureCall(argCount, closure, args);
+                return CallClosure(argCount, closure, args);
             }
 
-            return ExecuteInteropCall(argCount, calleeUnion, args);
+            return CallGlobalInteropFunction(argCount, calleeUnion, args);
         }
 
-        private bool ExecuteInteropCall(int argCount, TaggedUnion calleeUnion, TaggedUnion[] args)
+        private bool CallGlobalInteropFunction(int argCount, TaggedUnion calleeUnion, TaggedUnion[] args)
         {
             // Interop dispatch with already-popped values.
             TaggedUnion result;
@@ -342,7 +369,7 @@ namespace Chow.Interpreter
             return false;
         }
 
-        private bool ExecuteClosureCall(int argCount, Closure closure, TaggedUnion[] args)
+        private bool CallClosure(int argCount, Closure closure, TaggedUnion[] args)
         {
             if (argCount != closure.ParamCount)
             {
@@ -350,7 +377,7 @@ namespace Chow.Interpreter
                     $"{closure.Name}() takes {closure.ParamCount} positional arguments but {argCount} were given");
             }
 
-            // Re-push args; function body's first ops are param-bind AssignOrDeclareVariable's, popping right-to-left.
+            // Re-push args; function body's first ops are param-bind VariableAssignOrDeclare's, popping right-to-left.
             for (var i = 0; i < argCount; i++)
             {
                 _valStack.Push(args[i]);
@@ -362,7 +389,11 @@ namespace Chow.Interpreter
             return true;
         }
 
-        void ExecuteBinaryOperation(Func<TaggedUnion, TaggedUnion, TaggedUnion> operation)
+        #endregion
+
+        #region Expression Evaluation Methods
+
+        void EvaluateBinaryOperation(Func<TaggedUnion, TaggedUnion, TaggedUnion> operation)
         {
             // Floats coerce integers into floats inside TaggedUnion's operator overloads
             var right = _valStack.Pop();
@@ -370,7 +401,7 @@ namespace Chow.Interpreter
             _valStack.Push(operation(left, right));
         }
 
-        void ExecuteNegate()
+        void EvaluateNegation()
         {
             var operand = _valStack.Pop();
 
@@ -379,57 +410,10 @@ namespace Chow.Interpreter
                 : new TaggedUnion(-operand.IntegerValue));
         }
 
-        void ExecuteNot()
+        void EvaluateNot()
         {
             var operand = _valStack.Pop();
             _valStack.Push(new TaggedUnion(!operand.IsTruthy));
-        }
-
-        int GetCurrentLineNumber()
-        {
-            return _callStack.CurrentLineNum;
-        }
-
-        void ExecuteBuildList(int elementCount)
-        {
-            // Pop N values; reverse so source order is preserved.
-            var reversed = new TaggedUnion[elementCount];
-
-            for (var i = elementCount - 1; i >= 0; i--)
-            {
-                reversed[i] = _valStack.Pop();
-            }
-
-            var list = new InternalList();
-
-            for (var i = 0; i < elementCount; i++)
-            {
-                list.Add(reversed[i]);
-            }
-
-            _valStack.Push(new TaggedUnion(list));
-        }
-
-        void ExecuteBuildDict(int pairCount)
-        {
-            // Pop 2N values (value, key, value, key, ...); rebuild source order before insertion.
-            var keys = new TaggedUnion[pairCount];
-            var values = new TaggedUnion[pairCount];
-
-            for (var i = pairCount - 1; i >= 0; i--)
-            {
-                values[i] = _valStack.Pop();
-                keys[i] = _valStack.Pop();
-            }
-
-            var dict = new InternalDict();
-
-            for (var i = 0; i < pairCount; i++)
-            {
-                dict.Add(keys[i], values[i]);
-            }
-
-            _valStack.Push(new TaggedUnion(dict));
         }
 
         void ExecuteIn(bool negate)
@@ -461,6 +445,67 @@ namespace Chow.Interpreter
 
             _valStack.Push(new TaggedUnion(negate ? !found : found));
         }
+
+        #endregion
+
+        #region Create Reference Type Value Methods
+
+        void PushNewlyBuiltList(int elementCount)
+        {
+            // Pop N values; reverse so source order is preserved.
+            var reversed = new TaggedUnion[elementCount];
+
+            for (var i = elementCount - 1; i >= 0; i--)
+            {
+                reversed[i] = _valStack.Pop();
+            }
+
+            var list = new InternalList();
+
+            for (var i = 0; i < elementCount; i++)
+            {
+                list.Add(reversed[i]);
+            }
+
+            _valStack.Push(new TaggedUnion(list));
+        }
+
+        void PushNewlyBuiltDict(int pairCount)
+        {
+            // Pop 2N values (value, key, value, key, ...); rebuild source order before insertion.
+            var keys = new TaggedUnion[pairCount];
+            var values = new TaggedUnion[pairCount];
+
+            for (var i = pairCount - 1; i >= 0; i--)
+            {
+                values[i] = _valStack.Pop();
+                keys[i] = _valStack.Pop();
+            }
+
+            var dict = new InternalDict();
+
+            for (var i = 0; i < pairCount; i++)
+            {
+                dict.Add(keys[i], values[i]);
+            }
+
+            _valStack.Push(new TaggedUnion(dict));
+        }
+
+        void PushNewlyTemplatedClosure()
+        {
+            var templateUnion = _valStack.Pop();
+            var template = (ClosureTemplate)templateUnion.ObjectValue;
+
+            var captured = _callStack.CurrentScope;
+            var closure = new Closure(template.Chunk, captured, template.Name, template.ParamCount);
+
+            _valStack.Push(new TaggedUnion(closure));
+        }
+
+        #endregion
+
+        #region Subscript Methods
 
         void ExecuteSubscript()
         {
@@ -535,7 +580,11 @@ namespace Chow.Interpreter
             target.ListValue[(int)index.IntegerValue] = value;
         }
 
-        void ExecuteGetAttr()
+        #endregion
+
+        #region Attributes Methods
+
+        void GetVariableAttribute()
         {
             var attrName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
             var target = _valStack.Pop();
@@ -547,40 +596,37 @@ namespace Chow.Interpreter
 
                 if (!list.HasMethod(attrName))
                 {
-                    throw new AttributeException("list", attrName, GetCurrentLineNumber());
+                    throw new AttributeException(GetDataTypeName(target.Tag), attrName, GetCurrentLineNumber());
                 }
 
                 _valStack.Push(list[attrName]);
-                return;
             }
-
-            if (target.Tag == Tag.Dict)
+            else if (target.Tag == Tag.Dict)
             {
                 var dict = target.DictValue;
 
                 if (!dict.HasMethod(attrName))
                 {
-                    throw new AttributeException("dict", attrName, GetCurrentLineNumber());
+                    throw new AttributeException(GetDataTypeName(target.Tag), attrName, GetCurrentLineNumber());
                 }
 
                 _valStack.Push(dict[attrName]);
-                return;
             }
-
-            if (target.Tag == Tag.Object && target.ObjectValue is InteropClassObject ico)
+            else if (target.Tag == Tag.Object && target.ObjectValue is InteropClassObject ico)
             {
                 if (!ico.HasAttribute(attrName))
                 {
-                    throw new AttributeException(ico.ClassName, attrName, GetCurrentLineNumber());
+                    throw new AttributeException(GetDataTypeName(target.Tag), attrName, GetCurrentLineNumber());
                 }
                 _valStack.Push(ico.GetAttribute(attrName));
-                return;
             }
-
-            throw new AttributeException(target.Tag.ToString().ToLowerInvariant(), attrName, GetCurrentLineNumber());
+            else
+            {
+                throw new AttributeException(GetDataTypeName(target.Tag), attrName, GetCurrentLineNumber());
+            }
         }
 
-        void ExecuteSetAttr()
+        void SetVariableAttribute()
         {
             var attrName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
             var value = _valStack.Pop();
@@ -601,24 +647,29 @@ namespace Chow.Interpreter
                         $"'{ico.ClassName}' object attribute '{attrName}' is read-only");
                 }
                 ico.SetAttribute(attrName, value);
-                return;
             }
-
-            string typeName;
-            switch (target.Tag)
+            else
             {
-                case Tag.List:
-                    typeName = "list";
-                    break;
-                case Tag.Dict:
-                    typeName = "dict";
-                    break;
-                default:
-                    typeName = target.Tag.ToString().ToLowerInvariant();
-                    break;
+                throw new AttributeException(GetDataTypeName(target.Tag), attrName, GetCurrentLineNumber());
             }
-
-            throw new AttributeException(typeName, attrName, GetCurrentLineNumber());
         }
+
+        #endregion
+
+        #region Helper Methods
+
+        static string GetDataTypeName(Tag dataTypeTag)
+        {
+            // TODO: Refactor so there's a single source of truth for datatype names used in error messages
+            return dataTypeTag.ToString().ToLowerInvariant();
+        }
+
+        // TODO: Refactor to get rid of this method, as VirtualMachine no longer indexes the instruction stream directly (CallStack does)
+        int GetCurrentLineNumber()
+        {
+            return _callStack.CurrentLineNum;
+        }
+
+        #endregion
     }
 }
