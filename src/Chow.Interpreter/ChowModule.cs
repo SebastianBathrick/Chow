@@ -16,10 +16,7 @@ namespace Chow.Interpreter
     /// </summary>
     public class ChowModule
     {
-        Scope _globalScope = new Scope();
-        BuiltIns _builtIns = new BuiltIns();
-
-        public BuiltIns BuiltIns => _builtIns;
+        Scope _globalScope;
 
         #region Global Scope Access
 
@@ -131,6 +128,19 @@ namespace Chow.Interpreter
         #endregion
 
         /// <summary>
+        /// Registers the standard built-in functions into the global scope, making them available to Chow source code.
+        /// Call this before <see cref="Execute"/> if your scripts depend on built-ins.
+        /// </summary>
+        /// <remarks>Any of these built-in functions can be overridden by reassigning them in the global scope.</remarks>
+        public void ImportBuiltIns()
+        {
+            foreach ((string name, object obj) func in BuiltIns.GetFunctions())
+            {
+                this[func.name] = func.obj;
+            }
+        }
+
+        /// <summary>
         /// Compiles and executes a string of Chow source code. The global scope persists across calls, so
         /// variables and functions defined in one call are available in subsequent calls.
         /// <see langword="null"/>, empty, and whitespace-only strings are accepted and treated as no-ops.
@@ -141,8 +151,6 @@ namespace Chow.Interpreter
         /// <exception cref="Exceptions.ChowRuntimeException">A runtime error occurs during execution.</exception>
         public void Execute(string sourceCode)
         {
-            UpdateBuiltIns();
-
             // Source code that is null, empty, or whitespace is treated the same by the Scanner (it does a null check)
             // The rest of the pipeline does so as well to keep state consistent (e.g. _globalScope)
             var scanner = new Scanner(sourceCode);
@@ -161,8 +169,6 @@ namespace Chow.Interpreter
             // The global scope will now contain any global variables & functions defined in the source code
             _globalScope = vm.EvaluateChunk();
         }
-
-
 
         /// <summary>
         /// Calls a Chow function that was defined during a previous <see cref="Execute"/> call or
@@ -187,7 +193,6 @@ namespace Chow.Interpreter
         /// </exception>
         public ChowValue CallFunction(string functionName, params object[] arguments)
         {
-            // Check if builtins are dirty and if so
             ValidateGlobalExists(functionName, _globalScope);
 
             var vm = new VirtualMachine(_globalScope);
@@ -211,6 +216,11 @@ namespace Chow.Interpreter
         static void ValidateGlobalExists(string name, Scope globalScope)
         {
             ValidateGlobalName(name);
+
+            if (globalScope == null)
+            {
+                throw new InvalidOperationException($"{nameof(Execute)} was not called before attempting to access global variable '{name}'");
+            }
 
             if (globalScope.IsVariableDefined(name))
             {
@@ -246,29 +256,6 @@ namespace Chow.Interpreter
                     throw new GlobalAccessException(name, "Global variable names can only contain letters, digits, or underscores");
                 }
             }
-        }
-
-        void UpdateBuiltIns()
-        {
-            if (!_builtIns.IsDirty)
-            {
-                return;
-            }
-
-            var dirtyValues = _builtIns.GetDirtyValues();
-
-            if (dirtyValues == null || dirtyValues.Count == 0)
-            {
-                throw new InvalidOperationException();
-            }
-
-
-            foreach (var (name, value) in dirtyValues)
-            {
-                _globalScope.AssignVariableValue(name, value);
-            }
-
-            _builtIns.MarkAsNotDirty();
         }
 
         static bool IsDigit(char c)
