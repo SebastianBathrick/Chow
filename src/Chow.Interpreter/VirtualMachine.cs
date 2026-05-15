@@ -1,17 +1,22 @@
-using System;
-using System.Collections.Generic;
 using Chow.Interpreter.Bytecode;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State.Scopes;
 using Chow.Interpreter.State.Stack;
 using Chow.Interpreter.State.Values;
+using System.Collections.Generic;
+using System;
+
 namespace Chow.Interpreter
 {
     sealed class VirtualMachine
     {
-        readonly CallStack _callStack;
         readonly IScope _moduleScope;
+        readonly CallStack _callStack;
         readonly Stack<TaggedUnion> _valStack;
+
+        Instruction CurrentOperation => _callStack.CurrentInstr;
+
+        public TaggedUnion ValStackTop => _valStack.Count > 0 ? _valStack.Peek() : TaggedUnion.None;
 
         public VirtualMachine(Chunk chunk, IScope moduleScope)
         {
@@ -19,10 +24,6 @@ namespace Chow.Interpreter
             _callStack = new CallStack(chunk, _moduleScope);
             _valStack = new Stack<TaggedUnion>();
         }
-
-        Instruction CurrentOperation => _callStack.CurrentInstr;
-
-        public TaggedUnion ValStackTop => _valStack.Count > 0 ? _valStack.Peek() : TaggedUnion.None;
 
         public IScope EvaluateChunk()
         {
@@ -123,7 +124,6 @@ namespace Chow.Interpreter
                             _callStack.JumpToInstr(CurrentOperation.Operand);
                             continue;
                         }
-
                         break;
 
                     case OperationCode.JumpPastBranches:
@@ -168,7 +168,6 @@ namespace Chow.Interpreter
                             // A Closure was entered; caller's IP was already advanced and a new frame is active.
                             continue;
                         }
-
                         break;
 
                     case OperationCode.ReturnValue:
@@ -279,7 +278,6 @@ namespace Chow.Interpreter
             {
                 args[i] = _valStack.Pop();
             }
-
             var calleeUnion = _valStack.Pop();
 
             if (calleeUnion.Tag == Tag.Object && calleeUnion.ObjectValue is Closure closure)
@@ -333,8 +331,8 @@ namespace Chow.Interpreter
         {
             var operand = _valStack.Pop();
 
-            _valStack.Push(operand.IsFloat
-                ? new TaggedUnion(-operand.FloatValue)
+            _valStack.Push(operand.IsFloat 
+                ? new TaggedUnion(-operand.FloatValue) 
                 : new TaggedUnion(-operand.IntegerValue));
         }
 
@@ -413,7 +411,6 @@ namespace Chow.Interpreter
                             break;
                         }
                     }
-
                     break;
                 default:
                     throw new TypeException($"argument of type '{container.Tag}' is not iterable");
@@ -438,7 +435,6 @@ namespace Chow.Interpreter
                 {
                     throw new DictKeyException(ex.KeyRepr, GetCurrentLineNumber());
                 }
-
                 return;
             }
 
@@ -534,7 +530,6 @@ namespace Chow.Interpreter
                 {
                     throw new AttributeException(ico.ClassName, attrName, GetCurrentLineNumber());
                 }
-
                 _valStack.Push(ico.GetAttribute(attrName));
                 return;
             }
@@ -554,7 +549,6 @@ namespace Chow.Interpreter
                 {
                     throw new AttributeException(ico.ClassName, attrName, GetCurrentLineNumber());
                 }
-
                 if (!ico.IsWritableField(attrName))
                 {
                     // Method names and read-only fields both land here.
@@ -562,7 +556,6 @@ namespace Chow.Interpreter
                         ico.ClassName, attrName, GetCurrentLineNumber(),
                         $"'{ico.ClassName}' object attribute '{attrName}' is read-only");
                 }
-
                 ico.SetAttribute(attrName, value);
                 return;
             }

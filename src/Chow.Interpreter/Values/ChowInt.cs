@@ -34,9 +34,6 @@ namespace Chow.Interpreter.Values
             return typeof(TDataType) == typeof(long);
         }
 
-        public override string ToString()
-        {
-            return _val.ToString();
-        }
+        public override string ToString() => _val.ToString();
     }
 }

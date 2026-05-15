@@ -2,11 +2,12 @@
 {
     class ExprStatementNode : Node
     {
+        public Node Expression { get; }
+
         public ExprStatementNode(Node expr, int line) : base(line)
         {
             Expression = expr;
         }
-        public Node Expression { get; }
 
         public override string ToString()
         {

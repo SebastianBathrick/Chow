@@ -2,11 +2,13 @@ namespace Chow.Interpreter.Values
 {
     public class ChowDynamic : ChowValue
     {
+        public object Value { get; }
+
+
         public ChowDynamic(object val)
         {
             Value = val;
         }
-        public object Value { get; }
 
         public override TDataType AsType<TDataType>()
         {

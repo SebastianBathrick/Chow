@@ -1,8 +1,9 @@
+using Chow.Interpreter.State.Values;
+using Chow.Interpreter.Values;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Chow.Interpreter.State.Values;
-using Chow.Interpreter.Values;
+
 namespace Chow.Interpreter
 {
     public static class BuiltIns
@@ -23,7 +24,7 @@ namespace Chow.Interpreter
                 ("abs", (Func<ChowValue, ChowValue>)Abs),
                 ("round", (Func<ChowValue, ChowValue>)Round),
                 ("min", (Func<TaggedUnion[], TaggedUnion>)Min),
-                ("max", (Func<TaggedUnion[], TaggedUnion>)Max),
+                ("max", (Func<TaggedUnion[], TaggedUnion>)Max)
             };
         }
 
@@ -109,8 +110,7 @@ namespace Chow.Interpreter
                 throw new InvalidOperationException($"invalid literal for int() with base 10: '{str.Value}'");
             }
 
-            throw new InvalidOperationException(
-                $"int() argument must be a string, a bytes-like object or a real number, not '{ChowTypeName(val)}'");
+            throw new InvalidOperationException($"int() argument must be a string, a bytes-like object or a real number, not '{ChowTypeName(val)}'");
         }
 
         static ChowValue Bool(ChowValue val)

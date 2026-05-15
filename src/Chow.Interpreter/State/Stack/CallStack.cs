@@ -1,27 +1,20 @@
-using System.Collections.Generic;
 using Chow.Interpreter.Bytecode;
 using Chow.Interpreter.State.Scopes;
 using Chow.Interpreter.State.Values;
+using System.Collections.Generic;
+
 namespace Chow.Interpreter.State.Stack
 {
     /// <summary>
-    /// Owns the module frame plus a stack of function-call frames, and exposes scope-aware variable operations that route
-    /// through the active frame. Implements the LEGB lookup chain (L → E* → G) via <see cref="Scope.ParentOrNull" /> walking;
-    /// assignments always land in the current frame's scope (Python local-by-default).
+    /// Owns the module frame plus a stack of function-call frames, and exposes scope-aware
+    /// variable operations that route through the active frame. Implements the LEGB lookup
+    /// chain (L → E* → G) via <see cref="Scope.ParentOrNull"/> walking; assignments always
+    /// land in the current frame's scope (Python local-by-default).
     /// </summary>
     class CallStack
     {
-        readonly Stack<StackFrame> _callFrames;
         readonly StackFrame _moduleLvl;
-
-        /// <summary>Creates a call stack rooted at a single module frame.</summary>
-        /// <param name="moduleChunk">The compiled bytecode for the module being executed.</param>
-        /// <param name="moduleScope">The module scope to operate against; persists across <c>ChowModule.Execute</c> calls.</param>
-        public CallStack(Chunk moduleChunk, IScope moduleScope)
-        {
-            _moduleLvl = new StackFrame(moduleChunk, moduleScope);
-            _callFrames = new Stack<StackFrame>();
-        }
+        readonly Stack<StackFrame> _callFrames;
 
         /// <summary>The chunk currently being executed (function chunk if inside a call, module chunk otherwise).</summary>
         public Chunk CurrentChunk => CurrFrame.Chunk;
@@ -54,10 +47,20 @@ namespace Chow.Interpreter.State.Stack
             }
         }
 
+        /// <summary>Creates a call stack rooted at a single module frame.</summary>
+        /// <param name="moduleChunk">The compiled bytecode for the module being executed.</param>
+        /// <param name="moduleScope">The module scope to operate against; persists across <c>ChowModule.Execute</c> calls.</param>
+        public CallStack(Chunk moduleChunk, IScope moduleScope)
+        {
+            _moduleLvl = new StackFrame(moduleChunk, moduleScope);
+            _callFrames = new Stack<StackFrame>();
+        }
+
         /// <summary>
-        /// Binds <paramref name="name" /> to <paramref name="value" /> in the current frame's scope. At module level this writes to
-        /// the module scope; inside a function call it writes to that call's local scope (Python local-by-default). Does not rebind
-        /// enclosing or module names from inside a function — that requires the not-yet-supported <c>global</c>/<c>nonlocal</c>.
+        /// Binds <paramref name="name"/> to <paramref name="value"/> in the current frame's scope.
+        /// At module level this writes to the module scope; inside a function call it writes to
+        /// that call's local scope (Python local-by-default). Does not rebind enclosing or module
+        /// names from inside a function — that requires the not-yet-supported <c>global</c>/<c>nonlocal</c>.
         /// </summary>
         public void AssignVariableValue(string name, TaggedUnion value)
         {
@@ -65,8 +68,8 @@ namespace Chow.Interpreter.State.Stack
         }
 
         /// <summary>
-        /// True if <paramref name="name" /> resolves anywhere along the LEGB chain from the current frame upward. At module level
-        /// this is a single-scope probe.
+        /// True if <paramref name="name"/> resolves anywhere along the LEGB chain from the current
+        /// frame upward. At module level this is a single-scope probe.
         /// </summary>
         public bool IsVariableDefined(string name)
         {
@@ -82,9 +85,10 @@ namespace Chow.Interpreter.State.Stack
         }
 
         /// <summary>
-        /// Resolves <paramref name="name" /> by walking Local → Enclosing(s) → Module and returns the first binding found. Callers
-        /// must check <see cref="IsVariableDefined" /> first; a missing name surfaces as <see cref="KeyNotFoundException" /> (NameError
-        /// translation is the VM's responsibility).
+        /// Resolves <paramref name="name"/> by walking Local → Enclosing(s) → Module and returns
+        /// the first binding found. Callers must check <see cref="IsVariableDefined"/> first; a
+        /// missing name surfaces as <see cref="KeyNotFoundException"/> (NameError translation is
+        /// the VM's responsibility).
         /// </summary>
         public TaggedUnion GetVariableValue(string name)
         {
@@ -126,8 +130,9 @@ namespace Chow.Interpreter.State.Stack
         }
 
         /// <summary>
-        /// Pushes a new function frame for <paramref name="func" />. A fresh <see cref="LocalScope" /> is allocated with its parent
-        /// set to the closure's captured enclosing scope, becoming the L of LEGB for the duration of the call.
+        /// Pushes a new function frame for <paramref name="func"/>. A fresh <see cref="LocalScope"/>
+        /// is allocated with its parent set to the closure's captured enclosing scope, becoming the
+        /// L of LEGB for the duration of the call.
         /// </summary>
         public void EnterFunctionCall(Closure func)
         {

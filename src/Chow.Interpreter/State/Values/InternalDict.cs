@@ -1,8 +1,9 @@
+using Chow.Interpreter.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using Chow.Interpreter.Exceptions;
+
 namespace Chow.Interpreter.State.Values
 {
     class InternalDict
@@ -17,12 +18,6 @@ namespace Chow.Interpreter.State.Values
         readonly Dictionary<TaggedUnion, TaggedUnion> _entries;
         readonly List<TaggedUnion> _keys;
 
-        public InternalDict()
-        {
-            _entries = new Dictionary<TaggedUnion, TaggedUnion>();
-            _keys = new List<TaggedUnion>();
-        }
-
         public int Count => _keys.Count;
 
         public TaggedUnion this[TaggedUnion key]
@@ -34,7 +29,6 @@ namespace Chow.Interpreter.State.Values
                 {
                     throw new DictKeyException(KeyRepr(key));
                 }
-
                 return value;
             }
             set => Add(key, value);
@@ -44,6 +38,12 @@ namespace Chow.Interpreter.State.Values
             // Will throw if method name is invalid, which is the expected behavior
             new TaggedUnion(GetMethod(name));
 
+        public InternalDict()
+        {
+            _entries = new Dictionary<TaggedUnion, TaggedUnion>();
+            _keys = new List<TaggedUnion>();
+        }
+
         public void Add(TaggedUnion key, TaggedUnion value)
         {
             ValidateHashable(key);
@@ -51,7 +51,6 @@ namespace Chow.Interpreter.State.Values
             {
                 _keys.Add(key);
             }
-
             _entries[key] = value;
         }
 
@@ -70,7 +69,6 @@ namespace Chow.Interpreter.State.Values
             {
                 return value;
             }
-
             return args.Length == 2 ? args[1] : TaggedUnion.None;
         }
 
@@ -93,12 +91,10 @@ namespace Chow.Interpreter.State.Values
                 _keys.Remove(key);
                 return value;
             }
-
             if (args.Length == 2)
             {
                 return args[1];
             }
-
             throw new DictKeyException(KeyRepr(key));
         }
 
@@ -109,13 +105,11 @@ namespace Chow.Interpreter.State.Values
             {
                 throw new TypeException($"'{args[0].Tag}' object is not a dict");
             }
-
             var other = args[0].DictValue;
             foreach (var key in other._keys)
             {
                 Add(key, other._entries[key]);
             }
-
             return TaggedUnion.None;
         }
 
@@ -128,7 +122,6 @@ namespace Chow.Interpreter.State.Values
             {
                 return existing;
             }
-
             var def = args.Length == 2 ? args[1] : TaggedUnion.None;
             Add(key, def);
             return def;
@@ -149,7 +142,7 @@ namespace Chow.Interpreter.State.Values
                 case METHOD_SET_DEFAULT_NAME:
                     return SetDefault;
             }
-
+            
             throw new NotImplementedException($"Method '{methodName}' is not implemented for InternalDict");
         }
 
@@ -174,20 +167,17 @@ namespace Chow.Interpreter.State.Values
             {
                 return false;
             }
-
             foreach (var key in a._keys)
             {
                 if (!b._entries.TryGetValue(key, out var bValue))
                 {
                     return false;
                 }
-
                 if (a._entries[key] != bValue)
                 {
                     return false;
                 }
             }
-
             return true;
         }
 
@@ -198,12 +188,10 @@ namespace Chow.Interpreter.State.Values
             {
                 result.Add(key, a._entries[key]);
             }
-
             foreach (var key in b._keys)
             {
                 result.Add(key, b._entries[key]);
             }
-
             return result;
         }
 
@@ -232,13 +220,11 @@ namespace Chow.Interpreter.State.Values
                 {
                     sb.Append(", ");
                 }
-
                 var key = _keys[i];
                 Repr(sb, key);
                 sb.Append(": ");
                 Repr(sb, _entries[key]);
             }
-
             sb.Append('}');
             return sb.ToString();
         }
@@ -252,15 +238,15 @@ namespace Chow.Interpreter.State.Values
                 case Tag.None:
                     sb.Append("None");
                     return;
-
+                
                 case Tag.Boolean:
                     sb.Append(value.BooleanValue ? "True" : "False");
                     return;
-
+                
                 case Tag.Int:
                     sb.Append(value.IntegerValue);
                     return;
-
+                
                 case Tag.Float:
                     var f = value.FloatValue;
                     var fs = f.ToString("R", CultureInfo.InvariantCulture);
@@ -268,24 +254,23 @@ namespace Chow.Interpreter.State.Values
                     {
                         fs += ".0";
                     }
-
                     sb.Append(fs);
                     return;
-
+                
                 case Tag.Str:
                     sb.Append('\'');
                     sb.Append(value.StringValue);
                     sb.Append('\'');
                     return;
-
+                
                 case Tag.List:
                     sb.Append(value.ListValue);
                     return;
-
+                
                 case Tag.Dict:
                     sb.Append(value.DictValue);
                     return;
-
+                
                 default:
                     sb.Append(value.ToString());
                     return;

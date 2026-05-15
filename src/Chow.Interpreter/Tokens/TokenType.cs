@@ -1,6 +1,8 @@
 namespace Chow.Interpreter.Tokens
 {
-    /// <summary>Identifies the scanner category for a token.</summary>
+    /// <summary>
+    /// Identifies the scanner category for a token.
+    /// </summary>
     enum TokenType
     {
         /// <summary>Opening parenthesis: <c>(</c>.</summary>
@@ -176,6 +178,6 @@ namespace Chow.Interpreter.Tokens
         Dedent,
 
         /// <summary>End-of-file sentinel token appended after all source code is scanned.</summary>
-        EndOfCode,
+        EndOfCode
     }
 }

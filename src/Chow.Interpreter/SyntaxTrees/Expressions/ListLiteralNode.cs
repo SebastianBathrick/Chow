@@ -3,11 +3,12 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     class ListLiteralNode : Node
     {
+        public List<Node> Elements { get; }
+
         public ListLiteralNode(List<Node> elements, int line) : base(line)
         {
             Elements = elements;
         }
-        public List<Node> Elements { get; }
 
         public override string ToString()
         {
@@ -21,7 +22,6 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
             {
                 body += "\n" + IndentChildren(element.ToString());
             }
-
             return $"[List line={LineNumber}{body}\n]";
         }
 
