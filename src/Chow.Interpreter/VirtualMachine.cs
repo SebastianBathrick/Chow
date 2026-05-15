@@ -52,10 +52,13 @@ namespace Chow.Interpreter
                 switch (CurrentOperation.Code)
                 {
                     case OperationCode.PushConstant:
+                    {
                         _valStack.Push(_callStack.CurrentChunk.ReadConstant(CurrentOperation.Operand));
                         break;
+                    }
 
                     case OperationCode.CallFunction:
+                    {
                         CallFunction(CurrentOperation.Operand, out var isClosureEntered);
 
                         if (isClosureEntered)
@@ -63,91 +66,130 @@ namespace Chow.Interpreter
                             // A Closure was entered; caller's IP was already advanced and a new frame is active.
                             continue;
                         }
+
                         break;
+                    }
 
                     #region Binary Operators
 
                     case OperationCode.Add:
+                    {
                         EvaluateBinaryOperation((l, r) => l + r);
                         break;
+                    }
 
                     case OperationCode.Subtract:
+                    {
                         EvaluateBinaryOperation((l, r) => l - r);
                         break;
+                    }
 
                     case OperationCode.Multiply:
+                    {
                         EvaluateBinaryOperation((l, r) => l * r);
                         break;
+                    }
 
                     case OperationCode.Divide:
+                    {
                         EvaluateBinaryOperation((l, r) => l / r);
                         break;
+                    }
 
                     case OperationCode.Modulus:
+                    {
                         EvaluateBinaryOperation((l, r) => l % r);
                         break;
+                    }
 
                     case OperationCode.Exponentiate:
+                    {
                         EvaluateBinaryOperation(TaggedUnion.Power);
                         break;
+                    }
 
                     case OperationCode.FloorDivide:
+                    {
                         EvaluateBinaryOperation(TaggedUnion.FloorDivide);
                         break;
+                    }
 
                     case OperationCode.Equal:
+                    {
                         EvaluateBinaryOperation((l, r) => new TaggedUnion(l == r));
                         break;
+                    }
 
                     case OperationCode.NotEqual:
+                    {
                         EvaluateBinaryOperation((l, r) => new TaggedUnion(l != r));
                         break;
+                    }
 
                     case OperationCode.Less:
+                    {
                         EvaluateBinaryOperation((l, r) => new TaggedUnion(l < r));
                         break;
+                    }
 
                     case OperationCode.Greater:
+                    {
                         EvaluateBinaryOperation((l, r) => new TaggedUnion(l > r));
                         break;
+                    }
 
                     case OperationCode.LessEqual:
+                    {
                         EvaluateBinaryOperation((l, r) => new TaggedUnion(l <= r));
                         break;
+                    }
 
                     case OperationCode.GreaterEqual:
+                    {
                         EvaluateBinaryOperation((l, r) => new TaggedUnion(l >= r));
                         break;
+                    }
 
                     case OperationCode.BinaryOr:
+                    {
                         EvaluateBinaryOperation((l, r) => l | r);
                         break;
+                    }
 
                     case OperationCode.In:
+                    {
                         ExecuteIn(negate: false);
                         break;
+                    }
 
                     case OperationCode.NotIn:
+                    {
                         ExecuteIn(negate: true);
                         break;
+                    }
 
                     #endregion
 
                     #region Negation
 
                     case OperationCode.Not:
+                    {
                         EvaluateNot();
                         break;
+                    }
 
                     case OperationCode.Negate:
+                    {
                         EvaluateNegation();
                         break;
+                    }
 
                     #endregion
 
                     #region Jumps
 
                     case OperationCode.JumpIfFalseOrPop:
+                    {
                         if (!_valStack.Peek().IsTruthy)
                         {
                             // Leave the falsy value on the stack as the result of the short-circuited `and`
@@ -157,8 +199,10 @@ namespace Chow.Interpreter
 
                         _valStack.Pop();
                         break;
+                    }
 
                     case OperationCode.JumpIfTrueOrPop:
+                    {
                         if (_valStack.Peek().IsTruthy)
                         {
                             // Leave the truthy value on the stack as the result of the short-circuited `or`
@@ -168,25 +212,33 @@ namespace Chow.Interpreter
 
                         _valStack.Pop();
                         break;
+                    }
 
                     case OperationCode.JumpIfFalse:
+                    {
                         // Always pops; jumps past the branch body when the condition is false
                         if (!_valStack.Pop().IsTruthy)
                         {
                             _callStack.JumpToInstr(CurrentOperation.Operand);
                             continue;
                         }
+
                         break;
+                    }
 
                     case OperationCode.JumpPastElseBranches:
+                    {
                         // Unconditional jump emitted at the end of a taken if/elif body to skip remaining branches
                         _callStack.JumpToInstr(CurrentOperation.Operand);
                         continue;
+                    }
 
                     case OperationCode.JumpToLoopStart:
+                    {
                         // Unconditional backward jump emitted at the bottom of a loop body (and for `continue`)
                         _callStack.JumpToInstr(CurrentOperation.Operand);
                         continue;
+                    }
 
                     #endregion
 
@@ -194,78 +246,108 @@ namespace Chow.Interpreter
 
                     // TODO: Refactor as the scope management system has changed to be more akin to Python's, without block scopes
                     case OperationCode.IncScopeDepth:
+                    {
                         _callStack.EnterNestedScope();
                         break;
+                    }
 
                     case OperationCode.DecScopeDepth:
+                    {
                         _callStack.ExitNestedScope();
                         break;
+                    }
 
                     #endregion
 
                     #region Push/Pop
 
                     case OperationCode.PopAndAssignToVariable:
+                    {
                         PopAndAssignToVariable();
                         break;
+                    }
 
                     case OperationCode.PushVariableValue:
+                    {
                         PushVariableValue();
                         break;
+                    }
 
                     case OperationCode.PushNewInternalList:
+                    {
                         PushNewInternalList(CurrentOperation.Operand);
                         break;
+                    }
 
                     case OperationCode.PushNewClosureFromTemplate:
+                    {
                         PushNewClosureFromTemplate();
                         break;
+                    }
 
                     case OperationCode.PushNewInternalDict:
+                    {
                         PushNewInternalDict(CurrentOperation.Operand);
                         break;
+                    }
 
                     case OperationCode.PushReturnValue:
+                    {
                         PushReturnValue();
                         // Caller's IP was advanced before the call; resume the caller without auto-advancing the freshly-restored frame.
                         continue;
+                    }
 
                     case OperationCode.PopExpressionStatementResult:
+                    {
                         _valStack.Pop();
                         break;
+                    }
 
                     #endregion
 
                     #region Subscripts
 
                     case OperationCode.Subscript:
+                    {
                         ExecuteSubscript();
                         break;
+                    }
 
                     case OperationCode.SubscriptSlice:
+                    {
                         ExecuteSubscriptSlice();
                         break;
+                    }
 
                     case OperationCode.SubscriptSet:
+                    {
                         ExecuteSubscriptSet();
                         break;
+                    }
 
                     #endregion
 
                     #region Attributes
 
                     case OperationCode.GetObjectAttribute:
+                    {
                         GetObjectAttribute();
                         break;
+                    }
 
                     case OperationCode.SetInteropObjectAttribute:
+                    {
                         SetInteropObjectAttribute();
                         break;
+                    }
 
                     #endregion
 
                     default:
+                    {
                         throw new NotImplementedException($"Execution of {CurrentOperation.Code} is not implemented.");
+                    }
                 }
 
                 _callStack.MoveToNextInstr();
@@ -281,6 +363,7 @@ namespace Chow.Interpreter
         /// <param name="args">The arguments to pass to the function. If there are not any, this parameter can be null.</param>
         /// <returns>The result of the function call.</returns>
         /// <exception cref="UndefinedNameException">Thrown if the variable is not defined.</exception>
+        /// <remarks>Assumes that there is a module scope already set up that was provided to the constructor.</remarks>
         public TaggedUnion CallGlobalFunction(string callVarName, List<TaggedUnion> args)
         {
             if (!_callStack.IsVariableDefined(callVarName))
