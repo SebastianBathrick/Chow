@@ -36,7 +36,8 @@ namespace Chow.Interpreter
         // Chunk is null when the client is exclusively calling a closure
         public VirtualMachine(Scope globalScope = null, Chunk chunk = null)
         {
-            _globalScope = globalScope ?? new Scope();
+            // TODO: Update tests so that this does not throw. VirtualMachine no longer instantiates its own global scope; the caller is responsible for that
+            _globalScope = globalScope;
             _callStack = new CallStack(chunk ?? new Chunk(), _globalScope);
             _valStack = new Stack<TaggedUnion>();
         }
