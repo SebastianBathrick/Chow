@@ -1,19 +1,20 @@
-using System;
-using System.Collections.Generic;
 using Chow.Interpreter.Bytecode;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State.Values;
+using System.Collections.Generic;
 using Chow.Interpreter.SyntaxTrees;
 using Chow.Interpreter.SyntaxTrees.Expressions;
 using Chow.Interpreter.SyntaxTrees.Statements;
+using System;
+
 namespace Chow.Interpreter
 {
     class Compiler
     {
         readonly Chunk _chunk;
-        readonly Stack<LoopContext> _loopContextStack;
         readonly Node _root;
-
+        readonly Stack<LoopContext> _loopContextStack;
+        
         List<int> _pendingEndJumps;
 
         public Compiler(Node root)
@@ -45,7 +46,7 @@ namespace Chow.Interpreter
             {
                 throw new InvalidOperationException();
             }
-
+            
             // Caller pushes args left-to-right; bind in reverse so positional order matches when popping
             for (var i = funcNode.Params.Count - 1; i >= 0; i--)
             {
@@ -278,37 +279,30 @@ namespace Chow.Interpreter
             }
         }
 
-
-        sealed class LoopContext
-        {
-            public readonly List<int> PendingBreaks = new List<int>();
-            public int LoopStartIdx;
-        }
-
         #region Statement Compilation
 
         void CompileVarAssign(VarAssignNode varAssignNode)
         {
             /* [NOTE]
-             *
-             * Assume that before compilation, variable semantics have been verified, and there are no name
+             * 
+             * Assume that before compilation, variable semantics have been verified, and there are no name 
              * conflicts, and no unknown identifiers. Semantic analysis occurs between parsing and compilation.
-             *
+             * 
              * [HOW VARIABLE ASSIGNMENTS WORK]
-             *
-             * Assignments and declarations share syntax because the virtual machine handles them similarly due to
-             * dynamic typing. Here is how the VirtualMachine runs an assignment operation:
-             *
-             * 1. Pop a value off the stack representing the new/initial value for the variable. The new/initial value
+             * 
+             * Assignments and declarations share syntax because the virtual machine handles them similarly due to 
+             * dynamic typing. Here is how the VirtualMachine runs an assignment operation: 
+             * 
+             * 1. Pop a value off the stack representing the new/initial value for the variable. The new/initial value 
              *    is stored in a TaggedUnion and represents an expression evaluated at runtime. This can be of any type.
-             *
-             * 2. Use the current Operation.Operand to get the variable's name stored as a string inside Chunk during
-             *    compile-time (i.e., the compilation logic code below). It's stored this way so Operations don't have
+             *    
+             * 2. Use the current Operation.Operand to get the variable's name stored as a string inside Chunk during 
+             *    compile-time (i.e., the compilation logic code below). It's stored this way so Operations don't have 
              *    to store the identifiers themselves.
-             *
-             * 3. Maps the new/initial value to the variable name in VirtualMachine's Dictionary<string, TaggedUnion>
-             *    field. If the name is already a key in the dictionary, then overwrite the existing value with the
-             *    new/initial value.
+             *    
+             * 3. Maps the new/initial value to the variable name in VirtualMachine's Dictionary<string, TaggedUnion> 
+             *    field. If the name is already a key in the dictionary, then overwrite the existing value with the 
+             *    new/initial value. 
              */
 
             CompileTargetNode(varAssignNode.Expression);
@@ -339,7 +333,7 @@ namespace Chow.Interpreter
                 _chunk.AddInstruction(OperationCode.PushConstant, returnNode.LineNumber, noneIdx);
             }
 
-            _chunk.AddInstruction(OperationCode.ReturnValue, returnNode.LineNumber);
+            _chunk.AddInstruction(code: OperationCode.ReturnValue, returnNode.LineNumber);
         }
 
         void CompileExprStmnt(ExprStatementNode exprStmtNode)
@@ -527,7 +521,7 @@ namespace Chow.Interpreter
         static OperationCode GetExpressionOperationCode(ExprNode exprNode)
         {
             OperationCode opCode;
-
+            
             switch (exprNode.Operator)
             {
                 case ExprOperator.Add:
@@ -622,7 +616,6 @@ namespace Chow.Interpreter
                     {
                         constUnion = new TaggedUnion(intVal);
                     }
-
                     break;
 
                 case LiteralDataType.Float:
@@ -630,7 +623,6 @@ namespace Chow.Interpreter
                     {
                         constUnion = new TaggedUnion(floatVal);
                     }
-
                     break;
 
                 case LiteralDataType.Boolean:
@@ -638,7 +630,6 @@ namespace Chow.Interpreter
                     {
                         constUnion = new TaggedUnion(boolVal);
                     }
-
                     break;
 
                 case LiteralDataType.None:
@@ -650,7 +641,6 @@ namespace Chow.Interpreter
                     {
                         constUnion = new TaggedUnion(strVal);
                     }
-
                     break;
 
                 default:
@@ -670,5 +660,13 @@ namespace Chow.Interpreter
         }
 
         #endregion
+
+
+        sealed class LoopContext
+        {
+            public int LoopStartIdx;
+            public readonly List<int> PendingBreaks = new List<int>();
+        }
+
     }
 }

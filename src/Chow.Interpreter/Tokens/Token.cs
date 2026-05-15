@@ -1,6 +1,8 @@
 namespace Chow.Interpreter.Tokens
 {
-    /// <summary>Represents one lexeme recognized by the scanner.</summary>
+    /// <summary>
+    /// Represents one lexeme recognized by the scanner.
+    /// </summary>
     readonly struct Token
     {
         public readonly TokenType type;

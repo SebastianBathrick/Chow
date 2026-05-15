@@ -2,14 +2,15 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     class AttrAccessNode : Node
     {
+        public Node Target { get; }
+
+        public string AttrName { get; }
+
         public AttrAccessNode(Node target, string attrName, int line) : base(line)
         {
             Target = target;
             AttrName = attrName;
         }
-        public Node Target { get; }
-
-        public string AttrName { get; }
 
         public override string ToString()
         {

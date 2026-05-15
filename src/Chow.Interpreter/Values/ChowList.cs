@@ -1,8 +1,15 @@
 using Chow.Interpreter.State.Values;
+
 namespace Chow.Interpreter.Values
 {
     public class ChowList : ChowValue
     {
+        internal InternalList Internal { get; }
+
+        public int Count => Internal.Count;
+
+        public ChowValue this[int index] => ApiConverter.ToChowValue(Internal[index]);
+
         public ChowList()
         {
             Internal = new InternalList();
@@ -17,11 +24,6 @@ namespace Chow.Interpreter.Values
         {
             Internal = wrapped;
         }
-        internal InternalList Internal { get; }
-
-        public int Count => Internal.Count;
-
-        public ChowValue this[int index] => ApiConverter.ToChowValue(Internal[index]);
 
         public override TDataType AsType<TDataType>()
         {
@@ -38,9 +40,6 @@ namespace Chow.Interpreter.Values
             return false;
         }
 
-        public override string ToString()
-        {
-            return Internal.ToString();
-        }
+        public override string ToString() => Internal.ToString();
     }
 }

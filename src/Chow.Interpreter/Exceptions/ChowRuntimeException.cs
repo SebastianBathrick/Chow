@@ -1,4 +1,5 @@
 ﻿using System;
+
 namespace Chow.Interpreter.Exceptions
 {
     public abstract class ChowRuntimeException : Exception
@@ -9,8 +10,7 @@ namespace Chow.Interpreter.Exceptions
         // TODO: Add line's source code to the exception message
         int _lineNumber;
 
-        protected ChowRuntimeException(string exceptionAlias, string message, int lineNumber = NO_LINE_NUMBER) : base(
-            $"{exceptionAlias}: {message} on line {lineNumber}")
+        protected ChowRuntimeException(string exceptionAlias, string message, int lineNumber = NO_LINE_NUMBER) : base($"{exceptionAlias}: {message} on line {lineNumber}")
         {
             _lineNumber = lineNumber;
         }

@@ -3,6 +3,10 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     class LiteralNode : Node
     {
+        public object Value { get; }
+
+        public LiteralDataType Type { get; }
+
         public LiteralNode(object value, int lineNumber) : base(lineNumber)
         {
             if (value == null)
@@ -32,9 +36,6 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 
             Value = value;
         }
-        public object Value { get; }
-
-        public LiteralDataType Type { get; }
 
         public override string ToString()
         {

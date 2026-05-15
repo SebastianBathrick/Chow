@@ -2,11 +2,12 @@ namespace Chow.Interpreter.Values
 {
     public class ChowStr : ChowValue
     {
+        public string Value { get; }
+
         public ChowStr(string val)
         {
             Value = val;
         }
-        public string Value { get; }
 
         public override TDataType AsType<TDataType>()
         {
@@ -23,9 +24,6 @@ namespace Chow.Interpreter.Values
             return false;
         }
 
-        public override string ToString()
-        {
-            return Value;
-        }
+        public override string ToString() => Value;
     }
 }

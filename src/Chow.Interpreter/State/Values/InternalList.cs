@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
+
 namespace Chow.Interpreter.State.Values
 {
     class InternalList
@@ -15,11 +15,6 @@ namespace Chow.Interpreter.State.Values
 
 
         readonly List<TaggedUnion> _elements;
-
-        public InternalList()
-        {
-            _elements = new List<TaggedUnion>();
-        }
 
         public int Count => _elements.Count;
 
@@ -36,8 +31,6 @@ namespace Chow.Interpreter.State.Values
                 _elements[idx] = value;
             }
         }
-        // Will throw if method name is invalid, which is the expected behavior
-        public TaggedUnion this[string name] => new TaggedUnion(GetMethod(name));
 
         int NormalizeIndex(int index)
         {
@@ -46,8 +39,14 @@ namespace Chow.Interpreter.State.Values
             {
                 throw new IndexOutOfRangeException();
             }
-
             return idx;
+        }
+        // Will throw if method name is invalid, which is the expected behavior
+        public TaggedUnion this[string name] => new TaggedUnion(GetMethod(name));
+
+        public InternalList()
+        {
+            _elements = new List<TaggedUnion>();
         }
 
         TaggedUnion Append(TaggedUnion[] args)
@@ -94,7 +93,6 @@ namespace Chow.Interpreter.State.Values
             {
                 throw new ArgumentException($"Method 'pop' takes at most 1 argument, but {args.Length} were provided");
             }
-
             if (_elements.Count == 0)
             {
                 throw new InvalidOperationException("pop from empty list");
@@ -107,13 +105,11 @@ namespace Chow.Interpreter.State.Values
                 {
                     throw new ArgumentException($"Argument 0 must be of type {Tag.Int}, but was {args[0].Tag}");
                 }
-
                 index = (int)args[0].IntegerValue;
                 if (index < 0)
                 {
                     index = _elements.Count + index;
                 }
-
                 if (index < 0 || index >= _elements.Count)
                 {
                     throw new IndexOutOfRangeException();
@@ -137,7 +133,6 @@ namespace Chow.Interpreter.State.Values
                     return TaggedUnion.None;
                 }
             }
-
             throw new ArgumentException("list.remove(x): x not in list");
         }
 
@@ -224,7 +219,6 @@ namespace Chow.Interpreter.State.Values
             {
                 return false;
             }
-
             for (var i = 0; i < a._elements.Count; i++)
             {
                 if (a._elements[i] != b._elements[i])
@@ -232,7 +226,6 @@ namespace Chow.Interpreter.State.Values
                     return false;
                 }
             }
-
             return true;
         }
 
@@ -251,12 +244,10 @@ namespace Chow.Interpreter.State.Values
             {
                 return result;
             }
-
             for (var i = 0; i < n; i++)
             {
                 result._elements.AddRange(a._elements);
             }
-
             return result;
         }
 
@@ -296,12 +287,10 @@ namespace Chow.Interpreter.State.Values
                 {
                     start += length;
                 }
-
                 if (start < lower)
                 {
                     start = lower;
                 }
-
                 if (start > upper)
                 {
                     start = upper;
@@ -320,12 +309,10 @@ namespace Chow.Interpreter.State.Values
                 {
                     stop += length;
                 }
-
                 if (stop < lower)
                 {
                     stop = lower;
                 }
-
                 if (stop > upper)
                 {
                     stop = upper;
@@ -347,7 +334,6 @@ namespace Chow.Interpreter.State.Values
                     sliced._elements.Add(_elements[i]);
                 }
             }
-
             return new TaggedUnion(sliced);
         }
 
@@ -357,12 +343,10 @@ namespace Chow.Interpreter.State.Values
             {
                 return defaultValue;
             }
-
             if (union.Tag != Tag.Int)
             {
                 throw new ArgumentException($"slice indices must be integers or None, got {union.Tag}");
             }
-
             return (int)union.IntegerValue;
         }
 
@@ -377,10 +361,8 @@ namespace Chow.Interpreter.State.Values
                 {
                     sb.Append(", ");
                 }
-
                 Repr(sb, _elements[i]);
             }
-
             sb.Append(']');
             return sb.ToString();
         }
@@ -403,12 +385,11 @@ namespace Chow.Interpreter.State.Values
                 case Tag.Float:
                     // Python prints `1.0`, not `1`. C#'s default float.ToString() may drop the trailing zero.
                     var f = value.FloatValue;
-                    var fs = f.ToString("R", CultureInfo.InvariantCulture);
+                    var fs = f.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
                     if (fs.IndexOfAny(new[] { '.', 'e', 'E', 'n', 'N', 'i', 'I' }) < 0)
                     {
                         fs += ".0";
                     }
-
                     sb.Append(fs);
                     return;
                 case Tag.Str:
