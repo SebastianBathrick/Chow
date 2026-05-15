@@ -10,9 +10,9 @@ namespace Chow.Interpreter.ImplementationTests
     {
         static TaggedUnion Int(long v) => new TaggedUnion(v);
 
-        static (CallStack stack, ModuleScope module) NewStack()
+        static (CallStack stack, GlobalScope module) NewStack()
         {
-            var module = new ModuleScope();
+            var module = new GlobalScope();
             var stack = new CallStack(new Chunk(), module);
             return (stack, module);
         }

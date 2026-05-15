@@ -4,13 +4,13 @@ using Chow.Interpreter.State.Values;
 namespace Chow.Interpreter.Tests
 {
     [TestFixture]
-    public class ModuleScopeTests
+    public class GlobalScopeTests
     {
         // ------------------------------------------------------------------------------------------------------------
         // Helpers
         // ------------------------------------------------------------------------------------------------------------
 
-        static ModuleScope NewModule() => new ModuleScope();
+        static GlobalScope NewModule() => new GlobalScope();
 
         static TaggedUnion Int(long value) => new TaggedUnion(value);
 

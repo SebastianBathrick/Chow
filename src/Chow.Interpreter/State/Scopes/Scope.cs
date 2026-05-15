@@ -6,7 +6,7 @@ namespace Chow.Interpreter.State.Scopes
     /// <summary>
     /// Base class for all runtime variable scopes. Stores bindings in a flat dictionary backed by a name stack with
     /// boundary sentinels, which together support nested-block enter/exit within a single scope. Subclasses (<see
-    /// cref="ModuleScope"/>, <see cref="LocalScope"/>) differentiate the role of the scope in the LEGB lookup chain.
+    /// cref="GlobalScope"/>, <see cref="LocalScope"/>) differentiate the role of the scope in the LEGB lookup chain.
     /// </summary>
     /// <remarks>
     /// No source identifier can start with <c>&lt;</c>, so <c>SCOPE_BOUNDARY_ELEMENT</c> never collides with a real

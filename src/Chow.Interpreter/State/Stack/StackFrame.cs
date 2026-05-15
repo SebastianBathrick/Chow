@@ -17,7 +17,7 @@ namespace Chow.Interpreter.State.Stack
         /// <summary>The bytecode chunk this frame is executing.</summary>
         public Chunk Chunk { get; }
 
-        /// <summary>The frame's scope: a <see cref="ModuleScope"/> for the module frame, a <see cref="LocalScope"/> for any function frame.</summary>
+        /// <summary>The frame's scope: a <see cref="GlobalScope"/> for the module frame, a <see cref="LocalScope"/> for any function frame.</summary>
         public IScope Scope { get; }
 
         /// <summary>The instruction at the current pointer.</summary>

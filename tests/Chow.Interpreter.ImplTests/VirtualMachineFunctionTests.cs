@@ -24,14 +24,14 @@ namespace Chow.Interpreter.ImplTests
             return compiler.CompileRoot();
         }
 
-        static TaggedUnion Execute(Chunk chunk, ModuleScope scope = null)
+        static TaggedUnion Execute(Chunk chunk, GlobalScope scope = null)
         {
             var vm = new VirtualMachine(chunk, scope);
             vm.EvaluateChunk();
             return vm.ValStackTop;
         }
 
-        static TaggedUnion ExecuteSource(string source, ModuleScope scope = null)
+        static TaggedUnion ExecuteSource(string source, GlobalScope scope = null)
         {
             return Execute(Compile(source), scope);
         }
@@ -50,7 +50,7 @@ namespace Chow.Interpreter.ImplTests
             module.AddInstruction(OperationCode.PushConstant, LINE, idx);
             module.AddInstruction(OperationCode.PushNewClosureFromTemplate, LINE);
 
-            var scope = new ModuleScope();
+            var scope = new GlobalScope();
             var vm = new VirtualMachine(module, scope);
             vm.EvaluateChunk();
 
@@ -74,7 +74,7 @@ namespace Chow.Interpreter.ImplTests
         [Test]
         public void Call_OnClosure_ProducesReturnValue()
         {
-            var scope = new ModuleScope();
+            var scope = new GlobalScope();
             ExecuteSource("def f():\n    return 7\nresult = f()", scope);
 
             Assert.That(scope.GetVariableValue("result").IntegerValue, Is.EqualTo(7));
@@ -145,7 +145,7 @@ namespace Chow.Interpreter.ImplTests
                 "    return deep(n - 1) + 1\n" +
                 "result = deep(200)";
 
-            var scope = new ModuleScope();
+            var scope = new GlobalScope();
             ExecuteSource(source, scope);
 
             Assert.That(scope.GetVariableValue("result").IntegerValue, Is.EqualTo(200));
@@ -159,7 +159,7 @@ namespace Chow.Interpreter.ImplTests
         public void Return_PopsFrame_ModuleResumesAfterCall()
         {
             // The post-call statement `x = 99` must execute; verify the module scope has `x = 99`.
-            var scope = new ModuleScope();
+            var scope = new GlobalScope();
             ExecuteSource("def f():\n    return 1\nf()\nx = 99", scope);
 
             Assert.Multiple(() =>
@@ -176,7 +176,7 @@ namespace Chow.Interpreter.ImplTests
         [Test]
         public void Closure_CapturesModuleGlobal_VisibleInsideCall()
         {
-            var scope = new ModuleScope();
+            var scope = new GlobalScope();
             ExecuteSource(
                 "x = 100\n" +
                 "def get():\n" +

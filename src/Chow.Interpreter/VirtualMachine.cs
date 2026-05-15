@@ -12,7 +12,7 @@ namespace Chow.Interpreter
     {
         #region Fields
 
-        readonly IScope _moduleScope;
+        readonly IScope _globalScope;
         readonly CallStack _callStack;
         readonly Stack<TaggedUnion> _valStack;
 
@@ -28,16 +28,16 @@ namespace Chow.Interpreter
 
         #region Constructors
 
-        public VirtualMachine(Chunk chunk, IScope moduleScope)
-            : this(moduleScope, chunk)
+        public VirtualMachine(Chunk chunk, IScope globalScope)
+            : this(globalScope, chunk)
         {
         }
 
         // Chunk is null when the client is exclusively calling a closure
-        public VirtualMachine(IScope moduleScope = null, Chunk chunk = null)
+        public VirtualMachine(IScope globalScope = null, Chunk chunk = null)
         {
-            _moduleScope = moduleScope ?? new ModuleScope();
-            _callStack = new CallStack(chunk ?? new Chunk(), _moduleScope);
+            _globalScope = globalScope ?? new GlobalScope();
+            _callStack = new CallStack(chunk ?? new Chunk(), _globalScope);
             _valStack = new Stack<TaggedUnion>();
         }
 
@@ -353,7 +353,7 @@ namespace Chow.Interpreter
                 _callStack.MoveToNextInstr();
             }
 
-            return _moduleScope;
+            return _globalScope;
         }
 
         /// <summary>
@@ -363,7 +363,7 @@ namespace Chow.Interpreter
         /// <param name="args">The arguments to pass to the function. If there are not any, this parameter can be null.</param>
         /// <returns>The result of the function call.</returns>
         /// <exception cref="UndefinedNameException">Thrown if the variable is not defined.</exception>
-        /// <remarks>Assumes that there is a module scope already set up that was provided to the constructor.</remarks>
+        /// <remarks>Assumes that there is a global scope already set up that was provided to the constructor.</remarks>
         public TaggedUnion CallGlobalFunction(string callVarName, List<TaggedUnion> args)
         {
             if (!_callStack.IsVariableDefined(callVarName))

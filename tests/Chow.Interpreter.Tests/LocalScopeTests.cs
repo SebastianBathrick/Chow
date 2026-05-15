@@ -19,7 +19,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Constructor_WithModuleParent_ParentOrNullReturnsModule()
         {
-            var module = new ModuleScope();
+            var module = new GlobalScope();
             var local = new LocalScope(module);
 
             Assert.That(local.ParentOrNull, Is.SameAs(module));
@@ -28,7 +28,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Constructor_WithLocalParent_ParentOrNullReturnsParentLocal()
         {
-            var module = new ModuleScope();
+            var module = new GlobalScope();
             var outer = new LocalScope(module);
             var inner = new LocalScope(outer);
 
@@ -38,7 +38,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Constructor_NewInstance_NoVariablesDefined()
         {
-            var local = new LocalScope(new ModuleScope());
+            var local = new LocalScope(new GlobalScope());
 
             Assert.That(local.IsVariableDefined("x"), Is.False);
         }
@@ -50,7 +50,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void AssignVariableValue_DoesNotMutateParent()
         {
-            var module = new ModuleScope();
+            var module = new GlobalScope();
             module.AssignVariableValue("x", Int(1));
             var local = new LocalScope(module);
 
@@ -67,7 +67,7 @@ namespace Chow.Interpreter.Tests
         public void IsVariableDefined_LocalOnly_DoesNotConsultParent()
         {
             // LocalScope.IsVariableDefined is non-recursive; chain walking lives in CallStack.
-            var module = new ModuleScope();
+            var module = new GlobalScope();
             module.AssignVariableValue("x", Int(1));
             var local = new LocalScope(module);
 

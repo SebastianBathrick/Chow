@@ -68,6 +68,7 @@ namespace Chow.Interpreter.Tests
         public void Indexer_UndefinedName_RaisesApiNameError()
         {
             (var module, var _) = NewModule();
+            module.Execute("x = 1");
 
             Assert.Throws<GlobalAccessException>(() => { var _ = module["missing"]; });
         }
@@ -223,6 +224,7 @@ namespace Chow.Interpreter.Tests
         public void CallFunction_UndefinedName_ThrowsGlobalAccessException()
         {
             (var module, var _) = NewModule();
+            module.Execute("x = 1");
 
             Assert.Throws<GlobalAccessException>(() => module.CallFunction("missing"));
         }
