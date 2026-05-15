@@ -21,6 +21,7 @@ namespace Chow.Interpreter
                 ("list", (Func<TaggedUnion[], TaggedUnion>)List),
                 ("dict", (Func<TaggedUnion[], TaggedUnion>)Dict),
                 ("len", (Func<ChowValue, ChowValue>)Len),
+                ("type", (Func<ChowValue, ChowValue>)Type),
                 ("abs", (Func<ChowValue, ChowValue>)Abs),
                 ("round", (Func<ChowValue, ChowValue>)Round),
                 ("min", (Func<TaggedUnion[], TaggedUnion>)Min),
@@ -221,6 +222,11 @@ namespace Chow.Interpreter
             }
 
             throw new InvalidOperationException($"object of type '{ChowTypeName(val)}' has no len()");
+        }
+
+        static ChowValue Type(ChowValue val)
+        {
+            return new ChowStr(ChowTypeName(val));
         }
 
         static ChowValue Abs(ChowValue val)

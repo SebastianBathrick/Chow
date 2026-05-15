@@ -35,7 +35,7 @@ namespace Chow.Interpreter.Tests
 
             module.Execute("x = f()");
 
-            Assert.That(module.GetGlobal("x").As<long>(), Is.EqualTo(42));
+            Assert.That(module.GetGlobal("x").AsType<long>(), Is.EqualTo(42));
         }
 
         // ------------------------------------------------------------------------------------------------------------
@@ -46,11 +46,11 @@ namespace Chow.Interpreter.Tests
         public void B01_SingleArgFunc_ArgPassedCorrectly()
         {
             var module = MakeModule();
-            module["f"] = (Func<ChowValue, ChowValue>)(v => new ChowInt(v.As<long>() + 1));
+            module["f"] = (Func<ChowValue, ChowValue>)(v => new ChowInt(v.AsType<long>() + 1));
 
             module.Execute("x = f(10)");
 
-            Assert.That(module.GetGlobal("x").As<long>(), Is.EqualTo(11));
+            Assert.That(module.GetGlobal("x").AsType<long>(), Is.EqualTo(11));
         }
 
         [Test]
@@ -58,7 +58,7 @@ namespace Chow.Interpreter.Tests
         {
             var module = MakeModule();
             long received = -1;
-            module["f"] = (Action<ChowValue>)(v => { received = v.As<long>(); });
+            module["f"] = (Action<ChowValue>)(v => { received = v.AsType<long>(); });
 
             module.Execute("f(99)");
 
@@ -74,11 +74,11 @@ namespace Chow.Interpreter.Tests
         {
             var module = MakeModule();
             module["f"] = (Func<ChowValue[], ChowValue>)(args =>
-                new ChowInt(args[0].As<long>() * 10 + args[1].As<long>()));
+                new ChowInt(args[0].AsType<long>() * 10 + args[1].AsType<long>()));
 
             module.Execute("x = f(3, 7)");
 
-            Assert.That(module.GetGlobal("x").As<long>(), Is.EqualTo(37));
+            Assert.That(module.GetGlobal("x").AsType<long>(), Is.EqualTo(37));
         }
 
         [Test]
@@ -88,8 +88,8 @@ namespace Chow.Interpreter.Tests
             long first = -1, second = -1;
             module["f"] = (Action<ChowValue[]>)(args =>
             {
-                first = args[0].As<long>();
-                second = args[1].As<long>();
+                first = args[0].AsType<long>();
+                second = args[1].AsType<long>();
             });
 
             module.Execute("f(1, 2)");
@@ -102,7 +102,54 @@ namespace Chow.Interpreter.Tests
         }
 
         [Test]
-        public void C03_ExpressionStatementInsideFunction_DoesNotPolluteNestedCallStack()
+        public void C03_ArrayFunc_NoArgs_ReceivesEmptyArray()
+        {
+            var module = MakeModule();
+            module["f"] = (Func<ChowValue[], ChowValue>)(args => new ChowInt(args.Length));
+
+            module.Execute("x = f()");
+
+            Assert.That(module.GetGlobal("x").AsType<long>(), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void C04_ArrayFunc_OneArg_ReceivesSingleElementArray()
+        {
+            var module = MakeModule();
+            module["f"] = (Func<ChowValue[], ChowValue>)(args =>
+                new ChowInt(args.Length * 100 + args[0].AsType<long>()));
+
+            module.Execute("x = f(23)");
+
+            Assert.That(module.GetGlobal("x").AsType<long>(), Is.EqualTo(123));
+        }
+
+        [Test]
+        public void C05_ArrayAction_NoArgs_ReceivesEmptyArray()
+        {
+            var module = MakeModule();
+            var receivedLength = -1;
+            module["f"] = (Action<ChowValue[]>)(args => { receivedLength = args.Length; });
+
+            module.Execute("f()");
+
+            Assert.That(receivedLength, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void C06_ArrayAction_OneArg_ReceivesSingleElementArray()
+        {
+            var module = MakeModule();
+            long received = -1;
+            module["f"] = (Action<ChowValue[]>)(args => { received = args[0].AsType<long>(); });
+
+            module.Execute("f(99)");
+
+            Assert.That(received, Is.EqualTo(99));
+        }
+
+        [Test]
+        public void C07_ExpressionStatementInsideFunction_DoesNotPolluteNestedCallStack()
         {
             var module = MakeModule();
             var seen = new List<string>();

@@ -944,6 +944,80 @@ namespace Chow.Interpreter.Tests
             AssertCall(exprStmt.Expression, 0);
         }
 
+        [Test]
+        public void ParseStmt_IfBlock_ReturnsIfNode()
+        {
+            var stmt = ParseStmt("if True:\n    x = 1");
+
+            var ifNode = (IfNode)stmt;
+            Assert.Multiple(() =>
+            {
+                Assert.That(ifNode.Expr, Is.InstanceOf<LiteralNode>());
+                Assert.That(ifNode.Block, Is.InstanceOf<BlockNode>());
+                Assert.That(ifNode.Branch, Is.Null);
+            });
+        }
+
+        [Test]
+        public void ParseStmt_IfElifElse_ReturnsBranchChain()
+        {
+            var stmt = ParseStmt("if False:\n    x = 1\nelif True:\n    x = 2\nelse:\n    x = 3");
+
+            var ifNode = (IfNode)stmt;
+            Assert.That(ifNode.Branch, Is.InstanceOf<BranchStmntNode>());
+        }
+
+        [Test]
+        public void ParseStmt_WhileBlock_ReturnsWhileNode()
+        {
+            var stmt = ParseStmt("while True:\n    break");
+
+            var whileNode = (WhileNode)stmt;
+            Assert.Multiple(() =>
+            {
+                Assert.That(whileNode.Expr, Is.InstanceOf<LiteralNode>());
+                Assert.That(whileNode.Block, Is.InstanceOf<BlockNode>());
+            });
+        }
+
+        [Test]
+        public void ParseStmt_FunctionDefinition_ReturnsFunctionNode()
+        {
+            var stmt = ParseStmt("def add(a, b):\n    return a + b");
+
+            var function = (FunctionNode)stmt;
+            Assert.Multiple(() =>
+            {
+                Assert.That(function.Name, Is.EqualTo("add"));
+                Assert.That(function.Params, Has.Count.EqualTo(2));
+                Assert.That(function.Body, Is.InstanceOf<BlockNode>());
+            });
+        }
+
+        [Test]
+        public void ParseStmt_Return_ReturnsReturnNode()
+        {
+            var stmt = ParseStmt("return 1");
+
+            Assert.That(stmt, Is.InstanceOf<ReturnNode>());
+        }
+
+        [Test]
+        public void ParseStmt_Break_ReturnsBreakNode()
+        {
+            var stmt = ParseStmt("break");
+
+            Assert.That(stmt, Is.InstanceOf<BreakNode>());
+        }
+
+        [Test]
+        public void ParseStmt_Continue_ReturnsContinueNode()
+        {
+            var stmt = ParseStmt("continue");
+
+            Assert.That(stmt, Is.InstanceOf<ContinueNode>());
+        }
+
         // ------------------------------------------------------------------------------------------------------------
         // ToString smoke
         // ------------------------------------------------------------------------------------------------------------

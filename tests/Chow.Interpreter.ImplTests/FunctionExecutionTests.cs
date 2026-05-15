@@ -46,7 +46,7 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("def f():\n    return 1");
             module.Execute("__result = f()");
 
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(1));
         }
 
         // ============================================================================================================
@@ -61,7 +61,7 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("def add(a, b):\n    return a + b");
             module.Execute("__result = add(3, 4)");
 
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(7));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(7));
         }
 
         // ============================================================================================================
@@ -82,7 +82,7 @@ namespace Chow.Interpreter.ImplTests
             module.Execute(defSource);
             module.Execute("__result = fact(5)");
 
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(120));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(120));
         }
 
         // ============================================================================================================
@@ -135,7 +135,7 @@ namespace Chow.Interpreter.ImplTests
             module.Execute(defSource);
             module.Execute("__result = early(5)");
 
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(5));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(5));
         }
 
         // ============================================================================================================
@@ -152,7 +152,7 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("x = 20");
             module.Execute("__result = get()");
 
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(20));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(20));
         }
 
         // ============================================================================================================
@@ -174,7 +174,7 @@ namespace Chow.Interpreter.ImplTests
             module.Execute(defSource);
             module.Execute("__result = outer()");
 
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(1));
         }
 
         // ============================================================================================================
@@ -197,7 +197,7 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("g = make()");
             module.Execute("__result = g()");
 
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(5));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(5));
         }
 
         // ============================================================================================================
@@ -221,7 +221,7 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("__result = countdown(3)");
 
             // 3 + (2 + (1 + 0)) = 6
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(6));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(6));
         }
 
         // ============================================================================================================
@@ -250,7 +250,7 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("def square(n):\n    return n * n");
             module.Execute("__result = square(7)");
 
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(49));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(49));
         }
 
         // ============================================================================================================
@@ -270,7 +270,7 @@ namespace Chow.Interpreter.ImplTests
 
             moduleB.Execute("__result = f()");
 
-            Assert.That(Last(hookB).As<long>(), Is.EqualTo(42));
+            Assert.That(Last(hookB).AsType<long>(), Is.EqualTo(42));
         }
 
         // ============================================================================================================
@@ -294,7 +294,7 @@ namespace Chow.Interpreter.ImplTests
             module.Execute(defSource);
             module.Execute("__result = a()");
 
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(1));
         }
 
         // ============================================================================================================
@@ -310,7 +310,7 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("g = f");
             module.Execute("__result = g()");
 
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(1));
         }
 
         // ============================================================================================================
@@ -326,7 +326,7 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("def one():\n    return 1");
             module.Execute("__result = apply(one)");
 
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(1));
         }
     }
 }

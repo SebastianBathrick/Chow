@@ -96,7 +96,7 @@ namespace Chow.Interpreter.Tests
 
             moduleB.Execute("__result = f()");
 
-            Assert.That(Last(hookB).As<long>(), Is.EqualTo(99));
+            Assert.That(Last(hookB).AsType<long>(), Is.EqualTo(99));
         }
 
         [Test]
@@ -113,7 +113,7 @@ namespace Chow.Interpreter.Tests
 
             moduleB.Execute("__result = get()");
 
-            Assert.That(Last(hookB).As<long>(), Is.EqualTo(7));
+            Assert.That(Last(hookB).AsType<long>(), Is.EqualTo(7));
         }
 
         // ============================================================================================================
@@ -127,13 +127,13 @@ namespace Chow.Interpreter.Tests
             module.Execute("def f():\n    return 1");
 
             module.Execute("__result = f()");
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(1));
 
             module.Execute("__result = f()");
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(1));
 
             module.Execute("__result = f()");
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(1));
         }
 
         [Test]
@@ -145,7 +145,7 @@ namespace Chow.Interpreter.Tests
             module.Execute("__result = f()");
 
             var lastValue = Last(hook);
-            Assert.That(lastValue.As<long>(), Is.EqualTo(42));
+            Assert.That(lastValue.AsType<long>(), Is.EqualTo(42));
         }
 
         [Test]
@@ -156,7 +156,7 @@ namespace Chow.Interpreter.Tests
 
             var result = module.CallFunction("add", new ChowInt(2), new ChowInt(3));
 
-            Assert.That(result.As<long>(), Is.EqualTo(5));
+            Assert.That(result.AsType<long>(), Is.EqualTo(5));
         }
 
         [Test]
@@ -167,7 +167,122 @@ namespace Chow.Interpreter.Tests
 
             var result = module.CallFunction("add", 2, 3L);
 
-            Assert.That(result.As<long>(), Is.EqualTo(5));
+            Assert.That(result.AsType<long>(), Is.EqualTo(5));
+        }
+
+        [Test]
+        public void CallFunction_NoArgFunction_ReturnsValue()
+        {
+            (var module, var _) = NewModule();
+            module.Execute("def get():\n    return 12");
+
+            var result = module.CallFunction("get");
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(12));
+        }
+
+        [Test]
+        public void CallFunction_ImplicitReturn_ReturnsNone()
+        {
+            (var module, var _) = NewModule();
+            module.Execute("def f():\n    x = 1");
+
+            var result = module.CallFunction("f");
+
+            Assert.That(result.IsNone, Is.True);
+        }
+
+        [Test]
+        public void CallFunction_ReturnsList()
+        {
+            (var module, var _) = NewModule();
+            module.Execute("def f():\n    return [1, 2]");
+
+            var result = (ChowList)module.CallFunction("f");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Count, Is.EqualTo(2));
+                Assert.That(result[0].AsType<long>(), Is.EqualTo(1));
+                Assert.That(result[1].AsType<long>(), Is.EqualTo(2));
+            });
+        }
+
+        [Test]
+        public void CallFunction_ReturnsDict()
+        {
+            (var module, var _) = NewModule();
+            module.Execute("def f():\n    return {'x': 3}");
+
+            var result = (ChowDict)module.CallFunction("f");
+
+            Assert.That(result[new ChowStr("x")].AsType<long>(), Is.EqualTo(3));
+        }
+
+        [Test]
+        public void CallFunction_UndefinedName_ThrowsGlobalAccessException()
+        {
+            (var module, var _) = NewModule();
+
+            Assert.Throws<GlobalAccessException>(() => module.CallFunction("missing"));
+        }
+
+        [TestCase("")]
+        [TestCase("1bad")]
+        [TestCase("if")]
+        public void CallFunction_InvalidName_ThrowsGlobalAccessException(string name)
+        {
+            (var module, var _) = NewModule();
+
+            Assert.Throws<GlobalAccessException>(() => module.CallFunction(name));
+        }
+
+        [Test]
+        public void CallFunction_NonCallableGlobal_ThrowsInvalidOperationException()
+        {
+            (var module, var _) = NewModule();
+            module["x"] = 1;
+
+            Assert.Throws<InvalidOperationException>(() => module.CallFunction("x"));
+        }
+
+        [Test]
+        public void CallFunction_ArityMismatch_ThrowsTypeException()
+        {
+            (var module, var _) = NewModule();
+            module.Execute("def f(a):\n    return a");
+
+            Assert.Throws<TypeException>(() => module.CallFunction("f"));
+        }
+
+        [Test]
+        public void CallFunction_RecursiveFunction_UsesApiCallerFrame()
+        {
+            (var module, var _) = NewModule();
+            module.Execute(
+                "def fact(n):\n" +
+                "    if n == 0:\n" +
+                "        return 1\n" +
+                "    return n * fact(n - 1)");
+
+            var result = module.CallFunction("fact", 5);
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(120));
+        }
+
+        [Test]
+        public void CallFunction_CrossModuleClosure_UsesOriginalScope()
+        {
+            (var moduleA, var _) = NewModule();
+            (var moduleB, var _) = NewModule();
+
+            moduleA.Execute("x = 7");
+            moduleA.Execute("def get():\n    return x");
+            moduleB["get"] = moduleA["get"];
+
+            var result = moduleB.CallFunction("get");
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(7));
         }
 
         // ============================================================================================================
@@ -184,7 +299,7 @@ namespace Chow.Interpreter.Tests
             module["g"] = fValue;
             module.Execute("__result = g()");
 
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(5));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(5));
         }
     }
 }

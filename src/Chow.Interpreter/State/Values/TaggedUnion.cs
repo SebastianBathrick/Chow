@@ -311,7 +311,7 @@ namespace Chow.Interpreter.State.Values
                 case Func<ChowValue, ChowValue> funcOneArg:
                     return ApiConverter.ToTaggedUnion(funcOneArg(ApiConverter.ToChowValue(singleArg.Value)));
                 case Func<ChowValue[], ChowValue> funcManyArgs:
-                    return ApiConverter.ToTaggedUnion(funcManyArgs(BuildArgArray(args)));
+                    return ApiConverter.ToTaggedUnion(funcManyArgs(BuildArgArray(singleArg, args)));
                 case Action action:
                     action();
                     return None;
@@ -319,15 +319,25 @@ namespace Chow.Interpreter.State.Values
                     actionOneArg(ApiConverter.ToChowValue(singleArg.Value));
                     return None;
                 case Action<ChowValue[]> actionManyArgs:
-                    actionManyArgs(BuildArgArray(args));
+                    actionManyArgs(BuildArgArray(singleArg, args));
                     return None;
                 default:
                     throw new InvalidOperationException($"Object of type '{_obj.GetType().Name}' is not callable");
             }
         }
 
-        static ChowValue[] BuildArgArray(TaggedUnion[] args)
+        static ChowValue[] BuildArgArray(TaggedUnion? singleArg, TaggedUnion[] args)
         {
+            if (singleArg.HasValue)
+            {
+                return new[] { ApiConverter.ToChowValue(singleArg.Value) };
+            }
+
+            if (args == null)
+            {
+                return new ChowValue[0];
+            }
+
             var result = new ChowValue[args.Length];
             for (var i = 0; i < args.Length; i++)
             {

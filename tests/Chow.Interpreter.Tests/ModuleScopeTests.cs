@@ -19,11 +19,15 @@ namespace Chow.Interpreter.Tests
         // ============================================================================================================
 
         [Test]
-        public void Constructor_NewInstance_IsOutermostDepth()
+        public void Constructor_NewInstance_AllowsEmptyScopeRoundTrip()
         {
             var env = NewModule();
 
-            Assert.That(env.IsOutermostDepth, Is.True);
+            Assert.DoesNotThrow(() =>
+            {
+                env.EnterNestedScope();
+                env.ExitNestedScope();
+            });
         }
 
         [Test]
@@ -94,24 +98,26 @@ namespace Chow.Interpreter.Tests
         // ============================================================================================================
 
         [Test]
-        public void EnterScope_AfterCall_NoLongerOutermostDepth()
+        public void EnterScope_NewVariableIsVisibleInsideScope()
         {
             var env = NewModule();
 
             env.EnterNestedScope();
+            env.AssignVariableValue("x", Int(1));
 
-            Assert.That(env.IsOutermostDepth, Is.False);
+            Assert.That(env.GetVariableValue("x"), Is.EqualTo(Int(1)));
         }
 
         [Test]
-        public void ExitScope_AfterMatchingEnter_RestoresOutermostDepth()
+        public void ExitScope_AfterMatchingEnter_AllowsOuterAssignment()
         {
             var env = NewModule();
 
             env.EnterNestedScope();
             env.ExitNestedScope();
+            env.AssignVariableValue("x", Int(2));
 
-            Assert.That(env.IsOutermostDepth, Is.True);
+            Assert.That(env.GetVariableValue("x"), Is.EqualTo(Int(2)));
         }
 
         [Test]
@@ -164,19 +170,24 @@ namespace Chow.Interpreter.Tests
         }
 
         [Test]
-        public void EnterExit_NestedScopes_TracksDepth()
+        public void EnterExit_NestedScopes_RemovesVariablesAtMatchingDepth()
         {
             var env = NewModule();
 
             env.EnterNestedScope();
+            env.AssignVariableValue("mid", Int(1));
             env.EnterNestedScope();
-            Assert.That(env.IsOutermostDepth, Is.False);
+            env.AssignVariableValue("inner", Int(2));
 
             env.ExitNestedScope();
-            Assert.That(env.IsOutermostDepth, Is.False);
+            Assert.Multiple(() =>
+            {
+                Assert.That(env.IsVariableDefined("mid"), Is.True);
+                Assert.That(env.IsVariableDefined("inner"), Is.False);
+            });
 
             env.ExitNestedScope();
-            Assert.That(env.IsOutermostDepth, Is.True);
+            Assert.That(env.IsVariableDefined("mid"), Is.False);
         }
 
         [Test]

@@ -84,7 +84,7 @@ namespace Chow.Interpreter.ImplTests
         {
             (var module, var hook, _) = NewModule(active: true);
             module.Execute("__result = game_object.active_self");
-            Assert.That(Last(hook).As<bool>(), Is.True);
+            Assert.That(Last(hook).AsType<bool>(), Is.True);
         }
 
         [Test]
@@ -100,11 +100,11 @@ namespace Chow.Interpreter.ImplTests
         {
             (var module, var hook, var obj) = NewModule(active: false);
             module.Execute("__result = game_object.active_self");
-            Assert.That(Last(hook).As<bool>(), Is.False);
+            Assert.That(Last(hook).AsType<bool>(), Is.False);
 
             obj.ActiveSelf = true;
             module.Execute("__result = game_object.active_self");
-            Assert.That(Last(hook).As<bool>(), Is.True);
+            Assert.That(Last(hook).AsType<bool>(), Is.True);
         }
 
         // ============================================================================================================
@@ -116,7 +116,7 @@ namespace Chow.Interpreter.ImplTests
         {
             (var module, var hook, _) = NewModule(active: false);
             module.Execute("game_object.active_self = True\n__result = game_object.active_self");
-            Assert.That(Last(hook).As<bool>(), Is.True);
+            Assert.That(Last(hook).AsType<bool>(), Is.True);
         }
 
         [Test]
@@ -144,7 +144,7 @@ namespace Chow.Interpreter.ImplTests
         {
             (var module, var hook, var obj) = NewModule(active: false);
             module.Execute("game_object.set_active(True)\n__result = game_object.active_self");
-            Assert.That(Last(hook).As<bool>(), Is.True);
+            Assert.That(Last(hook).AsType<bool>(), Is.True);
             Assert.That(obj.ActiveSelf, Is.True);
         }
 
@@ -153,7 +153,7 @@ namespace Chow.Interpreter.ImplTests
         {
             (var module, var hook, _) = NewModule(active: true);
             module.Execute("f = game_object.set_active\nf(False)\n__result = game_object.active_self");
-            Assert.That(Last(hook).As<bool>(), Is.False);
+            Assert.That(Last(hook).AsType<bool>(), Is.False);
         }
 
         [Test]
@@ -192,7 +192,7 @@ namespace Chow.Interpreter.ImplTests
             // Python parity: an object instance is truthy. `not game_object` should be False.
             (var module, var hook, _) = NewModule();
             module.Execute("__result = not game_object");
-            Assert.That(Last(hook).As<bool>(), Is.False);
+            Assert.That(Last(hook).AsType<bool>(), Is.False);
         }
     }
 }

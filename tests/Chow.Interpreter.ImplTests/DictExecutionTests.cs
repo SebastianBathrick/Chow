@@ -103,7 +103,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = {1: 10, 2: 20}[2]");
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(20));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(20));
         }
 
         [Test]
@@ -277,7 +277,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = {1: 'a', 2: 'b'} == {2: 'b', 1: 'a'}");
-            Assert.That(Last(hook).As<bool>(), Is.True);
+            Assert.That(Last(hook).AsType<bool>(), Is.True);
         }
 
         [Test]
@@ -285,7 +285,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = {1: 'a'} == {1: 'b'}");
-            Assert.That(Last(hook).As<bool>(), Is.False);
+            Assert.That(Last(hook).AsType<bool>(), Is.False);
         }
 
         [Test]
@@ -293,7 +293,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = {1: {2: 'x'}} == {1: {2: 'x'}}");
-            Assert.That(Last(hook).As<bool>(), Is.True);
+            Assert.That(Last(hook).AsType<bool>(), Is.True);
         }
 
         [Test]
@@ -301,7 +301,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = {1: 'a'} != {1: 'b'}");
-            Assert.That(Last(hook).As<bool>(), Is.True);
+            Assert.That(Last(hook).AsType<bool>(), Is.True);
         }
 
         // ============================================================================================================
@@ -313,7 +313,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (var module, var hook) = NewModule();
             module.Execute("if {}:\n    __result = 1\nelse:\n    __result = 2");
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(2));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(2));
         }
 
         [Test]
@@ -321,7 +321,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (var module, var hook) = NewModule();
             module.Execute("if {1: 'a'}:\n    __result = 1\nelse:\n    __result = 2");
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(1));
         }
 
         // ============================================================================================================
@@ -333,7 +333,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = 1 in {1: 'a'}");
-            Assert.That(Last(hook).As<bool>(), Is.True);
+            Assert.That(Last(hook).AsType<bool>(), Is.True);
         }
 
         [Test]
@@ -341,7 +341,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = 99 in {1: 'a'}");
-            Assert.That(Last(hook).As<bool>(), Is.False);
+            Assert.That(Last(hook).AsType<bool>(), Is.False);
         }
 
         [Test]
@@ -349,7 +349,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = 99 not in {1: 'a'}");
-            Assert.That(Last(hook).As<bool>(), Is.True);
+            Assert.That(Last(hook).AsType<bool>(), Is.True);
         }
 
         [Test]
@@ -357,7 +357,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = 2 in [1, 2, 3]");
-            Assert.That(Last(hook).As<bool>(), Is.True);
+            Assert.That(Last(hook).AsType<bool>(), Is.True);
         }
 
         [Test]
@@ -365,7 +365,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = 9 in [1, 2, 3]");
-            Assert.That(Last(hook).As<bool>(), Is.False);
+            Assert.That(Last(hook).AsType<bool>(), Is.False);
         }
 
         [Test]
@@ -373,7 +373,7 @@ namespace Chow.Interpreter.ImplementationTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = 9 not in [1, 2, 3]");
-            Assert.That(Last(hook).As<bool>(), Is.True);
+            Assert.That(Last(hook).AsType<bool>(), Is.True);
         }
 
         [Test]
@@ -424,7 +424,7 @@ namespace Chow.Interpreter.ImplementationTests
                 new TaggedUnion(42));
             module["x"] = dict;
             module.Execute("__result = x[1]");
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(42));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(42));
         }
 
         [Test]

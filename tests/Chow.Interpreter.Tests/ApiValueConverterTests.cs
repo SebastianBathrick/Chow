@@ -13,13 +13,13 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ToTaggedUnion_NullValue_ThrowsArgumentNullException()
         {
-            Assert.That(() => ChowValueConverter.ToTaggedUnion(null!), Throws.TypeOf<ArgumentNullException>());
+            Assert.That(() => ApiConverter.ToTaggedUnion(null!), Throws.TypeOf<ArgumentNullException>());
         }
 
         [Test]
         public void ToTaggedUnion_ChowNone_ReturnsNoneTaggedUnion()
         {
-            var result = ChowValueConverter.ToTaggedUnion(ChowValue.None);
+            var result = ApiConverter.ToTaggedUnion(ChowValue.None);
 
             Assert.That(result.Tag, Is.EqualTo(Tag.None));
         }
@@ -27,7 +27,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ToTaggedUnion_ChowInt_ReturnsIntTaggedUnion()
         {
-            var result = ChowValueConverter.ToTaggedUnion(new ChowInt(42));
+            var result = ApiConverter.ToTaggedUnion(new ChowInt(42));
 
             Assert.Multiple(() =>
             {
@@ -40,7 +40,7 @@ namespace Chow.Interpreter.Tests
         public void ToTaggedUnion_ChowFloat_ReturnsFloatTaggedUnionPreservingValue()
         {
             // Regression: TaggedUnion(float) ctor previously clobbered _float with default.
-            var result = ChowValueConverter.ToTaggedUnion(new ChowFloat(2.5f));
+            var result = ApiConverter.ToTaggedUnion(new ChowFloat(2.5f));
 
             Assert.Multiple(() =>
             {
@@ -52,7 +52,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ToTaggedUnion_ChowBoolTrue_ReturnsBooleanTaggedUnion()
         {
-            var result = ChowValueConverter.ToTaggedUnion(new ChowBool(true));
+            var result = ApiConverter.ToTaggedUnion(new ChowBool(true));
 
             Assert.Multiple(() =>
             {
@@ -64,7 +64,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ToTaggedUnion_ChowBoolFalse_ReturnsBooleanTaggedUnion()
         {
-            var result = ChowValueConverter.ToTaggedUnion(new ChowBool(false));
+            var result = ApiConverter.ToTaggedUnion(new ChowBool(false));
 
             Assert.Multiple(() =>
             {
@@ -76,7 +76,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ToTaggedUnion_ChowStr_ReturnsStrTaggedUnion()
         {
-            var result = ChowValueConverter.ToTaggedUnion(new ChowStr("hello"));
+            var result = ApiConverter.ToTaggedUnion(new ChowStr("hello"));
 
             Assert.Multiple(() =>
             {
@@ -90,7 +90,7 @@ namespace Chow.Interpreter.Tests
         {
             var payload = new object();
 
-            var result = ChowValueConverter.ToTaggedUnion(new ChowDynamic(payload));
+            var result = ApiConverter.ToTaggedUnion(new ChowDynamic(payload));
 
             Assert.Multiple(() =>
             {
@@ -106,7 +106,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ToApiClassObj_NoneTag_ReturnsChowValueNone()
         {
-            var result = ChowValueConverter.ToChowValue(TaggedUnion.None);
+            var result = ApiConverter.ToChowValue(TaggedUnion.None);
 
             Assert.That(result, Is.SameAs(ChowValue.None));
         }
@@ -114,55 +114,55 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ToApiClassObj_IntTag_ReturnsChowIntWithSameValue()
         {
-            var result = ChowValueConverter.ToChowValue(new TaggedUnion(7));
+            var result = ApiConverter.ToChowValue(new TaggedUnion(7));
 
             Assert.Multiple(() =>
             {
                 Assert.That(result, Is.TypeOf<ChowInt>());
-                Assert.That(result.As<long>(), Is.EqualTo(7));
+                Assert.That(result.AsType<long>(), Is.EqualTo(7));
             });
         }
 
         [Test]
         public void ToApiClassObj_FloatTag_ReturnsChowFloatWithSameValue()
         {
-            var result = ChowValueConverter.ToChowValue(new TaggedUnion(3.25f));
+            var result = ApiConverter.ToChowValue(new TaggedUnion(3.25f));
 
             Assert.Multiple(() =>
             {
                 Assert.That(result, Is.TypeOf<ChowFloat>());
-                Assert.That(result.As<double>(), Is.EqualTo(3.25));
+                Assert.That(result.AsType<double>(), Is.EqualTo(3.25));
             });
         }
 
         [Test]
         public void ToApiClassObj_BoolTrueTag_ReturnsChowBoolWithSameValue()
         {
-            var result = ChowValueConverter.ToChowValue(new TaggedUnion(true));
+            var result = ApiConverter.ToChowValue(new TaggedUnion(true));
 
             Assert.Multiple(() =>
             {
                 Assert.That(result, Is.TypeOf<ChowBool>());
-                Assert.That(result.As<bool>(), Is.True);
+                Assert.That(result.AsType<bool>(), Is.True);
             });
         }
 
         [Test]
         public void ToApiClassObj_BoolFalseTag_ReturnsChowBoolWithSameValue()
         {
-            var result = ChowValueConverter.ToChowValue(new TaggedUnion(false));
+            var result = ApiConverter.ToChowValue(new TaggedUnion(false));
 
             Assert.Multiple(() =>
             {
                 Assert.That(result, Is.TypeOf<ChowBool>());
-                Assert.That(result.As<bool>(), Is.False);
+                Assert.That(result.AsType<bool>(), Is.False);
             });
         }
 
         [Test]
         public void ToApiClassObj_StrTag_ReturnsChowStr()
         {
-            var result = ChowValueConverter.ToChowValue(new TaggedUnion("hello"));
+            var result = ApiConverter.ToChowValue(new TaggedUnion("hello"));
 
             Assert.Multiple(() =>
             {
@@ -176,7 +176,7 @@ namespace Chow.Interpreter.Tests
         {
             var payload = new object();
 
-            var result = ChowValueConverter.ToChowValue(new TaggedUnion(payload));
+            var result = ApiConverter.ToChowValue(new TaggedUnion(payload));
 
             Assert.Multiple(() =>
             {
@@ -192,35 +192,35 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void RoundTrip_Int_PreservesValue()
         {
-            var roundTripped = ChowValueConverter.ToChowValue(
-                ChowValueConverter.ToTaggedUnion(new ChowInt(123)));
+            var roundTripped = ApiConverter.ToChowValue(
+                ApiConverter.ToTaggedUnion(new ChowInt(123)));
 
-            Assert.That(roundTripped.As<long>(), Is.EqualTo(123));
+            Assert.That(roundTripped.AsType<long>(), Is.EqualTo(123));
         }
 
         [Test]
         public void RoundTrip_Float_PreservesValue()
         {
-            var roundTripped = ChowValueConverter.ToChowValue(
-                ChowValueConverter.ToTaggedUnion(new ChowFloat(2.5)));
+            var roundTripped = ApiConverter.ToChowValue(
+                ApiConverter.ToTaggedUnion(new ChowFloat(2.5)));
 
-            Assert.That(roundTripped.As<double>(), Is.EqualTo(2.5));
+            Assert.That(roundTripped.AsType<double>(), Is.EqualTo(2.5));
         }
 
         [Test]
         public void RoundTrip_BoolTrue_PreservesValue()
         {
-            var roundTripped = ChowValueConverter.ToChowValue(
-                ChowValueConverter.ToTaggedUnion(new ChowBool(true)));
+            var roundTripped = ApiConverter.ToChowValue(
+                ApiConverter.ToTaggedUnion(new ChowBool(true)));
 
-            Assert.That(roundTripped.As<bool>(), Is.True);
+            Assert.That(roundTripped.AsType<bool>(), Is.True);
         }
 
         [Test]
         public void RoundTrip_None_PreservesIdentity()
         {
-            var roundTripped = ChowValueConverter.ToChowValue(
-                ChowValueConverter.ToTaggedUnion(ChowValue.None));
+            var roundTripped = ApiConverter.ToChowValue(
+                ApiConverter.ToTaggedUnion(ChowValue.None));
 
             Assert.That(roundTripped, Is.SameAs(ChowValue.None));
         }
@@ -230,8 +230,8 @@ namespace Chow.Interpreter.Tests
         {
             var payload = new object();
 
-            var roundTripped = ChowValueConverter.ToChowValue(
-                ChowValueConverter.ToTaggedUnion(new ChowDynamic(payload)));
+            var roundTripped = ApiConverter.ToChowValue(
+                ApiConverter.ToTaggedUnion(new ChowDynamic(payload)));
 
             Assert.Multiple(() =>
             {
@@ -243,8 +243,8 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void RoundTrip_Str_PreservesValue()
         {
-            var roundTripped = ChowValueConverter.ToChowValue(
-                ChowValueConverter.ToTaggedUnion(new ChowStr("hello")));
+            var roundTripped = ApiConverter.ToChowValue(
+                ApiConverter.ToTaggedUnion(new ChowStr("hello")));
 
             Assert.Multiple(() =>
             {

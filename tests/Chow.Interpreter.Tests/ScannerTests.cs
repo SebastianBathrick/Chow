@@ -100,6 +100,26 @@ namespace Chow.Interpreter.Tests
             Assert.That(nlToken.lexeme, Is.EqualTo("\n"));
         }
 
+        [TestCase("None", (int)TokenType.KeywordNone)]
+        [TestCase("and", (int)TokenType.KeywordAnd)]
+        [TestCase("or", (int)TokenType.KeywordOr)]
+        [TestCase("not", (int)TokenType.KeywordNot)]
+        [TestCase("in", (int)TokenType.KeywordIn)]
+        [TestCase("def", (int)TokenType.KeywordDef)]
+        [TestCase("return", (int)TokenType.KeywordReturn)]
+        [TestCase("if", (int)TokenType.KeywordIf)]
+        [TestCase("elif", (int)TokenType.KeywordElif)]
+        [TestCase("else", (int)TokenType.KeywordElse)]
+        [TestCase("while", (int)TokenType.KeywordWhile)]
+        [TestCase("break", (int)TokenType.KeywordBreak)]
+        [TestCase("continue", (int)TokenType.KeywordContinue)]
+        public void ScanTokens_PythonKeyword_ProducesKeywordToken(string source, int expectedType)
+        {
+            var tokens = Tokenize(source);
+
+            Assert.That(tokens[0].type, Is.EqualTo((TokenType)expectedType));
+        }
+
         // ============================================================================================================
         // C. Integer literals
         // ============================================================================================================

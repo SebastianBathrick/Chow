@@ -53,9 +53,9 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("__result = [1, 2, 3]");
             var list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
-            Assert.That(list[0].As<long>(), Is.EqualTo(1));
-            Assert.That(list[1].As<long>(), Is.EqualTo(2));
-            Assert.That(list[2].As<long>(), Is.EqualTo(3));
+            Assert.That(list[0].AsType<long>(), Is.EqualTo(1));
+            Assert.That(list[1].AsType<long>(), Is.EqualTo(2));
+            Assert.That(list[2].AsType<long>(), Is.EqualTo(3));
         }
 
         [Test]
@@ -67,7 +67,7 @@ namespace Chow.Interpreter.ImplTests
             Assert.That(outer.Count, Is.EqualTo(2));
             var inner0 = (ChowList)outer[0];
             Assert.That(inner0.Count, Is.EqualTo(2));
-            Assert.That(inner0[0].As<long>(), Is.EqualTo(1));
+            Assert.That(inner0[0].AsType<long>(), Is.EqualTo(1));
         }
 
         // ============================================================================================================
@@ -79,7 +79,7 @@ namespace Chow.Interpreter.ImplTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = [10, 20, 30][1]");
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(20));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(20));
         }
 
         [Test]
@@ -87,7 +87,7 @@ namespace Chow.Interpreter.ImplTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = [10, 20, 30][-1]");
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(30));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(30));
         }
 
         [Test]
@@ -107,8 +107,8 @@ namespace Chow.Interpreter.ImplTests
             (var module, var hook) = NewModule();
             module.Execute("a = [1, 2, 3]\na[0] = 9\n__result = a");
             var list = LastList(hook);
-            Assert.That(list[0].As<long>(), Is.EqualTo(9));
-            Assert.That(list[1].As<long>(), Is.EqualTo(2));
+            Assert.That(list[0].AsType<long>(), Is.EqualTo(9));
+            Assert.That(list[1].AsType<long>(), Is.EqualTo(2));
         }
 
         [Test]
@@ -117,7 +117,7 @@ namespace Chow.Interpreter.ImplTests
             (var module, var hook) = NewModule();
             module.Execute("a = [1, 2, 3]\na[-1] = 9\n__result = a");
             var list = LastList(hook);
-            Assert.That(list[2].As<long>(), Is.EqualTo(9));
+            Assert.That(list[2].AsType<long>(), Is.EqualTo(9));
         }
 
         // ============================================================================================================
@@ -131,8 +131,8 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("__result = [10, 20, 30, 40][1:3]");
             var list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(2));
-            Assert.That(list[0].As<long>(), Is.EqualTo(20));
-            Assert.That(list[1].As<long>(), Is.EqualTo(30));
+            Assert.That(list[0].AsType<long>(), Is.EqualTo(20));
+            Assert.That(list[1].AsType<long>(), Is.EqualTo(30));
         }
 
         [Test]
@@ -151,8 +151,8 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("__result = [1, 2, 3][::-1]");
             var list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
-            Assert.That(list[0].As<long>(), Is.EqualTo(3));
-            Assert.That(list[2].As<long>(), Is.EqualTo(1));
+            Assert.That(list[0].AsType<long>(), Is.EqualTo(3));
+            Assert.That(list[2].AsType<long>(), Is.EqualTo(1));
         }
 
         [Test]
@@ -162,9 +162,9 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("__result = [0, 1, 2, 3, 4][::2]");
             var list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
-            Assert.That(list[0].As<long>(), Is.EqualTo(0));
-            Assert.That(list[1].As<long>(), Is.EqualTo(2));
-            Assert.That(list[2].As<long>(), Is.EqualTo(4));
+            Assert.That(list[0].AsType<long>(), Is.EqualTo(0));
+            Assert.That(list[1].AsType<long>(), Is.EqualTo(2));
+            Assert.That(list[2].AsType<long>(), Is.EqualTo(4));
         }
 
         // ============================================================================================================
@@ -178,7 +178,7 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("a = [1]\na.append(2)\n__result = a");
             var list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(2));
-            Assert.That(list[1].As<long>(), Is.EqualTo(2));
+            Assert.That(list[1].AsType<long>(), Is.EqualTo(2));
         }
 
         [Test]
@@ -186,7 +186,7 @@ namespace Chow.Interpreter.ImplTests
         {
             (var module, var hook) = NewModule();
             module.Execute("a = [1, 2, 3]\n__result = a.pop()");
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(3));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(3));
         }
 
         [Test]
@@ -195,8 +195,8 @@ namespace Chow.Interpreter.ImplTests
             (var module, var hook) = NewModule();
             module.Execute("a = [1, 2, 3]\na.reverse()\n__result = a");
             var list = LastList(hook);
-            Assert.That(list[0].As<long>(), Is.EqualTo(3));
-            Assert.That(list[2].As<long>(), Is.EqualTo(1));
+            Assert.That(list[0].AsType<long>(), Is.EqualTo(3));
+            Assert.That(list[2].AsType<long>(), Is.EqualTo(1));
         }
 
         [Test]
@@ -206,8 +206,8 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("a = [1]\nf = a.append\nf(2)\nf(3)\n__result = a");
             var list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
-            Assert.That(list[1].As<long>(), Is.EqualTo(2));
-            Assert.That(list[2].As<long>(), Is.EqualTo(3));
+            Assert.That(list[1].AsType<long>(), Is.EqualTo(2));
+            Assert.That(list[2].AsType<long>(), Is.EqualTo(3));
         }
 
         // ============================================================================================================
@@ -239,8 +239,8 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("__result = [1] + [2, 3]");
             var list = LastList(hook);
             Assert.That(list.Count, Is.EqualTo(3));
-            Assert.That(list[0].As<long>(), Is.EqualTo(1));
-            Assert.That(list[2].As<long>(), Is.EqualTo(3));
+            Assert.That(list[0].AsType<long>(), Is.EqualTo(1));
+            Assert.That(list[2].AsType<long>(), Is.EqualTo(3));
         }
 
         [Test]
@@ -279,7 +279,7 @@ namespace Chow.Interpreter.ImplTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = [1, 2] == [1, 2]");
-            Assert.That(Last(hook).As<bool>(), Is.True);
+            Assert.That(Last(hook).AsType<bool>(), Is.True);
         }
 
         [Test]
@@ -287,7 +287,7 @@ namespace Chow.Interpreter.ImplTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = [1, 2] == [1, 3]");
-            Assert.That(Last(hook).As<bool>(), Is.False);
+            Assert.That(Last(hook).AsType<bool>(), Is.False);
         }
 
         [Test]
@@ -295,7 +295,7 @@ namespace Chow.Interpreter.ImplTests
         {
             (var module, var hook) = NewModule();
             module.Execute("__result = [1, [2]] == [1, [2]]");
-            Assert.That(Last(hook).As<bool>(), Is.True);
+            Assert.That(Last(hook).AsType<bool>(), Is.True);
         }
 
         // ============================================================================================================
@@ -307,7 +307,7 @@ namespace Chow.Interpreter.ImplTests
         {
             (var module, var hook) = NewModule();
             module.Execute("if []:\n    __result = 1\nelse:\n    __result = 2");
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(2));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(2));
         }
 
         [Test]
@@ -315,7 +315,7 @@ namespace Chow.Interpreter.ImplTests
         {
             (var module, var hook) = NewModule();
             module.Execute("if [0]:\n    __result = 1\nelse:\n    __result = 2");
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(1));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(1));
         }
 
         // ============================================================================================================
@@ -350,7 +350,7 @@ namespace Chow.Interpreter.ImplTests
             list.Internal.Add(new TaggedUnion(42));
             module["x"] = list;
             module.Execute("__result = x[0]");
-            Assert.That(Last(hook).As<long>(), Is.EqualTo(42));
+            Assert.That(Last(hook).AsType<long>(), Is.EqualTo(42));
         }
 
         [Test]
@@ -360,7 +360,7 @@ namespace Chow.Interpreter.ImplTests
             module.Execute("x = [1, 2, 3]");
             var list = (ChowList)module.GetGlobal("x");
             Assert.That(list.Count, Is.EqualTo(3));
-            Assert.That(list[1].As<long>(), Is.EqualTo(2));
+            Assert.That(list[1].AsType<long>(), Is.EqualTo(2));
         }
 
         // ============================================================================================================
