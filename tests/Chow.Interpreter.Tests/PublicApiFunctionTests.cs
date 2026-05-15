@@ -149,12 +149,23 @@ namespace Chow.Interpreter.Tests
         }
 
         [Test]
-        public void ExecuteCall_DefinedFunction_ReturnsValue()
+        public void CallFunction_DefinedFunction_ReturnsValue()
         {
             (var module, var _) = NewModule();
             module.Execute("def add(a, b):\n    return a + b");
 
-            var result = module.ExecuteCall("add", new ChowInt(2), new ChowInt(3));
+            var result = module.CallFunction("add", new ChowInt(2), new ChowInt(3));
+
+            Assert.That(result.As<long>(), Is.EqualTo(5));
+        }
+
+        [Test]
+        public void CallFunction_DefinedFunction_AcceptsHostArguments()
+        {
+            (var module, var _) = NewModule();
+            module.Execute("def add(a, b):\n    return a + b");
+
+            var result = module.CallFunction("add", 2, 3L);
 
             Assert.That(result.As<long>(), Is.EqualTo(5));
         }

@@ -33,21 +33,7 @@ namespace Chow.Interpreter
                     _moduleScope = new ModuleScope();
                 }
 
-                TaggedUnion varUnion;
-
-                if (value is ChowValue chowVal)
-                {
-                    // Get value inside ChowValue because ChowValues objects CANNOT be stored inside a TaggedUnion
-                    // TODO: Add error checking to ensure that the object field in TaggedUnion can never be a ChowValue
-                    varUnion = ApiConverter.ToTaggedUnion(chowVal);
-                }
-                else
-                {
-                    // The object type is determined & a new TaggedUnion containing the value & appropriate tag is returned
-                    // Note that if value is null then the static field TaggedUnion.None will be returned
-                    varUnion = TaggedUnion.CreateWithValue(value);
-                }
-
+                var varUnion = ApiConverter.ToTaggedUnion(value);
 
                 // Method either assigns a new value to an existing variable, or declares & initializes a new variable
                 _moduleScope.AssignVariableValue(name, varUnion);
@@ -119,7 +105,7 @@ namespace Chow.Interpreter
             _moduleScope = vm.EvaluateChunk();
         }
 
-        public ChowValue ExecuteCall(string functionName, params ChowValue[] arguments)
+        public ChowValue CallFunction(string functionName, params object[] arguments)
         {
             ValidateGlobalName(functionName);
             ValidateGlobalExists(functionName);

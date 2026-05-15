@@ -6,6 +6,16 @@ namespace Chow.Interpreter
 {
     static class ApiConverter
     {
+        public static TaggedUnion ToTaggedUnion(object value)
+        {
+            if (value is ChowValue chowVal)
+            {
+                return ToTaggedUnion(chowVal);
+            }
+
+            return TaggedUnion.CreateWithValue(value);
+        }
+
         public static TaggedUnion ToTaggedUnion(ChowValue value)
         {
             if (value == null)

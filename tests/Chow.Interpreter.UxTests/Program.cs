@@ -1,5 +1,4 @@
 ﻿using Chow.Interpreter;
-using Chow.Interpreter.Values;
 
 
 ChowModule module = new ChowModule();
@@ -15,6 +14,6 @@ module.ImportBuiltIns();
 
 module.Execute(code);
 module.Execute("print(add(1, 2))");
-var result = module.ExecuteCall("add", new ChowInt(1), new ChowInt(3000));
+var result = module.CallFunction("add", 1, 3000);
 Console.WriteLine(result);
 

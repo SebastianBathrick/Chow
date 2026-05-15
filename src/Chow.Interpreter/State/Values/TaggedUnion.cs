@@ -231,8 +231,12 @@ namespace Chow.Interpreter.State.Values
 
             switch (value)
             {
+                case int i:
+                    return new TaggedUnion((long)i);
                 case long l:
                     return new TaggedUnion(l);
+                case float f:
+                    return new TaggedUnion((double)f);
                 case double d:
                     return new TaggedUnion(d);
                 case bool b:
