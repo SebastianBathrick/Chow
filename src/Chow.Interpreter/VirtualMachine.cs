@@ -28,15 +28,11 @@ namespace Chow.Interpreter
 
         #region Constructors
 
-        public VirtualMachine(Chunk chunk, Scope globalScope)
-            : this(globalScope, chunk)
-        {
-        }
-
         // Chunk is null when the client is exclusively calling a closure
         public VirtualMachine(Scope globalScope = null, Chunk chunk = null)
         {
-            _globalScope = globalScope ?? new Scope();
+            // Module must have instantiated scope object to s
+            _globalScope = globalScope ?? throw new ArgumentNullException(nameof(globalScope));
             _callStack = new CallStack(chunk ?? new Chunk(), _globalScope);
             _valStack = new Stack<TaggedUnion>();
         }
