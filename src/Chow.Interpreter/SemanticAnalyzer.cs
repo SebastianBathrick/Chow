@@ -28,6 +28,8 @@ namespace Chow.Interpreter
         readonly TreeRootNode _root;
         readonly Stack<ScopeFrame> _scopes;
 
+        #region Primary Methods
+
         public SemanticAnalyzer(Node root)
         {
             if (!(root is TreeRootNode treeRoot))
@@ -43,6 +45,8 @@ namespace Chow.Interpreter
         {
             AnalyzeModule(_root);
         }
+
+        #endregion
 
         #region Per-Scope Analysis
 
@@ -66,14 +70,14 @@ namespace Chow.Interpreter
             _scopes.Pop();
         }
 
-        void AnalyzeFunction(FunctionNode func)
+        void AnalyzeFunction(FunctionNode funcNode)
         {
-            var frame = ScopeFrame.NewFunction(func);
+            var frame = ScopeFrame.NewFunction(funcNode);
             _scopes.Push(frame);
 
-            PreScan(func.Body);
+            PreScan(funcNode.Body);
             ValidateScope();
-            Annotate(func.Body);
+            Annotate(funcNode.Body);
 
             _scopes.Pop();
         }
@@ -243,18 +247,18 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case SubscriptAssignNode subscriptNode:
+                case SubscriptAssignNode subscriptAssignNode:
                 {
-                    PreScan(subscriptNode.Target);
-                    PreScan(subscriptNode.Index);
-                    PreScan(subscriptNode.Expression);
+                    PreScan(subscriptAssignNode.Target);
+                    PreScan(subscriptAssignNode.Index);
+                    PreScan(subscriptAssignNode.Expression);
                     break;
                 }
 
-                case AttributeAssignNode attributeNode:
+                case AttributeAssignNode attrAssignNode:
                 {
-                    PreScan(attributeNode.Target);
-                    PreScan(attributeNode.Expression);
+                    PreScan(attrAssignNode.Target);
+                    PreScan(attrAssignNode.Expression);
                     break;
                 }
 
@@ -501,7 +505,7 @@ namespace Chow.Interpreter
 
         void ValidateGlobalDeclaration(ScopeFrame frame, string name, int declareLine)
         {
-            if (frame.Params.Contains(name))
+            if (frame.Parameters.Contains(name))
             {
                 throw new SemanticEx($"name '{name}' is parameter and global", declareLine);
             }
@@ -529,7 +533,7 @@ namespace Chow.Interpreter
                 throw new SemanticEx("nonlocal declaration not allowed at module level", declareLine);
             }
 
-            if (frame.Params.Contains(name))
+            if (frame.Parameters.Contains(name))
             {
                 throw new SemanticEx($"name '{name}' is parameter and nonlocal", declareLine);
             }
@@ -580,7 +584,7 @@ namespace Chow.Interpreter
                     continue;
                 }
 
-                if (scope.Params.Contains(name) || scope.Bindings.ContainsKey(name) || scope.NonlocalDeclarations.ContainsKey(name))
+                if (scope.Parameters.Contains(name) || scope.Bindings.ContainsKey(name) || scope.NonlocalDeclarations.ContainsKey(name))
                 {
                     return true;
                 }
@@ -615,7 +619,7 @@ namespace Chow.Interpreter
         sealed class ScopeFrame
         {
             public bool IsModule { get; }
-            public HashSet<string> Params { get; }
+            public HashSet<string> Parameters { get; }
             public Dictionary<string, int> Bindings { get; }
             public Dictionary<string, int> Uses { get; }
             public Dictionary<string, int> GlobalDeclarations { get; }
@@ -624,7 +628,7 @@ namespace Chow.Interpreter
             ScopeFrame(bool isModule, HashSet<string> parameters)
             {
                 IsModule = isModule;
-                Params = parameters;
+                Parameters = parameters;
                 Bindings = new Dictionary<string, int>();
                 Uses = new Dictionary<string, int>();
                 GlobalDeclarations = new Dictionary<string, int>();
@@ -636,10 +640,10 @@ namespace Chow.Interpreter
                 return new ScopeFrame(isModule: true, parameters: new HashSet<string>());
             }
 
-            public static ScopeFrame NewFunction(FunctionNode func)
+            public static ScopeFrame NewFunction(FunctionNode funcNode)
             {
                 var parameters = new HashSet<string>();
-                foreach (var param in func.Params)
+                foreach (var param in funcNode.Params)
                 {
                     if (param is NameNode nameNode)
                     {
