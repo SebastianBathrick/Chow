@@ -10,7 +10,6 @@ var code =
         return x + y
 
     """;
-module.ImportBuiltIns();
 
 module.Execute(code);
 module.Execute("print(add(1, 2))");

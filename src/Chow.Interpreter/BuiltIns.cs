@@ -6,27 +6,96 @@ using System.Globalization;
 
 namespace Chow.Interpreter
 {
-    public static class BuiltIns
+    /// <summary>
+    /// Stable identifiers for the standard built-in functions. Hosts use these with
+    /// <see cref="ChowModule.SetBuiltInActive"/>, <see cref="ChowModule.SetBuiltInValue"/>, and
+    /// <see cref="ChowModule.IsBuiltInActive"/> to sandbox or override individual built-ins.
+    /// </summary>
+    public enum BuiltInType
     {
-        public static List<(string name, object funcObj)> GetFunctions()
+        /// <summary><c>print(value)</c> — writes <c>value</c> to standard output and returns <c>None</c>.</summary>
+        Print,
+        /// <summary><c>input()</c> — reads a line from standard input and returns it as a string.</summary>
+        Input,
+        /// <summary><c>float(value)</c> — converts a number or numeric string to a float.</summary>
+        Float,
+        /// <summary><c>str(value)</c> — converts any value to its string representation.</summary>
+        Str,
+        /// <summary><c>int(value)</c> — converts a number, bool, or numeric string to an int (truncating floats).</summary>
+        Int,
+        /// <summary><c>bool(value)</c> — converts a value to a bool using Python truthiness rules.</summary>
+        Bool,
+        /// <summary><c>list()</c> / <c>list(iterable)</c> — constructs a list (empty or a copy of the argument).</summary>
+        List,
+        /// <summary><c>dict()</c> / <c>dict(mapping)</c> — constructs a dict (empty or a copy of the argument).</summary>
+        Dict,
+        /// <summary><c>len(value)</c> — returns the length of a string, list, or dict.</summary>
+        Len,
+        /// <summary><c>type(value)</c> — returns the Python-style type name as a string.</summary>
+        Type,
+        /// <summary><c>abs(value)</c> — returns the absolute value of a number.</summary>
+        Abs,
+        /// <summary><c>round(value)</c> — rounds to the nearest integer using banker's rounding.</summary>
+        Round,
+        /// <summary><c>min(a, b)</c> — returns the smaller of two numbers.</summary>
+        Min,
+        /// <summary><c>max(a, b)</c> — returns the larger of two numbers.</summary>
+        Max,
+    }
+
+    /// <summary>
+    /// Internal source-of-truth table for the standard built-ins: maps each <see cref="BuiltInType"/> to its
+    /// source-language name and default implementation. Hosts do not interact with this class directly —
+    /// the table is consumed by <see cref="ChowModule"/> at construction to seed the module's global scope.
+    /// </summary>
+    internal static class BuiltIns
+    {
+        static readonly Dictionary<BuiltInType, string> _names = new Dictionary<BuiltInType, string>
         {
-            return new List<(string name, object funcObj)>
-            {
-                ("print", (Func<ChowValue, ChowValue>)Print),
-                ("input", (Func<ChowValue>)Input),
-                ("float", (Func<ChowValue, ChowValue>)Float),
-                ("str", (Func<ChowValue, ChowValue>)Str),
-                ("int", (Func<ChowValue, ChowValue>)Int),
-                ("bool", (Func<ChowValue, ChowValue>)Bool),
-                ("list", (Func<TaggedUnion[], TaggedUnion>)List),
-                ("dict", (Func<TaggedUnion[], TaggedUnion>)Dict),
-                ("len", (Func<ChowValue, ChowValue>)Len),
-                ("type", (Func<ChowValue, ChowValue>)Type),
-                ("abs", (Func<ChowValue, ChowValue>)Abs),
-                ("round", (Func<ChowValue, ChowValue>)Round),
-                ("min", (Func<TaggedUnion[], TaggedUnion>)Min),
-                ("max", (Func<TaggedUnion[], TaggedUnion>)Max)
-            };
+            { BuiltInType.Print, "print" },
+            { BuiltInType.Input, "input" },
+            { BuiltInType.Float, "float" },
+            { BuiltInType.Str,   "str"   },
+            { BuiltInType.Int,   "int"   },
+            { BuiltInType.Bool,  "bool"  },
+            { BuiltInType.List,  "list"  },
+            { BuiltInType.Dict,  "dict"  },
+            { BuiltInType.Len,   "len"   },
+            { BuiltInType.Type,  "type"  },
+            { BuiltInType.Abs,   "abs"   },
+            { BuiltInType.Round, "round" },
+            { BuiltInType.Min,   "min"   },
+            { BuiltInType.Max,   "max"   },
+        };
+
+        static readonly Dictionary<BuiltInType, object> _defaults = new Dictionary<BuiltInType, object>
+        {
+            { BuiltInType.Print, (Func<ChowValue, ChowValue>)Print          },
+            { BuiltInType.Input, (Func<ChowValue>)Input                     },
+            { BuiltInType.Float, (Func<ChowValue, ChowValue>)Float          },
+            { BuiltInType.Str,   (Func<ChowValue, ChowValue>)Str            },
+            { BuiltInType.Int,   (Func<ChowValue, ChowValue>)Int            },
+            { BuiltInType.Bool,  (Func<ChowValue, ChowValue>)Bool           },
+            { BuiltInType.List,  (Func<TaggedUnion[], TaggedUnion>)List     },
+            { BuiltInType.Dict,  (Func<TaggedUnion[], TaggedUnion>)Dict     },
+            { BuiltInType.Len,   (Func<ChowValue, ChowValue>)Len            },
+            { BuiltInType.Type,  (Func<ChowValue, ChowValue>)Type           },
+            { BuiltInType.Abs,   (Func<ChowValue, ChowValue>)Abs            },
+            { BuiltInType.Round, (Func<ChowValue, ChowValue>)Round          },
+            { BuiltInType.Min,   (Func<TaggedUnion[], TaggedUnion>)Min      },
+            { BuiltInType.Max,   (Func<TaggedUnion[], TaggedUnion>)Max      },
+        };
+
+        public static IEnumerable<BuiltInType> AllTypes => _names.Keys;
+
+        public static string NameOf(BuiltInType type)
+        {
+            return _names[type];
+        }
+
+        public static object DefaultOf(BuiltInType type)
+        {
+            return _defaults[type];
         }
 
         static ChowValue Print(ChowValue val)

@@ -30,9 +30,8 @@ static class Program
         {
             var source = File.ReadAllText(filePath);
             var module = new ChowModule();
-            module.ImportBuiltIns();
-            module["input"] = (Func<ChowValue>)(() =>
-                throw new InvalidOperationException("input() is not supported in CodeEditor."));
+            module.SetBuiltInValue(BuiltInType.Input, (Func<ChowValue>)(() =>
+                throw new InvalidOperationException("input() is not supported in CodeEditor.")));
 
             var stopwatch = Stopwatch.StartNew();
             try

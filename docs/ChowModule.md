@@ -151,16 +151,39 @@ Attribute names follow the same rules as [global variable names](#global-variabl
 
 ---
 
-## Registering Built-in Functions
+## Built-in Functions
 
-### `void ImportBuiltIns()`
+The 14 standard built-ins (`print`, `input`, `float`, `str`, `int`, `bool`, `list`, `dict`, `len`, `type`, `abs`, `round`, `min`, `max`) are seeded into the global scope automatically when a `ChowModule` is constructed — no setup call is required.
 
-Registers the standard built-in functions into the global scope, making them available to Chow source code. Call this before `Execute` if your scripts depend on built-ins.
+Hosts can disable, re-enable, or override individual built-ins via the methods below. Each built-in is identified by a `BuiltInType` enum value (e.g. `BuiltInType.Print`) so client code doesn't depend on the source-language name string.
+
+### `void SetBuiltInActive(BuiltInType type, bool active)`
+
+Controls whether a built-in is visible to Chow source code. Disabling removes the binding from the global scope; a reference to it from Chow code then raises a `NameError`. Re-enabling reinstalls the currently *configured* value (the default, or whatever was most recently passed to `SetBuiltInValue`). Idempotent.
 
 ```csharp
-module.ImportBuiltIns();
-module.Execute("print(\"hello\")");
+module.SetBuiltInActive(BuiltInType.Print, false);
+module.Execute("print(\"hi\")"); // throws UndefinedNameException
 ```
+
+### `void SetBuiltInValue(BuiltInType type, object value)`
+
+Overrides the implementation of a built-in. The override is retained across `SetBuiltInActive` toggles, so hosts don't have to re-apply it after a disable/enable cycle. If the built-in is currently active, the new value takes effect immediately; if inactive, the override is held until the next `SetBuiltInActive(type, true)` call.
+
+Accepted value types match those of the [indexer setter](#global-variable-access) (delegates such as `Func<ChowValue, ChowValue>`, `ChowValue` subclasses, `ChowObject`, primitives). `null` throws `ArgumentNullException` — use `SetBuiltInActive(type, false)` to remove.
+
+```csharp
+module.SetBuiltInValue(BuiltInType.Print, (Func<ChowValue, ChowValue>)(arg =>
+{
+    Debug.Log($"chow: {arg}");
+    return ChowValue.None;
+}));
+module.Execute("print(\"hi\")"); // routes to Debug.Log
+```
+
+### `bool IsBuiltInActive(BuiltInType type)`
+
+Returns `true` if the built-in is currently callable from Chow source code.
 
 ---
 
