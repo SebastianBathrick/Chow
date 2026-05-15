@@ -30,8 +30,6 @@ namespace Chow.Interpreter
         int _lineNum;
         bool _isLineBegin;
 
-        char CurrChar => _sourceCode[_charIdx];
-
         #endregion
 
         #region Constructor & Primary Methods
@@ -58,7 +56,7 @@ namespace Chow.Interpreter
         /// <returns>A list of tokens representing the scanned source code in the order they appear.</returns>
         public List<Token> ScanTokens()
         {
-            // If source code is null, emit end of code token, so it can be treated as if it were an empty string or whitespace
+            // If source code is null, emit end-of-code token, so it can be treated as if it were an empty string or whitespace
             if (_sourceCode == null)
             {
                 AddNewToken(TokenType.EndOfCode, string.Empty, _lineNum);
@@ -101,33 +99,33 @@ namespace Chow.Interpreter
                 }
             }
 
-            if (IsNameLeadingChar(CurrChar))
+            if (IsNameLeadingChar())
             {
                 ScanNameToken();
             }
-            else if (IsNewlineChar(CurrChar))
+            else if (IsNewlineChar())
             {
                 ScanNewlineToken();
             }
-            else if (IsDigitChar(CurrChar))
+            else if (IsDigitChar())
             {
                 ScanNumericToken();
             }
-            else if (IsQuoteChar(CurrChar))
+            else if (IsQuoteChar())
             {
                 ScanStringToken();
             }
-            else if (IsIndentChar(CurrChar))
+            else if (IsIndentChar())
             {
                 MoveToNextChar();
             }
-            else if (IsCommentPrefix(CurrChar))
+            else if (IsCommentPrefix())
             {
                 SkipRemainingLineChars();
             }
             else if (!TryScanSymbolToken())
             {
-                throw new ScannerEx($"Unexpected character '{CurrChar}'.", _lineNum);
+                throw new ScannerEx($"Unexpected character '{CurrentChar}'.", _lineNum);
             }
         }
 
@@ -140,7 +138,7 @@ namespace Chow.Interpreter
         {
             var startIdx = _charIdx;
 
-            while (IsCharToScan && IsNameTrailChar(CurrChar))
+            while (IsCharToScan && IsNameTrailChar())
             {
                 MoveToNextChar();
             }
@@ -150,10 +148,11 @@ namespace Chow.Interpreter
             if (ReservedKeywords.Contains(lexeme))
             {
                 AddNewToken(ReservedKeywords.GetTokenType(lexeme), lexeme, _lineNum);
-                return;
             }
-
-            AddNewToken(TokenType.Identifier, lexeme, _lineNum);
+            else
+            {
+                AddNewToken(TokenType.Identifier, lexeme, _lineNum);
+            }
         }
 
         void ScanNewlineToken()
@@ -172,27 +171,25 @@ namespace Chow.Interpreter
         {
             var indentColumn = ScanIndentColumn();
 
-            if (!IsCharToScan || IsNewlineChar(CurrChar) || IsCommentPrefix(CurrChar))
+            if (IsCharToScan && !IsNewlineChar() && !IsCommentPrefix())
             {
-                return;
+                CreateIndentTokens(indentColumn);
+                _isLineBegin = false;
             }
-
-            CreateIndentTokens(indentColumn);
-            _isLineBegin = false;
         }
 
         int ScanIndentColumn()
         {
             var indentColumn = 0;
 
-            while (IsCharToScan && IsFormFeedChar(CurrChar))
+            while (IsCharToScan && IsFormFeedChar())
             {
                 MoveToNextChar();
             }
 
-            while (IsCharToScan && IsIndentChar(CurrChar))
+            while (IsCharToScan && IsIndentChar())
             {
-                if (CurrChar == '\t')
+                if (CurrentChar == '\t')
                 {
                     // Tab rounds column up to the next multiple of TAB_SIZE (Python rule)
                     indentColumn = (indentColumn / TAB_SIZE + 1) * TAB_SIZE;
@@ -254,7 +251,7 @@ namespace Chow.Interpreter
         {
             TokenType tokenType;
 
-            switch (CurrChar)
+            switch (CurrentChar)
             {
                 case ',':
                     {
@@ -407,7 +404,7 @@ namespace Chow.Interpreter
                     }
             }
 
-            var lexeme = CurrChar.ToString();
+            var lexeme = CurrentChar.ToString();
             MoveToNextChar();
             AddNewToken(tokenType, lexeme, _lineNum);
             return true;
@@ -433,13 +430,13 @@ namespace Chow.Interpreter
             // Move past digits before any decimal point (if any)
             MoveToNextChar();
 
-            while (IsCharToScan && IsDigitChar(CurrChar))
+            while (IsCharToScan && IsDigitChar())
             {
                 MoveToNextChar();
             }
 
             // If there is a decimal point, move past it and any following digits
-            var isFloat = IsCharToScan && CurrChar == '.';
+            var isFloat = IsCharToScan && CurrentChar == '.';
 
             if (isFloat)
             {
@@ -457,7 +454,7 @@ namespace Chow.Interpreter
         {
             MoveToNextChar();
 
-            while (IsCharToScan && IsDigitChar(CurrChar))
+            while (IsCharToScan && IsDigitChar())
             {
                 MoveToNextChar();
             }
@@ -493,21 +490,13 @@ namespace Chow.Interpreter
 
         void ScanStringToken()
         {
-            var quoteChar = CurrChar;
+            var quoteChar = CurrentChar;
             var startIdx = _charIdx;
             MoveToNextChar();
 
             var contentStartIdx = _charIdx;
 
-            while (IsCharToScan && CurrChar != quoteChar)
-            {
-                if (IsNewlineChar(CurrChar))
-                {
-                    throw new ScannerEx("Unterminated string literal", _lineNum);
-                }
-
-                MoveToNextChar();
-            }
+            ScanStringContent(quoteChar);
 
             if (!IsCharToScan)
             {
@@ -522,12 +511,27 @@ namespace Chow.Interpreter
 
             AddNewToken(TokenType.LiteralStr, lexeme, _lineNum, literal);
         }
+        void ScanStringContent(char quoteChar)
+        {
+
+            while (IsCharToScan && CurrentChar != quoteChar)
+            {
+                if (IsNewlineChar())
+                {
+                    throw new ScannerEx("Unterminated string literal", _lineNum);
+                }
+
+                MoveToNextChar();
+            }
+        }
 
         #endregion
 
         #region Char Pointer Methods
 
         bool IsCharToScan => _charIdx < _sourceCode.Length;
+
+        char CurrentChar => _sourceCode[_charIdx];
 
         void MoveToNextChar()
         {
@@ -545,49 +549,49 @@ namespace Chow.Interpreter
 
         #region Char Classification Methods
 
-        static bool IsDigitChar(char checkChar)
+        bool IsDigitChar()
         {
-            return checkChar >= '0' && checkChar <= '9';
+            return CurrentChar >= '0' && CurrentChar <= '9';
         }
 
-        static bool IsAlphaChar(char checkChar)
+        bool IsAlphaChar()
         {
-            return checkChar >= 'a' && checkChar <= 'z' || checkChar >= 'A' && checkChar <= 'Z';
+            return CurrentChar >= 'a' && CurrentChar <= 'z' || CurrentChar >= 'A' && CurrentChar <= 'Z';
         }
 
-        static bool IsIndentChar(char checkChar)
+        bool IsIndentChar()
         {
-            return checkChar == ' ' || checkChar == '\t';
+            return CurrentChar == ' ' || CurrentChar == '\t';
         }
 
-        static bool IsFormFeedChar(char checkChar)
+        bool IsFormFeedChar()
         {
-            return checkChar == '\f';
+            return CurrentChar == '\f';
         }
 
-        static bool IsNewlineChar(char checkChar)
+        bool IsNewlineChar()
         {
-            return checkChar == '\n' || checkChar == '\r';
+            return CurrentChar == '\n' || CurrentChar == '\r';
         }
 
-        static bool IsCommentPrefix(char checkChar)
+        bool IsCommentPrefix()
         {
-            return checkChar == '#';
+            return CurrentChar == '#';
         }
 
-        static bool IsQuoteChar(char checkChar)
+        bool IsQuoteChar()
         {
-            return checkChar == '\'' || checkChar == '"';
+            return CurrentChar == '\'' || CurrentChar == '"';
         }
 
-        static bool IsNameLeadingChar(char checkChar)
+        bool IsNameLeadingChar()
         {
-            return IsAlphaChar(checkChar) || checkChar == '_';
+            return IsAlphaChar() || CurrentChar == '_';
         }
 
-        static bool IsNameTrailChar(char checkChar)
+        bool IsNameTrailChar()
         {
-            return IsAlphaChar(checkChar) || IsDigitChar(checkChar) || checkChar == '_';
+            return IsAlphaChar() || IsDigitChar() || CurrentChar == '_';
         }
 
         #endregion
@@ -596,7 +600,7 @@ namespace Chow.Interpreter
 
         void MovePastNewline()
         {
-            switch (CurrChar)
+            switch (CurrentChar)
             {
                 case '\n':
                 {
@@ -610,7 +614,7 @@ namespace Chow.Interpreter
                     // Older Mac newline (if not followed by \n)
                     MoveToNextChar();
 
-                    if (IsCharToScan && CurrChar == '\n')
+                    if (IsCharToScan && CurrentChar == '\n')
                     {
                         // Windows/MS-DOS newline
                         MoveToNextChar();
@@ -628,15 +632,15 @@ namespace Chow.Interpreter
         {
             while (IsCharToScan)
             {
-                if (IsIndentChar(CurrChar))
+                if (IsIndentChar())
                 {
                     MoveToNextChar();
                 }
-                else if (IsNewlineChar(CurrChar))
+                else if (IsNewlineChar())
                 {
                     MovePastNewline();
                 }
-                else if (IsCommentPrefix(CurrChar))
+                else if (IsCommentPrefix())
                 {
                     SkipRemainingLineChars();
                 }
@@ -653,7 +657,7 @@ namespace Chow.Interpreter
 
         void SkipRemainingLineChars()
         {
-            while (IsCharToScan && !IsNewlineChar(CurrChar))
+            while (IsCharToScan && !IsNewlineChar())
             {
                 MoveToNextChar();
             }
