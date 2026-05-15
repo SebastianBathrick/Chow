@@ -19,9 +19,15 @@ namespace Chow.Interpreter
         public TaggedUnion ValStackTop => _valStack.Count > 0 ? _valStack.Peek() : TaggedUnion.None;
 
         public VirtualMachine(Chunk chunk, IScope moduleScope)
+            : this(moduleScope, chunk)
+        {
+        }
+
+        // Chunk is null when the client is exclusively calling a closure
+        public VirtualMachine(IScope moduleScope = null, Chunk chunk = null)
         {
             _moduleScope = moduleScope ?? new ModuleScope();
-            _callStack = new CallStack(chunk, _moduleScope);
+            _callStack = new CallStack(chunk ?? new Chunk(), _moduleScope);
             _valStack = new Stack<TaggedUnion>();
         }
 
@@ -155,7 +161,7 @@ namespace Chow.Interpreter
                         break;
 
                     case OperationCode.PopExprStmntResult:
-                        // TODO: Find a good use case for this
+                        _valStack.Pop();
                         break;
 
                     case OperationCode.MakeClosure:
@@ -269,11 +275,38 @@ namespace Chow.Interpreter
             _callStack.AssignVariableValue(name, assignVal);
         }
 
+        public TaggedUnion ExecuteCall(string callVarName, List<TaggedUnion> args)
+        {
+            if (!_callStack.IsVariableDefined(callVarName))
+            {
+                throw new UndefinedNameException(callVarName, -1);
+            }
+
+            _valStack.Push(_callStack.GetVariableValue(callVarName));
+
+            if (args != null)
+            {
+                foreach (var arg in args)
+                {
+                    _valStack.Push(arg);
+                }
+            }
+
+            var argCount = args == null ? 0 : args.Count;
+            if (ExecuteCall(argCount))
+            {
+                EvaluateChunk();
+            }
+
+            return _valStack.Pop();
+        }
+
         // Returns true when a Chow Closure was entered (frame pushed, caller IP already advanced).
         // Returns false for the synchronous interop path, where the result is already on the value stack.
         bool ExecuteCall(int argCount)
         {
             var args = new TaggedUnion[argCount];
+
             for (var i = argCount - 1; i >= 0; i--)
             {
                 args[i] = _valStack.Pop();
@@ -282,24 +315,14 @@ namespace Chow.Interpreter
 
             if (calleeUnion.Tag == Tag.Object && calleeUnion.ObjectValue is Closure closure)
             {
-                if (argCount != closure.ParamCount)
-                {
-                    throw new TypeException(
-                        $"{closure.Name}() takes {closure.ParamCount} positional arguments but {argCount} were given");
-                }
-
-                // Re-push args; function body's first ops are param-bind AssignOrDeclareVariable's, popping right-to-left.
-                for (var i = 0; i < argCount; i++)
-                {
-                    _valStack.Push(args[i]);
-                }
-
-                // Advance caller's IP BEFORE pushing the frame so ReturnValue lands at the next caller instruction.
-                _callStack.MoveToNextInstr();
-                _callStack.EnterFunctionCall(closure);
-                return true;
+                return ExecuteClosureCall(argCount, closure, args);
             }
 
+            return ExecuteInteropCall(argCount, calleeUnion, args);
+        }
+
+        private bool ExecuteInteropCall(int argCount, TaggedUnion calleeUnion, TaggedUnion[] args)
+        {
             // Interop dispatch with already-popped values.
             TaggedUnion result;
             if (argCount == 0)
@@ -317,6 +340,26 @@ namespace Chow.Interpreter
 
             _valStack.Push(result);
             return false;
+        }
+
+        private bool ExecuteClosureCall(int argCount, Closure closure, TaggedUnion[] args)
+        {
+            if (argCount != closure.ParamCount)
+            {
+                throw new TypeException(
+                    $"{closure.Name}() takes {closure.ParamCount} positional arguments but {argCount} were given");
+            }
+
+            // Re-push args; function body's first ops are param-bind AssignOrDeclareVariable's, popping right-to-left.
+            for (var i = 0; i < argCount; i++)
+            {
+                _valStack.Push(args[i]);
+            }
+
+            // Advance caller's IP BEFORE pushing the frame so ReturnValue lands at the next caller instruction.
+            _callStack.MoveToNextInstr();
+            _callStack.EnterFunctionCall(closure);
+            return true;
         }
 
         void ExecuteBinaryOperation(Func<TaggedUnion, TaggedUnion, TaggedUnion> operation)

@@ -148,6 +148,17 @@ namespace Chow.Interpreter.Tests
             Assert.That(lastValue.As<long>(), Is.EqualTo(42));
         }
 
+        [Test]
+        public void ExecuteCall_DefinedFunction_ReturnsValue()
+        {
+            (var module, var _) = NewModule();
+            module.Execute("def add(a, b):\n    return a + b");
+
+            var result = module.ExecuteCall("add", new ChowInt(2), new ChowInt(3));
+
+            Assert.That(result.As<long>(), Is.EqualTo(5));
+        }
+
         // ============================================================================================================
         // E. Round-trip through the indexer
         // ============================================================================================================

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Chow.Interpreter.State.Scopes;
 using Chow.Interpreter.State.Values;
 using Chow.Interpreter.Exceptions;
@@ -112,10 +113,31 @@ namespace Chow.Interpreter
             var chunk = compiler.CompileRoot();
             
             // Executes the chunk with the provided module scope, or if null, a new one
-            var vm = new VirtualMachine(chunk, _moduleScope);
+            var vm = new VirtualMachine(_moduleScope, chunk);
 
             // The module scope will now contain any global variables & functions defined in the source code
             _moduleScope = vm.EvaluateChunk();
+        }
+
+        public ChowValue ExecuteCall(string functionName, params ChowValue[] arguments)
+        {
+            ValidateGlobalName(functionName);
+            ValidateGlobalExists(functionName);
+
+            var vm = new VirtualMachine(_moduleScope);
+            var taggedUnionArgs = new List<TaggedUnion>();
+
+            if (arguments != null)
+            {
+                foreach (var argument in arguments)
+                {
+                    var taggedUnionArg = ApiConverter.ToTaggedUnion(argument);
+                    taggedUnionArgs.Add(taggedUnionArg);
+                }
+            }
+
+            var returnedUnion = vm.ExecuteCall(functionName, taggedUnionArgs);
+            return ApiConverter.ToChowValue(returnedUnion);
         }
         
         #region Helper Methods

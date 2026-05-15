@@ -101,6 +101,23 @@ namespace Chow.Interpreter.Tests
             });
         }
 
+        [Test]
+        public void C03_ExpressionStatementInsideFunction_DoesNotPolluteNestedCallStack()
+        {
+            var module = MakeModule();
+            var seen = new List<string>();
+            module["sink"] = (Action<ChowValue>)(value => seen.Add(value.ToString()));
+
+            module.Execute(
+                "def add(x, y):\n" +
+                "    sink('Adding')\n" +
+                "    return x + y");
+
+            module.Execute("sink(add(1, 2))");
+
+            Assert.That(seen, Is.EqualTo(new[] { "Adding", "3" }));
+        }
+
         // ------------------------------------------------------------------------------------------------------------
         // D — Error cases
         // ------------------------------------------------------------------------------------------------------------

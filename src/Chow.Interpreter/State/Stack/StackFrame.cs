@@ -24,7 +24,7 @@ namespace Chow.Interpreter.State.Stack
         public Instruction CurrentInstr => Chunk[_instrIdx];
 
         /// <summary>True while the instruction pointer has not reached the end of the chunk.</summary>
-        public bool IsInstrToRun => Chunk.InstructionCount != _instrIdx;
+        public bool IsInstrToRun => _instrIdx < Chunk.InstructionCount;
 
         /// <summary>Source line number associated with the current instruction.</summary>
         public int CurrentLineNum => Chunk.GetInstructionLineIndex(_instrIdx);

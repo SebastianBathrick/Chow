@@ -4,4 +4,5 @@
   <Project Path="src/DeveloperTools/CodeEditor/CodeEditor.csproj" />
   <Project Path="tests/Chow.Interpreter.ImplTests/Chow.Interpreter.ImplTests.csproj" />
   <Project Path="tests/Chow.Interpreter.Tests/Chow.Interpreter.Tests.csproj" />
+  <Project Path="tests/Chow.Interpreter.UxTests/Chow.Interpreter.UxTests.csproj" Id="64f80280-80bf-4066-922a-1061d33f3b69" />
 </Solution>
