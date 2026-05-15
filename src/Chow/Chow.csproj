@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Chow.Interpreter\Chow.Interpreter.csproj" />
-    <ProjectReference Include="..\Chow\Chow.Interpreter.csproj" />
   </ItemGroup>
 
 </Project>

@@ -468,6 +468,15 @@ namespace Chow.Interpreter
             var numTokenType = isFloat ? TokenType.LiteralFloat : TokenType.LiteralInt;
             object literal;
 
+            literal = ParseNumericLiteral(isFloat, lexeme, numTokenType);
+
+            AddNewToken(numTokenType, lexeme, _lineNum, literal);
+        }
+        
+        static object ParseNumericLiteral(bool isFloat, string lexeme, TokenType numTokenType)
+        {
+
+            object literal;
             try
             {
                 if (isFloat)
@@ -489,7 +498,7 @@ namespace Chow.Interpreter
                 throw new InvalidOperationException();
             }
 
-            AddNewToken(numTokenType, lexeme, _lineNum, literal);
+            return literal;
         }
 
         void ScanStringToken()
