@@ -1,8 +1,8 @@
 namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    class BreakNode : Node
+    class BreakStatementNode : Node
     {
-        public BreakNode(int line) : base(line)
+        public BreakStatementNode(int line) : base(line)
         {
         }
 

@@ -1,8 +1,7 @@
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State.Values;
 using Chow.Interpreter.Values;
-
-namespace Chow.Interpreter.ImplementationTests
+namespace Chow.Interpreter.ImplTests
 {
     [TestFixture]
     public class DictExecutionTests

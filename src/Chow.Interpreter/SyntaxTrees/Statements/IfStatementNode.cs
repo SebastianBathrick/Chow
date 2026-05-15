@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    class IfNode : Node
+    class IfStatementNode : Node
     {
         public Node Expr { get; }
 
@@ -8,7 +8,7 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
 
         public Node Branch { get; }
 
-        public IfNode(Node expr, Node block, Node branch, int line) : base(line)
+        public IfStatementNode(Node expr, Node block, Node branch, int line) : base(line)
         {
             Expr = expr;
             Block = block;

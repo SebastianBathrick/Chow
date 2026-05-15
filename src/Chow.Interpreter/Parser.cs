@@ -3,8 +3,12 @@ using Chow.Interpreter.Tokens;
 using System;
 using System.Collections.Generic;
 using Chow.Interpreter.SyntaxTrees;
+using Chow.Interpreter.SyntaxTrees.Attributes;
 using Chow.Interpreter.SyntaxTrees.Expressions;
+using Chow.Interpreter.SyntaxTrees.Literals;
+using Chow.Interpreter.SyntaxTrees.Scope;
 using Chow.Interpreter.SyntaxTrees.Statements;
+using Chow.Interpreter.SyntaxTrees.Subscripts;
 
 namespace Chow.Interpreter
 {
@@ -21,19 +25,19 @@ namespace Chow.Interpreter
     /// </summary>
     class Parser
     {
-        readonly List<Token> _tkns;
-        int _tknIdx;
+        readonly List<Token> _tokens;
+        int _tokenIdx;
 
-        Token CurrToken => _tkns[_tknIdx];
-        Token PrevTkn => _tkns[_tknIdx - 1];
+        Token CurrToken => _tokens[_tokenIdx];
+        Token PrevToken => _tokens[_tokenIdx - 1];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Parser"/> class with the tokens to analyze.
         /// </summary>
-        /// <param name="tkns">The <see cref="Token"/> list produced by the <see cref="Scanner"/>.</param>
-        public Parser(List<Token> tkns)
+        /// <param name="tokens">The <see cref="Token"/> list produced by the <see cref="Scanner"/>.</param>
+        public Parser(List<Token> tokens)
         {
-            _tkns = tkns;
+            _tokens = tokens;
         }
 
         #region Primary Methods
@@ -71,7 +75,7 @@ namespace Chow.Interpreter
                     continue;
                 }
 
-                var hasBlock = newStatement is FunctionNode || newStatement is IfNode || newStatement is WhileNode;
+                var hasBlock = newStatement is FunctionNode || newStatement is IfStatementNode || newStatement is WhileStatementNode;
 
                 if (hasBlock)
                 {
@@ -90,7 +94,7 @@ namespace Chow.Interpreter
             ConsumeToken(TokenType.SymbolColon, "Expected ':' after block header.");
             ConsumeToken(TokenType.Newline, "Expected newline after ':'.");
 
-            var indentTkn = ConsumeToken(TokenType.Indent, "Expected indented block body.");
+            var indentToken = ConsumeToken(TokenType.Indent, "Expected indented block body.");
             var statements = new List<Node>
             {
                 ParseStatement()
@@ -112,7 +116,7 @@ namespace Chow.Interpreter
             }
 
             ConsumeToken(TokenType.Dedent, "Expected dedent to close block.");
-            return new BlockNode(statements, indentTkn.lineNum);
+            return new BlockNode(statements, indentToken.lineNum);
         }
 
         #endregion
@@ -125,27 +129,27 @@ namespace Chow.Interpreter
             {
                 case TokenType.KeywordReturn:
                 {
-                    return ParseReturn();
+                    return ParseReturnStatement();
                 }
 
                 case TokenType.KeywordIf:
                 {
-                    return ParseIf();
+                    return ParseIfStatement();
                 }
 
                 case TokenType.KeywordDef:
                 {
-                    return ParseFunction();
+                    return ParseFunctionDefinition();
                 }
 
                 case TokenType.KeywordWhile:
                 {
-                    return ParseWhile();
+                    return ParseWhileStatement();
                 }
 
                 case TokenType.KeywordBreak:
                 {
-                    return ParseBreak();
+                    return ParseBreakStatement();
                 }
 
                 case TokenType.KeywordContinue:
@@ -160,7 +164,7 @@ namespace Chow.Interpreter
 
                 case TokenType.KeywordNonlocal:
                 {
-                    return ParseNonlocalDecl();
+                    return ParseNonlocalDeclaration();
                 }
             }
 
@@ -172,15 +176,15 @@ namespace Chow.Interpreter
             // Parse expression first; if an '=' follows, convert the LHS into the appropriate assignment node.
             // Otherwise, this is a standalone expression statement (result discarded or routed to hook).
             var startLine = CurrToken.lineNum;
-            var lhs = ParseExpr();
+            var lhs = ParseExpression();
 
             if (!TryConsumeType(TokenType.SymbolAssign))
             {
-                return new ExprStatementNode(lhs, startLine);
+                return new ExpressionStatementNode(lhs, startLine);
             }
 
-            var eqLine = PrevTkn.lineNum;
-            var rhs = ParseExpr();
+            var eqLine = PrevToken.lineNum;
+            var rhs = ParseExpression();
             return MakeAssignFromTarget(lhs, rhs, eqLine);
         }
 
@@ -190,7 +194,7 @@ namespace Chow.Interpreter
             {
                 case NameNode nameNode:
                 {
-                    return new VarAssignNode(nameNode.Name, value, line);
+                    return new VariableAssignStatementNode(nameNode.Name, value, line);
 
                 }
                 case SubscriptNode subscriptNode:
@@ -199,20 +203,20 @@ namespace Chow.Interpreter
                 }
                 case AttributeAccessNode attrNode:
                 {
-                    return new AttributeAssignNode(attrNode.Target, attrNode.AttrName, value, line);
+                    return new AttributeAssignNode(attrNode.Target, attrNode.AttributeName, value, line);
                 }
             }
 
             throw new ParserEx("Invalid assignment target.", line);
         }
 
-        Node ParseFunction()
+        Node ParseFunctionDefinition()
         {
             var line = CurrToken.lineNum;
 
             ConsumeToken(TokenType.KeywordDef, "Expected 'def' keyword.");
 
-            var nameTkn = ConsumeToken(TokenType.Identifier, "Expected function name.");
+            var nameToken = ConsumeToken(TokenType.Identifier, "Expected function name.");
 
             ConsumeToken(TokenType.SymbolLeftParen, "Expected '(' after function name.");
 
@@ -220,46 +224,46 @@ namespace Chow.Interpreter
 
             if (!IsTokenType(TokenType.SymbolRightParen))
             {
-                var paramTkn = ConsumeToken(TokenType.Identifier, "Expected parameter name.");
-                paramList.Add(new NameNode(paramTkn.lexeme, paramTkn.lineNum));
+                var paramToken = ConsumeToken(TokenType.Identifier, "Expected parameter name.");
+                paramList.Add(new NameNode(paramToken.lexeme, paramToken.lineNum));
 
                 while (TryConsumeType(TokenType.SymbolComma))
                 {
-                    paramTkn = ConsumeToken(TokenType.Identifier, "Expected parameter name after ','.");
-                    paramList.Add(new NameNode(paramTkn.lexeme, paramTkn.lineNum));
+                    paramToken = ConsumeToken(TokenType.Identifier, "Expected parameter name after ','.");
+                    paramList.Add(new NameNode(paramToken.lexeme, paramToken.lineNum));
                 }
             }
 
             ConsumeToken(TokenType.SymbolRightParen, "Expected ')' after parameter list.");
             var body = ParseBlock();
 
-            return new FunctionNode(nameTkn.lexeme, paramList, body, line);
+            return new FunctionNode(nameToken.lexeme, paramList, body, line);
         }
 
-        Node ParseIf()
+        Node ParseIfStatement()
         {
             var line = CurrToken.lineNum;
             ConsumeToken(TokenType.KeywordIf, "Expected 'if' keyword.");
 
-            var expr = ParseExpr();
+            var expr = ParseExpression();
             var block = ParseBlock();
-            var branch = ParseBranch();
+            var branch = ParseBranchStatement();
 
-            return new IfNode(expr, block, branch, line);
+            return new IfStatementNode(expr, block, branch, line);
         }
 
-        Node ParseBranch()
+        Node ParseBranchStatement()
         {
             if (IsTokenType(TokenType.KeywordElif))
             {
                 var line = CurrToken.lineNum;
                 ConsumeToken();
 
-                var expr = ParseExpr();
+                var expr = ParseExpression();
                 var block = ParseBlock();
-                var branch = ParseBranch();
+                var branch = ParseBranchStatement();
 
-                return new BranchStmntNode(expr, block, branch, line);
+                return new BranchStatementNode(expr, block, branch, line);
             }
 
             if (IsTokenType(TokenType.KeywordElse))
@@ -268,46 +272,46 @@ namespace Chow.Interpreter
                 ConsumeToken();
 
                 var block = ParseBlock();
-                return new BranchStmntNode(null, block, null, line);
+                return new BranchStatementNode(null, block, null, line);
             }
 
             return null;
         }
 
-        Node ParseWhile()
+        Node ParseWhileStatement()
         {
             var line = CurrToken.lineNum;
             ConsumeToken(TokenType.KeywordWhile, "Expected 'while' keyword.");
 
-            var expr = ParseExpr();
+            var expr = ParseExpression();
             var block = ParseBlock();
 
-            return new WhileNode(expr, block, line);
+            return new WhileStatementNode(expr, block, line);
         }
 
-        Node ParseBreak()
+        Node ParseBreakStatement()
         {
             var line = CurrToken.lineNum;
             ConsumeToken(TokenType.KeywordBreak, "Expected 'break' keyword.");
-            return new BreakNode(line);
+            return new BreakStatementNode(line);
         }
 
         Node ParseContinue()
         {
             var line = CurrToken.lineNum;
             ConsumeToken(TokenType.KeywordContinue, "Expected 'continue' keyword.");
-            return new ContinueNode(line);
+            return new ContinueStatementNode(line);
         }
 
-        Node ParseReturn()
+        Node ParseReturnStatement()
         {
             var line = CurrToken.lineNum;
             ConsumeToken(TokenType.KeywordReturn, "Expected 'return' keyword.");
 
             // Void functions always return None, and their calls inside expressions will not cause an error
-            var expr = IsPrimaryToken() ? ParseExpr() : null;
+            var expr = IsPrimaryToken() ? ParseExpression() : null;
 
-            return new ReturnNode(expr, line);
+            return new ReturnStatementNode(expr, line);
         }
 
         Node ParseGlobalDeclaration()
@@ -315,27 +319,27 @@ namespace Chow.Interpreter
             var line = CurrToken.lineNum;
             ConsumeToken(TokenType.KeywordGlobal, "Expected 'global' keyword.");
             var names = ParseDeclNameList("global");
-            return new GlobalDeclNode(names, line);
+            return new GlobalDeclarationNode(names, line);
         }
 
-        Node ParseNonlocalDecl()
+        Node ParseNonlocalDeclaration()
         {
             var line = CurrToken.lineNum;
             ConsumeToken(TokenType.KeywordNonlocal, "Expected 'nonlocal' keyword.");
             var names = ParseDeclNameList("nonlocal");
-            return new NonlocalDeclNode(names, line);
+            return new NonlocalDeclarationNode(names, line);
         }
 
         List<string> ParseDeclNameList(string keyword)
         {
             var names = new List<string>();
-            var firstTkn = ConsumeToken(TokenType.Identifier, $"Expected identifier after '{keyword}'.");
-            names.Add(firstTkn.lexeme);
+            var firstToken = ConsumeToken(TokenType.Identifier, $"Expected identifier after '{keyword}'.");
+            names.Add(firstToken.lexeme);
 
             while (TryConsumeType(TokenType.SymbolComma))
             {
-                var nameTkn = ConsumeToken(TokenType.Identifier, $"Expected identifier after ',' in '{keyword}' declaration.");
-                names.Add(nameTkn.lexeme);
+                var nameToken = ConsumeToken(TokenType.Identifier, $"Expected identifier after ',' in '{keyword}' declaration.");
+                names.Add(nameToken.lexeme);
             }
 
             return names;
@@ -345,45 +349,45 @@ namespace Chow.Interpreter
 
         #region Expression Methods
 
-        Node ParseExpr()
+        Node ParseExpression()
         {
             return ParseOr();
         }
 
         Node ParseOr()
         {
-            var l = ParseAnd();
+            var leftNode = ParseAnd();
 
             while (TryConsumeType(TokenType.KeywordOr))
             {
-                var opTkn = PrevTkn;
-                var r = ParseAnd();
-                l = new ExprNode(ExprOperator.Or, l, r, opTkn.lineNum);
+                var opToken = PrevToken;
+                var rightNode = ParseAnd();
+                leftNode = new ExpressionNode(ExpressionOperator.Or, leftNode, rightNode, opToken.lineNum);
             }
 
-            return l;
+            return leftNode;
         }
 
         Node ParseAnd()
         {
-            var l = ParseNot();
+            var leftNode = ParseNot();
 
             while (TryConsumeType(TokenType.KeywordAnd))
             {
-                var opTkn = PrevTkn;
-                var r = ParseNot();
-                l = new ExprNode(ExprOperator.And, l, r, opTkn.lineNum);
+                var opToken = PrevToken;
+                var rightNode = ParseNot();
+                leftNode = new ExpressionNode(ExpressionOperator.And, leftNode, rightNode, opToken.lineNum);
             }
 
-            return l;
+            return leftNode;
         }
 
         Node ParseNot()
         {
             if (TryConsumeType(TokenType.KeywordNot))
             {
-                var opTkn = PrevTkn;
-                return new ExprNode(ExprOperator.Not, ParseNot(), opTkn.lineNum);
+                var opToken = PrevToken;
+                return new ExpressionNode(ExpressionOperator.Not, ParseNot(), opToken.lineNum);
             }
 
             return ParseComparison();
@@ -391,12 +395,12 @@ namespace Chow.Interpreter
 
         Node ParseComparison()
         {
-            var l = ParseBitOr();
+            var leftNode = ParseBitOr();
             Node result = null;
 
             while (true)
             {
-                ExprOperator op;
+                ExpressionOperator op;
                 int opLine;
 
                 if (TryConsumeType(
@@ -408,23 +412,23 @@ namespace Chow.Interpreter
                     TokenType.SymbolGreaterEqual,
                     TokenType.KeywordIn))
                 {
-                    op = MapBinary(PrevTkn.type);
-                    opLine = PrevTkn.lineNum;
+                    op = MapBinary(PrevToken.type);
+                    opLine = PrevToken.lineNum;
                 }
                 else if (IsTokenType(TokenType.KeywordNot) && PeekTokenType(TokenType.KeywordIn))
                 {
                     opLine = CurrToken.lineNum;
                     ConsumeToken();
                     ConsumeToken();
-                    op = ExprOperator.NotIn;
+                    op = ExpressionOperator.NotIn;
                 }
                 else
                 {
                     break;
                 }
 
-                var r = ParseBitOr();
-                Node comparison = new ExprNode(op, l, r, opLine);
+                var rightNode = ParseBitOr();
+                Node comparison = new ExpressionNode(op, leftNode, rightNode, opLine);
 
                 if (result == null)
                 {
@@ -432,63 +436,63 @@ namespace Chow.Interpreter
                 }
                 else
                 {
-                    result = new ExprNode(ExprOperator.And, result, comparison, opLine);
+                    result = new ExpressionNode(ExpressionOperator.And, result, comparison, opLine);
                 }
 
-                l = r;
+                leftNode = rightNode;
             }
 
-            return result ?? l;
+            return result ?? leftNode;
         }
 
         Node ParseBitOr()
         {
-            var l = ParseAdd();
+            var leftNode = ParseAdd();
 
             while (TryConsumeType(TokenType.SymbolPipe))
             {
-                var opTkn = PrevTkn;
-                var r = ParseAdd();
-                l = new ExprNode(ExprOperator.BinaryOr, l, r, opTkn.lineNum);
+                var opToken = PrevToken;
+                var rightNode = ParseAdd();
+                leftNode = new ExpressionNode(ExpressionOperator.BinaryOr, leftNode, rightNode, opToken.lineNum);
             }
 
-            return l;
+            return leftNode;
         }
 
         Node ParseAdd()
         {
-            var l = ParseTerm();
+            var leftNode = ParseTerm();
 
             while (TryConsumeType(TokenType.SymbolPlus, TokenType.SymbolMinus))
             {
-                var opTkn = PrevTkn;
-                var r = ParseTerm();
-                l = new ExprNode(MapBinary(opTkn.type), l, r, opTkn.lineNum);
+                var opToken = PrevToken;
+                var rightNode = ParseTerm();
+                leftNode = new ExpressionNode(MapBinary(opToken.type), leftNode, rightNode, opToken.lineNum);
             }
 
-            return l;
+            return leftNode;
         }
 
         Node ParseTerm()
         {
-            var l = ParseFactor();
+            var leftNode = ParseFactor();
 
             while (TryConsumeType(TokenType.SymbolMultiply, TokenType.SymbolDivide, TokenType.SymbolFloorDivide, TokenType.SymbolPercent))
             {
-                var opTkn = PrevTkn;
-                var r = ParseFactor();
-                l = new ExprNode(MapBinary(opTkn.type), l, r, opTkn.lineNum);
+                var opToken = PrevToken;
+                var rightNode = ParseFactor();
+                leftNode = new ExpressionNode(MapBinary(opToken.type), leftNode, rightNode, opToken.lineNum);
             }
 
-            return l;
+            return leftNode;
         }
 
         Node ParseFactor()
         {
             if (TryConsumeType(TokenType.SymbolMinus))
             {
-                var opTkn = PrevTkn;
-                return new ExprNode(ExprOperator.Negate, ParseFactor(), opTkn.lineNum);
+                var opToken = PrevToken;
+                return new ExpressionNode(ExpressionOperator.Negate, ParseFactor(), opToken.lineNum);
             }
 
             return ParseExponent();
@@ -496,16 +500,16 @@ namespace Chow.Interpreter
 
         Node ParseExponent()
         {
-            var l = ParsePostfix();
+            var leftNode = ParsePostfix();
 
             if (TryConsumeType(TokenType.SymbolExponent))
             {
-                var opTkn = PrevTkn;
-                var r = ParseFactor();
-                return new ExprNode(ExprOperator.Exponentiate, l, r, opTkn.lineNum);
+                var opToken = PrevToken;
+                var rightNode = ParseFactor();
+                return new ExpressionNode(ExpressionOperator.Exponentiate, leftNode, rightNode, opToken.lineNum);
             }
 
-            return l;
+            return leftNode;
         }
 
         Node ParsePostfix()
@@ -520,7 +524,7 @@ namespace Chow.Interpreter
                 {
                     case TokenType.SymbolDot:
                     {
-                        node = ParseAttrAccessTail(node);
+                        node = ParseAttributeAccessTail(node);
                         break;
                     }
                     case TokenType.SymbolLeftBracket:
@@ -545,12 +549,12 @@ namespace Chow.Interpreter
             return node;
         }
 
-        Node ParseAttrAccessTail(Node targ)
+        Node ParseAttributeAccessTail(Node targ)
         {
-            var dotTkn = ConsumeToken(TokenType.SymbolDot, "Expected '.'.");
-            var nameTkn = ConsumeToken(TokenType.Identifier, "Expected attribute name after '.'.");
+            var dotToken = ConsumeToken(TokenType.SymbolDot, "Expected '.'.");
+            var nameToken = ConsumeToken(TokenType.Identifier, "Expected attribute name after '.'.");
 
-            return new AttributeAccessNode(targ, nameTkn.lexeme, dotTkn.lineNum);
+            return new AttributeAccessNode(targ, nameToken.lexeme, dotToken.lineNum);
         }
 
         Node ParseSubscriptTail(Node targ)
@@ -571,7 +575,7 @@ namespace Chow.Interpreter
 
             if (!IsTokenType(TokenType.SymbolColon))
             {
-                var first = ParseExpr();
+                var first = ParseExpression();
 
                 if (!IsTokenType(TokenType.SymbolColon))
                 {
@@ -588,15 +592,15 @@ namespace Chow.Interpreter
 
             if (!IsTokenType(TokenType.SymbolColon) && !IsTokenType(TokenType.SymbolRightBracket))
             {
-                stop = ParseExpr();
+                stop = ParseExpression();
             }
 
             if (TryConsumeType(TokenType.SymbolColon) && !IsTokenType(TokenType.SymbolRightBracket))
             {
-                step = ParseExpr();
+                step = ParseExpression();
             }
 
-            return new SliceNode(start, stop, step, sliceLine);
+            return new SubscriptSliceNode(start, stop, step, sliceLine);
         }
 
         Node ParseInvokeTail(Node callNameNode)
@@ -606,11 +610,11 @@ namespace Chow.Interpreter
 
             if (!IsTokenType(TokenType.SymbolRightParen))
             {
-                args.Add(ParseExpr());
+                args.Add(ParseExpression());
 
                 while (TryConsumeType(TokenType.SymbolComma))
                 {
-                    args.Add(ParseExpr());
+                    args.Add(ParseExpression());
                 }
             }
 
@@ -620,22 +624,22 @@ namespace Chow.Interpreter
 
         Node ParseListLiteral()
         {
-            var leftBr = ConsumeToken(TokenType.SymbolLeftBracket, "Expected '['.");
-            var elems = new List<Node>();
+            var leftBracket = ConsumeToken(TokenType.SymbolLeftBracket, "Expected '['.");
+            var elements = new List<Node>();
 
             if (!IsTokenType(TokenType.SymbolRightBracket))
             {
-                elems.Add(ParseExpr());
+                elements.Add(ParseExpression());
 
                 // Allow trailing comma: `[1, 2,]`
                 while (TryConsumeType(TokenType.SymbolComma) && !IsTokenType(TokenType.SymbolRightBracket))
                 {
-                    elems.Add(ParseExpr());
+                    elements.Add(ParseExpression());
                 }
             }
 
             ConsumeToken(TokenType.SymbolRightBracket, "Expected ']' to close list literal.");
-            return new ListLiteralNode(elems, leftBr.lineNum);
+            return new ListLiteralNode(elements, leftBracket.lineNum);
         }
 
         Node ParseDictLiteral()
@@ -655,14 +659,14 @@ namespace Chow.Interpreter
             }
 
             ConsumeToken(TokenType.SymbolRightCurly, "Expected '}' to close dict literal.");
-            return new DictLiteralNode(keys, values, leftCurly.lineNum);
+            return new ListDictNode(keys, values, leftCurly.lineNum);
         }
 
         void ParseDictEntry(List<Node> keys, List<Node> values)
         {
-            var key = ParseExpr();
+            var key = ParseExpression();
             ConsumeToken(TokenType.SymbolColon, "Expected ':' between dict key and value.");
-            var value = ParseExpr();
+            var value = ParseExpression();
             keys.Add(key);
             values.Add(value);
         }
@@ -676,42 +680,42 @@ namespace Chow.Interpreter
             {
                 case TokenType.Identifier:
                 {
-                    var idTkn = CurrToken;
+                    var idToken = CurrToken;
                     ConsumeToken();
-                    return new NameNode(idTkn.lexeme, idTkn.lineNum);
+                    return new NameNode(idToken.lexeme, idToken.lineNum);
                 }
 
                 case TokenType.LiteralInt:
                 case TokenType.LiteralFloat:
                 case TokenType.LiteralStr:
                 {
-                    var numTkn = CurrToken;
+                    var numToken = CurrToken;
                     ConsumeToken();
-                    return new LiteralNode(numTkn.literal, numTkn.lineNum);
+                    return new LiteralNode(numToken.literal, numToken.lineNum);
                 }
 
                 case TokenType.KeywordNone:
                 {
                     ConsumeToken(TokenType.KeywordNone);
-                    return new LiteralNode(value: null, PrevTkn.lineNum);
+                    return new LiteralNode(value: null, PrevToken.lineNum);
                 }
 
                 case TokenType.KeywordTrue:
                 {
                     ConsumeToken(TokenType.KeywordTrue);
-                    return new LiteralNode(value: true, PrevTkn.lineNum);
+                    return new LiteralNode(value: true, PrevToken.lineNum);
                 }
 
                 case TokenType.KeywordFalse:
                 {
                     ConsumeToken(TokenType.KeywordFalse);
-                    return new LiteralNode(value: false, PrevTkn.lineNum);
+                    return new LiteralNode(value: false, PrevToken.lineNum);
                 }
 
                 case TokenType.SymbolLeftParen:
                 {
                     ConsumeToken();
-                    var inner = ParseExpr();
+                    var inner = ParseExpression();
                     ConsumeToken(TokenType.SymbolRightParen);
                     return inner;
                 }
@@ -741,7 +745,7 @@ namespace Chow.Interpreter
         {
             if (CurrToken.type != TokenType.EndOfCode)
             {
-                _tknIdx++;
+                _tokenIdx++;
             }
         }
 
@@ -752,23 +756,21 @@ namespace Chow.Interpreter
 
         bool PeekTokenType(TokenType type, int offset = 1)
         {
-            var nextIndex = _tknIdx + offset;
+            var nextIndex = _tokenIdx + offset;
 
             // This method will never be called when the current token is EndOfCode, so we don't need to check for out-of-range.
-            return _tkns[nextIndex].type == type;
+            return _tokens[nextIndex].type == type;
         }
 
         bool TryConsumeType(params TokenType[] types)
         {
             foreach (var type in types)
             {
-                if (!IsTokenType(type))
+                if (IsTokenType(type))
                 {
-                    continue;
+                    ConsumeToken();
+                    return true;
                 }
-
-                ConsumeToken();
-                return true;
             }
 
             return false;
@@ -788,113 +790,118 @@ namespace Chow.Interpreter
 
         bool IsPrimaryToken()
         {
-            var type = CurrToken.type;
-            return type == TokenType.Identifier ||
-                   type == TokenType.LiteralInt ||
-                   type == TokenType.LiteralFloat ||
-                   type == TokenType.LiteralStr ||
-                   type == TokenType.KeywordNone ||
-                   type == TokenType.KeywordTrue ||
-                   type == TokenType.KeywordFalse ||
-                   type == TokenType.KeywordNot ||
-                   type == TokenType.SymbolLeftParen ||
-                   type == TokenType.SymbolLeftBracket ||
-                   type == TokenType.SymbolLeftCurly;
+            switch (CurrToken.type)
+            {
+                case TokenType.Identifier: 
+                case TokenType.LiteralInt:
+                case TokenType.LiteralFloat:
+                case TokenType.LiteralStr:
+                case TokenType.KeywordNone:
+                case TokenType.KeywordTrue:
+                case TokenType.KeywordFalse:
+                case TokenType.KeywordNot:
+                case TokenType.SymbolLeftParen:
+                case TokenType.SymbolLeftBracket:
+                case TokenType.SymbolLeftCurly:
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         #endregion
 
         #region Helper Methods
 
-
-
-        static ExprOperator MapBinary(TokenType type)
+        static ExpressionOperator MapBinary(TokenType type)
         {
             switch (type)
             {
                 case TokenType.SymbolPlus:
                 {
-                    return ExprOperator.Add;
+                    return ExpressionOperator.Add;
                 }
 
                 case TokenType.SymbolMinus:
                 {
-                    return ExprOperator.Subtract;
+                    return ExpressionOperator.Subtract;
                 }
 
                 case TokenType.SymbolMultiply:
                 {
-                    return ExprOperator.Multiply;
+                    return ExpressionOperator.Multiply;
                 }
 
                 case TokenType.SymbolDivide:
                 {
-                    return ExprOperator.Divide;
+                    return ExpressionOperator.Divide;
                 }
 
                 case TokenType.SymbolPercent:
                 {
-                    return ExprOperator.Modulus;
+                    return ExpressionOperator.Modulus;
                 }
 
                 case TokenType.SymbolExponent:
                 {
-                    return ExprOperator.Exponentiate;
+                    return ExpressionOperator.Exponentiate;
                 }
 
                 case TokenType.SymbolFloorDivide:
                 {
-                    return ExprOperator.FloorDivide;
+                    return ExpressionOperator.FloorDivide;
                 }
 
                 case TokenType.SymbolEqualTo:
                 {
-                    return ExprOperator.Equal;
+                    return ExpressionOperator.Equal;
                 }
 
                 case TokenType.SymbolNotEqual:
                 {
-                    return ExprOperator.NotEqual;
+                    return ExpressionOperator.NotEqual;
                 }
 
                 case TokenType.SymbolLess:
                 {
-                    return ExprOperator.Less;
+                    return ExpressionOperator.Less;
                 }
 
                 case TokenType.SymbolGreater:
                 {
-                    return ExprOperator.Greater;
+                    return ExpressionOperator.Greater;
                 }
 
                 case TokenType.SymbolLessEqual:
                 {
-                    return ExprOperator.LessEqual;
+                    return ExpressionOperator.LessEqual;
                 }
 
                 case TokenType.SymbolGreaterEqual:
                 {
-                    return ExprOperator.GreaterEqual;
+                    return ExpressionOperator.GreaterEqual;
                 }
 
                 case TokenType.KeywordAnd:
                 {
-                    return ExprOperator.And;
+                    return ExpressionOperator.And;
                 }
 
                 case TokenType.KeywordOr:
                 {
-                    return ExprOperator.Or;
+                    return ExpressionOperator.Or;
                 }
 
                 case TokenType.SymbolPipe:
                 {
-                    return ExprOperator.BinaryOr;
+                    return ExpressionOperator.BinaryOr;
                 }
 
                 case TokenType.KeywordIn:
                 {
-                    return ExprOperator.In;
+                    return ExpressionOperator.In;
                 }
 
                 default:

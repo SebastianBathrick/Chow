@@ -1,6 +1,6 @@
-namespace Chow.Interpreter.SyntaxTrees.Expressions
+namespace Chow.Interpreter.SyntaxTrees.Subscripts
 {
-    class SliceNode : Node
+    class SubscriptSliceNode : Node
     {
         public Node Start { get; }
 
@@ -8,7 +8,7 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 
         public Node Step { get; }
 
-        public SliceNode(Node start, Node stop, Node step, int line) : base(line)
+        public SubscriptSliceNode(Node start, Node stop, Node step, int line) : base(line)
         {
             Start = start;
             Stop = stop;

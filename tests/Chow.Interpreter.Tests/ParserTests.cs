@@ -1,7 +1,11 @@
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.SyntaxTrees;
+using Chow.Interpreter.SyntaxTrees.Attributes;
 using Chow.Interpreter.SyntaxTrees.Expressions;
+using Chow.Interpreter.SyntaxTrees.Literals;
+using Chow.Interpreter.SyntaxTrees.Scope;
 using Chow.Interpreter.SyntaxTrees.Statements;
+using Chow.Interpreter.SyntaxTrees.Subscripts;
 using Chow.Interpreter.Tokens;
 
 namespace Chow.Interpreter.Tests
@@ -30,7 +34,7 @@ namespace Chow.Interpreter.Tests
         static Node UnwrapAssignmentExpression(Node root)
         {
             var statement = ((TreeRootNode)root).Statements[0];
-            return ((VarAssignNode)statement).Expression;
+            return ((VariableAssignStatementNode)statement).Expression;
         }
 
         static Token Token(TokenType type, string lexeme, int lineNumber, object literal = null!) =>
@@ -47,10 +51,10 @@ namespace Chow.Interpreter.Tests
             });
         }
 
-        static ExprNode AssertBinary(Node node, ExprOperator expectedOp)
+        static ExpressionNode AssertBinary(Node node, ExpressionOperator expectedOp)
         {
-            Assert.That(node, Is.InstanceOf<ExprNode>());
-            var op = (ExprNode)node;
+            Assert.That(node, Is.InstanceOf<ExpressionNode>());
+            var op = (ExpressionNode)node;
             Assert.Multiple(() =>
             {
                 Assert.That(op.Operator, Is.EqualTo(expectedOp));
@@ -59,13 +63,13 @@ namespace Chow.Interpreter.Tests
             return op;
         }
 
-        static ExprNode AssertUnary(Node node)
+        static ExpressionNode AssertUnary(Node node)
         {
-            Assert.That(node, Is.InstanceOf<ExprNode>());
-            var op = (ExprNode)node;
+            Assert.That(node, Is.InstanceOf<ExpressionNode>());
+            var op = (ExpressionNode)node;
             Assert.Multiple(() =>
             {
-                Assert.That(op.Operator, Is.EqualTo(ExprOperator.Negate));
+                Assert.That(op.Operator, Is.EqualTo(ExpressionOperator.Negate));
                 Assert.That(op.Right, Is.Null);
             });
             return op;
@@ -130,43 +134,43 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void BuildSyntaxTree_Addition_BuildsAddNode()
         {
-            AssertBinary(Parse("1 + 2"), ExprOperator.Add);
+            AssertBinary(Parse("1 + 2"), ExpressionOperator.Add);
         }
 
         [Test]
         public void BuildSyntaxTree_Subtraction_BuildsSubtractNode()
         {
-            AssertBinary(Parse("3 - 1"), ExprOperator.Subtract);
+            AssertBinary(Parse("3 - 1"), ExpressionOperator.Subtract);
         }
 
         [Test]
         public void BuildSyntaxTree_Multiplication_BuildsMultiplyNode()
         {
-            AssertBinary(Parse("2 * 3"), ExprOperator.Multiply);
+            AssertBinary(Parse("2 * 3"), ExpressionOperator.Multiply);
         }
 
         [Test]
         public void BuildSyntaxTree_Division_BuildsDivideNode()
         {
-            AssertBinary(Parse("6 / 2"), ExprOperator.Divide);
+            AssertBinary(Parse("6 / 2"), ExpressionOperator.Divide);
         }
 
         [Test]
         public void BuildSyntaxTree_Modulus_BuildsModulusNode()
         {
-            AssertBinary(Parse("7 % 2"), ExprOperator.Modulus);
+            AssertBinary(Parse("7 % 2"), ExpressionOperator.Modulus);
         }
 
         [Test]
         public void BuildSyntaxTree_Exponent_BuildsExponentiateNode()
         {
-            AssertBinary(Parse("2 ** 3"), ExprOperator.Exponentiate);
+            AssertBinary(Parse("2 ** 3"), ExpressionOperator.Exponentiate);
         }
 
         [Test]
         public void BuildSyntaxTree_FloorDivide_BuildsFloorDivideNode()
         {
-            AssertBinary(Parse("7 // 2"), ExprOperator.FloorDivide);
+            AssertBinary(Parse("7 // 2"), ExpressionOperator.FloorDivide);
         }
 
         [Test]
@@ -198,9 +202,9 @@ namespace Chow.Interpreter.Tests
         {
             // 1 + 2 * 3 => Add(1, Multiply(2, 3))
             var result = Parse("1 + 2 * 3");
-            var add = AssertBinary(result, ExprOperator.Add);
+            var add = AssertBinary(result, ExpressionOperator.Add);
             AssertLiteral(add.Left, 1, LiteralDataType.Integer);
-            var mul = AssertBinary(add.Right!, ExprOperator.Multiply);
+            var mul = AssertBinary(add.Right!, ExpressionOperator.Multiply);
             AssertLiteral(mul.Left, 2, LiteralDataType.Integer);
             AssertLiteral(mul.Right!, 3, LiteralDataType.Integer);
         }
@@ -210,8 +214,8 @@ namespace Chow.Interpreter.Tests
         {
             // 1 + 2 + 3 => Add(Add(1, 2), 3)
             var result = Parse("1 + 2 + 3");
-            var outer = AssertBinary(result, ExprOperator.Add);
-            var inner = AssertBinary(outer.Left, ExprOperator.Add);
+            var outer = AssertBinary(result, ExpressionOperator.Add);
+            var inner = AssertBinary(outer.Left, ExpressionOperator.Add);
             AssertLiteral(inner.Left, 1, LiteralDataType.Integer);
             AssertLiteral(inner.Right!, 2, LiteralDataType.Integer);
             AssertLiteral(outer.Right!, 3, LiteralDataType.Integer);
@@ -222,8 +226,8 @@ namespace Chow.Interpreter.Tests
         {
             // 5 - 2 - 1 => Subtract(Subtract(5, 2), 1) — catches accidental right-associativity
             var result = Parse("5 - 2 - 1");
-            var outer = AssertBinary(result, ExprOperator.Subtract);
-            var inner = AssertBinary(outer.Left, ExprOperator.Subtract);
+            var outer = AssertBinary(result, ExpressionOperator.Subtract);
+            var inner = AssertBinary(outer.Left, ExpressionOperator.Subtract);
             AssertLiteral(inner.Left, 5, LiteralDataType.Integer);
             AssertLiteral(inner.Right!, 2, LiteralDataType.Integer);
             AssertLiteral(outer.Right!, 1, LiteralDataType.Integer);
@@ -234,9 +238,9 @@ namespace Chow.Interpreter.Tests
         {
             // 2 ** 3 ** 2 => Exp(2, Exp(3, 2)) — right-associative matches Python: 2**(3**2) = 512
             var result = Parse("2 ** 3 ** 2");
-            var outer = AssertBinary(result, ExprOperator.Exponentiate);
+            var outer = AssertBinary(result, ExpressionOperator.Exponentiate);
             AssertLiteral(outer.Left, 2, LiteralDataType.Integer);
-            var inner = AssertBinary(outer.Right!, ExprOperator.Exponentiate);
+            var inner = AssertBinary(outer.Right!, ExpressionOperator.Exponentiate);
             AssertLiteral(inner.Left, 3, LiteralDataType.Integer);
             AssertLiteral(inner.Right!, 2, LiteralDataType.Integer);
         }
@@ -247,7 +251,7 @@ namespace Chow.Interpreter.Tests
             // -2 ** 2 => Negate(Exp(2, 2)) — Python: ** binds tighter than unary minus
             var result = Parse("-2 ** 2");
             var negate = AssertUnary(result);
-            var exp = AssertBinary(negate.Left, ExprOperator.Exponentiate);
+            var exp = AssertBinary(negate.Left, ExpressionOperator.Exponentiate);
             AssertLiteral(exp.Left, 2, LiteralDataType.Integer);
             AssertLiteral(exp.Right!, 2, LiteralDataType.Integer);
         }
@@ -257,7 +261,7 @@ namespace Chow.Interpreter.Tests
         {
             // 2 ** -3 => Exp(2, Negate(3))
             var result = Parse("2 ** -3");
-            var exp = AssertBinary(result, ExprOperator.Exponentiate);
+            var exp = AssertBinary(result, ExpressionOperator.Exponentiate);
             AssertLiteral(exp.Left, 2, LiteralDataType.Integer);
             var negate = AssertUnary(exp.Right!);
             AssertLiteral(negate.Left, 3, LiteralDataType.Integer);
@@ -268,8 +272,8 @@ namespace Chow.Interpreter.Tests
         {
             // 6 % 4 * 2 => Multiply(Modulus(6, 4), 2) — % same precedence as *
             var result = Parse("6 % 4 * 2");
-            var mul = AssertBinary(result, ExprOperator.Multiply);
-            var mod = AssertBinary(mul.Left, ExprOperator.Modulus);
+            var mul = AssertBinary(result, ExpressionOperator.Multiply);
+            var mod = AssertBinary(mul.Left, ExpressionOperator.Modulus);
             AssertLiteral(mod.Left, 6, LiteralDataType.Integer);
             AssertLiteral(mod.Right!, 4, LiteralDataType.Integer);
             AssertLiteral(mul.Right!, 2, LiteralDataType.Integer);
@@ -286,8 +290,8 @@ namespace Chow.Interpreter.Tests
                 Token(TokenType.LiteralInt, "1", 5, 1L),
                 Token(TokenType.EndOfCode, string.Empty, 5));
 
-            var outer = AssertBinary(result, ExprOperator.Subtract);
-            var inner = AssertBinary(outer.Left, ExprOperator.Subtract);
+            var outer = AssertBinary(result, ExpressionOperator.Subtract);
+            var inner = AssertBinary(outer.Left, ExpressionOperator.Subtract);
 
             Assert.Multiple(() =>
             {
@@ -305,8 +309,8 @@ namespace Chow.Interpreter.Tests
         {
             // (1 + 2) * 3 => Multiply(Add(1, 2), 3)
             var result = Parse("(1 + 2) * 3");
-            var mul = AssertBinary(result, ExprOperator.Multiply);
-            var add = AssertBinary(mul.Left, ExprOperator.Add);
+            var mul = AssertBinary(result, ExpressionOperator.Multiply);
+            var add = AssertBinary(mul.Left, ExpressionOperator.Add);
             AssertLiteral(add.Left, 1, LiteralDataType.Integer);
             AssertLiteral(add.Right!, 2, LiteralDataType.Integer);
             AssertLiteral(mul.Right!, 3, LiteralDataType.Integer);
@@ -316,7 +320,7 @@ namespace Chow.Interpreter.Tests
         public void BuildSyntaxTree_NestedParentheses_ParsesInnerFirst()
         {
             var result = Parse("((1 + 2))");
-            var add = AssertBinary(result, ExprOperator.Add);
+            var add = AssertBinary(result, ExpressionOperator.Add);
             AssertLiteral(add.Left, 1, LiteralDataType.Integer);
             AssertLiteral(add.Right!, 2, LiteralDataType.Integer);
         }
@@ -359,7 +363,7 @@ namespace Chow.Interpreter.Tests
             // -(1 + 2) => Negate(Add(1, 2))
             var result = Parse("-(1 + 2)");
             var negate = AssertUnary(result);
-            var add = AssertBinary(negate.Left, ExprOperator.Add);
+            var add = AssertBinary(negate.Left, ExpressionOperator.Add);
             AssertLiteral(add.Left, 1, LiteralDataType.Integer);
             AssertLiteral(add.Right!, 2, LiteralDataType.Integer);
         }
@@ -369,7 +373,7 @@ namespace Chow.Interpreter.Tests
         {
             // -2 * 3 => Multiply(Negate(2), 3)
             var result = Parse("-2 * 3");
-            var mul = AssertBinary(result, ExprOperator.Multiply);
+            var mul = AssertBinary(result, ExpressionOperator.Multiply);
             var negate = AssertUnary(mul.Left);
             AssertLiteral(negate.Left, 2, LiteralDataType.Integer);
             AssertLiteral(mul.Right!, 3, LiteralDataType.Integer);
@@ -380,7 +384,7 @@ namespace Chow.Interpreter.Tests
         {
             // 1 - -2 => Subtract(1, Negate(2))
             var result = Parse("1 - -2");
-            var sub = AssertBinary(result, ExprOperator.Subtract);
+            var sub = AssertBinary(result, ExpressionOperator.Subtract);
             AssertLiteral(sub.Left, 1, LiteralDataType.Integer);
             var negate = AssertUnary(sub.Right!);
             AssertLiteral(negate.Left, 2, LiteralDataType.Integer);
@@ -421,17 +425,17 @@ namespace Chow.Interpreter.Tests
             return (SubscriptNode)node;
         }
 
-        static SliceNode AssertSlice(Node node)
+        static SubscriptSliceNode AssertSlice(Node node)
         {
-            Assert.That(node, Is.InstanceOf<SliceNode>());
-            return (SliceNode)node;
+            Assert.That(node, Is.InstanceOf<SubscriptSliceNode>());
+            return (SubscriptSliceNode)node;
         }
 
         static AttributeAccessNode AssertAttr(Node node, string expectedName)
         {
             Assert.That(node, Is.InstanceOf<AttributeAccessNode>());
             var attr = (AttributeAccessNode)node;
-            Assert.That(attr.AttrName, Is.EqualTo(expectedName));
+            Assert.That(attr.AttributeName, Is.EqualTo(expectedName));
             return attr;
         }
 
@@ -513,8 +517,8 @@ namespace Chow.Interpreter.Tests
         {
             var result = Parse("[1 + 2, a * b]");
             var list = AssertList(result, 2);
-            AssertBinary(list.Elements[0], ExprOperator.Add);
-            AssertBinary(list.Elements[1], ExprOperator.Multiply);
+            AssertBinary(list.Elements[0], ExpressionOperator.Add);
+            AssertBinary(list.Elements[1], ExpressionOperator.Multiply);
         }
 
         [Test]
@@ -560,7 +564,7 @@ namespace Chow.Interpreter.Tests
         {
             var result = Parse("a[i + 1]");
             var sub = AssertSubscript(result);
-            AssertBinary(sub.Index, ExprOperator.Add);
+            AssertBinary(sub.Index, ExpressionOperator.Add);
         }
 
         [Test]
@@ -687,9 +691,9 @@ namespace Chow.Interpreter.Tests
         {
             var result = Parse("a[i + 1:j - 1:k * 2]");
             var slice = AssertSlice(AssertSubscript(result).Index);
-            AssertBinary(slice.Start, ExprOperator.Add);
-            AssertBinary(slice.Stop, ExprOperator.Subtract);
-            AssertBinary(slice.Step, ExprOperator.Multiply);
+            AssertBinary(slice.Start, ExpressionOperator.Add);
+            AssertBinary(slice.Stop, ExpressionOperator.Subtract);
+            AssertBinary(slice.Step, ExpressionOperator.Multiply);
         }
 
         // ------------------------------------------------------------------------------------------------------------
@@ -718,7 +722,7 @@ namespace Chow.Interpreter.Tests
         {
             var result = Parse("(1 + 2).x");
             var attr = AssertAttr(result, "x");
-            AssertBinary(attr.Target, ExprOperator.Add);
+            AssertBinary(attr.Target, ExpressionOperator.Add);
         }
 
         [TestCase("a.")]
@@ -838,8 +842,8 @@ namespace Chow.Interpreter.Tests
         public void ParseStmt_SimpleNameAssignment_StillProducesVarAssignNode()
         {
             var stmt = ParseStmt("a = 1");
-            Assert.That(stmt, Is.InstanceOf<VarAssignNode>());
-            var var = (VarAssignNode)stmt;
+            Assert.That(stmt, Is.InstanceOf<VariableAssignStatementNode>());
+            var var = (VariableAssignStatementNode)stmt;
             Assert.That(var.Name, Is.EqualTo("a"));
             AssertLiteral(var.Expression, 1, LiteralDataType.Integer);
         }
@@ -930,8 +934,8 @@ namespace Chow.Interpreter.Tests
         public void ParseStmt_StandaloneSubscript_WrapsInExprStatementNode()
         {
             var stmt = ParseStmt("a[0]");
-            Assert.That(stmt, Is.InstanceOf<ExprStatementNode>());
-            var exprStmt = (ExprStatementNode)stmt;
+            Assert.That(stmt, Is.InstanceOf<ExpressionStatementNode>());
+            var exprStmt = (ExpressionStatementNode)stmt;
             AssertSubscript(exprStmt.Expression);
         }
 
@@ -939,8 +943,8 @@ namespace Chow.Interpreter.Tests
         public void ParseStmt_StandaloneMethodCall_WrapsInvokeInExprStatementNode()
         {
             var stmt = ParseStmt("a.b()");
-            Assert.That(stmt, Is.InstanceOf<ExprStatementNode>());
-            var exprStmt = (ExprStatementNode)stmt;
+            Assert.That(stmt, Is.InstanceOf<ExpressionStatementNode>());
+            var exprStmt = (ExpressionStatementNode)stmt;
             AssertCall(exprStmt.Expression, 0);
         }
 
@@ -949,7 +953,7 @@ namespace Chow.Interpreter.Tests
         {
             var stmt = ParseStmt("if True:\n    x = 1");
 
-            var ifNode = (IfNode)stmt;
+            var ifNode = (IfStatementNode)stmt;
             Assert.Multiple(() =>
             {
                 Assert.That(ifNode.Expr, Is.InstanceOf<LiteralNode>());
@@ -963,8 +967,8 @@ namespace Chow.Interpreter.Tests
         {
             var stmt = ParseStmt("if False:\n    x = 1\nelif True:\n    x = 2\nelse:\n    x = 3");
 
-            var ifNode = (IfNode)stmt;
-            Assert.That(ifNode.Branch, Is.InstanceOf<BranchStmntNode>());
+            var ifNode = (IfStatementNode)stmt;
+            Assert.That(ifNode.Branch, Is.InstanceOf<BranchStatementNode>());
         }
 
         [Test]
@@ -972,7 +976,7 @@ namespace Chow.Interpreter.Tests
         {
             var stmt = ParseStmt("while True:\n    break");
 
-            var whileNode = (WhileNode)stmt;
+            var whileNode = (WhileStatementNode)stmt;
             Assert.Multiple(() =>
             {
                 Assert.That(whileNode.Expr, Is.InstanceOf<LiteralNode>());
@@ -999,7 +1003,7 @@ namespace Chow.Interpreter.Tests
         {
             var stmt = ParseStmt("return 1");
 
-            Assert.That(stmt, Is.InstanceOf<ReturnNode>());
+            Assert.That(stmt, Is.InstanceOf<ReturnStatementNode>());
         }
 
         [Test]
@@ -1007,7 +1011,7 @@ namespace Chow.Interpreter.Tests
         {
             var stmt = ParseStmt("break");
 
-            Assert.That(stmt, Is.InstanceOf<BreakNode>());
+            Assert.That(stmt, Is.InstanceOf<BreakStatementNode>());
         }
 
         [Test]
@@ -1015,7 +1019,7 @@ namespace Chow.Interpreter.Tests
         {
             var stmt = ParseStmt("continue");
 
-            Assert.That(stmt, Is.InstanceOf<ContinueNode>());
+            Assert.That(stmt, Is.InstanceOf<ContinueStatementNode>());
         }
 
         // ------------------------------------------------------------------------------------------------------------
@@ -1027,8 +1031,8 @@ namespace Chow.Interpreter.Tests
         {
             var stmt = ParseStmt("global x");
 
-            Assert.That(stmt, Is.InstanceOf<GlobalDeclNode>());
-            var decl = (GlobalDeclNode)stmt;
+            Assert.That(stmt, Is.InstanceOf<GlobalDeclarationNode>());
+            var decl = (GlobalDeclarationNode)stmt;
             Assert.Multiple(() =>
             {
                 Assert.That(decl.Names.Count, Is.EqualTo(1));
@@ -1042,7 +1046,7 @@ namespace Chow.Interpreter.Tests
         {
             var stmt = ParseStmt("global a, b, c");
 
-            var decl = (GlobalDeclNode)stmt;
+            var decl = (GlobalDeclarationNode)stmt;
             Assert.That(decl.Names, Is.EqualTo(new[] { "a", "b", "c" }));
         }
 
@@ -1051,8 +1055,8 @@ namespace Chow.Interpreter.Tests
         {
             var stmt = ParseStmt("nonlocal x");
 
-            Assert.That(stmt, Is.InstanceOf<NonlocalDeclNode>());
-            var decl = (NonlocalDeclNode)stmt;
+            Assert.That(stmt, Is.InstanceOf<NonlocalDeclarationNode>());
+            var decl = (NonlocalDeclarationNode)stmt;
             Assert.Multiple(() =>
             {
                 Assert.That(decl.Names.Count, Is.EqualTo(1));
@@ -1065,7 +1069,7 @@ namespace Chow.Interpreter.Tests
         {
             var stmt = ParseStmt("nonlocal a, b");
 
-            var decl = (NonlocalDeclNode)stmt;
+            var decl = (NonlocalDeclarationNode)stmt;
             Assert.That(decl.Names, Is.EqualTo(new[] { "a", "b" }));
         }
 

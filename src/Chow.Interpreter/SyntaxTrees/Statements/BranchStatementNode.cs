@@ -1,6 +1,6 @@
 ﻿namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    class BranchStmntNode : Node
+    class BranchStatementNode : Node
     {
         public Node Branch { get; }
 
@@ -10,7 +10,7 @@
 
         public bool IsElse => Expr == null;
 
-        public BranchStmntNode(Node expr, Node block, Node branch, int line) : base(line)
+        public BranchStatementNode(Node expr, Node block, Node branch, int line) : base(line)
         {
             Expr = expr;
             Block = block;

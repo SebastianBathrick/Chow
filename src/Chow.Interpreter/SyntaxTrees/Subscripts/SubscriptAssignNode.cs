@@ -1,4 +1,4 @@
-namespace Chow.Interpreter.SyntaxTrees.Statements
+namespace Chow.Interpreter.SyntaxTrees.Subscripts
 {
     class SubscriptAssignNode : Node
     {

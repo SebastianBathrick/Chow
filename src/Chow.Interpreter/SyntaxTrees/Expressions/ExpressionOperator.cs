@@ -1,6 +1,6 @@
 namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
-    enum ExprOperator
+    enum ExpressionOperator
     {
         Add,
         Subtract,

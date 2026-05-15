@@ -4,7 +4,7 @@ namespace Chow.Interpreter.Tokens
 {
     static class ReservedKeywords
     {
-        static readonly IReadOnlyDictionary<string, TokenType> _keywordToType = new Dictionary<string, TokenType>
+        static readonly IReadOnlyDictionary<string, TokenType> _keywordTypeMap = new Dictionary<string, TokenType>
         {
             { "True", TokenType.KeywordTrue },
             { "False", TokenType.KeywordFalse },
@@ -40,8 +40,8 @@ namespace Chow.Interpreter.Tokens
 
         static ReservedKeywords()
         {
-            var reverse = new Dictionary<TokenType, string>(_keywordToType.Count);
-            foreach (var pair in _keywordToType)
+            var reverse = new Dictionary<TokenType, string>(_keywordTypeMap.Count);
+            foreach (var pair in _keywordTypeMap)
             {
                 reverse[pair.Value] = pair.Key;
             }
@@ -51,12 +51,12 @@ namespace Chow.Interpreter.Tokens
         // Assumes Contains was called first
         public static TokenType GetTokenType(string keyword)
         {
-            return _keywordToType[keyword];
+            return _keywordTypeMap[keyword];
         }
 
         public static bool Contains(string keyword)
         {
-            return _keywordToType.ContainsKey(keyword);
+            return _keywordTypeMap.ContainsKey(keyword);
         }
 
         public static string GetKeyword(TokenType tokenType)

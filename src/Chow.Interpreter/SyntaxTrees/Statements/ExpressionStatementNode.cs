@@ -1,10 +1,10 @@
 ﻿namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    class ExprStatementNode : Node
+    class ExpressionStatementNode : Node
     {
         public Node Expression { get; }
 
-        public ExprStatementNode(Node expr, int line) : base(line)
+        public ExpressionStatementNode(Node expr, int line) : base(line)
         {
             Expression = expr;
         }

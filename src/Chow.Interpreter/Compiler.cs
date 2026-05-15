@@ -6,6 +6,10 @@ using Chow.Interpreter.SyntaxTrees;
 using Chow.Interpreter.SyntaxTrees.Expressions;
 using Chow.Interpreter.SyntaxTrees.Statements;
 using System;
+using Chow.Interpreter.SyntaxTrees.Attributes;
+using Chow.Interpreter.SyntaxTrees.Literals;
+using Chow.Interpreter.SyntaxTrees.Scope;
+using Chow.Interpreter.SyntaxTrees.Subscripts;
 
 namespace Chow.Interpreter
 {
@@ -40,7 +44,7 @@ namespace Chow.Interpreter
             return _chunk;
         }
 
-        Chunk CompileFuncBody()
+        Chunk CompileFunctionBody()
         {
             if (!(_root is FunctionNode funcNode))
             {
@@ -67,10 +71,10 @@ namespace Chow.Interpreter
             return _chunk;
         }
 
-        void CompileFuncDeclaration(FunctionNode funcNode)
+        void CompileFunctionDeclaration(FunctionNode funcNode)
         {
             var funcCompiler = new Compiler(funcNode);
-            var funcChunk = funcCompiler.CompileFuncBody();
+            var funcChunk = funcCompiler.CompileFunctionBody();
 
             var template = new ClosureTemplate(funcChunk, funcNode.Name, funcNode.Params.Count);
             var templateIdx = _chunk.RegisterConstant(new TaggedUnion(template));
@@ -83,7 +87,7 @@ namespace Chow.Interpreter
             // The binding is subject to global/nonlocal resolution stamped on the FunctionNode
             // by SemanticAnalysis.
             var varNameIdx = _chunk.RegisterVariableName(funcNode.Name);
-            _chunk.AddInstruction(GetAssignOpCode(funcNode.Resolution), funcNode.LineNumber, varNameIdx);
+            _chunk.AddInstruction(GetScopeAssignOpCode(funcNode.Resolution), funcNode.LineNumber, varNameIdx);
         }
 
         void CompileCall(CallNode callNode)
@@ -114,70 +118,70 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case ExprNode exprNode:
+                case ExpressionNode exprNode:
                 {
                     CompileExpression(exprNode);
                     break;
                 }
 
-                case VarAssignNode varAssignNode:
+                case VariableAssignStatementNode varAssignNode:
                 {
-                    CompileVarAssign(varAssignNode);
+                    CompileVariableAssign(varAssignNode);
                     break;
                 }
 
                 case NameNode varFactorNode:
                 {
-                    CompileVarFactor(varFactorNode);
+                    CompileVariableFactor(varFactorNode);
                     break;
                 }
 
-                case ReturnNode returnNode:
+                case ReturnStatementNode returnNode:
                 {
                     // If it returns early, still parse the remaining code in the chunk for debugging (subject to change)
-                    CompileReturn(returnNode);
+                    CompileReturnStatement(returnNode);
                     break;
                 }
 
-                case ExprStatementNode exprStmtNode:
+                case ExpressionStatementNode exprStmtNode:
                 {
-                    CompileExprStmnt(exprStmtNode);
+                    CompileExpressionStatement(exprStmtNode);
                     break;
                 }
 
-                case IfNode ifNode:
+                case IfStatementNode ifNode:
                 {
-                    CompileIfStmnt(ifNode);
+                    CompileIfStatement(ifNode);
                     break;
                 }
 
-                case BranchStmntNode branchNode:
+                case BranchStatementNode branchNode:
                 {
-                    CompileBranchStmnt(branchNode);
+                    CompileBranchStatement(branchNode);
                     break;
                 }
 
-                case WhileNode whileNode:
+                case WhileStatementNode whileNode:
                 {
-                    CompileWhileStmnt(whileNode);
+                    CompileWhileStatement(whileNode);
                     break;
                 }
 
-                case BreakNode breakNode:
+                case BreakStatementNode breakNode:
                 {
-                    CompileBreakStmnt(breakNode);
+                    CompileBreakStatement(breakNode);
                     break;
                 }
 
-                case ContinueNode continueNode:
+                case ContinueStatementNode continueNode:
                 {
-                    CompileContinueStmnt(continueNode);
+                    CompileContinueStatement(continueNode);
                     break;
                 }
 
                 case FunctionNode funcNode:
                 {
-                    CompileFuncDeclaration(funcNode);
+                    CompileFunctionDeclaration(funcNode);
                     break;
                 }
 
@@ -194,7 +198,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case DictLiteralNode dictLiteralNode:
+                case ListDictNode dictLiteralNode:
                 {
                     CompileDictLiteral(dictLiteralNode);
                     break;
@@ -206,9 +210,9 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case AttrAccessNode attrAccessNode:
+                case AttributeAccessNode attrAccessNode:
                 {
-                    CompileAttrAccess(attrAccessNode);
+                    CompileAttributeAccess(attrAccessNode);
                     break;
                 }
 
@@ -218,14 +222,14 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case AttrAssignNode attrAssignNode:
+                case AttributeAssignNode attrAssignNode:
                 {
-                    CompileAttrAssign(attrAssignNode);
+                    CompileAttributeAssign(attrAssignNode);
                     break;
                 }
 
-                case GlobalDeclNode _:
-                case NonlocalDeclNode _:
+                case GlobalDeclarationNode _:
+                case NonlocalDeclarationNode _:
                 {
                     // Declarations are compile-time directives consumed by SemanticAnalysis;
                     // they emit no bytecode.
@@ -249,7 +253,7 @@ namespace Chow.Interpreter
             _chunk.AddInstruction(OperationCode.PushNewInternalList, node.LineNumber, node.Elements.Count);
         }
 
-        void CompileDictLiteral(DictLiteralNode node)
+        void CompileDictLiteral(ListDictNode node)
         {
             for (var i = 0; i < node.Keys.Count; i++)
             {
@@ -264,11 +268,11 @@ namespace Chow.Interpreter
         {
             CompileTargetNode(node.Target);
 
-            if (node.Index is SliceNode sliceNode)
+            if (node.Index is SubscriptSliceNode sliceNode)
             {
-                CompileSliceArg(sliceNode.Start, sliceNode.LineNumber);
-                CompileSliceArg(sliceNode.Stop, sliceNode.LineNumber);
-                CompileSliceArg(sliceNode.Step, sliceNode.LineNumber);
+                CompileSliceArgument(sliceNode.Start, sliceNode.LineNumber);
+                CompileSliceArgument(sliceNode.Stop, sliceNode.LineNumber);
+                CompileSliceArgument(sliceNode.Step, sliceNode.LineNumber);
                 _chunk.AddInstruction(OperationCode.SubscriptSlice, node.LineNumber);
             }
             else
@@ -278,7 +282,7 @@ namespace Chow.Interpreter
             }
         }
 
-        void CompileSliceArg(Node argOrNull, int sliceLineNum)
+        void CompileSliceArgument(Node argOrNull, int sliceLineNum)
         {
             if (argOrNull == null)
             {
@@ -291,16 +295,16 @@ namespace Chow.Interpreter
             }
         }
 
-        void CompileAttrAccess(AttrAccessNode node)
+        void CompileAttributeAccess(AttributeAccessNode node)
         {
             CompileTargetNode(node.Target);
-            var varNameIdx = _chunk.RegisterVariableName(node.AttrName);
+            var varNameIdx = _chunk.RegisterVariableName(node.AttributeName);
             _chunk.AddInstruction(OperationCode.GetObjectAttribute, node.LineNumber, varNameIdx);
         }
 
         void CompileSubscriptAssign(SubscriptAssignNode node)
         {
-            if (node.Index is SliceNode)
+            if (node.Index is SubscriptSliceNode)
             {
                 throw new NotImplementedException("slice assignment is not implemented");
             }
@@ -311,7 +315,7 @@ namespace Chow.Interpreter
             _chunk.AddInstruction(OperationCode.SubscriptSet, node.LineNumber);
         }
 
-        void CompileAttrAssign(AttrAssignNode node)
+        void CompileAttributeAssign(AttributeAssignNode node)
         {
             CompileTargetNode(node.Target);
             CompileTargetNode(node.Expression);
@@ -330,9 +334,7 @@ namespace Chow.Interpreter
             }
         }
 
-        #region Statement Compilation
-
-        void CompileVarAssign(VarAssignNode varAssignNode)
+        void CompileVariableAssign(VariableAssignStatementNode variableAssignStatementNode)
         {
             /* [NOTE]
              *
@@ -357,30 +359,30 @@ namespace Chow.Interpreter
              *    for Local, the module scope for Global, or the nearest enclosing function scope for Nonlocal.
              */
 
-            CompileTargetNode(varAssignNode.Expression);
+            CompileTargetNode(variableAssignStatementNode.Expression);
 
             // If a variable with the same name already exists in the chunk, the index of the existing variable will be returned.
             // Otherwise, the new variable will be added to the chunk and its new index will be returned.
-            var varNameIdx = _chunk.RegisterVariableName(varAssignNode.Name);
-            _chunk.AddInstruction(GetAssignOpCode(varAssignNode.Resolution), varAssignNode.LineNumber, varNameIdx);
+            var varNameIdx = _chunk.RegisterVariableName(variableAssignStatementNode.Name);
+            _chunk.AddInstruction(GetScopeAssignOpCode(variableAssignStatementNode.Resolution), variableAssignStatementNode.LineNumber, varNameIdx);
         }
 
-        void CompileVarFactor(NameNode varFactorNode)
+        void CompileVariableFactor(NameNode varFactorNode)
         {
             // Register to have its own constant in case the variable with this name is declared in a previous environment
             var varNameIdx = _chunk.RegisterVariableName(varFactorNode.Name);
-            _chunk.AddInstruction(GetReadOpCode(varFactorNode.Resolution), varFactorNode.LineNumber, varNameIdx);
+            _chunk.AddInstruction(GetScopeReadOpCode(varFactorNode.Resolution), varFactorNode.LineNumber, varNameIdx);
         }
 
-        static OperationCode GetAssignOpCode(ScopeKind resolution)
+        static OperationCode GetScopeAssignOpCode(ScopeType resolution)
         {
             switch (resolution)
             {
-                case ScopeKind.Global:
+                case ScopeType.Global:
                 {
                     return OperationCode.PopAndAssignToGlobal;
                 }
-                case ScopeKind.Nonlocal:
+                case ScopeType.Nonlocal:
                 {
                     return OperationCode.PopAndAssignToNonlocal;
                 }
@@ -391,15 +393,15 @@ namespace Chow.Interpreter
             }
         }
 
-        static OperationCode GetReadOpCode(ScopeKind resolution)
+        static OperationCode GetScopeReadOpCode(ScopeType resolution)
         {
             switch (resolution)
             {
-                case ScopeKind.Global:
+                case ScopeType.Global:
                 {
                     return OperationCode.PushGlobalValue;
                 }
-                case ScopeKind.Nonlocal:
+                case ScopeType.Nonlocal:
                 {
                     return OperationCode.PushNonlocalValue;
                 }
@@ -410,55 +412,55 @@ namespace Chow.Interpreter
             }
         }
 
-        void CompileReturn(ReturnNode returnNode)
+        void CompileReturnStatement(ReturnStatementNode returnStatementNode)
         {
-            if (returnNode.Expression != null)
+            if (returnStatementNode.Expression != null)
             {
-                CompileTargetNode(returnNode.Expression);
+                CompileTargetNode(returnStatementNode.Expression);
             }
             else
             {
                 // Bare `return` returns None; PushReturnValue always pops exactly one value off the stack.
                 var noneIdx = _chunk.RegisterConstant(TaggedUnion.None);
-                _chunk.AddInstruction(OperationCode.PushConstant, returnNode.LineNumber, noneIdx);
+                _chunk.AddInstruction(OperationCode.PushConstant, returnStatementNode.LineNumber, noneIdx);
             }
 
-            _chunk.AddInstruction(code: OperationCode.PushReturnValue, returnNode.LineNumber);
+            _chunk.AddInstruction(code: OperationCode.PushReturnValue, returnStatementNode.LineNumber);
         }
 
-        void CompileExprStmnt(ExprStatementNode exprStmtNode)
+        void CompileExpressionStatement(ExpressionStatementNode expressionStmtNode)
         {
-            CompileTargetNode(exprStmtNode.Expression);
-            _chunk.AddInstruction(OperationCode.PopExpressionStatementResult, exprStmtNode.LineNumber);
+            CompileTargetNode(expressionStmtNode.Expression);
+            _chunk.AddInstruction(OperationCode.PopExpressionStatementResult, expressionStmtNode.LineNumber);
         }
 
-        void CompileIfStmnt(IfNode ifNode)
+        void CompileIfStatement(IfStatementNode ifStatementNode)
         {
             // Save outer chain's pending end-jumps so nested ifs don't corrupt it
             var saved = _pendingEndJumps;
 
             // TODO: Check if we can avoid using a new list here and just clear the existing one
             _pendingEndJumps = new List<int>();
-            CompileTargetNode(ifNode.Expr);
+            CompileTargetNode(ifStatementNode.Expr);
 
-            _chunk.AddInstruction(OperationCode.JumpIfFalse, ifNode.LineNumber);
+            _chunk.AddInstruction(OperationCode.JumpIfFalse, ifStatementNode.LineNumber);
             var jumpFalseIdx = _chunk.InstructionCount - 1;
 
-            CompileTargetNode(ifNode.Block);
+            CompileTargetNode(ifStatementNode.Block);
 
             // Only emit a jump-past-branches if there's actually a branch to skip
-            if (ifNode.Branch != null)
+            if (ifStatementNode.Branch != null)
             {
-                _chunk.AddInstruction(OperationCode.JumpPastElseBranches, ifNode.LineNumber);
+                _chunk.AddInstruction(OperationCode.JumpPastElseBranches, ifStatementNode.LineNumber);
                 _pendingEndJumps.Add(_chunk.InstructionCount - 1);
             }
 
             // JumpIfFalse lands at the start of the next branch (or END if no branch)
             _chunk.PatchInstructionOperand(jumpFalseIdx, _chunk.InstructionCount);
 
-            if (ifNode.Branch != null)
+            if (ifStatementNode.Branch != null)
             {
-                CompileTargetNode(ifNode.Branch);
+                CompileTargetNode(ifStatementNode.Branch);
             }
 
             // Patch every JumpPastElseBranches in this chain to land at END (current count)
@@ -470,14 +472,14 @@ namespace Chow.Interpreter
             _pendingEndJumps = saved;
         }
 
-        void CompileWhileStmnt(WhileNode whileNode)
+        void CompileWhileStatement(WhileStatementNode whileStatementNode)
         {
             // loopStart marks the start of the condition; both `continue` and the bottom-of-body JumpToLoopStart op target it.
             var loopStartIdx = _chunk.InstructionCount;
 
-            CompileTargetNode(whileNode.Expr);
+            CompileTargetNode(whileStatementNode.Expr);
 
-            _chunk.AddInstruction(OperationCode.JumpIfFalse, whileNode.LineNumber);
+            _chunk.AddInstruction(OperationCode.JumpIfFalse, whileStatementNode.LineNumber);
             var exitJumpIdx = _chunk.InstructionCount - 1;
 
             var loopContext = new LoopContext
@@ -487,11 +489,11 @@ namespace Chow.Interpreter
 
             _loopContextStack.Push(loopContext);
 
-            CompileTargetNode(whileNode.Block);
+            CompileTargetNode(whileStatementNode.Block);
 
             _loopContextStack.Pop();
 
-            _chunk.AddInstruction(OperationCode.JumpToLoopStart, whileNode.LineNumber, loopStartIdx);
+            _chunk.AddInstruction(OperationCode.JumpToLoopStart, whileStatementNode.LineNumber, loopStartIdx);
 
             // Condition-false exit and any `break` jumps land here, after the backward JumpToLoopStart.
             var exitIdx = _chunk.InstructionCount;
@@ -503,33 +505,33 @@ namespace Chow.Interpreter
             }
         }
 
-        void CompileBreakStmnt(BreakNode breakNode)
+        void CompileBreakStatement(BreakStatementNode breakStatementNode)
         {
             if (_loopContextStack.Count == 0)
             {
-                throw new ParserEx("'break' outside loop", breakNode.LineNumber);
+                throw new ParserEx("'break' outside loop", breakStatementNode.LineNumber);
             }
 
             var loopContext = _loopContextStack.Peek();
 
-            _chunk.AddInstruction(OperationCode.JumpPastElseBranches, breakNode.LineNumber);
+            _chunk.AddInstruction(OperationCode.JumpPastElseBranches, breakStatementNode.LineNumber);
             loopContext.PendingBreaks.Add(_chunk.InstructionCount - 1);
         }
 
-        void CompileContinueStmnt(ContinueNode continueNode)
+        void CompileContinueStatement(ContinueStatementNode continueStatementNode)
         {
             if (_loopContextStack.Count == 0)
             {
                 // TODO: Remove ParserEx in the compiler and replace with a more appropriate exception type
-                throw new ParserEx("'continue' not properly in loop", continueNode.LineNumber);
+                throw new ParserEx("'continue' not properly in loop", continueStatementNode.LineNumber);
             }
 
             var loopContext = _loopContextStack.Peek();
 
-            _chunk.AddInstruction(OperationCode.JumpToLoopStart, continueNode.LineNumber, loopContext.LoopStartIdx);
+            _chunk.AddInstruction(OperationCode.JumpToLoopStart, continueStatementNode.LineNumber, loopContext.LoopStartIdx);
         }
 
-        void CompileBranchStmnt(BranchStmntNode node)
+        void CompileBranchStatement(BranchStatementNode node)
         {
             if (node.IsElse)
             {
@@ -558,38 +560,34 @@ namespace Chow.Interpreter
             }
         }
 
-        #endregion
-
-        #region Expression Compilation
-
-        void CompileExpression(ExprNode exprNode)
+        void CompileExpression(ExpressionNode expressionNode)
         {
             // `and`/`or` short-circuit, so they cannot use the eager postfix layout used by all other binary operators
-            if (exprNode.Operator == ExprOperator.And || exprNode.Operator == ExprOperator.Or)
+            if (expressionNode.Operator == ExpressionOperator.And || expressionNode.Operator == ExpressionOperator.Or)
             {
-                CompileShortCircuit(exprNode);
+                CompileShortCircuit(expressionNode);
                 return;
             }
 
             // Compile operands first so they are pushed onto the runtime stack before the operation consumes them
-            CompileTargetNode(exprNode.Left);
+            CompileTargetNode(expressionNode.Left);
 
-            if (exprNode.Right != null)
+            if (expressionNode.Right != null)
             {
-                CompileTargetNode(exprNode.Right);
+                CompileTargetNode(expressionNode.Right);
             }
 
-            var opCode = GetExpressionOperationCode(exprNode);
-            _chunk.AddInstruction(opCode, exprNode.LineNumber);
+            var opCode = GetExpressionOperationCode(expressionNode);
+            _chunk.AddInstruction(opCode, expressionNode.LineNumber);
         }
 
-        void CompileShortCircuit(ExprNode exprNode)
+        void CompileShortCircuit(ExpressionNode expressionNode)
         {
-            CompileTargetNode(exprNode.Left);
+            CompileTargetNode(expressionNode.Left);
 
             OperationCode jumpCode;
 
-            if (exprNode.Operator == ExprOperator.And)
+            if (expressionNode.Operator == ExpressionOperator.And)
             {
                 jumpCode = OperationCode.JumpIfFalseOrPop;
             }
@@ -599,124 +597,124 @@ namespace Chow.Interpreter
             }
 
             // Emit jump with placeholder operand; the real target is unknown until the right side is compiled
-            _chunk.AddInstruction(jumpCode, exprNode.LineNumber);
+            _chunk.AddInstruction(jumpCode, expressionNode.LineNumber);
             var patchIdx = _chunk.InstructionCount - 1;
 
-            CompileTargetNode(exprNode.Right);
+            CompileTargetNode(expressionNode.Right);
 
             // Land just past the right-hand bytecode
             _chunk.PatchInstructionOperand(patchIdx, _chunk.InstructionCount);
         }
 
-        static OperationCode GetExpressionOperationCode(ExprNode exprNode)
+        static OperationCode GetExpressionOperationCode(ExpressionNode expressionNode)
         {
             OperationCode opCode;
             
-            switch (exprNode.Operator)
+            switch (expressionNode.Operator)
             {
-                case ExprOperator.Add:
+                case ExpressionOperator.Add:
                 {
                     opCode = OperationCode.Add;
                     break;
                 }
 
-                case ExprOperator.Subtract:
+                case ExpressionOperator.Subtract:
                 {
                     opCode = OperationCode.Subtract;
                     break;
                 }
 
-                case ExprOperator.Multiply:
+                case ExpressionOperator.Multiply:
                 {
                     opCode = OperationCode.Multiply;
                     break;
                 }
 
-                case ExprOperator.Divide:
+                case ExpressionOperator.Divide:
                 {
                     opCode = OperationCode.Divide;
                     break;
                 }
 
-                case ExprOperator.Modulus:
+                case ExpressionOperator.Modulus:
                 {
                     opCode = OperationCode.Modulus;
                     break;
                 }
 
-                case ExprOperator.Exponentiate:
+                case ExpressionOperator.Exponentiate:
                 {
                     opCode = OperationCode.Exponentiate;
                     break;
                 }
 
-                case ExprOperator.FloorDivide:
+                case ExpressionOperator.FloorDivide:
                 {
                     opCode = OperationCode.FloorDivide;
                     break;
                 }
 
-                case ExprOperator.Negate:
+                case ExpressionOperator.Negate:
                 {
                     opCode = OperationCode.Negate;
                     break;
                 }
 
-                case ExprOperator.Equal:
+                case ExpressionOperator.Equal:
                 {
                     opCode = OperationCode.Equal;
                     break;
                 }
 
-                case ExprOperator.NotEqual:
+                case ExpressionOperator.NotEqual:
                 {
                     opCode = OperationCode.NotEqual;
                     break;
                 }
 
-                case ExprOperator.Less:
+                case ExpressionOperator.Less:
                 {
                     opCode = OperationCode.Less;
                     break;
                 }
 
-                case ExprOperator.Greater:
+                case ExpressionOperator.Greater:
                 {
                     opCode = OperationCode.Greater;
                     break;
                 }
 
-                case ExprOperator.LessEqual:
+                case ExpressionOperator.LessEqual:
                 {
                     opCode = OperationCode.LessEqual;
                     break;
                 }
 
-                case ExprOperator.GreaterEqual:
+                case ExpressionOperator.GreaterEqual:
                 {
                     opCode = OperationCode.GreaterEqual;
                     break;
                 }
 
-                case ExprOperator.Not:
+                case ExpressionOperator.Not:
                 {
                     opCode = OperationCode.Not;
                     break;
                 }
 
-                case ExprOperator.BinaryOr:
+                case ExpressionOperator.BinaryOr:
                 {
                     opCode = OperationCode.BinaryOr;
                     break;
                 }
 
-                case ExprOperator.In:
+                case ExpressionOperator.In:
                 {
                     opCode = OperationCode.In;
                     break;
                 }
 
-                case ExprOperator.NotIn:
+                case ExpressionOperator.NotIn:
                 {
                     opCode = OperationCode.NotIn;
                     break;
@@ -724,7 +722,7 @@ namespace Chow.Interpreter
 
                 default:
                 {
-                    throw new NotImplementedException(nameof(exprNode.Operator));
+                    throw new NotImplementedException(nameof(expressionNode.Operator));
                 }
             }
 
@@ -802,9 +800,6 @@ namespace Chow.Interpreter
             var constIdx = _chunk.RegisterConstant(constUnion);
             _chunk.AddInstruction(OperationCode.PushConstant, literalNode.LineNumber, constIdx);
         }
-
-        #endregion
-
 
         sealed class LoopContext
         {

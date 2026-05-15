@@ -1,6 +1,7 @@
-﻿namespace Chow.Interpreter.SyntaxTrees.Statements
+﻿using Chow.Interpreter.SyntaxTrees.Scope;
+namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    class VarAssignNode : Node
+    class VariableAssignStatementNode : Node
     {
         public string Name { get; }
 
@@ -8,11 +9,11 @@
 
         /// <summary>
         /// How this binding resolves at runtime. Stamped by <see cref="SemanticAnalyzer"/> before
-        /// the compiler runs. Defaults to <see cref="ScopeKind.Local"/>.
+        /// the compiler runs. Defaults to <see cref="ScopeType.Local"/>.
         /// </summary>
-        public ScopeKind Resolution { get; set; }
+        public ScopeType Resolution { get; set; }
 
-        public VarAssignNode(string name, Node expr, int line) : base(line)
+        public VariableAssignStatementNode(string name, Node expr, int line) : base(line)
         {
             Name = name;
             Expression = expr;

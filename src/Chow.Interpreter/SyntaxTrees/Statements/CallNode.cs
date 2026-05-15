@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-namespace Chow.Interpreter.SyntaxTrees.Expressions
+namespace Chow.Interpreter.SyntaxTrees.Statements
 {
     class CallNode : Node
     {

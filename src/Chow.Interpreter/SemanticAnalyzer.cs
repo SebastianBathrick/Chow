@@ -4,19 +4,23 @@ using Chow.Interpreter.SyntaxTrees.Expressions;
 using Chow.Interpreter.SyntaxTrees.Statements;
 using System;
 using System.Collections.Generic;
+using Chow.Interpreter.SyntaxTrees.Attributes;
+using Chow.Interpreter.SyntaxTrees.Literals;
+using Chow.Interpreter.SyntaxTrees.Scope;
+using Chow.Interpreter.SyntaxTrees.Subscripts;
 
 namespace Chow.Interpreter
 {
     /// <summary>
     /// Performs name-resolution between parsing and compilation. Walks the AST and stamps every
-    /// name-bearing node (<see cref="NameNode"/>, <see cref="VarAssignNode"/>,
-    /// <see cref="FunctionNode"/>) with a <see cref="ScopeKind"/> so the
+    /// name-bearing node (<see cref="NameNode"/>, <see cref="VariableAssignStatementNode"/>,
+    /// <see cref="FunctionNode"/>) with a <see cref="ScopeType"/> so the
     /// <see cref="Compiler"/> can emit the correct opcode without performing scope analysis itself.
     /// <para>
     /// Validates Python-compatible <c>global</c>/<c>nonlocal</c> rules and raises
     /// <see cref="SemanticEx"/> on any violation. Each function scope is processed in two phases:
     /// a pre-scan that collects bindings, uses, and declarations; followed by an annotation pass
-    /// that stamps <see cref="ScopeKind"/> values and recursively analyzes nested function bodies.
+    /// that stamps <see cref="ScopeType"/> values and recursively analyzes nested function bodies.
     /// </para>
     /// </summary>
     sealed class SemanticAnalyzer
@@ -99,7 +103,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case VarAssignNode varAssignNode:
+                case VariableAssignStatementNode varAssignNode:
                 {
                     PreScan(varAssignNode.Expression);
                     RecordBinding(varAssignNode.Name, varAssignNode.LineNumber);
@@ -119,7 +123,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case GlobalDeclNode globalNode:
+                case GlobalDeclarationNode globalNode:
                 {
                     foreach (var name in globalNode.Names)
                     {
@@ -128,7 +132,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case NonlocalDeclNode nonlocalNode:
+                case NonlocalDeclarationNode nonlocalNode:
                 {
                     foreach (var name in nonlocalNode.Names)
                     {
@@ -137,7 +141,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case IfNode ifNode:
+                case IfStatementNode ifNode:
                 {
                     PreScan(ifNode.Expr);
                     PreScan(ifNode.Block);
@@ -145,7 +149,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case BranchStmntNode branchNode:
+                case BranchStatementNode branchNode:
                 {
                     PreScan(branchNode.Expr);
                     PreScan(branchNode.Block);
@@ -153,26 +157,26 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case WhileNode whileNode:
+                case WhileStatementNode whileNode:
                 {
                     PreScan(whileNode.Expr);
                     PreScan(whileNode.Block);
                     break;
                 }
 
-                case ReturnNode returnNode:
+                case ReturnStatementNode returnNode:
                 {
                     PreScan(returnNode.Expression);
                     break;
                 }
 
-                case ExprStatementNode exprStmtNode:
+                case ExpressionStatementNode exprStmtNode:
                 {
                     PreScan(exprStmtNode.Expression);
                     break;
                 }
 
-                case ExprNode exprNode:
+                case ExpressionNode exprNode:
                 {
                     PreScan(exprNode.Left);
                     PreScan(exprNode.Right);
@@ -198,7 +202,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case DictLiteralNode dictNode:
+                case ListDictNode dictNode:
                 {
                     for (var i = 0; i < dictNode.Keys.Count; i++)
                     {
@@ -215,7 +219,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case SliceNode sliceNode:
+                case SubscriptSliceNode sliceNode:
                 {
                     PreScan(sliceNode.Start);
                     PreScan(sliceNode.Stop);
@@ -223,7 +227,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case AttrAccessNode attrAccessNode:
+                case AttributeAccessNode attrAccessNode:
                 {
                     PreScan(attrAccessNode.Target);
                     break;
@@ -237,7 +241,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case AttrAssignNode attributeNode:
+                case AttributeAssignNode attributeNode:
                 {
                     PreScan(attributeNode.Target);
                     PreScan(attributeNode.Expression);
@@ -245,8 +249,8 @@ namespace Chow.Interpreter
                 }
 
                 case LiteralNode _:
-                case BreakNode _:
-                case ContinueNode _:
+                case BreakStatementNode _:
+                case ContinueStatementNode _:
                 {
                     break;
                 }
@@ -277,7 +281,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case VarAssignNode varAssignNode:
+                case VariableAssignStatementNode varAssignNode:
                 {
                     Annotate(varAssignNode.Expression);
                     varAssignNode.Resolution = ResolveName(varAssignNode.Name);
@@ -297,13 +301,13 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case GlobalDeclNode _:
-                case NonlocalDeclNode _:
+                case GlobalDeclarationNode _:
+                case NonlocalDeclarationNode _:
                 {
                     break;
                 }
 
-                case IfNode ifNode:
+                case IfStatementNode ifNode:
                 {
                     Annotate(ifNode.Expr);
                     Annotate(ifNode.Block);
@@ -311,7 +315,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case BranchStmntNode branchNode:
+                case BranchStatementNode branchNode:
                 {
                     Annotate(branchNode.Expr);
                     Annotate(branchNode.Block);
@@ -319,26 +323,26 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case WhileNode whileNode:
+                case WhileStatementNode whileNode:
                 {
                     Annotate(whileNode.Expr);
                     Annotate(whileNode.Block);
                     break;
                 }
 
-                case ReturnNode returnNode:
+                case ReturnStatementNode returnNode:
                 {
                     Annotate(returnNode.Expression);
                     break;
                 }
 
-                case ExprStatementNode exprStmtNode:
+                case ExpressionStatementNode exprStmtNode:
                 {
                     Annotate(exprStmtNode.Expression);
                     break;
                 }
 
-                case ExprNode exprNode:
+                case ExpressionNode exprNode:
                 {
                     Annotate(exprNode.Left);
                     Annotate(exprNode.Right);
@@ -364,7 +368,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case DictLiteralNode dictNode:
+                case ListDictNode dictNode:
                 {
                     for (var i = 0; i < dictNode.Keys.Count; i++)
                     {
@@ -381,7 +385,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case SliceNode sliceNode:
+                case SubscriptSliceNode sliceNode:
                 {
                     Annotate(sliceNode.Start);
                     Annotate(sliceNode.Stop);
@@ -389,7 +393,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case AttrAccessNode attrAccessNode:
+                case AttributeAccessNode attrAccessNode:
                 {
                     Annotate(attrAccessNode.Target);
                     break;
@@ -403,7 +407,7 @@ namespace Chow.Interpreter
                     break;
                 }
 
-                case AttrAssignNode attrAssignNode:
+                case AttributeAssignNode attrAssignNode:
                 {
                     Annotate(attrAssignNode.Target);
                     Annotate(attrAssignNode.Expression);
@@ -411,8 +415,8 @@ namespace Chow.Interpreter
                 }
 
                 case LiteralNode _:
-                case BreakNode _:
-                case ContinueNode _:
+                case BreakStatementNode _:
+                case ContinueStatementNode _:
                 {
                     break;
                 }
@@ -570,21 +574,21 @@ namespace Chow.Interpreter
 
         #region Resolution
 
-        ScopeKind ResolveName(string name)
+        ScopeType ResolveName(string name)
         {
             var frame = Current;
 
             if (frame.GlobalDeclarations.ContainsKey(name))
             {
-                return ScopeKind.Global;
+                return ScopeType.Global;
             }
 
             if (frame.NonlocalDeclarations.ContainsKey(name))
             {
-                return ScopeKind.Nonlocal;
+                return ScopeType.Nonlocal;
             }
 
-            return ScopeKind.Local;
+            return ScopeType.Local;
         }
 
         #endregion

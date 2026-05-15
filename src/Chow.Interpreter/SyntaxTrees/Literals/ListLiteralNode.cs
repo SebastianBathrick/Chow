@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-namespace Chow.Interpreter.SyntaxTrees.Expressions
+namespace Chow.Interpreter.SyntaxTrees.Literals
 {
     class ListLiteralNode : Node
     {

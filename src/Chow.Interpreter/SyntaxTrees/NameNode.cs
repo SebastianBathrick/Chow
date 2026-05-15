@@ -1,3 +1,4 @@
+using Chow.Interpreter.SyntaxTrees.Scope;
 namespace Chow.Interpreter.SyntaxTrees
 {
     class NameNode : Node
@@ -6,9 +7,9 @@ namespace Chow.Interpreter.SyntaxTrees
 
         /// <summary>
         /// How this read resolves at runtime. Stamped by <see cref="SemanticAnalyzer"/> before
-        /// the compiler runs. Defaults to <see cref="ScopeKind.Local"/>.
+        /// the compiler runs. Defaults to <see cref="ScopeType.Local"/>.
         /// </summary>
-        public ScopeKind Resolution { get; set; }
+        public ScopeType Resolution { get; set; }
 
         public NameNode(string name, int line) : base(line)
         {

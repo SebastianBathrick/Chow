@@ -1,5 +1,5 @@
 using System;
-namespace Chow.Interpreter.SyntaxTrees.Expressions
+namespace Chow.Interpreter.SyntaxTrees.Literals
 {
     class LiteralNode : Node
     {

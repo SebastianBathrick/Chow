@@ -1,6 +1,6 @@
 ﻿namespace Chow.Interpreter.SyntaxTrees.Statements
 {
-    class ReturnNode : Node
+    class ReturnStatementNode : Node
     {
         /// <summary>
         /// Node representing the expression to be evaluated and returned by the return statement or null.
@@ -9,7 +9,7 @@
 
         /// <param name="expr">Node representing the expression to be evaluated and returned by the return statement or null.</param>
         /// <param name="line">The line number of the return statement.</param>
-        public ReturnNode(Node expr, int line) : base(line)
+        public ReturnStatementNode(Node expr, int line) : base(line)
         {
             Expression = expr;
         }

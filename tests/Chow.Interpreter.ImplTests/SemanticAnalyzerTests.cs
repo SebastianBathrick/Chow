@@ -1,6 +1,7 @@
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.SyntaxTrees;
 using Chow.Interpreter.SyntaxTrees.Expressions;
+using Chow.Interpreter.SyntaxTrees.Scope;
 using Chow.Interpreter.SyntaxTrees.Statements;
 
 namespace Chow.Interpreter.ImplTests
@@ -57,11 +58,11 @@ namespace Chow.Interpreter.ImplTests
             }
         }
 
-        static VarAssignNode FindAssign(Node node, string name)
+        static VariableAssignStatementNode FindAssign(Node node, string name)
         {
             switch (node)
             {
-                case VarAssignNode v when v.Name == name:
+                case VariableAssignStatementNode v when v.Name == name:
                     return v;
                 case BlockNode block:
                 {
@@ -84,7 +85,7 @@ namespace Chow.Interpreter.ImplTests
                     }
                     break;
                 }
-                case IfNode ifNode:
+                case IfStatementNode ifNode:
                 {
                     return TryFindAssign(ifNode.Block, name) ?? TryFindAssign(ifNode.Branch, name)!;
                 }
@@ -93,7 +94,7 @@ namespace Chow.Interpreter.ImplTests
             return null!;
         }
 
-        static VarAssignNode? TryFindAssign(Node? node, string name)
+        static VariableAssignStatementNode? TryFindAssign(Node? node, string name)
         {
             if (node == null)
             {
@@ -101,7 +102,7 @@ namespace Chow.Interpreter.ImplTests
             }
             switch (node)
             {
-                case VarAssignNode v when v.Name == name:
+                case VariableAssignStatementNode v when v.Name == name:
                     return v;
                 case BlockNode block:
                     foreach (var stmt in block.Statements)
@@ -115,7 +116,7 @@ namespace Chow.Interpreter.ImplTests
                     return null;
                 case FunctionNode func:
                     return TryFindAssign(func.Body, name);
-                case IfNode ifNode:
+                case IfStatementNode ifNode:
                     return TryFindAssign(ifNode.Block, name) ?? TryFindAssign(ifNode.Branch, name);
                 default:
                     return null;
@@ -154,13 +155,13 @@ namespace Chow.Interpreter.ImplTests
                     return null;
                 case FunctionNode func:
                     return TryFindRead(func.Body, name);
-                case VarAssignNode v:
+                case VariableAssignStatementNode v:
                     return TryFindRead(v.Expression, name);
-                case ExprStatementNode ex:
+                case ExpressionStatementNode ex:
                     return TryFindRead(ex.Expression, name);
-                case ExprNode e:
+                case ExpressionNode e:
                     return TryFindRead(e.Left, name) ?? TryFindRead(e.Right, name);
-                case ReturnNode r:
+                case ReturnStatementNode r:
                     return TryFindRead(r.Expression, name);
                 case CallNode call:
                 {
@@ -179,7 +180,7 @@ namespace Chow.Interpreter.ImplTests
                     }
                     return null;
                 }
-                case IfNode ifNode:
+                case IfStatementNode ifNode:
                     return TryFindRead(ifNode.Expr, name)
                         ?? TryFindRead(ifNode.Block, name)
                         ?? TryFindRead(ifNode.Branch, name);
@@ -197,7 +198,7 @@ namespace Chow.Interpreter.ImplTests
         {
             var root = Analyze("x = 1");
             var assign = FindAssign(root.Statements[0], "x");
-            Assert.That(assign.Resolution, Is.EqualTo(ScopeKind.Local));
+            Assert.That(assign.Resolution, Is.EqualTo(ScopeType.Local));
         }
 
         [Test]
@@ -206,7 +207,7 @@ namespace Chow.Interpreter.ImplTests
             var root = Analyze("def f():\n    x = 1");
             var func = FindFunction(root, "f");
             var assign = FindAssign(func.Body, "x");
-            Assert.That(assign.Resolution, Is.EqualTo(ScopeKind.Local));
+            Assert.That(assign.Resolution, Is.EqualTo(ScopeType.Local));
         }
 
         [Test]
@@ -215,7 +216,7 @@ namespace Chow.Interpreter.ImplTests
             var root = Analyze("x = 0\ndef f():\n    global x\n    x = 1");
             var func = FindFunction(root, "f");
             var assign = FindAssign(func.Body, "x");
-            Assert.That(assign.Resolution, Is.EqualTo(ScopeKind.Global));
+            Assert.That(assign.Resolution, Is.EqualTo(ScopeType.Global));
         }
 
         [Test]
@@ -224,7 +225,7 @@ namespace Chow.Interpreter.ImplTests
             var root = Analyze("x = 0\ndef f():\n    global x\n    return x");
             var func = FindFunction(root, "f");
             var read = FindRead(func.Body, "x");
-            Assert.That(read.Resolution, Is.EqualTo(ScopeKind.Global));
+            Assert.That(read.Resolution, Is.EqualTo(ScopeType.Global));
         }
 
         [Test]
@@ -239,7 +240,7 @@ namespace Chow.Interpreter.ImplTests
             var root = Analyze(src);
             var inner = FindFunction(root, "inner");
             var assign = FindAssign(inner.Body, "x");
-            Assert.That(assign.Resolution, Is.EqualTo(ScopeKind.Nonlocal));
+            Assert.That(assign.Resolution, Is.EqualTo(ScopeType.Nonlocal));
         }
 
         [Test]
@@ -254,7 +255,7 @@ namespace Chow.Interpreter.ImplTests
             var root = Analyze(src);
             var inner = FindFunction(root, "inner");
             var read = FindRead(inner.Body, "x");
-            Assert.That(read.Resolution, Is.EqualTo(ScopeKind.Nonlocal));
+            Assert.That(read.Resolution, Is.EqualTo(ScopeType.Nonlocal));
         }
 
         [Test]
@@ -273,7 +274,7 @@ namespace Chow.Interpreter.ImplTests
                 }
             }
             Assert.That(fooDef, Is.Not.Null);
-            Assert.That(fooDef!.Resolution, Is.EqualTo(ScopeKind.Global));
+            Assert.That(fooDef!.Resolution, Is.EqualTo(ScopeType.Global));
         }
 
         [Test]
@@ -283,7 +284,7 @@ namespace Chow.Interpreter.ImplTests
             var root = Analyze("global x\nx = 1");
             var assign = FindAssign(root.Statements[1], "x");
             // At module level, both Local and Global resolve to module scope; the analyzer stamps Global.
-            Assert.That(assign.Resolution, Is.EqualTo(ScopeKind.Global));
+            Assert.That(assign.Resolution, Is.EqualTo(ScopeType.Global));
         }
 
         // ============================================================================================================
