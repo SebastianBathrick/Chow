@@ -21,7 +21,7 @@ namespace Chow.Interpreter
                 var varUnion = _moduleScope.GetVariableValue(name);
 
                 // Gets the C#-typed value stored in the TaggedUnion instance
-                return varUnion.GetTaggedValue();
+                return ApiConverter.ToObject(varUnion);
             }
 
             set

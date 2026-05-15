@@ -588,13 +588,14 @@ namespace Chow.Interpreter
 
             if (target.Tag == Tag.Object && target.ObjectValue is InteropClassObject ico)
             {
-                if (!ico.HasAttribute(attrName))
+                if (!ico.CanSetAttribute(attrName))
                 {
-                    throw new AttributeException(ico.ClassName, attrName, GetCurrentLineNumber());
-                }
-                if (!ico.IsWritableField(attrName))
-                {
-                    // Method names and read-only fields both land here.
+                    if (!ico.HasAttribute(attrName))
+                    {
+                        throw new AttributeException(ico.ClassName, attrName, GetCurrentLineNumber());
+                    }
+
+                    // Method names and read-only fields land here.
                     throw new AttributeException(
                         ico.ClassName, attrName, GetCurrentLineNumber(),
                         $"'{ico.ClassName}' object attribute '{attrName}' is read-only");

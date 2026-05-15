@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Chow.Interpreter.UxTests": {
+      "commandName": "Project"
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    }
+  }
+}
