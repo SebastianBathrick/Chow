@@ -49,7 +49,7 @@ namespace Chow.Interpreter.ImplTests
         }
 
         // ============================================================================================================
-        // A. def emits ClosureTemplate -> CreateClosureFromTemplate -> VariableAssignOrDeclare
+        // A. def emits ClosureTemplate -> PushNewClosureFromTemplate -> PopAndAssignToVariable
         // ============================================================================================================
 
         [Test]
@@ -59,15 +59,15 @@ namespace Chow.Interpreter.ImplTests
 
             var ops = Instructions(chunk);
 
-            // Expect last three of module chunk: PushConstant(template), CreateClosureFromTemplate, VariableAssignOrDeclare(f)
+            // Expect last three of module chunk: PushConstant(template), PushNewClosureFromTemplate, PopAndAssignToVariable(f)
             Assert.That(ops.Count, Is.GreaterThanOrEqualTo(3));
             var n = ops.Count;
 
             Assert.Multiple(() =>
             {
                 Assert.That(ops[n - 3].Code, Is.EqualTo(OperationCode.PushConstant));
-                Assert.That(ops[n - 2].Code, Is.EqualTo(OperationCode.CreateClosureFromTemplate));
-                Assert.That(ops[n - 1].Code, Is.EqualTo(OperationCode.VariableAssignOrDeclare));
+                Assert.That(ops[n - 2].Code, Is.EqualTo(OperationCode.PushNewClosureFromTemplate));
+                Assert.That(ops[n - 1].Code, Is.EqualTo(OperationCode.PopAndAssignToVariable));
             });
         }
 
@@ -98,7 +98,7 @@ namespace Chow.Interpreter.ImplTests
         }
 
         // ============================================================================================================
-        // B. Function body has implicit None + ReturnValue tail
+        // B. Function body has implicit None + PushReturnValue tail
         // ============================================================================================================
 
         [Test]
@@ -113,7 +113,7 @@ namespace Chow.Interpreter.ImplTests
             Assert.Multiple(() =>
             {
                 Assert.That(ops[n - 2].Code, Is.EqualTo(OperationCode.PushConstant));
-                Assert.That(ops[n - 1].Code, Is.EqualTo(OperationCode.ReturnValue));
+                Assert.That(ops[n - 1].Code, Is.EqualTo(OperationCode.PushReturnValue));
 
                 var tailConst = body.ReadConstant(ops[n - 2].Operand);
                 Assert.That(tailConst.Tag, Is.EqualTo(Tag.None));
@@ -127,11 +127,11 @@ namespace Chow.Interpreter.ImplTests
             var body = FindFirstTemplate(chunk).Chunk;
             var ops = Instructions(body);
 
-            // Last two ops are always the implicit None + ReturnValue tail.
+            // Last two ops are always the implicit None + PushReturnValue tail.
             var n = ops.Count;
             Assert.Multiple(() =>
             {
-                Assert.That(ops[n - 1].Code, Is.EqualTo(OperationCode.ReturnValue));
+                Assert.That(ops[n - 1].Code, Is.EqualTo(OperationCode.PushReturnValue));
                 Assert.That(ops[n - 2].Code, Is.EqualTo(OperationCode.PushConstant));
 
                 var tailConst = body.ReadConstant(ops[n - 2].Operand);
@@ -140,7 +140,7 @@ namespace Chow.Interpreter.ImplTests
         }
 
         // ============================================================================================================
-        // C. Bare return emits PushConstant(None) + ReturnValue
+        // C. Bare return emits PushConstant(None) + PushReturnValue
         // ============================================================================================================
 
         [Test]
@@ -151,19 +151,19 @@ namespace Chow.Interpreter.ImplTests
             var ops = Instructions(body);
 
             // Body has the block-wrapped bare return plus the implicit-None tail; both produce
-            // a PushConstant(None) + ReturnValue pair. Two ReturnValues confirms the bare return
+            // a PushConstant(None) + PushReturnValue pair. Two ReturnValues confirms the bare return
             // is not optimized away.
             var returnValueCount = 0;
             var pushNoneBeforeReturnCount = 0;
             for (var i = 0; i < ops.Count; i++)
             {
-                if (ops[i].Code != OperationCode.ReturnValue)
+                if (ops[i].Code != OperationCode.PushReturnValue)
                 {
                     continue;
                 }
                 returnValueCount++;
 
-                Assert.That(i, Is.GreaterThan(0), "ReturnValue cannot be the first op");
+                Assert.That(i, Is.GreaterThan(0), "PushReturnValue cannot be the first op");
                 var prev = ops[i - 1];
                 if (prev.Code == OperationCode.PushConstant && body.ReadConstant(prev.Operand).Tag == Tag.None)
                 {
@@ -193,19 +193,19 @@ namespace Chow.Interpreter.ImplTests
             Assert.Multiple(() =>
             {
                 // Reverse order: c then b then a
-                Assert.That(ops[0].Code, Is.EqualTo(OperationCode.VariableAssignOrDeclare));
+                Assert.That(ops[0].Code, Is.EqualTo(OperationCode.PopAndAssignToVariable));
                 Assert.That(body.ReadVariableName(ops[0].Operand), Is.EqualTo("c"));
 
-                Assert.That(ops[1].Code, Is.EqualTo(OperationCode.VariableAssignOrDeclare));
+                Assert.That(ops[1].Code, Is.EqualTo(OperationCode.PopAndAssignToVariable));
                 Assert.That(body.ReadVariableName(ops[1].Operand), Is.EqualTo("b"));
 
-                Assert.That(ops[2].Code, Is.EqualTo(OperationCode.VariableAssignOrDeclare));
+                Assert.That(ops[2].Code, Is.EqualTo(OperationCode.PopAndAssignToVariable));
                 Assert.That(body.ReadVariableName(ops[2].Operand), Is.EqualTo("a"));
             });
         }
 
         // ============================================================================================================
-        // E. Call site emit
+        // E. CallFunction site emit
         // ============================================================================================================
 
         [Test]
@@ -216,11 +216,11 @@ namespace Chow.Interpreter.ImplTests
             // The call site is at the end of the module chunk; find it.
             var ops = Instructions(chunk);
 
-            // Scan for the Call op; verify operand and preceding ops.
+            // Scan for the CallFunction op; verify operand and preceding ops.
             var callIdx = -1;
             for (var i = 0; i < ops.Count; i++)
             {
-                if (ops[i].Code == OperationCode.Call)
+                if (ops[i].Code == OperationCode.CallFunction)
                 {
                     callIdx = i;
                     break;
@@ -232,8 +232,8 @@ namespace Chow.Interpreter.ImplTests
             {
                 Assert.That(ops[callIdx].Operand, Is.EqualTo(2));
 
-                // VariablePushValue(add) sits before the two arg evaluations.
-                Assert.That(ops[callIdx - 3].Code, Is.EqualTo(OperationCode.VariablePushValue));
+                // PushVariableValue(add) sits before the two arg evaluations.
+                Assert.That(ops[callIdx - 3].Code, Is.EqualTo(OperationCode.PushVariableValue));
                 Assert.That(chunk.ReadVariableName(ops[callIdx - 3].Operand), Is.EqualTo("add"));
             });
         }
@@ -247,7 +247,7 @@ namespace Chow.Interpreter.ImplTests
             var callIdx = -1;
             for (var i = 0; i < ops.Count; i++)
             {
-                if (ops[i].Code == OperationCode.Call)
+                if (ops[i].Code == OperationCode.CallFunction)
                 {
                     callIdx = i;
                     break;

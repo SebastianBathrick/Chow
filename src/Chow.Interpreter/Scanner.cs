@@ -24,11 +24,10 @@ namespace Chow.Interpreter
         readonly List<Token> _tkns;
         readonly Stack<int> _indentLvls;
         readonly Stack<char> _brackets;
-
         readonly string _src;
+
         int _charIdx;
         int _lineNum;
-
         bool _isLineBegin;
 
         char CurrChar => _src[_charIdx];

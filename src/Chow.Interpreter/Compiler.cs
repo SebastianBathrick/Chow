@@ -53,7 +53,7 @@ namespace Chow.Interpreter
                 var param = (NameNode)funcNode.Params[i];
                 var pramConstIdx = _chunk.RegisterVariableName(param.Name);
 
-                _chunk.AddInstruction(OperationCode.VariableAssignOrDeclare, param.LineNumber, pramConstIdx);
+                _chunk.AddInstruction(OperationCode.PopAndAssignToVariable, param.LineNumber, pramConstIdx);
             }
 
             CompileTargetNode(funcNode.Body);
@@ -62,7 +62,7 @@ namespace Chow.Interpreter
             var noneIdx = _chunk.RegisterConstant(TaggedUnion.None);
 
             _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNumber, noneIdx);
-            _chunk.AddInstruction(OperationCode.ReturnValue, funcNode.LineNumber);
+            _chunk.AddInstruction(OperationCode.PushReturnValue, funcNode.LineNumber);
 
             return _chunk;
         }
@@ -75,14 +75,14 @@ namespace Chow.Interpreter
             var template = new ClosureTemplate(funcChunk, funcNode.Name, funcNode.Params.Count);
             var templateIdx = _chunk.RegisterConstant(new TaggedUnion(template));
 
-            // Push template, then runtime CreateClosureFromTemplate captures the active scope and wraps it as a Closure.
+            // Push template, then runtime PushNewClosureFromTemplate captures the active scope and wraps it as a Closure.
             _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNumber, templateIdx);
-            _chunk.AddInstruction(OperationCode.CreateClosureFromTemplate, funcNode.LineNumber);
+            _chunk.AddInstruction(OperationCode.PushNewClosureFromTemplate, funcNode.LineNumber);
 
             // Functions work like variables, can be reassigned, and be passed around as values.
-            // This method represents something similar in concept to VariableAssignOrDeclare, but for functions.
+            // This method represents something similar in concept to PopAndAssignToVariable, but for functions.
             var varNameIdx = _chunk.RegisterVariableName(funcNode.Name);
-            _chunk.AddInstruction(OperationCode.VariableAssignOrDeclare, funcNode.LineNumber, varNameIdx);
+            _chunk.AddInstruction(OperationCode.PopAndAssignToVariable, funcNode.LineNumber, varNameIdx);
         }
 
         void CompileCall(CallNode callNode)
@@ -94,7 +94,7 @@ namespace Chow.Interpreter
                 CompileTargetNode(arg);
             }
 
-            _chunk.AddInstruction(OperationCode.Call, callNode.LineNumber, callNode.Args.Count);
+            _chunk.AddInstruction(OperationCode.CallFunction, callNode.LineNumber, callNode.Args.Count);
         }
 
         void CompileTargetNode(Node targetNode)
@@ -195,7 +195,7 @@ namespace Chow.Interpreter
                 CompileTargetNode(element);
             }
 
-            _chunk.AddInstruction(OperationCode.CreateInternalList, node.LineNumber, node.Elements.Count);
+            _chunk.AddInstruction(OperationCode.PushNewInternalList, node.LineNumber, node.Elements.Count);
         }
 
         void CompileDictLiteral(DictLiteralNode node)
@@ -206,7 +206,7 @@ namespace Chow.Interpreter
                 CompileTargetNode(node.Values[i]);
             }
 
-            _chunk.AddInstruction(OperationCode.CreateInternalDict, node.LineNumber, node.Keys.Count);
+            _chunk.AddInstruction(OperationCode.PushNewInternalDict, node.LineNumber, node.Keys.Count);
         }
 
         void CompileSubscript(SubscriptNode node)
@@ -244,7 +244,7 @@ namespace Chow.Interpreter
         {
             CompileTargetNode(node.Target);
             var varNameIdx = _chunk.RegisterVariableName(node.AttrName);
-            _chunk.AddInstruction(OperationCode.GetVariableAttribute, node.LineNumber, varNameIdx);
+            _chunk.AddInstruction(OperationCode.GetObjectAttribute, node.LineNumber, varNameIdx);
         }
 
         void CompileSubscriptAssign(SubscriptAssignNode node)
@@ -266,7 +266,7 @@ namespace Chow.Interpreter
             CompileTargetNode(node.Expression);
 
             var varNameIdx = _chunk.RegisterVariableName(node.AttrName);
-            _chunk.AddInstruction(OperationCode.SetVariableAttribute, node.LineNumber, varNameIdx);
+            _chunk.AddInstruction(OperationCode.SetInteropObjectAttribute, node.LineNumber, varNameIdx);
         }
 
         void CompileBlockNode(BlockNode blockNode)
@@ -310,14 +310,14 @@ namespace Chow.Interpreter
             // If a variable with the same name already exists in the chunk, the index of the existing variable will be returned.
             // Otherwise, the new variable will be added to the chunk and its new index will be returned.
             var varNameIdx = _chunk.RegisterVariableName(varAssignNode.Name);
-            _chunk.AddInstruction(OperationCode.VariableAssignOrDeclare, varAssignNode.LineNumber, varNameIdx);
+            _chunk.AddInstruction(OperationCode.PopAndAssignToVariable, varAssignNode.LineNumber, varNameIdx);
         }
 
         void CompileVarFactor(NameNode varFactorNode)
         {
             // Register to have its own constant in case the variable with this name is declared in a previous environment
             var varNameIdx = _chunk.RegisterVariableName(varFactorNode.Name);
-            _chunk.AddInstruction(OperationCode.VariablePushValue, varFactorNode.LineNumber, varNameIdx);
+            _chunk.AddInstruction(OperationCode.PushVariableValue, varFactorNode.LineNumber, varNameIdx);
         }
 
         void CompileReturn(ReturnNode returnNode)
@@ -328,12 +328,12 @@ namespace Chow.Interpreter
             }
             else
             {
-                // Bare `return` returns None; ReturnValue always pops exactly one value off the stack.
+                // Bare `return` returns None; PushReturnValue always pops exactly one value off the stack.
                 var noneIdx = _chunk.RegisterConstant(TaggedUnion.None);
                 _chunk.AddInstruction(OperationCode.PushConstant, returnNode.LineNumber, noneIdx);
             }
 
-            _chunk.AddInstruction(code: OperationCode.ReturnValue, returnNode.LineNumber);
+            _chunk.AddInstruction(code: OperationCode.PushReturnValue, returnNode.LineNumber);
         }
 
         void CompileExprStmnt(ExprStatementNode exprStmtNode)

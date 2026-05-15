@@ -37,18 +37,18 @@ namespace Chow.Interpreter.ImplTests
         }
 
         // ============================================================================================================
-        // A. CreateClosureFromTemplate produces a Closure carrying captured scope
+        // A. PushNewClosureFromTemplate produces a Closure carrying captured scope
         // ============================================================================================================
 
         [Test]
         public void MakeClosure_ProducesClosure_WithCapturedScope()
         {
-            // Hand-build a chunk: PushConstant(template) + CreateClosureFromTemplate
+            // Hand-build a chunk: PushConstant(template) + PushNewClosureFromTemplate
             var module = new Chunk();
             var template = new ClosureTemplate(new Chunk(), "f", 0);
             var idx = module.RegisterConstant(new TaggedUnion(template));
             module.AddInstruction(OperationCode.PushConstant, LINE, idx);
-            module.AddInstruction(OperationCode.CreateClosureFromTemplate, LINE);
+            module.AddInstruction(OperationCode.PushNewClosureFromTemplate, LINE);
 
             var scope = new ModuleScope();
             var vm = new VirtualMachine(module, scope);
@@ -68,7 +68,7 @@ namespace Chow.Interpreter.ImplTests
         }
 
         // ============================================================================================================
-        // B. End-to-end Call + ReturnValue produce the function's return value
+        // B. End-to-end CallFunction + PushReturnValue produce the function's return value
         // ============================================================================================================
 
         [Test]
@@ -89,7 +89,7 @@ namespace Chow.Interpreter.ImplTests
             // rely on no infinite loop and on completion.
             var _ = ExecuteSource("def f():\n    return 1\nf()\n1 + 2");
 
-            // If we got here, IP advancement after Call works.
+            // If we got here, IP advancement after CallFunction works.
             Assert.Pass();
         }
 
@@ -116,7 +116,7 @@ namespace Chow.Interpreter.ImplTests
         }
 
         // ============================================================================================================
-        // D. Interop dispatch still works through the Call op (regression)
+        // D. Interop dispatch still works through the CallFunction op (regression)
         // ============================================================================================================
 
         [Test]
@@ -152,7 +152,7 @@ namespace Chow.Interpreter.ImplTests
         }
 
         // ============================================================================================================
-        // F. ReturnValue properly pops the frame so module-level resumes
+        // F. PushReturnValue properly pops the frame so module-level resumes
         // ============================================================================================================
 
         [Test]
