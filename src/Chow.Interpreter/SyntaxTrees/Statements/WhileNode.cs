@@ -2,15 +2,14 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
 {
     class WhileNode : Node
     {
-        public Node Expr { get; }
-
-        public Node Block { get; }
-
         public WhileNode(Node expr, Node block, int line) : base(line)
         {
             Expr = expr;
             Block = block;
         }
+        public Node Expr { get; }
+
+        public Node Block { get; }
 
         public override string ToString()
         {

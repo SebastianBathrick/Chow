@@ -1,19 +1,27 @@
 using Chow.Interpreter.Bytecode;
 using Chow.Interpreter.State.Scopes;
-
 namespace Chow.Interpreter.State.Values
 {
     /// <summary>
-    /// Runtime function value produced by a <c>def</c> statement in Chow source (as opposed to interop delegates supplied
-    /// by the host language). Pairs a compiled <see cref="Chunk"/> with the scope active at the moment <c>def</c> ran, so
-    /// the function body can later resolve enclosing names via the LEGB chain.
+    /// Runtime function value produced by a <c>def</c> statement in Chow source (as opposed to interop delegates supplied by
+    /// the host language). Pairs a compiled <see cref="Chunk" /> with the scope active at the moment <c>def</c> ran, so the function
+    /// body can later resolve enclosing names via the LEGB chain.
     /// </summary>
     /// <remarks>
-    /// <see cref="Enclosing"/> is a live reference — never a copy. Mutations to that scope after capture remain visible
-    /// to the function body, matching Python closure semantics.
+    /// <see cref="Enclosing" /> is a live reference — never a copy. Mutations to that scope after capture remain visible to the
+    /// function body, matching Python closure semantics.
     /// </remarks>
     sealed class Closure
     {
+        /// <summary>Constructs a closure. All fields are readonly; closures are immutable once built.</summary>
+        public Closure(Chunk chunk, IScope enclosing, string name, int paramCount)
+        {
+            Chunk = chunk;
+            Enclosing = enclosing;
+            Name = name;
+            ParamCount = paramCount;
+        }
+
         /// <summary>The compiled bytecode of the function body.</summary>
         public Chunk Chunk { get; }
 
@@ -25,14 +33,5 @@ namespace Chow.Interpreter.State.Values
 
         /// <summary>Declared positional-parameter count. Used by the VM for arity checking at call sites.</summary>
         public int ParamCount { get; }
-
-        /// <summary>Constructs a closure. All fields are readonly; closures are immutable once built.</summary>
-        public Closure(Chunk chunk, IScope enclosing, string name, int paramCount)
-        {
-            Chunk = chunk;
-            Enclosing = enclosing;
-            Name = name;
-            ParamCount = paramCount;
-        }
     }
 }

@@ -1,7 +1,6 @@
-﻿using Chow.Interpreter.State.Values;
+﻿using System;
+using Chow.Interpreter.State.Values;
 using Chow.Interpreter.Values;
-using System;
-
 namespace Chow.Interpreter
 {
     static class ApiConverter

@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
-
 namespace Chow.Interpreter.State.Values
 {
-    internal abstract class InteropClassObject
+    abstract class InteropClassObject
     {
-        readonly Dictionary<string, Func<TaggedUnion[], TaggedUnion>> _methods;
         readonly Dictionary<string, Field> _fields;
-
-        public abstract string ClassName { get; }
+        readonly Dictionary<string, Func<TaggedUnion[], TaggedUnion>> _methods;
 
         protected InteropClassObject()
         {
@@ -27,9 +24,12 @@ namespace Chow.Interpreter.State.Values
                     throw new InvalidOperationException(
                         $"'{ClassName}' declares '{entry.name}' as both a method and a field");
                 }
+
                 _fields.Add(entry.name, entry.field);
             }
         }
+
+        public abstract string ClassName { get; }
 
         // NOTE: called from base ctor BEFORE subclass ctor body runs. Subclass overrides MUST NOT
         // depend on subclass-only field initialization here. Lambdas that close over `this` are
@@ -53,10 +53,12 @@ namespace Chow.Interpreter.State.Values
             {
                 return f.Get();
             }
+
             if (_methods.TryGetValue(name, out var m))
             {
                 return new TaggedUnion(m);
             }
+
             throw new InvalidOperationException($"contract violation: '{ClassName}' has no attribute '{name}'");
         }
 
@@ -67,6 +69,7 @@ namespace Chow.Interpreter.State.Values
                 throw new InvalidOperationException(
                     $"contract violation: '{ClassName}.{name}' is not a writable field");
             }
+
             f.Set(value);
         }
 

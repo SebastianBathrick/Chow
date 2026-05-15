@@ -1,22 +1,21 @@
-using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Tokens;
 using System;
 using System.Collections.Generic;
+using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.SyntaxTrees;
 using Chow.Interpreter.SyntaxTrees.Expressions;
 using Chow.Interpreter.SyntaxTrees.Statements;
-
+using Chow.Interpreter.Tokens;
 namespace Chow.Interpreter
 {
     /// <summary>
-    /// Instances perform syntax analysis on a list of <see cref="Token"/>. The client provides the list of tokens from
-    /// the interpreter's scanning phase via an argument passed to the Parser instance's constructor.
+    /// Instances perform syntax analysis on a list of <see cref="Token" />. The client provides the list of tokens from the
+    /// interpreter's scanning phase via an argument passed to the Parser instance's constructor.
     /// <para>
-    /// To begin syntax analysis, the client calls <see cref="BuildTree"/>, which iterates over each token to determine
-    /// whether the source code's grammar is valid and which constructs it is trying to define. While doing so, it builds
-    /// an abstract syntax tree that outlines the constructs and any relevant information from the tokens. Once the tree
-    /// is complete, BuildTree returns a <see cref="Node"/> object representing the root of the abstract syntax tree.
-    /// After this point, the client should discard the Parser instance, because it will be considered dirty.
+    /// To begin syntax analysis, the client calls <see cref="BuildTree" />, which iterates over each token to determine whether
+    /// the source code's grammar is valid and which constructs it is trying to define. While doing so, it builds an abstract syntax tree
+    /// that outlines the constructs and any relevant information from the tokens. Once the tree is complete, BuildTree returns a
+    /// <see cref="Node" /> object representing the root of the abstract syntax tree. After this point, the client should discard the
+    /// Parser instance, because it will be considered dirty.
     /// </para>
     /// </summary>
     class Parser
@@ -24,24 +23,84 @@ namespace Chow.Interpreter
         readonly List<Token> _tkns;
         int _tknIdx;
 
-        Token CurrToken => _tkns[_tknIdx];
-        Token PrevTkn => _tkns[_tknIdx - 1];
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Parser"/> class with the tokens to analyze.
-        /// </summary>
-        /// <param name="tkns">The <see cref="Token"/> list produced by the <see cref="Scanner"/>.</param>
+        /// <summary>Initializes a new instance of the <see cref="Parser" /> class with the tokens to analyze.</summary>
+        /// <param name="tkns">The <see cref="Token" /> list produced by the <see cref="Scanner" />.</param>
         public Parser(List<Token> tkns)
         {
             _tkns = tkns;
         }
 
+        Token CurrToken => _tkns[_tknIdx];
+        Token PrevTkn => _tkns[_tknIdx - 1];
+
+        #region Helper Methods
+
+        static ExprOperator MapBinary(TokenType type)
+        {
+            switch (type)
+            {
+                case TokenType.SymbolPlus:
+                    return ExprOperator.Add;
+
+                case TokenType.SymbolMinus:
+                    return ExprOperator.Subtract;
+
+                case TokenType.SymbolMultiply:
+                    return ExprOperator.Multiply;
+
+                case TokenType.SymbolDivide:
+                    return ExprOperator.Divide;
+
+                case TokenType.SymbolPercent:
+                    return ExprOperator.Modulus;
+
+                case TokenType.SymbolExponent:
+                    return ExprOperator.Exponentiate;
+
+                case TokenType.SymbolFloorDivide:
+                    return ExprOperator.FloorDivide;
+
+                case TokenType.SymbolEqualTo:
+                    return ExprOperator.Equal;
+
+                case TokenType.SymbolNotEqual:
+                    return ExprOperator.NotEqual;
+
+                case TokenType.SymbolLess:
+                    return ExprOperator.Less;
+
+                case TokenType.SymbolGreater:
+                    return ExprOperator.Greater;
+
+                case TokenType.SymbolLessEqual:
+                    return ExprOperator.LessEqual;
+
+                case TokenType.SymbolGreaterEqual:
+                    return ExprOperator.GreaterEqual;
+
+                case TokenType.KeywordAnd:
+                    return ExprOperator.And;
+
+                case TokenType.KeywordOr:
+                    return ExprOperator.Or;
+
+                case TokenType.SymbolPipe:
+                    return ExprOperator.BinaryOr;
+
+                case TokenType.KeywordIn:
+                    return ExprOperator.In;
+
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
+        #endregion
+
         #region Primary Methods
 
-        /// <summary>
-        /// Performs syntax analysis on the tokens provided to this Parser instance and builds an abstract syntax tree.
-        /// </summary>
-        /// <returns>A <see cref="Node"/> representing the root of the completed abstract syntax tree.</returns>
+        /// <summary>Performs syntax analysis on the tokens provided to this Parser instance and builds an abstract syntax tree.</summary>
+        /// <returns>A <see cref="Node" /> representing the root of the completed abstract syntax tree.</returns>
         public Node BuildTree()
         {
             var stmnts = new List<Node>();
@@ -93,7 +152,7 @@ namespace Chow.Interpreter
             var indentTkn = ConsumeToken(TokenType.Indent, "Expected indented block body.");
             var stmnts = new List<Node>
             {
-                ParseStmnt()
+                ParseStmnt(),
             };
 
             TryConsumeType(TokenType.Newline);
@@ -623,15 +682,15 @@ namespace Chow.Interpreter
 
                 case TokenType.KeywordNone:
                     ConsumeToken(TokenType.KeywordNone);
-                    return new LiteralNode(value: null, PrevTkn.lineNum);
+                    return new LiteralNode(null, PrevTkn.lineNum);
 
                 case TokenType.KeywordTrue:
                     ConsumeToken(TokenType.KeywordTrue);
-                    return new LiteralNode(value: true, PrevTkn.lineNum);
+                    return new LiteralNode(true, PrevTkn.lineNum);
 
                 case TokenType.KeywordFalse:
                     ConsumeToken(TokenType.KeywordFalse);
-                    return new LiteralNode(value: false, PrevTkn.lineNum);
+                    return new LiteralNode(false, PrevTkn.lineNum);
 
                 case TokenType.SymbolLeftParen:
                     ConsumeToken();
@@ -717,72 +776,6 @@ namespace Chow.Interpreter
                    type == TokenType.SymbolLeftParen ||
                    type == TokenType.SymbolLeftBracket ||
                    type == TokenType.SymbolLeftCurly;
-        }
-
-        #endregion
-
-        #region Helper Methods
-
-
-
-        static ExprOperator MapBinary(TokenType type)
-        {
-            switch (type)
-            {
-                case TokenType.SymbolPlus:
-                    return ExprOperator.Add;
-
-                case TokenType.SymbolMinus:
-                    return ExprOperator.Subtract;
-
-                case TokenType.SymbolMultiply:
-                    return ExprOperator.Multiply;
-
-                case TokenType.SymbolDivide:
-                    return ExprOperator.Divide;
-
-                case TokenType.SymbolPercent:
-                    return ExprOperator.Modulus;
-
-                case TokenType.SymbolExponent:
-                    return ExprOperator.Exponentiate;
-
-                case TokenType.SymbolFloorDivide:
-                    return ExprOperator.FloorDivide;
-
-                case TokenType.SymbolEqualTo:
-                    return ExprOperator.Equal;
-
-                case TokenType.SymbolNotEqual:
-                    return ExprOperator.NotEqual;
-
-                case TokenType.SymbolLess:
-                    return ExprOperator.Less;
-
-                case TokenType.SymbolGreater:
-                    return ExprOperator.Greater;
-
-                case TokenType.SymbolLessEqual:
-                    return ExprOperator.LessEqual;
-
-                case TokenType.SymbolGreaterEqual:
-                    return ExprOperator.GreaterEqual;
-
-                case TokenType.KeywordAnd:
-                    return ExprOperator.And;
-
-                case TokenType.KeywordOr:
-                    return ExprOperator.Or;
-
-                case TokenType.SymbolPipe:
-                    return ExprOperator.BinaryOr;
-
-                case TokenType.KeywordIn:
-                    return ExprOperator.In;
-
-                default:
-                    throw new InvalidOperationException();
-            }
         }
 
         #endregion

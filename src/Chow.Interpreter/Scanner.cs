@@ -1,18 +1,17 @@
-using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-
+using Chow.Interpreter.Exceptions;
+using Chow.Interpreter.Tokens;
 namespace Chow.Interpreter
 {
     /// <summary>
-    /// Instances facilitate the first phase of the interpreter, lexical analysis/scanning. The client provides source
-    /// code via an argument passed to an instance's constructor.
+    /// Instances facilitate the first phase of the interpreter, lexical analysis/scanning. The client provides source code via an
+    /// argument passed to an instance's constructor.
     /// <para>
-    /// To begin lexical analysis, the client must call the <see cref="ScanTokens"/> method, which tokenizes the source
-    /// code and returns a list of <see cref="Token"/>s. After <see cref="ScanTokens"/> returns its value, the client
-    /// should discard the Scanner instance, because it will be considered dirty.
+    /// To begin lexical analysis, the client must call the <see cref="ScanTokens" /> method, which tokenizes the source code and
+    /// returns a list of <see cref="Token" />s. After <see cref="ScanTokens" /> returns its value, the client should discard the Scanner
+    /// instance, because it will be considered dirty.
     /// </para>
     /// </summary>
     sealed class Scanner
@@ -37,9 +36,7 @@ namespace Chow.Interpreter
 
         #region Constructor & Primary Methods
 
-        /// <summary>
-        /// Initializes a new Scanner instance using Chow source code.
-        /// </summary>
+        /// <summary>Initializes a new Scanner instance using Chow source code.</summary>
         /// <param name="src">Null or string containing raw Chow source code or whitespace.</param>
         public Scanner(string src)
         {
@@ -53,9 +50,7 @@ namespace Chow.Interpreter
             _indentLvls.Push(0);
         }
 
-        /// <summary>
-        /// Scans the source code string provided during this instance's initialization, and generates a list of tokens.
-        /// </summary>
+        /// <summary>Scans the source code string provided during this instance's initialization, and generates a list of tokens.</summary>
         /// <returns>A list of tokens representing the scanned source code in the order they appear.</returns>
         public List<Token> ScanTokens()
         {
@@ -130,7 +125,6 @@ namespace Chow.Interpreter
                 throw new ScannerEx($"Unexpected character '{CurrChar}'.", _lineNum);
             }
         }
-
 
         #endregion
 
@@ -375,6 +369,7 @@ namespace Chow.Interpreter
                         {
                             throw new ScannerEx("Unexpected ']'", _lineNum);
                         }
+
                         break;
                     }
 
@@ -393,6 +388,7 @@ namespace Chow.Interpreter
                         {
                             throw new ScannerEx("Unexpected '}'", _lineNum);
                         }
+
                         break;
                     }
 
@@ -411,6 +407,7 @@ namespace Chow.Interpreter
                         {
                             throw new ScannerEx("Unexpected ')'", _lineNum);
                         }
+
                         break;
                     }
 
@@ -647,7 +644,7 @@ namespace Chow.Interpreter
                 }
                 else
                 {
-                    throw new ScannerEx($"Unexpected indentation.", _lineNum);
+                    throw new ScannerEx("Unexpected indentation.", _lineNum);
                 }
             }
         }

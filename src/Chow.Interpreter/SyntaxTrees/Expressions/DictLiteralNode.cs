@@ -3,15 +3,14 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     class DictLiteralNode : Node
     {
-        public List<Node> Keys { get; }
-
-        public List<Node> Values { get; }
-
         public DictLiteralNode(List<Node> keys, List<Node> values, int line) : base(line)
         {
             Keys = keys;
             Values = values;
         }
+        public List<Node> Keys { get; }
+
+        public List<Node> Values { get; }
 
         public override string ToString()
         {
@@ -26,6 +25,7 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
                 body += "\n" + IndentChildren(Keys[i].ToString());
                 body += "\n" + IndentChildren(Values[i].ToString());
             }
+
             return $"[Dict line={LineNumber}{body}\n]";
         }
 

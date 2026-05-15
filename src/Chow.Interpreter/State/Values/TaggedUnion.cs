@@ -1,56 +1,54 @@
-using Chow.Interpreter.Values;
 using System;
-
+using Chow.Interpreter.Values;
 namespace Chow.Interpreter.State.Values
 {
     struct TaggedUnion
     {
         #region Constants
-        
+
         const double DEFAULT_FLOAT_VALUE = 0.0;
         const long DEFAULT_INT_VALUE = 0L;
         const bool DEFAULT_BOOL_VALUE = false;
         const object DEFAULT_NULL_VALUE = null;
-        
+
         #endregion
-        
+
         #region Fields
-        
+
         public static TaggedUnion Empty = new TaggedUnion(Tag.Empty);
         public static TaggedUnion None = new TaggedUnion(Tag.None);
 
         // TODO: Test whether using explicit struct layouts meaningly affects performance
         // If it seems it reduces execution time then Tag likely will become a byte enum
-        Tag _tag;
         bool _bool;
         object _obj;
         long _longInt;
         double _doubleFloat;
 
         #endregion
-        
+
         #region Properties
-        
+
         // TODO: Get rid of these, because .Tag does the same thing with not that much more code
-        public Tag Tag => _tag;
+        public Tag Tag { get; }
 
         public bool IsEmpty => Tag == Tag.Empty;
-        
+
         public bool IsInt => Tag == Tag.Int;
-        
+
         public bool IsFloat => Tag == Tag.Float;
-        
+
         public bool IsString => Tag == Tag.Str;
-        
+
         public bool IsBoolean => Tag == Tag.Boolean;
-        
+
         public bool IsObject => Tag == Tag.Object;
-        
+
         public bool IsList => Tag == Tag.List;
-        
+
         public bool IsDict => Tag == Tag.Dict;
-        
-                public bool IsTruthy
+
+        public bool IsTruthy
         {
             get
             {
@@ -113,6 +111,7 @@ namespace Chow.Interpreter.State.Values
                 {
                     throw new InvalidOperationException($"String access attempt but union's type is {Tag}");
                 }
+
                 return (string)_obj;
             }
         }
@@ -153,6 +152,7 @@ namespace Chow.Interpreter.State.Values
                 {
                     throw new InvalidOperationException($"List access attempt but union's type is {Tag}");
                 }
+
                 return (InternalList)_obj;
             }
         }
@@ -165,18 +165,18 @@ namespace Chow.Interpreter.State.Values
                 {
                     throw new InvalidOperationException($"Dict access attempt but union's type is {Tag}");
                 }
+
                 return (InternalDict)_obj;
             }
         }
 
-        
         #endregion
-        
+
         #region Constructors
-        
+
         TaggedUnion(Tag type)
         {
-            _tag = type;
+            Tag = type;
             _longInt = DEFAULT_INT_VALUE;
             _doubleFloat = DEFAULT_FLOAT_VALUE;
             _bool = DEFAULT_BOOL_VALUE;
@@ -217,7 +217,7 @@ namespace Chow.Interpreter.State.Values
         {
             _obj = dict;
         }
-        
+
         #endregion
 
 
@@ -271,14 +271,14 @@ namespace Chow.Interpreter.State.Values
         }
 
         /// <summary>
-        ///  Makes call to a value that is not a function declared in Chow source code, but instead a client-provided 
-        ///  delegate types that optionally accept <see cref="ChowValue"/> parameters and can return a <see cref="ChowValue"/>.
+        /// Makes call to a value that is not a function declared in Chow source code, but instead a client-provided delegate types
+        /// that optionally accept <see cref="ChowValue" /> parameters and can return a <see cref="ChowValue" />.
         /// </summary>
         /// <param name="singleArg">The first argument used for the call or null.</param>
         /// <param name="args">An array of additional arguments for the call or null.</param>
         /// <returns>The TaggedUnion result of the call. If the interop function returns void, the result is a None value.</returns>
         /// <exception cref="InvalidOperationException">If the object is not callable.</exception>
-        /// <remarks><paramref name="singleArg"/> is its own parameter so that a new array does not have to be created for a single element.</remarks>
+        /// <remarks><paramref name="singleArg" /> is its own parameter so that a new array does not have to be created for a single element.</remarks>
         public TaggedUnion MakeInteropCall(TaggedUnion? singleArg, TaggedUnion[] args)
         {
             if (!IsObject)
@@ -300,6 +300,7 @@ namespace Chow.Interpreter.State.Values
                     {
                         allArgs = args ?? Array.Empty<TaggedUnion>();
                     }
+
                     return methodDelegate(allArgs);
 
                 case Func<ChowValue> funcNoArg:
@@ -329,6 +330,7 @@ namespace Chow.Interpreter.State.Values
             {
                 result[i] = ApiConverter.ToChowValue(args[i]);
             }
+
             return result;
         }
 
@@ -354,6 +356,7 @@ namespace Chow.Interpreter.State.Values
             {
                 return new TaggedUnion(InternalList.Concat((InternalList)left._obj, (InternalList)right._obj));
             }
+
             ThrowIfObjectOperands(left, right);
             // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
             ThrowIfMixedBoolNumeric(left, right);
@@ -361,6 +364,7 @@ namespace Chow.Interpreter.State.Values
             {
                 return new TaggedUnion(BoolAsInt(left) + BoolAsInt(right));
             }
+
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion(AsFloat(left) + AsFloat(right));
@@ -378,6 +382,7 @@ namespace Chow.Interpreter.State.Values
             {
                 return new TaggedUnion(BoolAsInt(left) - BoolAsInt(right));
             }
+
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion(AsFloat(left) - AsFloat(right));
@@ -393,10 +398,12 @@ namespace Chow.Interpreter.State.Values
             {
                 return new TaggedUnion(InternalList.Repeat((InternalList)left._obj, (int)right.IntegerValue));
             }
+
             if (left.IsInt && right.IsList)
             {
                 return new TaggedUnion(InternalList.Repeat((InternalList)right._obj, (int)left.IntegerValue));
             }
+
             ThrowIfObjectOperands(left, right);
             // TODO: Remove once bool<->numeric coercion is implemented (Python coerces bool to int in mixed arithmetic).
             ThrowIfMixedBoolNumeric(left, right);
@@ -404,6 +411,7 @@ namespace Chow.Interpreter.State.Values
             {
                 return new TaggedUnion(BoolAsInt(left) * BoolAsInt(right));
             }
+
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion(AsFloat(left) * AsFloat(right));
@@ -422,6 +430,7 @@ namespace Chow.Interpreter.State.Values
             {
                 return new TaggedUnion((double)BoolAsInt(left) / BoolAsInt(right));
             }
+
             return new TaggedUnion(AsFloat(left) / AsFloat(right));
         }
 
@@ -437,6 +446,7 @@ namespace Chow.Interpreter.State.Values
                 var b = BoolAsInt(right);
                 return new TaggedUnion((a % b + b) % b);
             }
+
             if (EitherIsFloat(left, right))
             {
                 var l = AsFloat(left);
@@ -459,6 +469,7 @@ namespace Chow.Interpreter.State.Values
             {
                 return new TaggedUnion((long)Math.Floor(BoolAsInt(left) / (double)BoolAsInt(right)));
             }
+
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion(Math.Floor(AsFloat(left) / AsFloat(right)));
@@ -477,6 +488,7 @@ namespace Chow.Interpreter.State.Values
             {
                 return new TaggedUnion((long)Math.Pow(BoolAsInt(left), BoolAsInt(right)));
             }
+
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion(Math.Pow(AsFloat(left), AsFloat(right)));
@@ -497,6 +509,7 @@ namespace Chow.Interpreter.State.Values
             {
                 return new TaggedUnion(InternalDict.Merge((InternalDict)left._obj, (InternalDict)right._obj));
             }
+
             throw new InvalidOperationException($"unsupported operand type(s) for |: '{left.Tag}' and '{right.Tag}'");
         }
 
@@ -541,6 +554,7 @@ namespace Chow.Interpreter.State.Values
             {
                 return BoolAsInt(left) < BoolAsInt(right);
             }
+
             if (EitherIsFloat(left, right))
             {
                 return AsFloat(left) < AsFloat(right);
@@ -557,6 +571,7 @@ namespace Chow.Interpreter.State.Values
             {
                 return BoolAsInt(left) > BoolAsInt(right);
             }
+
             if (EitherIsFloat(left, right))
             {
                 return AsFloat(left) > AsFloat(right);
@@ -573,6 +588,7 @@ namespace Chow.Interpreter.State.Values
             {
                 return BoolAsInt(left) <= BoolAsInt(right);
             }
+
             if (EitherIsFloat(left, right))
             {
                 return AsFloat(left) <= AsFloat(right);
@@ -589,6 +605,7 @@ namespace Chow.Interpreter.State.Values
             {
                 return BoolAsInt(left) >= BoolAsInt(right);
             }
+
             if (EitherIsFloat(left, right))
             {
                 return AsFloat(left) >= AsFloat(right);
@@ -614,7 +631,14 @@ namespace Chow.Interpreter.State.Values
 
         static void ThrowIfObjectOperands(TaggedUnion left, TaggedUnion right)
         {
-            if (left.IsObject || right.IsObject || left.IsString || right.IsString || left.IsList || right.IsList || left.IsDict || right.IsDict)
+            if (left.IsObject ||
+                right.IsObject ||
+                left.IsString ||
+                right.IsString ||
+                left.IsList ||
+                right.IsList ||
+                left.IsDict ||
+                right.IsDict)
             {
                 throw new InvalidOperationException("Object operands are not supported for this operation.");
             }
@@ -705,7 +729,8 @@ namespace Chow.Interpreter.State.Values
             // TODO: Replace this branch with actual coercion (bool<->int<->float) once implemented.
             if (IsCoercibleNumeric(desiredType) && IsCoercibleNumeric(Tag))
             {
-                throw new NotImplementedException($"{desiredType} access on union of type {Tag} requires coercion that is not yet implemented.");
+                throw new NotImplementedException(
+                    $"{desiredType} access on union of type {Tag} requires coercion that is not yet implemented.");
             }
 
             throw new InvalidOperationException($"{desiredType} access attempt but union's type is {Tag}");

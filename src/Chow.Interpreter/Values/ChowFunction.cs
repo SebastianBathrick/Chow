@@ -2,12 +2,11 @@ namespace Chow.Interpreter.Values
 {
     public class ChowFunction : ChowValue
     {
-        public object Value { get; }
-
         public ChowFunction(object value)
         {
             Value = value;
         }
+        public object Value { get; }
 
         public override TDataType AsType<TDataType>()
         {

@@ -37,6 +37,9 @@ namespace Chow.Interpreter.Values
             return typeof(TDataType) == typeof(bool);
         }
 
-        public override string ToString() => _val ? TRUE_STRING : FALSE_STRING;
+        public override string ToString()
+        {
+            return _val ? TRUE_STRING : FALSE_STRING;
+        }
     }
 }

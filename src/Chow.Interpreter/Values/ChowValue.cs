@@ -16,4 +16,3 @@ namespace Chow.Interpreter.Values
         public abstract override string ToString();
     }
 }
-

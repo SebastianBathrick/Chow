@@ -1,5 +1,4 @@
 ﻿using System;
-
 namespace Chow.Interpreter.Values
 {
     public class InvalidCastException : Exception

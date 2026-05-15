@@ -1,33 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <Title>Chow</Title>
-    <Authors>Sebastian Bathrick</Authors>
-    <RepositoryType></RepositoryType>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Copyright>Copyright © 2026 Sebastian Bathrick</Copyright>
-    <Version>0.1.14</Version>
-    <AssemblyName>Chow</AssemblyName>
-    <RootNamespace>Chow.Interpreter</RootNamespace>
-    <GenerateDocumentationFile>False</GenerateDocumentationFile>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <Title>Chow</Title>
+        <Authors>Sebastian Bathrick</Authors>
+        <RepositoryType></RepositoryType>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Copyright>Copyright © 2026 Sebastian Bathrick</Copyright>
+        <Version>0.1.14</Version>
+        <AssemblyName>Chow</AssemblyName>
+        <RootNamespace>Chow.Interpreter</RootNamespace>
+        <GenerateDocumentationFile>False</GenerateDocumentationFile>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>Chow.Interpreter.Tests</_Parameter1>
-    </AssemblyAttribute>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>Chow.Interpreter.ImplTests</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>Chow.Interpreter.Tests</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>Chow.Interpreter.ImplTests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\..\README.md">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-      <Link>README.md</Link>
-    </None>
-  </ItemGroup>
+    <ItemGroup>
+        <None Include="..\..\README.md">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+            <Link>README.md</Link>
+        </None>
+    </ItemGroup>
 
 </Project>

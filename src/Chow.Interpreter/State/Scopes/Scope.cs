@@ -1,28 +1,26 @@
-using Chow.Interpreter.State.Values;
 using System.Collections.Generic;
-
+using Chow.Interpreter.State.Values;
 namespace Chow.Interpreter.State.Scopes
 {
     /// <summary>
-    /// Base class for all runtime variable scopes. Stores bindings in a flat dictionary backed by a name stack with
-    /// boundary sentinels, which together support nested-block enter/exit within a single scope. Subclasses (<see
-    /// cref="ModuleScope"/>, <see cref="LocalScope"/>) differentiate the role of the scope in the LEGB lookup chain.
+    /// Base class for all runtime variable scopes. Stores bindings in a flat dictionary backed by a name stack with boundary sentinels,
+    /// which together support nested-block enter/exit within a single scope. Subclasses (
+    /// <see
+    ///     cref="ModuleScope" />
+    /// , <see cref="LocalScope" />) differentiate the role of the scope in the LEGB lookup chain.
     /// </summary>
     /// <remarks>
-    /// No source identifier can start with <c>&lt;</c>, so <c>SCOPE_BOUNDARY_ELEMENT</c> never collides with a real
-    /// variable name.
+    /// No source identifier can start with <c>&lt;</c>, so <c>SCOPE_BOUNDARY_ELEMENT</c> never collides with a real variable
+    /// name.
     /// </remarks>
     abstract class Scope : IScope
     {
         const string SCOPE_BOUNDARY_ELEMENT = "<SCOPE_BOUNDARY>";
         const int OUTERMOST_SCOPE_DEPTH = 0;
+        readonly Dictionary<string, TaggedUnion> _varMap;
 
         readonly Stack<string> _varNames;
-        readonly Dictionary<string, TaggedUnion> _varMap;
         int _scopeDepth;
-
-        /// <inheritdoc/>
-        public virtual IScope ParentOrNull => null;
 
         protected Scope()
         {
@@ -34,20 +32,23 @@ namespace Chow.Interpreter.State.Scopes
             _varNames.Push(SCOPE_BOUNDARY_ELEMENT);
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
+        public virtual IScope ParentOrNull => null;
+
+        /// <inheritdoc />
         public bool IsVariableDefined(string name)
         {
             return _varMap.ContainsKey(name);
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public void EnterNestedScope()
         {
             _scopeDepth++;
             _varNames.Push(SCOPE_BOUNDARY_ELEMENT);
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public void ExitNestedScope()
         {
             // Pop the name of the variable declared last OR the boundary element if no variables were declared in the current scope
@@ -66,7 +67,7 @@ namespace Chow.Interpreter.State.Scopes
             _scopeDepth--;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public void AssignVariableValue(string name, TaggedUnion value)
         {
             // First-time assignment also declares: track the name in the current scope
@@ -79,7 +80,7 @@ namespace Chow.Interpreter.State.Scopes
             _varMap[name] = value;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public TaggedUnion GetVariableValue(string name)
         {
             return _varMap[name];

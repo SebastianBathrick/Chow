@@ -1,14 +1,41 @@
+using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State.Scopes;
 using Chow.Interpreter.State.Values;
-using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Tokens;
 using Chow.Interpreter.Values;
-
 namespace Chow.Interpreter
 {
     public class ChowModule
     {
         IScope _moduleScope;
+
+        public void ImportBuiltIns()
+        {
+            foreach ((string name, object obj) func in BuiltIns.GetFunctions())
+            {
+                this[func.name] = func.obj;
+            }
+        }
+
+        public void Execute(string sourceCode)
+        {
+            // Source code that is null, empty, or whitespace is treated the same by the Scanner (it does a null check)
+            // The rest of the pipeline does so as well to keep state consistent (e.g. _moduleScope)
+            var scanner = new Scanner(sourceCode);
+            var tokens = scanner.ScanTokens();
+
+            var parser = new Parser(tokens);
+            var syntaxTreeRoot = parser.BuildTree();
+
+            var compiler = new Compiler(syntaxTreeRoot);
+            var chunk = compiler.CompileRoot();
+
+            // Executes the chunk with the provided module scope, or if null, a new one
+            var vm = new VirtualMachine(chunk, _moduleScope);
+
+            // The module scope will now contain any global variables & functions defined in the source code
+            _moduleScope = vm.EvaluateChunk();
+        }
 
         #region Global Scope Access
 
@@ -90,34 +117,6 @@ namespace Chow.Interpreter
 
         #endregion
 
-        public void ImportBuiltIns()
-        {
-            foreach ((string name, object obj) func in BuiltIns.GetFunctions())
-            {
-                this[func.name] = func.obj;
-            }
-        }
-        
-        public void Execute(string sourceCode)
-        {
-            // Source code that is null, empty, or whitespace is treated the same by the Scanner (it does a null check)
-            // The rest of the pipeline does so as well to keep state consistent (e.g. _moduleScope)
-            var scanner = new Scanner(sourceCode);
-            var tokens = scanner.ScanTokens();
-
-            var parser = new Parser(tokens);
-            var syntaxTreeRoot = parser.BuildTree();
-
-            var compiler = new Compiler(syntaxTreeRoot);
-            var chunk = compiler.CompileRoot();
-            
-            // Executes the chunk with the provided module scope, or if null, a new one
-            var vm = new VirtualMachine(chunk, _moduleScope);
-
-            // The module scope will now contain any global variables & functions defined in the source code
-            _moduleScope = vm.EvaluateChunk();
-        }
-        
         #region Helper Methods
 
         void ValidateGlobalExists(string name)

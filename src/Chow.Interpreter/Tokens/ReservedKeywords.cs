@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-
 namespace Chow.Interpreter.Tokens
 {
     static class ReservedKeywords
@@ -44,6 +43,7 @@ namespace Chow.Interpreter.Tokens
             {
                 reverse[pair.Value] = pair.Key;
             }
+
             _typeToKeyword = reverse;
         }
 

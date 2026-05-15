@@ -1,5 +1,4 @@
 using System;
-
 namespace Chow.Interpreter.Exceptions
 {
     class TypeException : Exception
