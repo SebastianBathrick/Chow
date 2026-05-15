@@ -25,22 +25,5 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
             Right = null;
         }
 
-        public override string ToString()
-        {
-            var indentedLeft = IndentChildren(Left.ToString());
-
-            if (Right == null)
-            {
-                return $"[{Operator} line={LineNumber}\n{indentedLeft}\n]";
-            }
-
-            var indentedRight = IndentChildren(Right.ToString());
-            return $"[{Operator} line={LineNumber}\n{indentedLeft}\n{indentedRight}\n]";
-        }
-
-        static string IndentChildren(string nodeString)
-        {
-            return "  " + nodeString.Replace("\n", "\n  ");
-        }
     }
 }

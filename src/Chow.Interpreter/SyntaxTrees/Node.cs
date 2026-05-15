@@ -8,7 +8,5 @@ namespace Chow.Interpreter.SyntaxTrees
         {
             LineNumber = line;
         }
-
-        public abstract override string ToString();
     }
 }

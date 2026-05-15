@@ -13,25 +13,5 @@ namespace Chow.Interpreter.SyntaxTrees.Literals
             Values = values;
         }
 
-        public override string ToString()
-        {
-            if (Keys.Count == 0)
-            {
-                return $"[Dict line={LineNumber}]";
-            }
-
-            var body = string.Empty;
-            for (var i = 0; i < Keys.Count; i++)
-            {
-                body += "\n" + IndentChildren(Keys[i].ToString());
-                body += "\n" + IndentChildren(Values[i].ToString());
-            }
-            return $"[Dict line={LineNumber}{body}\n]";
-        }
-
-        static string IndentChildren(string nodeString)
-        {
-            return "  " + nodeString.Replace("\n", "\n  ");
-        }
     }
 }

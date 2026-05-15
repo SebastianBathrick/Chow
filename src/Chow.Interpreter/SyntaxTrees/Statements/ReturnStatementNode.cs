@@ -14,9 +14,5 @@
             Expression = expr;
         }
 
-        public override string ToString()
-        {
-            return $"return {Expression}";
-        }
     }
 }

@@ -16,9 +16,5 @@ namespace Chow.Interpreter.SyntaxTrees
             Name = name;
         }
 
-        public override string ToString()
-        {
-            return $"VariableFactor({Name}) line={LineNumber}";
-        }
     }
 }

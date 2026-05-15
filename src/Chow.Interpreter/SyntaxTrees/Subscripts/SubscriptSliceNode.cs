@@ -15,17 +15,5 @@ namespace Chow.Interpreter.SyntaxTrees.Subscripts
             Step = step;
         }
 
-        public override string ToString()
-        {
-            var startStr = Start == null ? "None" : Start.ToString();
-            var stopStr = Stop == null ? "None" : Stop.ToString();
-            var stepStr = Step == null ? "None" : Step.ToString();
-            return $"[Slice line={LineNumber}\n  start={IndentChildren(startStr)}\n  stop={IndentChildren(stopStr)}\n  step={IndentChildren(stepStr)}\n]";
-        }
-
-        static string IndentChildren(string nodeString)
-        {
-            return nodeString.Replace("\n", "\n  ");
-        }
     }
 }

@@ -15,9 +15,5 @@ namespace Chow.Interpreter.SyntaxTrees.Subscripts
             Expression = expr;
         }
 
-        public override string ToString()
-        {
-            return $"SubscriptAssign({Target}[{Index}], {Expression}) line={LineNumber}";
-        }
     }
 }

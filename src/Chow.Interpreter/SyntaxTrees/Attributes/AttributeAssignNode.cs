@@ -15,9 +15,5 @@ namespace Chow.Interpreter.SyntaxTrees.Attributes
             Expression = expr;
         }
 
-        public override string ToString()
-        {
-            return $"AttrAssign({Target}.{AttributeName}, {Expression}) line={LineNumber}";
-        }
     }
 }

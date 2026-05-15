@@ -12,15 +12,5 @@ namespace Chow.Interpreter.SyntaxTrees.Attributes
             AttributeName = attributeName;
         }
 
-        public override string ToString()
-        {
-            var indentedTarget = IndentChildren(Target.ToString());
-            return $"[AttrAccess line={LineNumber} attr={AttributeName}\n{indentedTarget}\n]";
-        }
-
-        static string IndentChildren(string nodeString)
-        {
-            return "  " + nodeString.Replace("\n", "\n  ");
-        }
     }
 }

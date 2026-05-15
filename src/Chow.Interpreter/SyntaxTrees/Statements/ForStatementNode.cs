@@ -20,16 +20,5 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
             ElseBranch = elseBranch;
         }
 
-        public override string ToString()
-        {
-            var result = $"for {Target} in {Iterable}\n{{\n{Block}\n}}";
-
-            if (ElseBranch != null)
-            {
-                result += $"\n{ElseBranch}";
-            }
-
-            return result;
-        }
     }
 }

@@ -6,9 +6,5 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
         {
         }
 
-        public override string ToString()
-        {
-            return "continue";
-        }
     }
 }

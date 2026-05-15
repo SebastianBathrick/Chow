@@ -25,9 +25,5 @@ namespace Chow.Interpreter.SyntaxTrees
             Body = body;
         }
 
-        public override string ToString()
-        {
-            return $"def {Name}({string.Join(", ", Params)}) {{\n{Body}\n}}";
-        }
     }
 }

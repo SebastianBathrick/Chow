@@ -14,9 +14,5 @@ namespace Chow.Interpreter.SyntaxTrees.Scope
             Names = names;
         }
 
-        public override string ToString()
-        {
-            return $"nonlocal {string.Join(", ", Names)}";
-        }
     }
 }

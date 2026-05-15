@@ -19,9 +19,5 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
             Expression = expr;
         }
 
-        public override string ToString()
-        {
-            return $"VariableAssignment({Name}, {Expression}) line={LineNumber}";
-        }
     }
 }

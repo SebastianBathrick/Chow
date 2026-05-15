@@ -10,24 +10,5 @@ namespace Chow.Interpreter.SyntaxTrees.Literals
             Elements = elements;
         }
 
-        public override string ToString()
-        {
-            if (Elements.Count == 0)
-            {
-                return $"[List line={LineNumber}]";
-            }
-
-            var body = string.Empty;
-            foreach (var element in Elements)
-            {
-                body += "\n" + IndentChildren(element.ToString());
-            }
-            return $"[List line={LineNumber}{body}\n]";
-        }
-
-        static string IndentChildren(string nodeString)
-        {
-            return "  " + nodeString.Replace("\n", "\n  ");
-        }
     }
 }

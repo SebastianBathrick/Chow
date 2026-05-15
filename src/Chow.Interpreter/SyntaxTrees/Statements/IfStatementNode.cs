@@ -15,16 +15,5 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
             Branch = branch;
         }
 
-        public override string ToString()
-        {
-            var result = $"if {Expression}\n{{\n{Block}\n}}";
-
-            if (Branch != null)
-            {
-                result += $"\n{Branch}";
-            }
-
-            return result;
-        }
     }
 }

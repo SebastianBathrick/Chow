@@ -13,9 +13,5 @@ namespace Chow.Interpreter.SyntaxTrees.Expressions
             Args = args;
         }
 
-        public override string ToString()
-        {
-            return $"{CallName}({string.Join(", ", Args)})";
-        }
     }
 }

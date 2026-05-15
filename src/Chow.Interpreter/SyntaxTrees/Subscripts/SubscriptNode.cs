@@ -12,16 +12,5 @@ namespace Chow.Interpreter.SyntaxTrees.Subscripts
             Index = index;
         }
 
-        public override string ToString()
-        {
-            var indentedTarget = IndentChildren(Target.ToString());
-            var indentedIndex = IndentChildren(Index.ToString());
-            return $"[Subscript line={LineNumber}\n{indentedTarget}\n{indentedIndex}\n]";
-        }
-
-        static string IndentChildren(string nodeString)
-        {
-            return "  " + nodeString.Replace("\n", "\n  ");
-        }
     }
 }

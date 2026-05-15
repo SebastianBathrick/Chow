@@ -12,10 +12,5 @@ namespace Chow.Interpreter.SyntaxTrees
             Statements = statements;
         }
 
-        public override string ToString()
-        {
-            // TODO: Write logic for this
-            return string.Empty;
-        }
     }
 }

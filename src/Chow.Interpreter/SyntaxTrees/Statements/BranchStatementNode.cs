@@ -17,25 +17,5 @@
             Branch = branch;
         }
 
-        public override string ToString()
-        {
-            string result;
-
-            if (IsElse)
-            {
-                result = $"else\n{{\n{Block}\n}}";
-            }
-            else
-            {
-                result = $"elif {Expression}\n{{\n{Block}\n}}";
-            }
-
-            if (Branch != null)
-            {
-                result += $"\n{Branch}";
-            }
-
-            return result;
-        }
     }
 }

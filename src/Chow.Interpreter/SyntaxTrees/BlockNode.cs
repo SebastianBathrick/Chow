@@ -11,9 +11,5 @@ namespace Chow.Interpreter.SyntaxTrees
             Statements = statements;
         }
 
-        public override string ToString()
-        {
-            return $"Block({Statements.Count} statements) line={LineNumber}";
-        }
     }
 }

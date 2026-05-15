@@ -37,9 +37,5 @@ namespace Chow.Interpreter.SyntaxTrees.Literals
             Value = value;
         }
 
-        public override string ToString()
-        {
-            return $"{Value} line={LineNumber}";
-        }
     }
 }

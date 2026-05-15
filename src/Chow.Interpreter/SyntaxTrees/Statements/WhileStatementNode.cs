@@ -12,9 +12,5 @@ namespace Chow.Interpreter.SyntaxTrees.Statements
             Block = block;
         }
 
-        public override string ToString()
-        {
-            return $"while {Expression}\n{{\n{Block}\n}}";
-        }
     }
 }

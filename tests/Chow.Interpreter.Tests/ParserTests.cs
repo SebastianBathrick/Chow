@@ -117,16 +117,6 @@ namespace Chow.Interpreter.Tests
             Assert.That(result.LineNumber, Is.EqualTo(7));
         }
 
-        [Test]
-        public void LiteralNode_ToString_IncludesLineNumber()
-        {
-            var result = ParseTokens(
-                Token(TokenType.LiteralInt, "42", 7, 42L),
-                Token(TokenType.EndOfCode, string.Empty, 7));
-
-            Assert.That(result.ToString(), Is.EqualTo("42 line=7"));
-        }
-
         // ============================================================================================================
         // Binary operators
         // ============================================================================================================
@@ -183,18 +173,6 @@ namespace Chow.Interpreter.Tests
                 Token(TokenType.EndOfCode, string.Empty, 4));
 
             Assert.That(result.LineNumber, Is.EqualTo(3));
-        }
-
-        [Test]
-        public void ExpressionOperationNode_ToString_IncludesLineNumber()
-        {
-            var result = ParseTokens(
-                Token(TokenType.LiteralInt, "1", 2, 1L),
-                Token(TokenType.SymbolPlus, "+", 3),
-                Token(TokenType.LiteralInt, "2", 4, 2L),
-                Token(TokenType.EndOfCode, string.Empty, 4));
-
-            Assert.That(result.ToString(), Is.EqualTo("[Add line=3\n  1 line=2\n  2 line=4\n]"));
         }
 
         [Test]
@@ -1087,47 +1065,5 @@ namespace Chow.Interpreter.Tests
             Assert.That(() => ParseStmt(source), Throws.TypeOf<ParserEx>());
         }
 
-        [Test]
-        public void ParseStmt_GlobalDecl_ToStringContainsKeywordAndNames()
-        {
-            var stmt = ParseStmt("global a, b");
-            Assert.That(stmt.ToString(), Is.EqualTo("global a, b"));
-        }
-
-        [Test]
-        public void ParseStmt_NonlocalDecl_ToStringContainsKeywordAndNames()
-        {
-            var stmt = ParseStmt("nonlocal a, b");
-            Assert.That(stmt.ToString(), Is.EqualTo("nonlocal a, b"));
-        }
-
-        // ------------------------------------------------------------------------------------------------------------
-        // ToString smoke
-        // ------------------------------------------------------------------------------------------------------------
-
-        [Test]
-        public void ToString_NewNodes_IncludeLineNumber()
-        {
-            var list = Parse("[1]");
-            Assert.That(list.ToString(), Does.Contain("line=1"));
-
-            var sub = Parse("a[0]");
-            Assert.That(sub.ToString(), Does.Contain("Subscript"));
-
-            var slice = Parse("a[1:5]");
-            Assert.That(slice.ToString(), Does.Contain("Slice"));
-
-            var attr = Parse("a.b");
-            Assert.That(attr.ToString(), Does.Contain("AttrAccess"));
-
-            var call = Parse("a.b()");
-            Assert.That(call.ToString(), Does.Contain("AttrAccess"));
-
-            var subAssign = ParseStmt("a[0] = x");
-            Assert.That(subAssign.ToString(), Does.Contain("SubscriptAssign"));
-
-            var attrAssign = ParseStmt("a.b = x");
-            Assert.That(attrAssign.ToString(), Does.Contain("AttrAssign"));
-        }
     }
 }
