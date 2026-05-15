@@ -8,6 +8,17 @@ using Chow.Interpreter.SyntaxTrees.Statements;
 
 namespace Chow.Interpreter
 {
+    /// <summary>
+    /// Instances perform syntax analysis on a list of <see cref="Token"/>. The client provides the list of tokens from
+    /// the interpreter's scanning phase via an argument passed to the Parser instance's constructor.
+    /// <para>
+    /// To begin syntax analysis, the client calls <see cref="BuildTree"/>, which iterates over each token to determine
+    /// whether the source code's grammar is valid and which constructs it is trying to define. While doing so, it builds
+    /// an abstract syntax tree that outlines the constructs and any relevant information from the tokens. Once the tree
+    /// is complete, BuildTree returns a <see cref="Node"/> object representing the root of the abstract syntax tree.
+    /// After this point, the client should discard the Parser instance, because it will be considered dirty.
+    /// </para>
+    /// </summary>
     class Parser
     {
         readonly List<Token> _tkns;
@@ -16,6 +27,10 @@ namespace Chow.Interpreter
         Token CurrToken => _tkns[_tknIdx];
         Token PrevTkn => _tkns[_tknIdx - 1];
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Parser"/> class with the tokens to analyze.
+        /// </summary>
+        /// <param name="tkns">The <see cref="Token"/> list produced by the <see cref="Scanner"/>.</param>
         public Parser(List<Token> tkns)
         {
             _tkns = tkns;
@@ -23,6 +38,10 @@ namespace Chow.Interpreter
 
         #region Primary Methods
 
+        /// <summary>
+        /// Performs syntax analysis on the tokens provided to this Parser instance and builds an abstract syntax tree.
+        /// </summary>
+        /// <returns>A <see cref="Node"/> representing the root of the completed abstract syntax tree.</returns>
         public Node BuildTree()
         {
             var stmnts = new List<Node>();
