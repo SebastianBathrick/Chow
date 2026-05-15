@@ -21,16 +21,16 @@ namespace Chow.Interpreter
 
         const int TAB_SIZE = 4;
 
-        readonly List<Token> _tkns;
-        readonly Stack<int> _indentLvls;
-        readonly Stack<char> _brackets;
-        readonly string _src;
+        readonly List<Token> _tokenList;
+        readonly Stack<int> _indentLevels;
+        readonly Stack<char> _openingBrackets;
+        readonly string _sourceCode;
 
         int _charIdx;
         int _lineNum;
         bool _isLineBegin;
 
-        char CurrChar => _src[_charIdx];
+        char CurrChar => _sourceCode[_charIdx];
 
         #endregion
 
@@ -39,17 +39,17 @@ namespace Chow.Interpreter
         /// <summary>
         /// Initializes a new Scanner instance using Chow source code.
         /// </summary>
-        /// <param name="src">Null or string containing raw Chow source code or whitespace.</param>
-        public Scanner(string src)
+        /// <param name="sourceCode">Null or string containing raw Chow source code or whitespace.</param>
+        public Scanner(string sourceCode)
         {
-            _src = src;
-            _tkns = new List<Token>();
+            _sourceCode = sourceCode;
+            _tokenList = new List<Token>();
             _charIdx = 0;
             _lineNum = 1;
-            _indentLvls = new Stack<int>();
-            _brackets = new Stack<char>();
+            _indentLevels = new Stack<int>();
+            _openingBrackets = new Stack<char>();
             _isLineBegin = true;
-            _indentLvls.Push(0);
+            _indentLevels.Push(0);
         }
 
         /// <summary>
@@ -59,10 +59,10 @@ namespace Chow.Interpreter
         public List<Token> ScanTokens()
         {
             // If source code is null, emit end of code token, so it can be treated as if it were an empty string or whitespace
-            if (_src == null)
+            if (_sourceCode == null)
             {
-                AddEndOfCodeTkn();
-                return _tkns;
+                AddEndOfCodeToken();
+                return _tokenList;
             }
 
             // Skip to the first line that does not start with whitespace, a comment, or newline character
@@ -73,16 +73,16 @@ namespace Chow.Interpreter
                 RunScanIteration();
             }
 
-            if (_brackets.Count > 0)
+            if (_openingBrackets.Count > 0)
             {
                 throw new ScannerEx("Bracket(s) never closed in source code", _lineNum);
             }
 
             // Add dedent tokens for each block nested within the top-level to mark their end
-            AddLastDedentsTkns();
-            AddEndOfCodeTkn();
+            AddLastDedentsTokens();
+            AddEndOfCodeToken();
 
-            return _tkns;
+            return _tokenList;
         }
 
         void RunScanIteration()
@@ -91,7 +91,7 @@ namespace Chow.Interpreter
             {
                 if (IsLineAndIndentLogicEnabled())
                 {
-                    ScanIndentTkn();
+                    ScanIndentToken();
                 }
 
                 if (!IsCharToScan())
@@ -102,11 +102,11 @@ namespace Chow.Interpreter
 
             if (IsNameLeadingChar(CurrChar))
             {
-                ScanNameTkn();
+                ScanNameToken();
             }
             else if (IsNewlineChar(CurrChar))
             {
-                ScanNewlineTkn();
+                ScanNewlineToken();
             }
             else if (IsDigitChar(CurrChar))
             {
@@ -114,7 +114,7 @@ namespace Chow.Interpreter
             }
             else if (IsQuoteChar(CurrChar))
             {
-                ScanStringTkn();
+                ScanStringToken();
             }
             else if (IsIndentChar(CurrChar))
             {
@@ -124,7 +124,7 @@ namespace Chow.Interpreter
             {
                 SkipRemainingLineChars();
             }
-            else if (!TryScanSymbolTkn())
+            else if (!TryScanSymbolToken())
             {
                 throw new ScannerEx($"Unexpected character '{CurrChar}'.", _lineNum);
             }
@@ -135,7 +135,7 @@ namespace Chow.Interpreter
 
         #region Newline & Indentation Token Scan Methods
 
-        void ScanNameTkn()
+        void ScanNameToken()
         {
             var startIdx = _charIdx;
 
@@ -144,7 +144,7 @@ namespace Chow.Interpreter
                 MoveToNextChar();
             }
 
-            var lexeme = _src.Substring(startIdx, _charIdx - startIdx);
+            var lexeme = _sourceCode.Substring(startIdx, _charIdx - startIdx);
 
             if (ReservedKeywords.Contains(lexeme))
             {
@@ -155,10 +155,10 @@ namespace Chow.Interpreter
             AddNewToken(TokenType.Identifier, lexeme, _lineNum);
         }
 
-        void ScanNewlineTkn()
+        void ScanNewlineToken()
         {
             // Newlines are ignored when inside brackets
-            if (_brackets.Count == 0)
+            if (_openingBrackets.Count == 0)
             {
                 // Use a newline for the lexeme for clean debug information
                 AddNewToken(TokenType.Newline, "\n", _lineNum);
@@ -167,7 +167,7 @@ namespace Chow.Interpreter
             MovePastNewline();
         }
 
-        void ScanIndentTkn()
+        void ScanIndentToken()
         {
             var indentColumn = ScanIndentColumn();
 
@@ -176,7 +176,7 @@ namespace Chow.Interpreter
                 return;
             }
 
-            CreateIndentTkns(indentColumn);
+            CreateIndentTokens(indentColumn);
             _isLineBegin = false;
         }
 
@@ -207,13 +207,13 @@ namespace Chow.Interpreter
             return indentColumn;
         }
 
-        void CreateIndentTkns(int indentLvl)
+        void CreateIndentTokens(int indentLvl)
         {
-            var prevIndentLvl = _indentLvls.Peek();
+            var prevIndentLvl = _indentLevels.Peek();
 
             if (indentLvl > prevIndentLvl)
             {
-                _indentLvls.Push(indentLvl);
+                _indentLevels.Push(indentLvl);
                 AddNewToken(TokenType.Indent, " ", _lineNum);
                 return;
             }
@@ -223,23 +223,23 @@ namespace Chow.Interpreter
                 return;
             }
 
-            while (_indentLvls.Peek() > indentLvl)
+            while (_indentLevels.Peek() > indentLvl)
             {
-                _indentLvls.Pop();
+                _indentLevels.Pop();
                 AddNewToken(TokenType.Dedent, string.Empty, _lineNum);
             }
 
-            if (_indentLvls.Peek() != indentLvl)
+            if (_indentLevels.Peek() != indentLvl)
             {
                 throw new ScannerEx("Inconsistent dedent.", _lineNum);
             }
         }
 
-        void AddLastDedentsTkns()
+        void AddLastDedentsTokens()
         {
-            while (_indentLvls.Count > 1)
+            while (_indentLevels.Count > 1)
             {
-                _indentLvls.Pop();
+                _indentLevels.Pop();
                 AddNewToken(TokenType.Dedent, string.Empty, _lineNum);
             }
         }
@@ -249,40 +249,40 @@ namespace Chow.Interpreter
         #region Lexeme-Dependent Token Scan Methods
 
         // TODO: Refactor all project switches to use curly braces
-        bool TryScanSymbolTkn()
+        bool TryScanSymbolToken()
         {
-            TokenType tknType;
+            TokenType tokenType;
 
             switch (CurrChar)
             {
                 case ',':
                     {
-                        tknType = TokenType.SymbolComma;
+                        tokenType = TokenType.SymbolComma;
                         break;
                     }
 
 
                 case '.':
                     {
-                        tknType = TokenType.SymbolDot;
+                        tokenType = TokenType.SymbolDot;
                         break;
                     }
 
                 case ':':
                     {
-                        tknType = TokenType.SymbolColon;
+                        tokenType = TokenType.SymbolColon;
                         break;
                     }
 
                 case '+':
                     {
-                        tknType = TokenType.SymbolPlus;
+                        tokenType = TokenType.SymbolPlus;
                         break;
                     }
 
                 case '-':
                     {
-                        tknType = TokenType.SymbolMinus;
+                        tokenType = TokenType.SymbolMinus;
                         break;
                     }
 
@@ -293,7 +293,7 @@ namespace Chow.Interpreter
                             return true;
                         }
 
-                        tknType = TokenType.SymbolMultiply;
+                        tokenType = TokenType.SymbolMultiply;
                         break;
                     }
 
@@ -304,19 +304,19 @@ namespace Chow.Interpreter
                             return true;
                         }
 
-                        tknType = TokenType.SymbolDivide;
+                        tokenType = TokenType.SymbolDivide;
                         break;
                     }
 
                 case '%':
                     {
-                        tknType = TokenType.SymbolPercent;
+                        tokenType = TokenType.SymbolPercent;
                         break;
                     }
 
                 case '|':
                     {
-                        tknType = TokenType.SymbolPipe;
+                        tokenType = TokenType.SymbolPipe;
                         break;
                     }
 
@@ -332,7 +332,7 @@ namespace Chow.Interpreter
                             return true;
                         }
 
-                        tknType = TokenType.SymbolAssign;
+                        tokenType = TokenType.SymbolAssign;
                         break;
                     }
 
@@ -343,7 +343,7 @@ namespace Chow.Interpreter
                             return true;
                         }
 
-                        tknType = TokenType.SymbolGreater;
+                        tokenType = TokenType.SymbolGreater;
                         break;
                     }
                 case '<':
@@ -353,24 +353,24 @@ namespace Chow.Interpreter
                             return true;
                         }
 
-                        tknType = TokenType.SymbolLess;
+                        tokenType = TokenType.SymbolLess;
                         break;
                     }
 
                 // Indentation and line-break rules are not enforced (for lists and dictionary declarations)
                 case '[':
                     {
-                        tknType = TokenType.SymbolLeftBracket;
-                        _brackets.Push('[');
+                        tokenType = TokenType.SymbolLeftBracket;
+                        _openingBrackets.Push('[');
                         break;
                     }
 
                 // TODO: Refactor to reduce repeated closing bracket logic
                 case ']':
                     {
-                        tknType = TokenType.SymbolRightBracket;
+                        tokenType = TokenType.SymbolRightBracket;
 
-                        if (_brackets.Count == 0 || _brackets.Pop() != '[')
+                        if (_openingBrackets.Count == 0 || _openingBrackets.Pop() != '[')
                         {
                             throw new ScannerEx("Unexpected ']'", _lineNum);
                         }
@@ -379,16 +379,16 @@ namespace Chow.Interpreter
 
                 case '{':
                     {
-                        tknType = TokenType.SymbolLeftCurly;
-                        _brackets.Push('{');
+                        tokenType = TokenType.SymbolLeftCurly;
+                        _openingBrackets.Push('{');
                         break;
                     }
 
                 case '}':
                     {
-                        tknType = TokenType.SymbolRightCurly;
+                        tokenType = TokenType.SymbolRightCurly;
 
-                        if (_brackets.Count == 0 || _brackets.Pop() != '{')
+                        if (_openingBrackets.Count == 0 || _openingBrackets.Pop() != '{')
                         {
                             throw new ScannerEx("Unexpected '}'", _lineNum);
                         }
@@ -397,16 +397,16 @@ namespace Chow.Interpreter
 
                 case '(':
                     {
-                        tknType = TokenType.SymbolLeftParen;
-                        _brackets.Push('(');
+                        tokenType = TokenType.SymbolLeftParen;
+                        _openingBrackets.Push('(');
                         break;
                     }
 
                 case ')':
                     {
-                        tknType = TokenType.SymbolRightParen;
+                        tokenType = TokenType.SymbolRightParen;
 
-                        if (_brackets.Count == 0 || _brackets.Pop() != '(')
+                        if (_openingBrackets.Count == 0 || _openingBrackets.Pop() != '(')
                         {
                             throw new ScannerEx("Unexpected ')'", _lineNum);
                         }
@@ -421,7 +421,7 @@ namespace Chow.Interpreter
 
             var lexeme = CurrChar.ToString();
             MoveToNextChar();
-            AddNewToken(tknType, lexeme, _lineNum);
+            AddNewToken(tokenType, lexeme, _lineNum);
             return true;
         }
 
@@ -464,8 +464,8 @@ namespace Chow.Interpreter
             }
 
             var len = _charIdx - startIdx;
-            var lexeme = _src.Substring(startIdx, len);
-            var numTknType = isFloat ? TokenType.LiteralFloat : TokenType.LiteralInt;
+            var lexeme = _sourceCode.Substring(startIdx, len);
+            var numTokenType = isFloat ? TokenType.LiteralFloat : TokenType.LiteralInt;
             object literal;
 
             try
@@ -481,7 +481,7 @@ namespace Chow.Interpreter
             }
             catch (OverflowException)
             {
-                throw new OverflowException($"{numTknType} literal value out of range & parsing failed. Literal Value: {lexeme}");
+                throw new OverflowException($"{numTokenType} literal value out of range & parsing failed. Literal Value: {lexeme}");
             }
             catch (FormatException)
             {
@@ -489,10 +489,10 @@ namespace Chow.Interpreter
                 throw new InvalidOperationException();
             }
 
-            AddNewToken(numTknType, lexeme, _lineNum, literal);
+            AddNewToken(numTokenType, lexeme, _lineNum, literal);
         }
 
-        void ScanStringTkn()
+        void ScanStringToken()
         {
             var quoteChar = CurrChar;
             var startIdx = _charIdx;
@@ -518,8 +518,8 @@ namespace Chow.Interpreter
             var contentEndIdx = _charIdx;
             MoveToNextChar();
 
-            var lexeme = _src.Substring(startIdx, _charIdx - startIdx);
-            var literal = _src.Substring(contentStartIdx, contentEndIdx - contentStartIdx);
+            var lexeme = _sourceCode.Substring(startIdx, _charIdx - startIdx);
+            var literal = _sourceCode.Substring(contentStartIdx, contentEndIdx - contentStartIdx);
 
             AddNewToken(TokenType.LiteralStr, lexeme, _lineNum, literal);
         }
@@ -530,7 +530,7 @@ namespace Chow.Interpreter
 
         bool IsCharToScan()
         {
-            return _charIdx < _src.Length;
+            return _charIdx < _sourceCode.Length;
         }
 
         void MoveToNextChar()
@@ -542,7 +542,7 @@ namespace Chow.Interpreter
         char PeekNextChar()
         {
             var nextIndex = _charIdx + 1;
-            return nextIndex < _src.Length ? _src[nextIndex] : '\0';
+            return nextIndex < _sourceCode.Length ? _sourceCode[nextIndex] : '\0';
         }
 
         #endregion
@@ -663,18 +663,18 @@ namespace Chow.Interpreter
             }
         }
 
-        void AddEndOfCodeTkn()
+        void AddEndOfCodeToken()
         {
             AddNewToken(TokenType.EndOfCode, string.Empty, _lineNum);
         }
 
         bool IsLineAndIndentLogicEnabled()
         {
-            return _brackets.Count == 0;
+            return _openingBrackets.Count == 0;
         }
         void AddNewToken(TokenType type, string lexeme, int lineNum, object literal = null)
         {
-            _tkns.Add(new Token(type, lexeme, lineNum, literal));
+            _tokenList.Add(new Token(type, lexeme, lineNum, literal));
         }
 
         #endregion
