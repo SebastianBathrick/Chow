@@ -4,19 +4,41 @@ using System.Collections.Generic;
 
 namespace Chow.Interpreter.Values
 {
+    /// <summary>
+    /// A host-defined object that can be injected into the Chow scope and accessed from Chow source by
+    /// attribute access (<c>obj.attr</c>). Attributes are get/set via the indexer and are created on first
+    /// write.
+    /// </summary>
     public sealed class ChowObject : ChowValue
     {
         readonly Dictionary<string, TaggedUnion> _attributes;
         readonly Adapter _adapter;
 
+        /// <summary>Gets the class name provided at construction. Used for display purposes only.</summary>
         public string ClassName { get; }
 
+        /// <summary>
+        /// Gets or sets an attribute by name. The attribute is created on first write. The getter returns the
+        /// attribute value as a boxed primitive or a <see cref="ChowValue"/> subclass. The setter accepts the
+        /// same value types as the <see cref="ChowModule"/> indexer setter.
+        /// </summary>
+        /// <param name="name">The attribute name. Must not be <see langword="null"/>, empty, or whitespace.</param>
+        /// <exception cref="ArgumentException"><paramref name="name"/> is <see langword="null"/>, empty, or whitespace.</exception>
         public object this[string name]
         {
             get { return ApiConverter.ToObject(GetTaggedAttribute(name)); }
             set { SetTaggedAttribute(name, ApiConverter.ToTaggedUnion(value)); }
         }
 
+        /// <summary>
+        /// Initialises a new <see cref="ChowObject"/> with the given class name.
+        /// </summary>
+        /// <param name="className">
+        /// The display name for this object's type. Must not be <see langword="null"/>, empty, or whitespace.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="className"/> is <see langword="null"/>, empty, or whitespace.
+        /// </exception>
         public ChowObject(string className)
         {
             if (string.IsNullOrWhiteSpace(className))
@@ -29,17 +51,28 @@ namespace Chow.Interpreter.Values
             _adapter = new Adapter(this);
         }
 
+        /// <summary>Returns <see langword="true"/> if the named attribute exists on this object.</summary>
+        /// <param name="name">The attribute name. Must not be <see langword="null"/>, empty, or whitespace.</param>
+        /// <exception cref="ArgumentException"><paramref name="name"/> is <see langword="null"/>, empty, or whitespace.</exception>
         public bool ContainsAttribute(string name)
         {
             ValidateAttributeName(name);
             return _attributes.ContainsKey(name);
         }
 
+        /// <summary>Returns the value of an attribute as a <see cref="ChowValue"/>.</summary>
+        /// <param name="name">The attribute name. Must not be <see langword="null"/>, empty, or whitespace.</param>
+        /// <exception cref="ArgumentException"><paramref name="name"/> is <see langword="null"/>, empty, or whitespace.</exception>
         public ChowValue GetAttribute(string name)
         {
             return ApiConverter.ToChowValue(GetTaggedAttribute(name));
         }
 
+        /// <summary>
+        /// Extracts the underlying value as <typeparamref name="TDataType"/>. Supported conversions:
+        /// <see langword="bool"/> (always <see langword="true"/>).
+        /// </summary>
+        /// <exception cref="InvalidCastException"><typeparamref name="TDataType"/> is not a supported conversion.</exception>
         public override TDataType AsType<TDataType>()
         {
             if (typeof(TDataType) == typeof(bool))
@@ -50,11 +83,13 @@ namespace Chow.Interpreter.Values
             throw new InvalidCastException(GetType(), typeof(TDataType), this);
         }
 
+        /// <summary>Always returns <see langword="false"/>.</summary>
         public override bool IsType<TDataType>()
         {
             return false;
         }
 
+        /// <summary>Returns <c>"&lt;ClassName object&gt;"</c>.</summary>
         public override string ToString()
         {
             return $"<{ClassName} object>";

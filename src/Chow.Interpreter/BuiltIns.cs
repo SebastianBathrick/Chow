@@ -327,6 +327,7 @@ namespace Chow.Interpreter
 
         static string ChowTypeName(ChowValue val)
         {
+            // TODO: Centralize type names, so that they're not hardcoded in multiple places
             if (val.IsNone)
             {
                 return "NoneType";

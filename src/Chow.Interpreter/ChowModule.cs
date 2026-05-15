@@ -9,9 +9,9 @@ using System;
 namespace Chow.Interpreter
 {
     /// <summary>
-    /// The primary entry point for embedding the Chow interpreter. Manages a persistent global scope across
-    /// multiple <see cref="Execute"/> calls so that variables and functions defined in one call are available
-    /// in subsequent calls.
+    /// The primary entry point for embedding the Chow interpreter. Manages a persistent global scope
+    /// across multiple <see cref="Execute"/> calls so that variables and functions defined in one call
+    /// are available in subsequent calls.
     /// </summary>
     public class ChowModule
     {
@@ -21,11 +21,9 @@ namespace Chow.Interpreter
 
         /// <summary>Gets or sets a global variable by name.</summary>
         /// <remarks>
-        /// <para>
         /// The getter returns the variable's value as a boxed primitive (<see langword="long"/>,
         /// <see langword="double"/>, <see langword="bool"/>, <see langword="string"/>) or a
         /// <see cref="ChowValue"/> subclass for composite types (list, dict, object, function).
-        /// </para>
         /// <para>
         /// The setter creates the variable if it does not already exist and does not require a prior
         /// <see cref="Execute"/> call. Accepted value types are <see langword="long"/>,
@@ -48,8 +46,6 @@ namespace Chow.Interpreter
 
                 ValidateGlobalExists(name, _globalScope);
                 var varUnion = _globalScope.GetVariableValue(name);
-
-                // Gets the C#-typed value stored in the TaggedUnion instance
                 return ApiConverter.ToObject(varUnion);
             }
 
@@ -95,6 +91,7 @@ namespace Chow.Interpreter
             return ApiConverter.ToChowValue(varUnion);
         }
 
+        // TODO: Add to SetGlobal to declare the variable if it does not already exist
         /// <summary>
         /// Updates the value of an existing global variable. Unlike the indexer setter, this method requires
         /// the variable to already exist and will not create a new one.
@@ -130,9 +127,10 @@ namespace Chow.Interpreter
         #endregion
 
         /// <summary>
-        /// Registers the standard built-in functions into the global scope, making them available to Chow
-        /// source code. Call this before <see cref="Execute"/> if your scripts depend on built-ins.
+        /// Registers the standard built-in functions into the global scope, making them available to Chow source code.
+        /// Call this before <see cref="Execute"/> if your scripts depend on built-ins.
         /// </summary>
+        /// <remarks>Any of these built-in functions can be overridden by reassigning them in the global scope.</remarks>
         public void ImportBuiltIns()
         {
             foreach ((string name, object obj) func in BuiltIns.GetFunctions())
@@ -166,15 +164,16 @@ namespace Chow.Interpreter
             // Executes the chunk with the provided global scope, or if null, a new one
             var vm = new VirtualMachine(_globalScope, chunk);
 
+            // TODO: Reprogram to have ChowModule always be the one to instantiate the global scope
             // The global scope will now contain any global variables & functions defined in the source code
             _globalScope = vm.EvaluateChunk();
         }
 
         /// <summary>
-        /// Calls a Chow function that was defined during a previous <see cref="Execute"/> call. Arguments are
-        /// converted from host values automatically. Accepted argument types are <see langword="long"/>,
-        /// <see langword="double"/>, <see langword="bool"/>, <see langword="string"/>, any
-        /// <see cref="ChowValue"/> subclass, and <see cref="ChowObject"/>.
+        /// Calls a Chow function that was defined during a previous <see cref="Execute"/> call or
+        /// global scope assignment. Arguments are converted from host values automatically. Accepted
+        /// argument types are <see langword="long"/>, <see langword="double"/>, <see langword="bool"/>,
+        /// <see langword="string"/>, any <see cref="ChowValue"/> subclass, and <see cref="ChowObject"/>.
         /// </summary>
         /// <param name="functionName">
         /// The name of the global function to call. Must satisfy the global name rules.
