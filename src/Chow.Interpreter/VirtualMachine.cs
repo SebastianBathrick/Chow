@@ -551,7 +551,7 @@ namespace Chow.Interpreter
             var captured = _callStack.CurrentScope;
             var closure = new Closure(template.Chunk, captured, template.Name, template.ParamCount);
 
-            _valStack.Push(new ChowValue((object)closure));
+            _valStack.Push(new ChowValue(closure));
         }
 
 

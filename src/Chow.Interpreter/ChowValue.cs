@@ -14,6 +14,7 @@ namespace Chow.Interpreter
         {
             { typeof(bool), DataType.Bool },
             { typeof(long), DataType.Int },
+            { typeof(int), DataType.Int },
             { typeof(double), DataType.Float },
             { typeof(string), DataType.Str },
             { typeof(InternalDict), DataType.Dict },
@@ -39,8 +40,8 @@ namespace Chow.Interpreter
         
         internal DataType DataType => _dataType;
         
-        bool IsNullableType => 
-            _dataType == DataType.Object ||  _dataType == DataType.List ||   _dataType == DataType.Dict ||   _dataType == DataType.Range;
+        bool IsNullableType =>
+            _dataType == DataType.Object ||  _dataType == DataType.List ||   _dataType == DataType.Dict ||   _dataType == DataType.Range ||   _dataType == DataType.Str;
 
         #endregion
         
@@ -72,7 +73,49 @@ namespace Chow.Interpreter
         internal ChowValue(InternalList list) : this(DataType.List,   objectValue:  list)  {}
         internal ChowValue(InternalDict dict) : this(DataType.Dict,   objectValue:  dict)  {}
         internal ChowValue(InternalRange range) : this(DataType.Range, objectValue: range) {}
-        internal ChowValue(object obj)        : this(DataType.Object, objectValue:  obj)   {}
+
+        // Re-dispatches to a typed ctor when obj happens to be a recognized interpreter value, so callers
+        // holding an `object` reference don't accidentally land in Tag.Object. Unknown types (interop
+        // delegates, ClosureTemplate, IChowIterator, etc.) keep the Object tag as intended.
+        internal ChowValue(object obj)
+        {
+            switch (obj)
+            {
+                case null:
+                    throw new ArgumentNullException(nameof(obj));
+                case string strValue:
+                    this = new ChowValue(strValue);
+                    return;
+                case long longValue:
+                    this = new ChowValue(longValue);
+                    return;
+                case int intValue:
+                    this = new ChowValue((long)intValue);
+                    return;
+                case double doubleValue:
+                    this = new ChowValue(doubleValue);
+                    return;
+                case bool boolValue:
+                    this = new ChowValue(boolValue);
+                    return;
+                case InternalList listValue:
+                    this = new ChowValue(listValue);
+                    return;
+                case InternalDict dictValue:
+                    this = new ChowValue(dictValue);
+                    return;
+                case InternalRange rangeValue:
+                    this = new ChowValue(rangeValue);
+                    return;
+                default:
+                    _dataType = DataType.Object;
+                    _boolValue = DEFAULT_BOOL_VALUE;
+                    _objectValue = obj;
+                    _int64Value = DEFAULT_INT64_VALUE;
+                    _float64Value = DEFAULT_FLOAT64_VALUE;
+                    return;
+            }
+        }
 
         #endregion
 
@@ -98,6 +141,12 @@ namespace Chow.Interpreter
                 }
                 case DataType.Int:
                 {
+                    // The map aliases both typeof(long) and typeof(int) to DataType.Int.
+                    // For T == int we truncate; for T == long we return the full 64-bit value.
+                    if (typeof(TDataType) == typeof(int))
+                    {
+                        return (TDataType)(object)(int)ToInt64();
+                    }
                     return (TDataType)(object)ToInt64();
                 }
                 case DataType.Float:
@@ -198,21 +247,22 @@ namespace Chow.Interpreter
                 case ConversionCase.PromoteToFloat:
                     return new ChowValue(PromoteToDouble() * rightOperand.PromoteToDouble());
                 case ConversionCase.NoConversion:
-                    if (_dataType == DataType.List && rightOperand._dataType == DataType.Int)
+                    // Python treats bool as a subtype of int, so [1] * True and "ab" * True are valid.
+                    if (_dataType == DataType.List && IsIntegerTag(rightOperand._dataType))
                     {
-                        return new ChowValue(InternalList.Repeat(AsType<InternalList>(), (int)rightOperand.AsType<long>()));
+                        return new ChowValue(InternalList.Repeat(AsType<InternalList>(), rightOperand.AsType<int>()));
                     }
-                    if (_dataType == DataType.Int && rightOperand._dataType == DataType.List)
+                    if (IsIntegerTag(_dataType) && rightOperand._dataType == DataType.List)
                     {
-                        return new ChowValue(InternalList.Repeat(rightOperand.AsType<InternalList>(), (int)AsType<long>()));
+                        return new ChowValue(InternalList.Repeat(rightOperand.AsType<InternalList>(), AsType<int>()));
                     }
-                    if (_dataType == DataType.Str && rightOperand._dataType == DataType.Int)
+                    if (_dataType == DataType.Str && IsIntegerTag(rightOperand._dataType))
                     {
-                        return new ChowValue(RepeatString(AsType<string>(), (int)rightOperand.AsType<long>()));
+                        return new ChowValue(RepeatString(AsType<string>(), rightOperand.AsType<int>()));
                     }
-                    if (_dataType == DataType.Int && rightOperand._dataType == DataType.Str)
+                    if (IsIntegerTag(_dataType) && rightOperand._dataType == DataType.Str)
                     {
-                        return new ChowValue(RepeatString(rightOperand.AsType<string>(), (int)AsType<long>()));
+                        return new ChowValue(RepeatString(rightOperand.AsType<string>(), AsType<int>()));
                     }
                     break;
             }
@@ -223,9 +273,17 @@ namespace Chow.Interpreter
         internal ChowValue CreateQuotient(ChowValue rightOperand)
         {
             // Python semantics: `/` always produces a float, even for int / int.
-            if (LookupBinary(ExpressionOperator.Divide, rightOperand) == ConversionCase.PromoteToFloat)
+            switch (LookupBinary(ExpressionOperator.Divide, rightOperand))
             {
-                return new ChowValue(PromoteToDouble() / rightOperand.PromoteToDouble());
+                case ConversionCase.PromoteToFloat:
+                {
+                    var divisor = rightOperand.PromoteToDouble();
+                    if (divisor == 0.0)
+                    {
+                        throw new ZeroDivisionException();
+                    }
+                    return new ChowValue(PromoteToDouble() / divisor);
+                }
             }
 
             throw UnsupportedBinary(ExpressionOperator.Divide, rightOperand);
@@ -240,12 +298,20 @@ namespace Chow.Interpreter
                 {
                     var a = PromoteToLong();
                     var b = rightOperand.PromoteToLong();
+                    if (b == 0L)
+                    {
+                        throw new ZeroDivisionException();
+                    }
                     return new ChowValue((a % b + b) % b);
                 }
                 case ConversionCase.PromoteToFloat:
                 {
                     var l = PromoteToDouble();
                     var r = rightOperand.PromoteToDouble();
+                    if (r == 0.0)
+                    {
+                        throw new ZeroDivisionException();
+                    }
                     return new ChowValue((l % r + r) % r);
                 }
             }
@@ -255,13 +321,34 @@ namespace Chow.Interpreter
 
         internal ChowValue CreateFloorQuotient(ChowValue rightOperand)
         {
-            // Python semantics: floors toward negative infinity.
+            // Python semantics: floors toward negative infinity. Integer path stays in longs (no detour
+            // through double) so values past 2^53 remain exact.
             switch (LookupBinary(ExpressionOperator.FloorDivide, rightOperand))
             {
                 case ConversionCase.PromoteToInt:
-                    return new ChowValue((long)Math.Floor(PromoteToLong() / (double)rightOperand.PromoteToLong()));
+                {
+                    var a = PromoteToLong();
+                    var b = rightOperand.PromoteToLong();
+                    if (b == 0L)
+                    {
+                        throw new ZeroDivisionException();
+                    }
+                    var q = a / b;
+                    if (a % b != 0L && (a < 0L) != (b < 0L))
+                    {
+                        q--;
+                    }
+                    return new ChowValue(q);
+                }
                 case ConversionCase.PromoteToFloat:
-                    return new ChowValue(Math.Floor(PromoteToDouble() / rightOperand.PromoteToDouble()));
+                {
+                    var divisor = rightOperand.PromoteToDouble();
+                    if (divisor == 0.0)
+                    {
+                        throw new ZeroDivisionException();
+                    }
+                    return new ChowValue(Math.Floor(PromoteToDouble() / divisor));
+                }
             }
 
             throw UnsupportedBinary(ExpressionOperator.FloorDivide, rightOperand);
@@ -269,8 +356,10 @@ namespace Chow.Interpreter
 
         internal ChowValue CreatePower(ChowValue rightOperand)
         {
-            // Python semantics: float if either operand is float, or if exponent is negative
-            // (the map alone can't represent the negative-exponent case, so override it here).
+            // Python semantics: float if either operand is float, or if exponent is negative.
+            // This is the one documented map override: the negative-exponent rule is value-dependent
+            // (depends on the runtime exponent's sign), not type-dependent, so it cannot live in the
+            // type-keyed map. Every other dispatch path defers to DataTypeConversionMap.
             var conv = LookupBinary(ExpressionOperator.Exponentiate, rightOperand);
             if (conv == ConversionCase.PromoteToInt && rightOperand.PromoteToLong() < 0)
             {
@@ -280,7 +369,10 @@ namespace Chow.Interpreter
             switch (conv)
             {
                 case ConversionCase.PromoteToInt:
-                    return new ChowValue((long)Math.Pow(PromoteToLong(), rightOperand.PromoteToLong()));
+                    // Exponent is non-negative here (negative-exp routed to float above). Exact integer
+                    // exponentiation avoids the 2^53 precision ceiling of (long)Math.Pow. Overflow wraps
+                    // silently — matches prior behavior; arbitrary-precision int is a separate concern.
+                    return new ChowValue(IntPow(PromoteToLong(), rightOperand.PromoteToLong()));
                 case ConversionCase.PromoteToFloat:
                     return new ChowValue(Math.Pow(PromoteToDouble(), rightOperand.PromoteToDouble()));
             }
@@ -341,7 +433,17 @@ namespace Chow.Interpreter
 
         internal bool IsNotEqualTo(ChowValue other)
         {
-            return !IsEqualTo(other);
+            switch (LookupBinary(ExpressionOperator.NotEqual, other))
+            {
+                case ConversionCase.PromoteToInt:
+                    return PromoteToLong() != other.PromoteToLong();
+                case ConversionCase.PromoteToFloat:
+                    return PromoteToDouble() != other.PromoteToDouble();
+                case ConversionCase.NoConversion:
+                    return !EqualsNoConversion(other);
+            }
+
+            return true;
         }
 
         internal bool IsLessThan(ChowValue other)
@@ -462,6 +564,10 @@ namespace Chow.Interpreter
                 case DataType.Object:
                 case DataType.Range:
                     return _objectValue?.GetHashCode() ?? 0;
+                case DataType.List:
+                    return InternalList.ElementsHashCode((InternalList)_objectValue);
+                case DataType.Dict:
+                    return InternalDict.ElementsHashCode((InternalDict)_objectValue);
                 default:
                     return _dataType.GetHashCode();
             }
@@ -850,7 +956,7 @@ namespace Chow.Interpreter
                 case DataType.Object:
                     return ReferenceEquals(_objectValue, other._objectValue);
                 default:
-                    return true;
+                    return false;
             }
         }
 
@@ -868,6 +974,29 @@ namespace Chow.Interpreter
             }
 
             return builder.ToString();
+        }
+
+        // Bool is treated as a subtype of Int for container-repeat dispatch (Python parity).
+        static bool IsIntegerTag(DataType dataType)
+        {
+            return dataType == DataType.Int || dataType == DataType.Bool;
+        }
+
+        // Exponent-by-squaring. Caller guarantees exponent >= 0 (negative exponents are promoted to
+        // float by CreatePower before this is reached). Overflow wraps silently.
+        static long IntPow(long b, long e)
+        {
+            long result = 1L;
+            while (e > 0L)
+            {
+                if ((e & 1L) == 1L)
+                {
+                    result *= b;
+                }
+                b *= b;
+                e >>= 1;
+            }
+            return result;
         }
 
         #endregion

@@ -14,10 +14,7 @@ namespace Chow.Interpreter
 
         static readonly Dictionary<(ExpressionOperator op, DataType operand), ConversionCase> _unaryTypeMap =
             new Dictionary<(ExpressionOperator, DataType), ConversionCase>();
-        
-        static readonly HashSet<ExpressionOperator> _noConversionOps = new HashSet<ExpressionOperator>
-            { ExpressionOperator.And, ExpressionOperator.Or, };
-        
+
         static readonly DataType[] NumericTags = { DataType.Bool, DataType.Int, DataType.Float };
 
         static readonly DataType[] AllTags = (DataType[])Enum.GetValues(typeof(DataType));
@@ -28,11 +25,9 @@ namespace Chow.Interpreter
         
         public static ConversionCase GetLeftRightConversionCase(ExpressionOperator op, DataType left, DataType right)
         {
-            if (_noConversionOps.Contains(op))
-            {
-                return ConversionCase.NoConversion;
-            }
-
+            // Note: ExpressionOperator.And/Or are not registered here. The Compiler short-circuits them
+            // into jump opcodes (see CompileShortCircuit), so this lookup is never invoked for those ops.
+            // If a defensive caller ever queries them, the TypeException below is the correct response.
             if (_binaryTypeMap.TryGetValue((op, left, right), out var conversion))
             {
                 return conversion;
@@ -141,6 +136,11 @@ namespace Chow.Interpreter
             _binaryTypeMap[(ExpressionOperator.Multiply, DataType.Int, DataType.List)] = ConversionCase.NoConversion;
             _binaryTypeMap[(ExpressionOperator.Multiply, DataType.Str, DataType.Int)] = ConversionCase.NoConversion;
             _binaryTypeMap[(ExpressionOperator.Multiply, DataType.Int, DataType.Str)] = ConversionCase.NoConversion;
+            // Python treats bool as a subtype of int, so `True * "ab"` and `[1] * True` are valid.
+            _binaryTypeMap[(ExpressionOperator.Multiply, DataType.List, DataType.Bool)] = ConversionCase.NoConversion;
+            _binaryTypeMap[(ExpressionOperator.Multiply, DataType.Bool, DataType.List)] = ConversionCase.NoConversion;
+            _binaryTypeMap[(ExpressionOperator.Multiply, DataType.Str, DataType.Bool)] = ConversionCase.NoConversion;
+            _binaryTypeMap[(ExpressionOperator.Multiply, DataType.Bool, DataType.Str)] = ConversionCase.NoConversion;
             _binaryTypeMap[(ExpressionOperator.BinaryOr, DataType.Dict, DataType.Dict)] = ConversionCase.NoConversion;
         }
 

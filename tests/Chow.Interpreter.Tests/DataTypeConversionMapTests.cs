@@ -73,12 +73,15 @@ namespace Chow.Interpreter.Tests
         [TestCase(ExpressionOperator.And, DataType.List, DataType.Dict)]
         [TestCase(ExpressionOperator.Or, DataType.Str, DataType.None)]
         [TestCase(ExpressionOperator.Or, DataType.Float, DataType.Range)]
-        public void GetLeftRightConversionCase_AndOr_AnyOperands_ReturnsNoConversion(
+        public void GetLeftRightConversionCase_AndOr_AnyOperands_Throws(
             ExpressionOperator op, DataType left, DataType right)
         {
+            // And/Or short-circuit at compile time (Compiler.CompileShortCircuit emits jump opcodes),
+            // so they never reach this lookup. If queried defensively, throwing TypeException is the
+            // documented response.
             Assert.That(
-                DataTypeConversionMap.GetLeftRightConversionCase(op, left, right),
-                Is.EqualTo(ConversionCase.NoConversion));
+                () => DataTypeConversionMap.GetLeftRightConversionCase(op, left, right),
+                Throws.TypeOf<TypeException>());
         }
 
         [TestCase(ExpressionOperator.Equal, DataType.Int, DataType.Int, ConversionCase.PromoteToInt)]

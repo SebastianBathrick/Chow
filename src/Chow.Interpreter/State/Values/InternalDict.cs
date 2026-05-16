@@ -181,6 +181,22 @@ namespace Chow.Interpreter.State.Values
             return true;
         }
 
+        public static int ElementsHashCode(InternalDict a)
+        {
+            // Order-independent combine — paired with ElementsEqual's order-insensitive lookup.
+            unchecked
+            {
+                var hash = 0;
+                foreach (var key in a._keys)
+                {
+                    var keyHash = key.GetHashCode();
+                    var valueHash = a._entries[key].GetHashCode();
+                    hash ^= (keyHash * 31) ^ valueHash;
+                }
+                return hash;
+            }
+        }
+
         public static InternalDict Merge(InternalDict a, InternalDict b)
         {
             var result = new InternalDict();

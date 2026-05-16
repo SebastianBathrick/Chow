@@ -229,6 +229,20 @@ namespace Chow.Interpreter.State.Values
             return true;
         }
 
+        public static int ElementsHashCode(InternalList a)
+        {
+            // Order-sensitive polynomial combine — paired with ElementsEqual's order-sensitive check.
+            unchecked
+            {
+                var hash = 17;
+                for (var i = 0; i < a._elements.Count; i++)
+                {
+                    hash = hash * 31 + a._elements[i].GetHashCode();
+                }
+                return hash;
+            }
+        }
+
         public static InternalList Concat(InternalList a, InternalList b)
         {
             var result = new InternalList();
