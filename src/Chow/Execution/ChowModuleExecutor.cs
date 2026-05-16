@@ -1,6 +1,7 @@
 using Chow.Interpreter;
 namespace Chow.Execution
 {
+    // TODO: Remove executor
     /// <summary>
     /// Adapts <see cref="ChowModule"/> to the CLI executor interface.
     /// </summary>

@@ -1,5 +1,7 @@
 using Chow.Execution;
+using Chow.Interpreter;
 using ReplLoop = Chow.Repl.Repl;
+
 
 namespace Chow.Cli
 {
@@ -10,22 +12,12 @@ namespace Chow.Cli
     {
         readonly IChowExecutor _executor;
 
-        /// <summary>
-        /// Initializes a new CLI app using the executor shared by CLI modes.
-        /// </summary>
-        /// <param name="executor">Executes Chow source code for REPL and inline-source modes.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="executor"/> is <see langword="null"/>.</exception>
+
         public CliApp(IChowExecutor executor)
         {
             _executor = executor ?? throw new ArgumentNullException(nameof(executor));
         }
-
-        /// <summary>
-        /// Runs the CLI: no arguments starts the REPL, and the first argument is treated as inline Chow source.
-        /// </summary>
-        /// <param name="args">Command-line arguments passed to the process.</param>
-        /// <returns>An exit code from <see cref="ExitCodes"/>.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="args"/> is <see langword="null"/>.</exception>
+        
         public int Run(string[] args)
         {
             if (args == null)
@@ -39,19 +31,20 @@ namespace Chow.Cli
                 return repl.Run();
             }
 
-            // File-path handling intentionally lives outside this dispatch path until the future file/module system exists.
-            return ExecuteInlineSource(args[0]);
+            return ExecuteFile(args[0]);
         }
 
-        int ExecuteInlineSource(string sourceCode)
+        int ExecuteFile(string filePath)
         {
-            if (string.IsNullOrWhiteSpace(sourceCode))
+            if (string.IsNullOrWhiteSpace(filePath))
             {
-                return ExitCodes.Success;
+                Console.Error.WriteLine("A Chow source file path is required.");
+                return ExitCodes.UsageError;
             }
 
             try
             {
+                var sourceCode = File.ReadAllText(filePath);
                 _executor.Execute(sourceCode);
                 return ExitCodes.Success;
             }

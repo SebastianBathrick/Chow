@@ -8,6 +8,7 @@ namespace Chow.Interpreter
     {
         Print,
         Input,
+        Clear,
         Float,
         Str,
         Int,
@@ -29,6 +30,7 @@ namespace Chow.Interpreter
         {
             { BuiltInType.Print, "print" },
             { BuiltInType.Input, "input" },
+            { BuiltInType.Clear, "clear" },
             { BuiltInType.Float, "float" },
             { BuiltInType.Str, "str" },
             { BuiltInType.Int, "int" },
@@ -49,6 +51,7 @@ namespace Chow.Interpreter
             {
                 { BuiltInType.Print, Print },
                 { BuiltInType.Input, Input },
+                { BuiltInType.Clear, Clear },
                 { BuiltInType.Float, Float },
                 { BuiltInType.Str, Str },
                 { BuiltInType.Int, Int },
@@ -85,7 +88,12 @@ namespace Chow.Interpreter
 
         static ChowValue Input(ChowValue[] args)
         {
-            RequireArity("input", args, 0);
+            var argCount = RequireArity("input", args, 0, 1);
+
+            if (argCount == 1)
+            {
+                Console.Write(args[0]);
+            }
 
             var input = Console.ReadLine();
 
@@ -95,6 +103,14 @@ namespace Chow.Interpreter
             }
 
             return new ChowValue(input);
+        }
+
+        static ChowValue Clear(ChowValue[] args)
+        {
+            RequireArity("clear", args, 0);
+            
+            Console.Clear();
+            return ChowValue.None;
         }
 
         static ChowValue Float(ChowValue[] args)
@@ -378,12 +394,24 @@ namespace Chow.Interpreter
 
         static void RequireArity(string name, ChowValue[] args, int expected)
         {
-            var actual = args == null ? 0 : args.Length;
+            var actual = args?.Length ?? 0;
 
             if (actual != expected)
             {
                 throw new InvalidOperationException($"{name}() expected {expected} arguments, got {actual}");
             }
+        }
+
+        static int RequireArity(string name, ChowValue[] args, int minExpected, int maxExpected)
+        {
+            var actual = args?.Length ?? 0;
+
+            if (actual < minExpected || actual > maxExpected)
+            {
+                throw new InvalidOperationException($"{name}() expected {minExpected} to {maxExpected} arguments, got {actual}");
+            }
+
+            return args?.Length ?? 0;
         }
 
         static bool IsNumeric(ChowValue val)
