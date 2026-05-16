@@ -4,52 +4,52 @@ namespace Chow.Interpreter.State.Values
 {
     static class IteratorFactory
     {
-        public static IChowIterator GetIterator(TaggedUnion source)
+        public static IChowIterator GetIterator(ChowValue source)
         {
-            switch (source.Tag)
+            switch (source.DataType)
             {
-                case Tag.List:
+                case DataType.List:
                 {
-                    return new InternalListIterator(source.ListValue);
+                    return new InternalListIterator(source.AsType<InternalList>());
                 }
-                case Tag.Str:
+                case DataType.Str:
                 {
-                    return new InternalStrIterator(source.StringValue);
+                    return new InternalStrIterator(source.AsType<string>());
                 }
-                case Tag.Range:
+                case DataType.Range:
                 {
-                    return source.RangeValue.GetIterator();
+                    return source.AsType<InternalRange>().GetIterator();
                 }
                 default:
                 {
-                    throw new TypeException($"'{TypeNameOf(source.Tag)}' object is not iterable");
+                    throw new TypeException($"'{TypeNameOf(source.DataType)}' object is not iterable");
                 }
             }
         }
 
-        static string TypeNameOf(Tag tag)
+        static string TypeNameOf(DataType dataType)
         {
-            switch (tag)
+            switch (dataType)
             {
-                case Tag.None:
+                case DataType.None:
                 {
                     return "NoneType";
                 }
-                case Tag.Boolean:
+                case DataType.Bool:
                 {
                     return "bool";
                 }
-                case Tag.Int:
+                case DataType.Int:
                 {
                     return "int";
                 }
-                case Tag.Float:
+                case DataType.Float:
                 {
                     return "float";
                 }
                 default:
                 {
-                    return tag.ToString().ToLowerInvariant();
+                    return dataType.ToString().ToLowerInvariant();
                 }
             }
         }

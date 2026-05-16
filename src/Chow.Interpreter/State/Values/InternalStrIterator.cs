@@ -11,15 +11,15 @@ namespace Chow.Interpreter.State.Values
             _index = 0;
         }
 
-        public bool TryMoveNext(out TaggedUnion current)
+        public bool TryMoveNext(out ChowValue current)
         {
             if (_index >= _source.Length)
             {
-                current = TaggedUnion.None;
+                current = ChowValue.None;
                 return false;
             }
 
-            current = new TaggedUnion(_source[_index].ToString());
+            current = new ChowValue(_source[_index].ToString());
             _index++;
             return true;
         }

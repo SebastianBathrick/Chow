@@ -20,7 +20,7 @@ namespace Chow.Interpreter.Tests
             return chunk;
         }
 
-        static TaggedUnion Execute(Chunk chunk)
+        static ChowValue Execute(Chunk chunk)
         {
             var vm = new VirtualMachine(chunk, new Scope());
             vm.EvaluateChunk();
@@ -29,31 +29,31 @@ namespace Chow.Interpreter.Tests
 
         static void PushIntegerConstant(Chunk chunk, int value)
         {
-            var index = chunk.RegisterConstant(new TaggedUnion(value));
+            var index = chunk.RegisterConstant(new ChowValue((long)value));
             chunk.AddInstruction(OperationCode.PushConstant, LINE, index);
         }
 
         static void PushFloatConstant(Chunk chunk, float value)
         {
-            var index = chunk.RegisterConstant(new TaggedUnion(value));
+            var index = chunk.RegisterConstant(new ChowValue((double)value));
             chunk.AddInstruction(OperationCode.PushConstant, LINE, index);
         }
 
-        static void AssertIntegerResult(TaggedUnion result, int expected)
+        static void AssertIntegerResult(ChowValue result, int expected)
         {
             Assert.Multiple(() =>
             {
-                Assert.That(result.IsInt, Is.True);
-                Assert.That(result.IntegerValue, Is.EqualTo(expected));
+                Assert.That(result.IsOfType<long>(), Is.True);
+                Assert.That(result.AsType<long>(), Is.EqualTo(expected));
             });
         }
 
-        static void AssertFloatResult(TaggedUnion result, float expected)
+        static void AssertFloatResult(ChowValue result, float expected)
         {
             Assert.Multiple(() =>
             {
-                Assert.That(result.IsFloat, Is.True);
-                Assert.That(result.FloatValue, Is.EqualTo(expected));
+                Assert.That(result.IsOfType<double>(), Is.True);
+                Assert.That(result.AsType<double>(), Is.EqualTo(expected));
             });
         }
 
@@ -347,7 +347,7 @@ namespace Chow.Interpreter.Tests
 
             var vm = new VirtualMachine(chunk, new Scope());
             vm.EvaluateChunk();
-            TaggedUnion result = vm.ValStackTop;
+            ChowValue result = vm.ValStackTop;
 
             AssertIntegerResult(result, 5);
         }
@@ -364,7 +364,7 @@ namespace Chow.Interpreter.Tests
 
             var vm = new VirtualMachine(chunk, new Scope());
             vm.EvaluateChunk();
-            TaggedUnion result = vm.ValStackTop;
+            ChowValue result = vm.ValStackTop;
 
             AssertIntegerResult(result, 7);
         }
@@ -383,7 +383,7 @@ namespace Chow.Interpreter.Tests
 
             var vm = new VirtualMachine(chunk, new Scope());
             vm.EvaluateChunk();
-            TaggedUnion result = vm.ValStackTop;
+            ChowValue result = vm.ValStackTop;
 
             AssertIntegerResult(result, 3);
         }
@@ -397,7 +397,7 @@ namespace Chow.Interpreter.Tests
         {
             var chunk = BuildChunk(c =>
             {
-                var idx = c.RegisterConstant(new TaggedUnion("hello"));
+                var idx = c.RegisterConstant(new ChowValue("hello"));
                 c.AddInstruction(OperationCode.PushConstant, LINE, idx);
             });
 
@@ -405,8 +405,8 @@ namespace Chow.Interpreter.Tests
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.IsString, Is.True);
-                Assert.That(result.StringValue, Is.EqualTo("hello"));
+                Assert.That(result.IsOfType<string>(), Is.True);
+                Assert.That(result.AsType<string>(), Is.EqualTo("hello"));
             });
         }
 
@@ -414,8 +414,8 @@ namespace Chow.Interpreter.Tests
         public void ExecuteChunk_RegisterSameStringTwice_DeduplicatesConstant()
         {
             var chunk = new Chunk();
-            var firstIdx = chunk.RegisterConstant(new TaggedUnion("dup"));
-            var secondIdx = chunk.RegisterConstant(new TaggedUnion("dup"));
+            var firstIdx = chunk.RegisterConstant(new ChowValue("dup"));
+            var secondIdx = chunk.RegisterConstant(new ChowValue("dup"));
 
             Assert.That(secondIdx, Is.EqualTo(firstIdx));
         }
@@ -425,27 +425,27 @@ namespace Chow.Interpreter.Tests
         [TestCase("hello world", true)]
         public void StringValue_IsTruthy_FollowsPythonRule(string value, bool expectedTruthy)
         {
-            var union = new TaggedUnion(value);
+            var stringValue = new ChowValue(value);
 
-            Assert.That(union.IsTruthy, Is.EqualTo(expectedTruthy));
+            Assert.That(stringValue.AsType<bool>(), Is.EqualTo(expectedTruthy));
         }
 
         [Test]
         public void StringEquality_SameValue_ReturnsTrue()
         {
-            var left = new TaggedUnion("abc");
-            var right = new TaggedUnion("abc");
+            var left = new ChowValue("abc");
+            var right = new ChowValue("abc");
 
-            Assert.That(left == right, Is.True);
+            Assert.That(left.Equals(right), Is.True);
         }
 
         [Test]
         public void StringEquality_DifferentValue_ReturnsFalse()
         {
-            var left = new TaggedUnion("abc");
-            var right = new TaggedUnion("xyz");
+            var left = new ChowValue("abc");
+            var right = new ChowValue("xyz");
 
-            Assert.That(left == right, Is.False);
+            Assert.That(left.Equals(right), Is.False);
         }
     }
 }

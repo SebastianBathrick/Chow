@@ -40,9 +40,9 @@ namespace Chow.Interpreter.ImplTests
                     continue;
                 }
                 var constant = chunk.ReadConstant(op.Operand);
-                if (constant.Tag == Tag.Object && constant.ObjectValue is ClosureTemplate template)
+                if (constant.IsOfType<ClosureTemplate>())
                 {
-                    return template;
+                    return constant.AsType<ClosureTemplate>();
                 }
             }
             return null;
@@ -116,7 +116,7 @@ namespace Chow.Interpreter.ImplTests
                 Assert.That(ops[n - 1].Code, Is.EqualTo(OperationCode.PushReturnValue));
 
                 var tailConst = body.ReadConstant(ops[n - 2].Operand);
-                Assert.That(tailConst.Tag, Is.EqualTo(Tag.None));
+                Assert.That(tailConst.DataType, Is.EqualTo(DataType.None));
             });
         }
 
@@ -135,7 +135,7 @@ namespace Chow.Interpreter.ImplTests
                 Assert.That(ops[n - 2].Code, Is.EqualTo(OperationCode.PushConstant));
 
                 var tailConst = body.ReadConstant(ops[n - 2].Operand);
-                Assert.That(tailConst.Tag, Is.EqualTo(Tag.None));
+                Assert.That(tailConst.DataType, Is.EqualTo(DataType.None));
             });
         }
 
@@ -165,7 +165,7 @@ namespace Chow.Interpreter.ImplTests
 
                 Assert.That(i, Is.GreaterThan(0), "PushReturnValue cannot be the first op");
                 var prev = ops[i - 1];
-                if (prev.Code == OperationCode.PushConstant && body.ReadConstant(prev.Operand).Tag == Tag.None)
+                if (prev.Code == OperationCode.PushConstant && body.ReadConstant(prev.Operand).DataType == DataType.None)
                 {
                     pushNoneBeforeReturnCount++;
                 }

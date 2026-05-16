@@ -13,15 +13,15 @@ namespace Chow.Interpreter.State.Values
             _step = range.Step;
         }
 
-        public bool TryMoveNext(out TaggedUnion current)
+        public bool TryMoveNext(out ChowValue current)
         {
             if (_step > 0 ? _next >= _stop : _next <= _stop)
             {
-                current = TaggedUnion.None;
+                current = ChowValue.None;
                 return false;
             }
 
-            current = new TaggedUnion(_next);
+            current = new ChowValue(_next);
             _next += _step;
             return true;
         }

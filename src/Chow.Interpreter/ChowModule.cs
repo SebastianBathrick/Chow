@@ -1,5 +1,4 @@
 using Chow.Interpreter.State.Scopes;
-using Chow.Interpreter.State.Values;
 using Chow.Interpreter.Tokens;
 
 namespace Chow.Interpreter
@@ -18,7 +17,7 @@ namespace Chow.Interpreter
         {
             foreach (var type in BuiltIns.AllTypes)
             {
-                _globalScope.AssignVariableValue(BuiltIns.NameOf(type), new TaggedUnion((object)BuiltIns.DefaultOf(type)));
+                _globalScope.AssignVariableValue(BuiltIns.NameOf(type), new ChowValue((object)BuiltIns.DefaultOf(type)));
             }
         }
 

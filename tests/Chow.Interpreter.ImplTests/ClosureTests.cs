@@ -7,7 +7,7 @@ namespace Chow.Interpreter.ImplTests
     [TestFixture]
     public class ClosureTests
     {
-        static TaggedUnion Int(long v) => new TaggedUnion(v);
+        static ChowValue Int(long v) => new ChowValue(v);
 
         // ============================================================================================================
         // A. Construction

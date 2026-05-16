@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State.Values;
 
 namespace Chow.Interpreter
@@ -11,12 +12,11 @@ namespace Chow.Interpreter
 
         static readonly Dictionary<Type, DataType> _dataTypeMap = new Dictionary<Type, DataType>()
         {
-            { null, DataType.None },
             { typeof(bool), DataType.Bool },
             { typeof(long), DataType.Int },
             { typeof(double), DataType.Float },
             { typeof(string), DataType.Str },
-            { typeof(InternalDict), DataType.List },
+            { typeof(InternalDict), DataType.Dict },
             { typeof(InternalRange), DataType.Range },
             { typeof(InternalList), DataType.List },
         };
@@ -37,12 +37,16 @@ namespace Chow.Interpreter
 
         #region Properties
         
+        internal DataType DataType => _dataType;
+        
         bool IsNullableType => 
             _dataType == DataType.Object ||  _dataType == DataType.List ||   _dataType == DataType.Dict ||   _dataType == DataType.Range;
 
         #endregion
         
-        ChowValue(
+        #region Constructors
+
+        internal ChowValue(
             DataType dataType = DataType.None, 
             bool boolValue = DEFAULT_BOOL_VALUE, 
             object objectValue = DEFAULT_OBJECT_VALUE, 
@@ -60,6 +64,19 @@ namespace Chow.Interpreter
                 throw new ArgumentNullException(nameof(objectValue));
             }
         }
+
+        internal ChowValue(long value)        : this(DataType.Int,    int64Value:   value) {}
+        internal ChowValue(double value)      : this(DataType.Float,  float64Value: value) {}
+        internal ChowValue(bool value)        : this(DataType.Bool,   boolValue:    value) {}
+        internal ChowValue(string value)      : this(DataType.Str,    objectValue:  value) {}
+        internal ChowValue(InternalList list) : this(DataType.List,   objectValue:  list)  {}
+        internal ChowValue(InternalDict dict) : this(DataType.Dict,   objectValue:  dict)  {}
+        internal ChowValue(InternalRange range) : this(DataType.Range, objectValue: range) {}
+        internal ChowValue(object obj)        : this(DataType.Object, objectValue:  obj)   {}
+
+        #endregion
+
+        #region Type Inspection
 
         public TDataType AsType<TDataType>()
         {
@@ -109,17 +126,354 @@ namespace Chow.Interpreter
 
         public bool IsOfType<TDataType>()
         {
+            var checkType = typeof(TDataType);
+            
             // If it is not a type defined by the DataType enum
-            if (!_dataTypeMap.ContainsKey(typeof(TDataType)))
+            if (!_dataTypeMap.ContainsKey(checkType))
             {
                 return _dataType == DataType.Object && _objectValue is TDataType;
             }
             
             // The map includes values representing data types that are from the Chow.Interpreter namespace
-            var chowDataType = _dataTypeMap[typeof(TDataType)];
+            var chowDataType = _dataTypeMap[checkType];
             return _dataType == chowDataType;
         }
 
+        internal bool IsTruthy()
+        {
+            return ToBool();
+        }
+
+        #endregion
+
+        #region Arithmetic & Logical Operations
+        // Instance methods to avoid passing two ChowValues as parameters. Each returns a new ChowValue
+        // (the struct is readonly, so no risk of accidentally mutating this instance's internal state).
+        // Promotion rules come from DataTypeConversionMap (the single source of truth). Carve-outs for
+        // container/string ops (list+list, list*int, str+str, str*int, dict|dict) are dispatched when
+        // the map reports ConversionCase.NoConversion.
+
+        internal ChowValue CreateSum(ChowValue rightOperand)
+        {
+            switch (LookupBinary(ExpressionOperator.Add, rightOperand))
+            {
+                case ConversionCase.PromoteToInt:
+                    return new ChowValue(PromoteToLong() + rightOperand.PromoteToLong());
+                case ConversionCase.PromoteToFloat:
+                    return new ChowValue(PromoteToDouble() + rightOperand.PromoteToDouble());
+                case ConversionCase.NoConversion:
+                    if (_dataType == DataType.List && rightOperand._dataType == DataType.List)
+                    {
+                        return new ChowValue(InternalList.Concat(AsType<InternalList>(), rightOperand.AsType<InternalList>()));
+                    }
+                    if (_dataType == DataType.Str && rightOperand._dataType == DataType.Str)
+                    {
+                        return new ChowValue(AsType<string>() + rightOperand.AsType<string>());
+                    }
+                    break;
+            }
+
+            throw UnsupportedBinary(ExpressionOperator.Add, rightOperand);
+        }
+
+        internal ChowValue CreateDifference(ChowValue rightOperand)
+        {
+            switch (LookupBinary(ExpressionOperator.Subtract, rightOperand))
+            {
+                case ConversionCase.PromoteToInt:
+                    return new ChowValue(PromoteToLong() - rightOperand.PromoteToLong());
+                case ConversionCase.PromoteToFloat:
+                    return new ChowValue(PromoteToDouble() - rightOperand.PromoteToDouble());
+            }
+
+            throw UnsupportedBinary(ExpressionOperator.Subtract, rightOperand);
+        }
+
+        internal ChowValue CreateProduct(ChowValue rightOperand)
+        {
+            switch (LookupBinary(ExpressionOperator.Multiply, rightOperand))
+            {
+                case ConversionCase.PromoteToInt:
+                    return new ChowValue(PromoteToLong() * rightOperand.PromoteToLong());
+                case ConversionCase.PromoteToFloat:
+                    return new ChowValue(PromoteToDouble() * rightOperand.PromoteToDouble());
+                case ConversionCase.NoConversion:
+                    if (_dataType == DataType.List && rightOperand._dataType == DataType.Int)
+                    {
+                        return new ChowValue(InternalList.Repeat(AsType<InternalList>(), (int)rightOperand.AsType<long>()));
+                    }
+                    if (_dataType == DataType.Int && rightOperand._dataType == DataType.List)
+                    {
+                        return new ChowValue(InternalList.Repeat(rightOperand.AsType<InternalList>(), (int)AsType<long>()));
+                    }
+                    if (_dataType == DataType.Str && rightOperand._dataType == DataType.Int)
+                    {
+                        return new ChowValue(RepeatString(AsType<string>(), (int)rightOperand.AsType<long>()));
+                    }
+                    if (_dataType == DataType.Int && rightOperand._dataType == DataType.Str)
+                    {
+                        return new ChowValue(RepeatString(rightOperand.AsType<string>(), (int)AsType<long>()));
+                    }
+                    break;
+            }
+
+            throw UnsupportedBinary(ExpressionOperator.Multiply, rightOperand);
+        }
+
+        internal ChowValue CreateQuotient(ChowValue rightOperand)
+        {
+            // Python semantics: `/` always produces a float, even for int / int.
+            if (LookupBinary(ExpressionOperator.Divide, rightOperand) == ConversionCase.PromoteToFloat)
+            {
+                return new ChowValue(PromoteToDouble() / rightOperand.PromoteToDouble());
+            }
+
+            throw UnsupportedBinary(ExpressionOperator.Divide, rightOperand);
+        }
+
+        internal ChowValue CreateModulus(ChowValue rightOperand)
+        {
+            // Python semantics: result has the sign of the divisor.
+            switch (LookupBinary(ExpressionOperator.Modulus, rightOperand))
+            {
+                case ConversionCase.PromoteToInt:
+                {
+                    var a = PromoteToLong();
+                    var b = rightOperand.PromoteToLong();
+                    return new ChowValue((a % b + b) % b);
+                }
+                case ConversionCase.PromoteToFloat:
+                {
+                    var l = PromoteToDouble();
+                    var r = rightOperand.PromoteToDouble();
+                    return new ChowValue((l % r + r) % r);
+                }
+            }
+
+            throw UnsupportedBinary(ExpressionOperator.Modulus, rightOperand);
+        }
+
+        internal ChowValue CreateFloorQuotient(ChowValue rightOperand)
+        {
+            // Python semantics: floors toward negative infinity.
+            switch (LookupBinary(ExpressionOperator.FloorDivide, rightOperand))
+            {
+                case ConversionCase.PromoteToInt:
+                    return new ChowValue((long)Math.Floor(PromoteToLong() / (double)rightOperand.PromoteToLong()));
+                case ConversionCase.PromoteToFloat:
+                    return new ChowValue(Math.Floor(PromoteToDouble() / rightOperand.PromoteToDouble()));
+            }
+
+            throw UnsupportedBinary(ExpressionOperator.FloorDivide, rightOperand);
+        }
+
+        internal ChowValue CreatePower(ChowValue rightOperand)
+        {
+            // Python semantics: float if either operand is float, or if exponent is negative
+            // (the map alone can't represent the negative-exponent case, so override it here).
+            var conv = LookupBinary(ExpressionOperator.Exponentiate, rightOperand);
+            if (conv == ConversionCase.PromoteToInt && rightOperand.PromoteToLong() < 0)
+            {
+                conv = ConversionCase.PromoteToFloat;
+            }
+
+            switch (conv)
+            {
+                case ConversionCase.PromoteToInt:
+                    return new ChowValue((long)Math.Pow(PromoteToLong(), rightOperand.PromoteToLong()));
+                case ConversionCase.PromoteToFloat:
+                    return new ChowValue(Math.Pow(PromoteToDouble(), rightOperand.PromoteToDouble()));
+            }
+
+            throw UnsupportedBinary(ExpressionOperator.Exponentiate, rightOperand);
+        }
+
+        internal ChowValue CreateUnion(ChowValue rightOperand)
+        {
+            if (LookupBinary(ExpressionOperator.BinaryOr, rightOperand) == ConversionCase.NoConversion
+                && _dataType == DataType.Dict && rightOperand._dataType == DataType.Dict)
+            {
+                return new ChowValue(InternalDict.Merge(AsType<InternalDict>(), rightOperand.AsType<InternalDict>()));
+            }
+
+            throw UnsupportedBinary(ExpressionOperator.BinaryOr, rightOperand);
+        }
+
+        internal ChowValue CreateNegation()
+        {
+            switch (LookupUnary(ExpressionOperator.Negate))
+            {
+                case ConversionCase.PromoteToInt:
+                    return new ChowValue(-PromoteToLong());
+                case ConversionCase.PromoteToFloat:
+                    return new ChowValue(-PromoteToDouble());
+            }
+
+            throw UnsupportedUnary(ExpressionOperator.Negate);
+        }
+
+        internal ChowValue CreateLogicalNot()
+        {
+            // The map records this as NoConversion for every type; consult it for consistency and so that
+            // a future map change (e.g. restricting unary `not` to specific types) propagates here.
+            LookupUnary(ExpressionOperator.Not);
+            return new ChowValue(!IsTruthy());
+        }
+
+        #endregion
+
+        #region Comparison Operations
+
+        internal bool IsEqualTo(ChowValue other)
+        {
+            switch (LookupBinary(ExpressionOperator.Equal, other))
+            {
+                case ConversionCase.PromoteToInt:
+                    return PromoteToLong() == other.PromoteToLong();
+                case ConversionCase.PromoteToFloat:
+                    return PromoteToDouble() == other.PromoteToDouble();
+                case ConversionCase.NoConversion:
+                    return EqualsNoConversion(other);
+            }
+
+            return false;
+        }
+
+        internal bool IsNotEqualTo(ChowValue other)
+        {
+            return !IsEqualTo(other);
+        }
+
+        internal bool IsLessThan(ChowValue other)
+        {
+            switch (LookupBinary(ExpressionOperator.Less, other))
+            {
+                case ConversionCase.PromoteToInt:
+                    return PromoteToLong() < other.PromoteToLong();
+                case ConversionCase.PromoteToFloat:
+                    return PromoteToDouble() < other.PromoteToDouble();
+                case ConversionCase.NoConversion:
+                    if (_dataType == DataType.Str && other._dataType == DataType.Str)
+                    {
+                        return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) < 0;
+                    }
+                    break;
+            }
+
+            throw UnsupportedBinary(ExpressionOperator.Less, other);
+        }
+
+        internal bool IsGreaterThan(ChowValue other)
+        {
+            switch (LookupBinary(ExpressionOperator.Greater, other))
+            {
+                case ConversionCase.PromoteToInt:
+                    return PromoteToLong() > other.PromoteToLong();
+                case ConversionCase.PromoteToFloat:
+                    return PromoteToDouble() > other.PromoteToDouble();
+                case ConversionCase.NoConversion:
+                    if (_dataType == DataType.Str && other._dataType == DataType.Str)
+                    {
+                        return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) > 0;
+                    }
+                    break;
+            }
+
+            throw UnsupportedBinary(ExpressionOperator.Greater, other);
+        }
+
+        internal bool IsLessOrEqualTo(ChowValue other)
+        {
+            switch (LookupBinary(ExpressionOperator.LessEqual, other))
+            {
+                case ConversionCase.PromoteToInt:
+                    return PromoteToLong() <= other.PromoteToLong();
+                case ConversionCase.PromoteToFloat:
+                    return PromoteToDouble() <= other.PromoteToDouble();
+                case ConversionCase.NoConversion:
+                    if (_dataType == DataType.Str && other._dataType == DataType.Str)
+                    {
+                        return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) <= 0;
+                    }
+                    break;
+            }
+
+            throw UnsupportedBinary(ExpressionOperator.LessEqual, other);
+        }
+
+        internal bool IsGreaterOrEqualTo(ChowValue other)
+        {
+            switch (LookupBinary(ExpressionOperator.GreaterEqual, other))
+            {
+                case ConversionCase.PromoteToInt:
+                    return PromoteToLong() >= other.PromoteToLong();
+                case ConversionCase.PromoteToFloat:
+                    return PromoteToDouble() >= other.PromoteToDouble();
+                case ConversionCase.NoConversion:
+                    if (_dataType == DataType.Str && other._dataType == DataType.Str)
+                    {
+                        return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) >= 0;
+                    }
+                    break;
+            }
+
+            throw UnsupportedBinary(ExpressionOperator.GreaterEqual, other);
+        }
+
+        #endregion
+
+        #region Interop
+
+        internal ChowValue CallInterop(ChowValue[] args)
+        {
+            if (_dataType != DataType.Object)
+            {
+                throw new InvalidOperationException($"'{_dataType}' object is not callable");
+            }
+
+            if (_objectValue is Func<ChowValue[], ChowValue> methodDelegate)
+            {
+                return methodDelegate(args ?? Array.Empty<ChowValue>());
+            }
+
+            throw new InvalidOperationException($"Object of type '{_objectValue.GetType().Name}' is not callable");
+        }
+
+        #endregion
+
+        #region Object Overrides
+
+        public override bool Equals(object obj)
+        {
+            return obj is ChowValue other && IsEqualTo(other);
+        }
+
+        public override int GetHashCode()
+        {
+            switch (_dataType)
+            {
+                case DataType.Int:
+                    return _int64Value.GetHashCode();
+                case DataType.Float:
+                    return _float64Value.GetHashCode();
+                case DataType.Bool:
+                    return _boolValue.GetHashCode();
+                case DataType.Str:
+                case DataType.Object:
+                case DataType.Range:
+                    return _objectValue?.GetHashCode() ?? 0;
+                default:
+                    return _dataType.GetHashCode();
+            }
+        }
+
+        public override string ToString()
+        {
+            return ToStr();
+        }
+
+        #endregion
+        
         #region Conversion Methods
         // These methods can be indirectly accessed via the AsType<T>() method. Even the VirtualMachine does not need direct access to these.
         
@@ -415,6 +769,105 @@ namespace Chow.Interpreter
             }
 
             throw new InvalidOperationException("Expected string value for string conversion");
+        }
+
+        #endregion
+
+        #region Operator Dispatch Helpers
+        // Promotion-rule lookup and result-coercion helpers used by the arithmetic/comparison instance
+        // methods above. Operand promotion is intentionally limited to the three numeric tags
+        // (Bool/Int/Float); the map guarantees PromoteToInt/PromoteToFloat is only reported for those.
+
+        ConversionCase LookupBinary(ExpressionOperator op, ChowValue right)
+        {
+            return DataTypeConversionMap.GetLeftRightConversionCase(op, _dataType, right._dataType);
+        }
+
+        ConversionCase LookupUnary(ExpressionOperator op)
+        {
+            return DataTypeConversionMap.GetOperandConversionCase(op, _dataType);
+        }
+
+        TypeException UnsupportedBinary(ExpressionOperator op, ChowValue right)
+        {
+            return new TypeException($"unsupported operand type(s) for {op}: '{_dataType}' and '{right._dataType}'");
+        }
+
+        TypeException UnsupportedUnary(ExpressionOperator op)
+        {
+            return new TypeException($"bad operand type for unary {op}: '{_dataType}'");
+        }
+
+        long PromoteToLong()
+        {
+            switch (_dataType)
+            {
+                case DataType.Bool:
+                    return _boolValue ? 1L : 0L;
+                case DataType.Int:
+                    return _int64Value;
+                default:
+                    throw new InvalidOperationException($"Cannot promote {_dataType} to int");
+            }
+        }
+
+        double PromoteToDouble()
+        {
+            switch (_dataType)
+            {
+                case DataType.Bool:
+                    return _boolValue ? 1.0 : 0.0;
+                case DataType.Int:
+                    return _int64Value;
+                case DataType.Float:
+                    return _float64Value;
+                default:
+                    throw new InvalidOperationException($"Cannot promote {_dataType} to float");
+            }
+        }
+
+        // Equality fallback used when DataTypeConversionMap reports NoConversion for ==/!= operands.
+        // Cross-type combinations are never equal (Python: 1 == "1" → False); same-type combinations
+        // delegate to the underlying value's identity/structural equality.
+        bool EqualsNoConversion(ChowValue other)
+        {
+            if (_dataType != other._dataType)
+            {
+                return false;
+            }
+
+            switch (_dataType)
+            {
+                case DataType.None:
+                    return true;
+                case DataType.Str:
+                    return (string)_objectValue == (string)other._objectValue;
+                case DataType.List:
+                    return InternalList.ElementsEqual((InternalList)_objectValue, (InternalList)other._objectValue);
+                case DataType.Dict:
+                    return InternalDict.ElementsEqual((InternalDict)_objectValue, (InternalDict)other._objectValue);
+                case DataType.Range:
+                case DataType.Object:
+                    return ReferenceEquals(_objectValue, other._objectValue);
+                default:
+                    return true;
+            }
+        }
+
+        static string RepeatString(string source, int count)
+        {
+            if (count <= 0 || source.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            var builder = new System.Text.StringBuilder(source.Length * count);
+            for (var index = 0; index < count; index++)
+            {
+                builder.Append(source);
+            }
+
+            return builder.ToString();
         }
 
         #endregion

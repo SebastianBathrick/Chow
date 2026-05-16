@@ -1,4 +1,3 @@
-using Chow.Interpreter.State.Values;
 using System.Collections.Generic;
 using System.Text;
 
@@ -9,7 +8,7 @@ namespace Chow.Interpreter.Bytecode
         const int NO_OPERAND = -1;
 
         readonly List<Instruction> _instructions;
-        readonly List<TaggedUnion> _constantPool;
+        readonly List<ChowValue> _constantPool;
 
         readonly List<string> _varNames;
         readonly List<int> _instrLines;
@@ -26,7 +25,7 @@ namespace Chow.Interpreter.Bytecode
         public Chunk()
         {
             _instructions = new List<Instruction>();
-            _constantPool = new List<TaggedUnion>();
+            _constantPool = new List<ChowValue>();
             _varNames = new List<string>();
             _instrLines = new List<int>();
         }
@@ -65,8 +64,8 @@ namespace Chow.Interpreter.Bytecode
 
         /// <summary>Returns the constant value stored at the provided operand index in the constant pool.</summary>
         /// <param name="operand">The operand index of the constant to retrieve.</param>
-        /// <returns>The <see cref="TaggedUnion"/> constant at the specified operand index.</returns>
-        public TaggedUnion ReadConstant(int operand)
+        /// <returns>The <see cref="ChowValue"/> constant at the specified operand index.</returns>
+        public ChowValue ReadConstant(int operand)
         {
             return _constantPool[operand];
         }
@@ -75,11 +74,11 @@ namespace Chow.Interpreter.Bytecode
         /// Stores a new constant in the constant pool and returns its pool index. The index is for use as an operand
         /// assigned to <see cref="Instruction"/> instance(s).
         /// </summary>
-        /// <param name="newConst">TaggedUnion containing a constant primitive value.</param>
+        /// <param name="newConst">ChowValue containing a constant primitive value.</param>
         /// <returns>Integer representing the operand used to read the constant at runtime.</returns>
         /// <remarks>If an existing constant has the same value as <paramref name="newConst"/> then the operand for 
         /// that existing constant will be returned. Otherwise, the new constant is stored and a new operand is returned</remarks>
-        public int RegisterConstant(TaggedUnion newConst)
+        public int RegisterConstant(ChowValue newConst)
         {
             var constIndex = _constantPool.IndexOf(newConst);
 

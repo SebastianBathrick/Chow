@@ -65,7 +65,7 @@ namespace Chow.Interpreter
             CompileTargetNode(funcNode.Body);
 
             // Implicit `return None` for funcs that fall off the end of the body
-            var noneIdx = _chunk.RegisterConstant(TaggedUnion.None);
+            var noneIdx = _chunk.RegisterConstant(ChowValue.None);
 
             _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNumber, noneIdx);
             _chunk.AddInstruction(OperationCode.PushReturnValue, funcNode.LineNumber);
@@ -240,7 +240,7 @@ namespace Chow.Interpreter
             var funcChunk = funcCompiler.CompileFunctionBody();
 
             var template = new ClosureTemplate(funcChunk, funcNode.Name, funcNode.Params.Count);
-            var templateIdx = _chunk.RegisterConstant(new TaggedUnion(template));
+            var templateIdx = _chunk.RegisterConstant(new ChowValue((object)template));
 
             // Push template, then runtime PushNewClosureFromTemplate captures the active scope and wraps it as a Closure.
             _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNumber, templateIdx);
@@ -268,7 +268,7 @@ namespace Chow.Interpreter
              * dynamic typing. Here is how the VirtualMachine runs an assignment operation:
              *
              * 1. Pop a value off the stack representing the new/initial value for the variable. The new/initial value
-             *    is stored in a TaggedUnion and represents an expression evaluated at runtime. This can be of any type.
+             *    is stored in a ChowValue and represents an expression evaluated at runtime. This can be of any type.
              *
              * 2. Use the current Operation.Operand to get the variable's name stored as a string inside Chunk during
              *    compile-time (i.e., the compilation logic code below). It's stored this way so Operations don't have
@@ -295,7 +295,7 @@ namespace Chow.Interpreter
             else
             {
                 // Bare `return` returns None; PushReturnValue always pops exactly one value off the stack.
-                var noneIdx = _chunk.RegisterConstant(TaggedUnion.None);
+                var noneIdx = _chunk.RegisterConstant(ChowValue.None);
                 _chunk.AddInstruction(OperationCode.PushConstant, returnStatementNode.LineNumber, noneIdx);
             }
 
@@ -555,16 +555,24 @@ namespace Chow.Interpreter
 
         void CompileLiteral(LiteralNode literalNode)
         {
-            var constUnion = TaggedUnion.Empty;
+            var constValue = BuildLiteralValue(literalNode);
 
+            // If a constant of the same value already exists in the chunk, the operand of the existing constant will be returned.
+            // Otherwise, the new constant will be added to the chunk and its new operand will be returned.
+            var constIdx = _chunk.RegisterConstant(constValue);
+            _chunk.AddInstruction(OperationCode.PushConstant, literalNode.LineNumber, constIdx);
+        }
+
+        static ChowValue BuildLiteralValue(LiteralNode literalNode)
+        {
+            // Cases for LiteralDataType where the boxed Value is the wrong CLR type should not occur unless the Parser is bugged
             switch (literalNode.Type)
             {
                 case LiteralDataType.Integer:
                 {
-                    // Cases for LiteralDataType like this should not fail unless the Parser is bugged
                     if (literalNode.Value is long intVal)
                     {
-                        constUnion = new TaggedUnion(intVal);
+                        return new ChowValue(intVal);
                     }
                     break;
                 }
@@ -573,7 +581,7 @@ namespace Chow.Interpreter
                 {
                     if (literalNode.Value is double floatVal)
                     {
-                        constUnion = new TaggedUnion(floatVal);
+                        return new ChowValue(floatVal);
                     }
                     break;
                 }
@@ -582,22 +590,21 @@ namespace Chow.Interpreter
                 {
                     if (literalNode.Value is bool boolVal)
                     {
-                        constUnion = new TaggedUnion(boolVal);
+                        return new ChowValue(boolVal);
                     }
                     break;
                 }
 
                 case LiteralDataType.None:
                 {
-                    constUnion = TaggedUnion.None;
-                    break;
+                    return ChowValue.None;
                 }
 
                 case LiteralDataType.String:
                 {
                     if (literalNode.Value is string strVal)
                     {
-                        constUnion = new TaggedUnion(strVal);
+                        return new ChowValue(strVal);
                     }
                     break;
                 }
@@ -608,16 +615,8 @@ namespace Chow.Interpreter
                 }
             }
 
-            if (constUnion.IsEmpty)
-            {
-                // This case should never occur unless the Parser is bugged. Refer to the inline comment above for more info
-                throw new InvalidOperationException();
-            }
-
-            // If a constant of the same value already exists in the chunk, the operand of the existing constant will be returned.
-            // Otherwise, the new constant will be added to the chunk and its new operand will be returned.
-            var constIdx = _chunk.RegisterConstant(constUnion);
-            _chunk.AddInstruction(OperationCode.PushConstant, literalNode.LineNumber, constIdx);
+            // Reached only when the boxed Value's CLR type doesn't match its declared LiteralDataType (parser bug).
+            throw new InvalidOperationException();
         }
 
         void CompileListLiteral(ListLiteralNode node)
@@ -663,7 +662,7 @@ namespace Chow.Interpreter
         {
             if (argOrNull == null)
             {
-                var noneIdx = _chunk.RegisterConstant(TaggedUnion.None);
+                var noneIdx = _chunk.RegisterConstant(ChowValue.None);
                 _chunk.AddInstruction(OperationCode.PushConstant, sliceLineNum, noneIdx);
             }
             else

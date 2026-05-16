@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -14,11 +14,11 @@ namespace Chow.Interpreter.State.Values
         const string METHOD_REVERSE_NAME = "reverse";
 
 
-        readonly List<TaggedUnion> _elements;
+        readonly List<ChowValue> _elements;
 
         public int Count => _elements.Count;
 
-        public TaggedUnion this[int index]
+        public ChowValue this[int index]
         {
             get
             {
@@ -42,37 +42,37 @@ namespace Chow.Interpreter.State.Values
             return idx;
         }
         // Will throw if method name is invalid, which is the expected behavior
-        public TaggedUnion this[string name] => new TaggedUnion(GetMethod(name));
+        public ChowValue this[string name] => new ChowValue((object)GetMethod(name));
 
         public InternalList()
         {
-            _elements = new List<TaggedUnion>();
+            _elements = new List<ChowValue>();
         }
 
-        TaggedUnion Append(TaggedUnion[] args)
+        ChowValue Append(ChowValue[] args)
         {
             ValidateArguments(args, 1);
             _elements.Add(args[0]);
-            return TaggedUnion.None;
+            return ChowValue.None;
         }
 
-        TaggedUnion Clear(TaggedUnion[] args)
+        ChowValue Clear(ChowValue[] args)
         {
             ValidateArguments(args);
             _elements.Clear();
-            return TaggedUnion.None;
+            return ChowValue.None;
         }
 
-        TaggedUnion Insert(TaggedUnion[] args)
+        ChowValue Insert(ChowValue[] args)
         {
             ValidateArguments(args, 2);
 
-            if (args[0].Tag != Tag.Int)
+            if (args[0].DataType != DataType.Int)
             {
-                throw new ArgumentException($"Argument 0 must be of type {Tag.Int}, but was {args[0].Tag}");
+                throw new ArgumentException($"Argument 0 must be of type {DataType.Int}, but was {args[0].DataType}");
             }
 
-            var idx = (int)args[0].IntegerValue;
+            var idx = (int)args[0].AsType<long>();
 
             if (idx < 0)
             {
@@ -84,10 +84,10 @@ namespace Chow.Interpreter.State.Values
             }
 
             _elements.Insert(idx, args[1]);
-            return TaggedUnion.None;
+            return ChowValue.None;
         }
 
-        TaggedUnion Pop(TaggedUnion[] args)
+        ChowValue Pop(ChowValue[] args)
         {
             if (args != null && args.Length > 1)
             {
@@ -101,11 +101,11 @@ namespace Chow.Interpreter.State.Values
             var index = _elements.Count - 1;
             if (args != null && args.Length == 1)
             {
-                if (args[0].Tag != Tag.Int)
+                if (args[0].DataType != DataType.Int)
                 {
-                    throw new ArgumentException($"Argument 0 must be of type {Tag.Int}, but was {args[0].Tag}");
+                    throw new ArgumentException($"Argument 0 must be of type {DataType.Int}, but was {args[0].DataType}");
                 }
-                index = (int)args[0].IntegerValue;
+                index = (int)args[0].AsType<long>();
                 if (index < 0)
                 {
                     index = _elements.Count + index;
@@ -122,29 +122,29 @@ namespace Chow.Interpreter.State.Values
             return value;
         }
 
-        TaggedUnion Remove(TaggedUnion[] args)
+        ChowValue Remove(ChowValue[] args)
         {
             ValidateArguments(args, 1);
             for (var i = 0; i < _elements.Count; i++)
             {
-                if (_elements[i] == args[0])
+                if (_elements[i].IsEqualTo(args[0]))
                 {
                     _elements.RemoveAt(i);
-                    return TaggedUnion.None;
+                    return ChowValue.None;
                 }
             }
             throw new ArgumentException("list.remove(x): x not in list");
         }
 
-        TaggedUnion Reverse(TaggedUnion[] args)
+        ChowValue Reverse(ChowValue[] args)
         {
             ValidateArguments(args);
             _elements.Reverse();
-            return TaggedUnion.None;
+            return ChowValue.None;
         }
 
-        // TODO: Refactor to reduce code duplication (e.g. with a dictionary of method name to Func<TaggedUnion[], TaggedUnion>)
-        public TaggedUnion CallMethod(string methodName, TaggedUnion[] args = null)
+        // TODO: Refactor to reduce code duplication (e.g. with a dictionary of method name to Func<ChowValue[], ChowValue>)
+        public ChowValue CallMethod(string methodName, ChowValue[] args = null)
         {
             switch (methodName)
             {
@@ -171,7 +171,7 @@ namespace Chow.Interpreter.State.Values
             }
         }
 
-        public Func<TaggedUnion[], TaggedUnion> GetMethod(string methodName)
+        public Func<ChowValue[], ChowValue> GetMethod(string methodName)
         {
             switch (methodName)
             {
@@ -192,7 +192,7 @@ namespace Chow.Interpreter.State.Values
             }
         }
 
-        public void Add(TaggedUnion element)
+        public void Add(ChowValue element)
         {
             _elements.Add(element);
         }
@@ -221,7 +221,7 @@ namespace Chow.Interpreter.State.Values
             }
             for (var i = 0; i < a._elements.Count; i++)
             {
-                if (a._elements[i] != b._elements[i])
+                if (!a._elements[i].IsEqualTo(b._elements[i]))
                 {
                     return false;
                 }
@@ -252,11 +252,11 @@ namespace Chow.Interpreter.State.Values
         }
 
         // FUTURE: strings will need a parallel GetSlice returning a string, not a list. Do not abstract.
-        public TaggedUnion GetSlice(TaggedUnion startUnion, TaggedUnion stopUnion, TaggedUnion stepUnion)
+        public ChowValue GetSlice(ChowValue startValue, ChowValue stopValue, ChowValue stepValue)
         {
             var length = _elements.Count;
 
-            var step = SliceArgOrDefault(stepUnion, 1);
+            var step = SliceArgOrDefault(stepValue, 1);
             if (step == 0)
             {
                 throw new ArgumentException("slice step cannot be zero");
@@ -276,13 +276,13 @@ namespace Chow.Interpreter.State.Values
             }
 
             int start;
-            if (startUnion.Tag == Tag.None)
+            if (startValue.DataType == DataType.None)
             {
                 start = step < 0 ? upper : lower;
             }
             else
             {
-                start = SliceArgOrDefault(startUnion, 0);
+                start = SliceArgOrDefault(startValue, 0);
                 if (start < 0)
                 {
                     start += length;
@@ -298,13 +298,13 @@ namespace Chow.Interpreter.State.Values
             }
 
             int stop;
-            if (stopUnion.Tag == Tag.None)
+            if (stopValue.DataType == DataType.None)
             {
                 stop = step < 0 ? lower : upper;
             }
             else
             {
-                stop = SliceArgOrDefault(stopUnion, 0);
+                stop = SliceArgOrDefault(stopValue, 0);
                 if (stop < 0)
                 {
                     stop += length;
@@ -334,20 +334,20 @@ namespace Chow.Interpreter.State.Values
                     sliced._elements.Add(_elements[i]);
                 }
             }
-            return new TaggedUnion(sliced);
+            return new ChowValue(sliced);
         }
 
-        static int SliceArgOrDefault(TaggedUnion union, int defaultValue)
+        static int SliceArgOrDefault(ChowValue value, int defaultValue)
         {
-            if (union.Tag == Tag.None)
+            if (value.DataType == DataType.None)
             {
                 return defaultValue;
             }
-            if (union.Tag != Tag.Int)
+            if (value.DataType != DataType.Int)
             {
-                throw new ArgumentException($"slice indices must be integers or None, got {union.Tag}");
+                throw new ArgumentException($"slice indices must be integers or None, got {value.DataType}");
             }
-            return (int)union.IntegerValue;
+            return (int)value.AsType<long>();
         }
 
         public override string ToString()
@@ -369,22 +369,22 @@ namespace Chow.Interpreter.State.Values
 
         // Python-faithful repr used inside collection contexts: strings get single quotes here, even though
         // a standalone string prints without quotes via ChowStr.ToString.
-        static void Repr(StringBuilder sb, TaggedUnion value)
+        static void Repr(StringBuilder sb, ChowValue value)
         {
-            switch (value.Tag)
+            switch (value.DataType)
             {
-                case Tag.None:
+                case DataType.None:
                     sb.Append("None");
                     return;
-                case Tag.Boolean:
-                    sb.Append(value.BooleanValue ? "True" : "False");
+                case DataType.Bool:
+                    sb.Append(value.AsType<bool>() ? "True" : "False");
                     return;
-                case Tag.Int:
-                    sb.Append(value.IntegerValue);
+                case DataType.Int:
+                    sb.Append(value.AsType<long>());
                     return;
-                case Tag.Float:
+                case DataType.Float:
                     // Python prints `1.0`, not `1`. C#'s default float.ToString() may drop the trailing zero.
-                    var f = value.FloatValue;
+                    var f = value.AsType<double>();
                     var fs = f.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
                     if (fs.IndexOfAny(new[] { '.', 'e', 'E', 'n', 'N', 'i', 'I' }) < 0)
                     {
@@ -392,16 +392,16 @@ namespace Chow.Interpreter.State.Values
                     }
                     sb.Append(fs);
                     return;
-                case Tag.Str:
+                case DataType.Str:
                     sb.Append('\'');
-                    sb.Append(value.StringValue);
+                    sb.Append(value.AsType<string>());
                     sb.Append('\'');
                     return;
-                case Tag.List:
-                    sb.Append(value.ListValue);
+                case DataType.List:
+                    sb.Append(value.AsType<InternalList>());
                     return;
-                case Tag.Dict:
-                    sb.Append(value.DictValue);
+                case DataType.Dict:
+                    sb.Append(value.AsType<InternalDict>());
                     return;
                 default:
                     sb.Append(value.ToString());
@@ -409,7 +409,7 @@ namespace Chow.Interpreter.State.Values
             }
         }
 
-        static void ValidateArguments(TaggedUnion[] args, int reqArgCount = 0, Tag[] reqTypes = null)
+        static void ValidateArguments(ChowValue[] args, int reqArgCount = 0, DataType[] reqTypes = null)
         {
             var expectedCount = reqTypes?.Length ?? reqArgCount;
             var actualCount = args?.Length ?? 0;
@@ -426,12 +426,12 @@ namespace Chow.Interpreter.State.Values
 
             for (var i = 0; i < reqTypes.Length; i++)
             {
-                if (args[i].Tag == reqTypes[i])
+                if (args[i].DataType == reqTypes[i])
                 {
                     continue;
                 }
 
-                throw new ArgumentException($"Argument {i} must be of type {reqTypes[i]}, but was {args[i].Tag}");
+                throw new ArgumentException($"Argument {i} must be of type {reqTypes[i]}, but was {args[i].DataType}");
             }
         }
     }

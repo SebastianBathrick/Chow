@@ -11,11 +11,11 @@ namespace Chow.Interpreter.State.Values
             _index = 0;
         }
 
-        public bool TryMoveNext(out TaggedUnion current)
+        public bool TryMoveNext(out ChowValue current)
         {
             if (_index >= _list.Count)
             {
-                current = TaggedUnion.None;
+                current = ChowValue.None;
                 return false;
             }
 

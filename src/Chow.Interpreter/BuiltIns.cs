@@ -45,8 +45,8 @@ namespace Chow.Interpreter
             { BuiltInType.Range, "range" },
         };
 
-        static readonly Dictionary<BuiltInType, Func<TaggedUnion[], TaggedUnion>> _defaults =
-            new Dictionary<BuiltInType, Func<TaggedUnion[], TaggedUnion>>
+        static readonly Dictionary<BuiltInType, Func<ChowValue[], ChowValue>> _defaults =
+            new Dictionary<BuiltInType, Func<ChowValue[], ChowValue>>
         {
             { BuiltInType.Print, Print },
             { BuiltInType.Input, Input },
@@ -72,19 +72,19 @@ namespace Chow.Interpreter
             return _names[type];
         }
 
-        public static Func<TaggedUnion[], TaggedUnion> DefaultOf(BuiltInType type)
+        public static Func<ChowValue[], ChowValue> DefaultOf(BuiltInType type)
         {
             return _defaults[type];
         }
 
-        static TaggedUnion Print(TaggedUnion[] args)
+        static ChowValue Print(ChowValue[] args)
         {
             RequireArity("print", args, 1);
             Console.WriteLine(FormatForPrint(args[0]));
-            return TaggedUnion.None;
+            return ChowValue.None;
         }
 
-        static TaggedUnion Input(TaggedUnion[] args)
+        static ChowValue Input(ChowValue[] args)
         {
             RequireArity("input", args, 0);
 
@@ -95,208 +95,208 @@ namespace Chow.Interpreter
                 input = string.Empty;
             }
 
-            return new TaggedUnion(input);
+            return new ChowValue(input);
         }
 
-        static TaggedUnion Float(TaggedUnion[] args)
+        static ChowValue Float(ChowValue[] args)
         {
             RequireArity("float", args, 1);
             var val = args[0];
 
-            switch (val.Tag)
+            switch (val.DataType)
             {
-                case Tag.Float:
+                case DataType.Float:
                 {
                     return val;
                 }
-                case Tag.Int:
+                case DataType.Int:
                 {
-                    return new TaggedUnion((double)val.IntegerValue);
+                    return new ChowValue((double)val.AsType<long>());
                 }
-                case Tag.Boolean:
+                case DataType.Bool:
                 {
-                    return new TaggedUnion(val.BooleanValue ? 1.0 : 0.0);
+                    return new ChowValue(val.AsType<bool>() ? 1.0 : 0.0);
                 }
-                case Tag.Str:
+                case DataType.Str:
                 {
                     double parsed;
-                    if (double.TryParse(val.StringValue, NumberStyles.Float, CultureInfo.InvariantCulture, out parsed))
+                    if (double.TryParse(val.AsType<string>(), NumberStyles.Float, CultureInfo.InvariantCulture, out parsed))
                     {
-                        return new TaggedUnion(parsed);
+                        return new ChowValue(parsed);
                     }
-                    throw new InvalidOperationException($"could not convert string to float: '{val.StringValue}'");
+                    throw new InvalidOperationException($"could not convert string to float: '{val.AsType<string>()}'");
                 }
             }
 
-            throw new InvalidOperationException($"float() argument must be a string or a number, not '{TagTypeName(val.Tag)}'");
+            throw new InvalidOperationException($"float() argument must be a string or a number, not '{DataTypeName(val.DataType)}'");
         }
 
-        static TaggedUnion Str(TaggedUnion[] args)
+        static ChowValue Str(ChowValue[] args)
         {
             RequireArity("str", args, 1);
-            return new TaggedUnion(FormatForPrint(args[0]));
+            return new ChowValue(FormatForPrint(args[0]));
         }
 
-        static TaggedUnion Int(TaggedUnion[] args)
+        static ChowValue Int(ChowValue[] args)
         {
             RequireArity("int", args, 1);
             var val = args[0];
 
-            switch (val.Tag)
+            switch (val.DataType)
             {
-                case Tag.Int:
+                case DataType.Int:
                 {
                     return val;
                 }
-                case Tag.Float:
+                case DataType.Float:
                 {
-                    return new TaggedUnion((long)val.FloatValue);
+                    return new ChowValue((long)val.AsType<double>());
                 }
-                case Tag.Boolean:
+                case DataType.Bool:
                 {
-                    return new TaggedUnion(val.BooleanValue ? 1L : 0L);
+                    return new ChowValue(val.AsType<bool>() ? 1L : 0L);
                 }
-                case Tag.Str:
+                case DataType.Str:
                 {
                     long parsed;
-                    if (long.TryParse(val.StringValue, out parsed))
+                    if (long.TryParse(val.AsType<string>(), out parsed))
                     {
-                        return new TaggedUnion(parsed);
+                        return new ChowValue(parsed);
                     }
-                    throw new InvalidOperationException($"invalid literal for int() with base 10: '{val.StringValue}'");
+                    throw new InvalidOperationException($"invalid literal for int() with base 10: '{val.AsType<string>()}'");
                 }
             }
 
-            throw new InvalidOperationException($"int() argument must be a string, a bytes-like object or a real number, not '{TagTypeName(val.Tag)}'");
+            throw new InvalidOperationException($"int() argument must be a string, a bytes-like object or a real number, not '{DataTypeName(val.DataType)}'");
         }
 
-        static TaggedUnion Bool(TaggedUnion[] args)
+        static ChowValue Bool(ChowValue[] args)
         {
             RequireArity("bool", args, 1);
-            return new TaggedUnion(args[0].IsTruthy);
+            return new ChowValue(args[0].IsTruthy());
         }
 
-        static TaggedUnion List(TaggedUnion[] args)
+        static ChowValue List(ChowValue[] args)
         {
             var argCount = args == null ? 0 : args.Length;
 
             if (argCount == 0)
             {
-                return new TaggedUnion(new InternalList());
+                return new ChowValue(new InternalList());
             }
 
             if (argCount == 1)
             {
-                if (args[0].Tag == Tag.List)
+                if (args[0].DataType == DataType.List)
                 {
-                    return new TaggedUnion(InternalList.Concat(args[0].ListValue, new InternalList()));
+                    return new ChowValue(InternalList.Concat(args[0].AsType<InternalList>(), new InternalList()));
                 }
-                throw new InvalidOperationException($"'{TagTypeName(args[0].Tag)}' object is not iterable");
+                throw new InvalidOperationException($"'{DataTypeName(args[0].DataType)}' object is not iterable");
             }
 
             throw new InvalidOperationException($"list expected at most 1 argument, got {argCount}");
         }
 
-        static TaggedUnion Dict(TaggedUnion[] args)
+        static ChowValue Dict(ChowValue[] args)
         {
             var argCount = args == null ? 0 : args.Length;
 
             if (argCount == 0)
             {
-                return new TaggedUnion(new InternalDict());
+                return new ChowValue(new InternalDict());
             }
 
             if (argCount == 1)
             {
-                if (args[0].Tag == Tag.Dict)
+                if (args[0].DataType == DataType.Dict)
                 {
-                    return new TaggedUnion(InternalDict.Merge(args[0].DictValue, new InternalDict()));
+                    return new ChowValue(InternalDict.Merge(args[0].AsType<InternalDict>(), new InternalDict()));
                 }
-                throw new InvalidOperationException($"'{TagTypeName(args[0].Tag)}' object is not iterable");
+                throw new InvalidOperationException($"'{DataTypeName(args[0].DataType)}' object is not iterable");
             }
 
             throw new InvalidOperationException($"dict expected at most 1 argument, got {argCount}");
         }
 
-        static TaggedUnion Len(TaggedUnion[] args)
+        static ChowValue Len(ChowValue[] args)
         {
             RequireArity("len", args, 1);
             var val = args[0];
 
-            switch (val.Tag)
+            switch (val.DataType)
             {
-                case Tag.Str:
+                case DataType.Str:
                 {
-                    return new TaggedUnion((long)val.StringValue.Length);
+                    return new ChowValue((long)val.AsType<string>().Length);
                 }
-                case Tag.List:
+                case DataType.List:
                 {
-                    return new TaggedUnion((long)val.ListValue.Count);
+                    return new ChowValue((long)val.AsType<InternalList>().Count);
                 }
-                case Tag.Dict:
+                case DataType.Dict:
                 {
-                    return new TaggedUnion((long)val.DictValue.Count);
+                    return new ChowValue((long)val.AsType<InternalDict>().Count);
                 }
             }
 
-            throw new InvalidOperationException($"object of type '{TagTypeName(val.Tag)}' has no len()");
+            throw new InvalidOperationException($"object of type '{DataTypeName(val.DataType)}' has no len()");
         }
 
-        static TaggedUnion Type(TaggedUnion[] args)
+        static ChowValue Type(ChowValue[] args)
         {
             RequireArity("type", args, 1);
-            return new TaggedUnion(TagTypeName(args[0].Tag));
+            return new ChowValue(DataTypeName(args[0].DataType));
         }
 
-        static TaggedUnion Abs(TaggedUnion[] args)
+        static ChowValue Abs(ChowValue[] args)
         {
             RequireArity("abs", args, 1);
             var val = args[0];
 
-            switch (val.Tag)
+            switch (val.DataType)
             {
-                case Tag.Int:
+                case DataType.Int:
                 {
-                    return new TaggedUnion(Math.Abs(val.IntegerValue));
+                    return new ChowValue(Math.Abs(val.AsType<long>()));
                 }
-                case Tag.Float:
+                case DataType.Float:
                 {
-                    return new TaggedUnion(Math.Abs(val.FloatValue));
+                    return new ChowValue(Math.Abs(val.AsType<double>()));
                 }
-                case Tag.Boolean:
+                case DataType.Bool:
                 {
-                    return new TaggedUnion(val.BooleanValue ? 1L : 0L);
+                    return new ChowValue(val.AsType<bool>() ? 1L : 0L);
                 }
             }
 
-            throw new InvalidOperationException($"bad operand type for abs(): '{TagTypeName(val.Tag)}'");
+            throw new InvalidOperationException($"bad operand type for abs(): '{DataTypeName(val.DataType)}'");
         }
 
-        static TaggedUnion Round(TaggedUnion[] args)
+        static ChowValue Round(ChowValue[] args)
         {
             RequireArity("round", args, 1);
             var val = args[0];
 
-            switch (val.Tag)
+            switch (val.DataType)
             {
-                case Tag.Int:
+                case DataType.Int:
                 {
                     return val;
                 }
-                case Tag.Float:
+                case DataType.Float:
                 {
-                    return new TaggedUnion((long)Math.Round(val.FloatValue, MidpointRounding.ToEven));
+                    return new ChowValue((long)Math.Round(val.AsType<double>(), MidpointRounding.ToEven));
                 }
-                case Tag.Boolean:
+                case DataType.Bool:
                 {
-                    return new TaggedUnion(val.BooleanValue ? 1L : 0L);
+                    return new ChowValue(val.AsType<bool>() ? 1L : 0L);
                 }
             }
 
-            throw new InvalidOperationException($"type {TagTypeName(val.Tag)} doesn't define __round__ method");
+            throw new InvalidOperationException($"type {DataTypeName(val.DataType)} doesn't define __round__ method");
         }
 
-        static TaggedUnion Min(TaggedUnion[] args)
+        static ChowValue Min(ChowValue[] args)
         {
             RequireArity("min", args, 2);
 
@@ -308,7 +308,7 @@ namespace Chow.Interpreter
             return AsDouble(args[0]) <= AsDouble(args[1]) ? args[0] : args[1];
         }
 
-        static TaggedUnion Max(TaggedUnion[] args)
+        static ChowValue Max(ChowValue[] args)
         {
             RequireArity("max", args, 2);
 
@@ -320,7 +320,7 @@ namespace Chow.Interpreter
             return AsDouble(args[0]) >= AsDouble(args[1]) ? args[0] : args[1];
         }
 
-        static TaggedUnion Range(TaggedUnion[] args)
+        static ChowValue Range(ChowValue[] args)
         {
             var argCount = args == null ? 0 : args.Length;
 
@@ -357,20 +357,20 @@ namespace Chow.Interpreter
                 }
             }
 
-            return new TaggedUnion(new InternalRange(start, stop, step));
+            return new ChowValue(new InternalRange(start, stop, step));
         }
 
-        static long RequireRangeInt(TaggedUnion arg, int position)
+        static long RequireRangeInt(ChowValue arg, int position)
         {
-            if (arg.Tag != Tag.Int)
+            if (arg.DataType != DataType.Int)
             {
-                throw new InvalidOperationException($"'{TagTypeName(arg.Tag)}' object cannot be interpreted as an integer");
+                throw new InvalidOperationException($"'{DataTypeName(arg.DataType)}' object cannot be interpreted as an integer");
             }
 
-            return arg.IntegerValue;
+            return arg.AsType<long>();
         }
 
-        static void RequireArity(string name, TaggedUnion[] args, int expected)
+        static void RequireArity(string name, ChowValue[] args, int expected)
         {
             var actual = args == null ? 0 : args.Length;
 
@@ -380,102 +380,102 @@ namespace Chow.Interpreter
             }
         }
 
-        static bool IsNumeric(TaggedUnion val)
+        static bool IsNumeric(ChowValue val)
         {
-            return val.Tag == Tag.Int || val.Tag == Tag.Float || val.Tag == Tag.Boolean;
+            return val.DataType == DataType.Int || val.DataType == DataType.Float || val.DataType == DataType.Bool;
         }
 
-        static double AsDouble(TaggedUnion val)
+        static double AsDouble(ChowValue val)
         {
-            switch (val.Tag)
+            switch (val.DataType)
             {
-                case Tag.Int:
+                case DataType.Int:
                 {
-                    return val.IntegerValue;
+                    return val.AsType<long>();
                 }
-                case Tag.Float:
+                case DataType.Float:
                 {
-                    return val.FloatValue;
+                    return val.AsType<double>();
                 }
-                case Tag.Boolean:
+                case DataType.Bool:
                 {
-                    return val.BooleanValue ? 1.0 : 0.0;
+                    return val.AsType<bool>() ? 1.0 : 0.0;
                 }
             }
 
             throw new InvalidOperationException("Value is not numeric");
         }
 
-        static string FormatForPrint(TaggedUnion val)
+        static string FormatForPrint(ChowValue val)
         {
-            switch (val.Tag)
+            switch (val.DataType)
             {
-                case Tag.None:
+                case DataType.None:
                 {
                     return "None";
                 }
-                case Tag.Boolean:
+                case DataType.Bool:
                 {
-                    return val.BooleanValue ? "True" : "False";
+                    return val.AsType<bool>() ? "True" : "False";
                 }
-                case Tag.Int:
+                case DataType.Int:
                 {
-                    return val.IntegerValue.ToString(CultureInfo.InvariantCulture);
+                    return val.AsType<long>().ToString(CultureInfo.InvariantCulture);
                 }
-                case Tag.Float:
+                case DataType.Float:
                 {
-                    return val.FloatValue.ToString(CultureInfo.InvariantCulture);
+                    return val.AsType<double>().ToString(CultureInfo.InvariantCulture);
                 }
-                case Tag.Str:
+                case DataType.Str:
                 {
-                    return val.StringValue;
+                    return val.AsType<string>();
                 }
                 default:
                 {
-                    return val.GetTaggedValue()?.ToString() ?? string.Empty;
+                    return val.ToString() ?? string.Empty;
                 }
             }
         }
 
-        static string TagTypeName(Tag tag)
+        static string DataTypeName(DataType dataType)
         {
-            switch (tag)
+            switch (dataType)
             {
-                case Tag.None:
+                case DataType.None:
                 {
                     return "NoneType";
                 }
-                case Tag.Boolean:
+                case DataType.Bool:
                 {
                     return "bool";
                 }
-                case Tag.Int:
+                case DataType.Int:
                 {
                     return "int";
                 }
-                case Tag.Float:
+                case DataType.Float:
                 {
                     return "float";
                 }
-                case Tag.Str:
+                case DataType.Str:
                 {
                     return "str";
                 }
-                case Tag.List:
+                case DataType.List:
                 {
                     return "list";
                 }
-                case Tag.Dict:
+                case DataType.Dict:
                 {
                     return "dict";
                 }
-                case Tag.Range:
+                case DataType.Range:
                 {
                     return "range";
                 }
                 default:
                 {
-                    return tag.ToString().ToLowerInvariant();
+                    return dataType.ToString().ToLowerInvariant();
                 }
             }
         }

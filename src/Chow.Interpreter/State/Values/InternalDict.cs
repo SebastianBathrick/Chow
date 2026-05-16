@@ -15,12 +15,12 @@ namespace Chow.Interpreter.State.Values
         const string METHOD_SET_DEFAULT_NAME = "setdefault";
 
 
-        readonly Dictionary<TaggedUnion, TaggedUnion> _entries;
-        readonly List<TaggedUnion> _keys;
+        readonly Dictionary<ChowValue, ChowValue> _entries;
+        readonly List<ChowValue> _keys;
 
         public int Count => _keys.Count;
 
-        public TaggedUnion this[TaggedUnion key]
+        public ChowValue this[ChowValue key]
         {
             get
             {
@@ -34,17 +34,17 @@ namespace Chow.Interpreter.State.Values
             set => Add(key, value);
         }
 
-        public TaggedUnion this[string name] =>
+        public ChowValue this[string name] =>
             // Will throw if method name is invalid, which is the expected behavior
-            new TaggedUnion(GetMethod(name));
+            new ChowValue((object)GetMethod(name));
 
         public InternalDict()
         {
-            _entries = new Dictionary<TaggedUnion, TaggedUnion>();
-            _keys = new List<TaggedUnion>();
+            _entries = new Dictionary<ChowValue, ChowValue>();
+            _keys = new List<ChowValue>();
         }
 
-        public void Add(TaggedUnion key, TaggedUnion value)
+        public void Add(ChowValue key, ChowValue value)
         {
             ValidateHashable(key);
             if (!_entries.ContainsKey(key))
@@ -54,13 +54,13 @@ namespace Chow.Interpreter.State.Values
             _entries[key] = value;
         }
 
-        public bool ContainsKey(TaggedUnion key)
+        public bool ContainsKey(ChowValue key)
         {
             ValidateHashable(key);
             return _entries.ContainsKey(key);
         }
 
-        TaggedUnion Get(TaggedUnion[] args)
+        ChowValue Get(ChowValue[] args)
         {
             ValidateArgRange(args, 1, 2);
             var key = args[0];
@@ -69,18 +69,18 @@ namespace Chow.Interpreter.State.Values
             {
                 return value;
             }
-            return args.Length == 2 ? args[1] : TaggedUnion.None;
+            return args.Length == 2 ? args[1] : ChowValue.None;
         }
 
-        TaggedUnion Clear(TaggedUnion[] args)
+        ChowValue Clear(ChowValue[] args)
         {
             ValidateArgCount(args, 0);
             _entries.Clear();
             _keys.Clear();
-            return TaggedUnion.None;
+            return ChowValue.None;
         }
 
-        TaggedUnion Pop(TaggedUnion[] args)
+        ChowValue Pop(ChowValue[] args)
         {
             ValidateArgRange(args, 1, 2);
             var key = args[0];
@@ -98,22 +98,22 @@ namespace Chow.Interpreter.State.Values
             throw new DictKeyException(KeyRepr(key));
         }
 
-        TaggedUnion Update(TaggedUnion[] args)
+        ChowValue Update(ChowValue[] args)
         {
             ValidateArgCount(args, 1);
-            if (args[0].Tag != Tag.Dict)
+            if (args[0].DataType != DataType.Dict)
             {
-                throw new TypeException($"'{args[0].Tag}' object is not a dict");
+                throw new TypeException($"'{args[0].DataType}' object is not a dict");
             }
-            var other = args[0].DictValue;
+            var other = args[0].AsType<InternalDict>();
             foreach (var key in other._keys)
             {
                 Add(key, other._entries[key]);
             }
-            return TaggedUnion.None;
+            return ChowValue.None;
         }
 
-        TaggedUnion SetDefault(TaggedUnion[] args)
+        ChowValue SetDefault(ChowValue[] args)
         {
             ValidateArgRange(args, 1, 2);
             var key = args[0];
@@ -122,12 +122,12 @@ namespace Chow.Interpreter.State.Values
             {
                 return existing;
             }
-            var def = args.Length == 2 ? args[1] : TaggedUnion.None;
+            var def = args.Length == 2 ? args[1] : ChowValue.None;
             Add(key, def);
             return def;
         }
 
-        public Func<TaggedUnion[], TaggedUnion> GetMethod(string methodName)
+        public Func<ChowValue[], ChowValue> GetMethod(string methodName)
         {
             switch (methodName)
             {
@@ -173,7 +173,7 @@ namespace Chow.Interpreter.State.Values
                 {
                     return false;
                 }
-                if (a._entries[key] != bValue)
+                if (!a._entries[key].IsEqualTo(bValue))
                 {
                     return false;
                 }
@@ -195,18 +195,18 @@ namespace Chow.Interpreter.State.Values
             return result;
         }
 
-        public static void ValidateHashable(TaggedUnion key)
+        public static void ValidateHashable(ChowValue key)
         {
-            switch (key.Tag)
+            switch (key.DataType)
             {
-                case Tag.None:
-                case Tag.Boolean:
-                case Tag.Int:
-                case Tag.Float:
-                case Tag.Str:
+                case DataType.None:
+                case DataType.Bool:
+                case DataType.Int:
+                case DataType.Float:
+                case DataType.Str:
                     return;
                 default:
-                    throw new TypeException($"unhashable type: '{TypeName(key.Tag)}'");
+                    throw new TypeException($"unhashable type: '{TypeName(key.DataType)}'");
             }
         }
 
@@ -231,24 +231,24 @@ namespace Chow.Interpreter.State.Values
 
         // Python-faithful repr used inside collection contexts: strings get single quotes here, even though
         // a standalone string prints without quotes via ChowStr.ToString.
-        static void Repr(StringBuilder sb, TaggedUnion value)
+        static void Repr(StringBuilder sb, ChowValue value)
         {
-            switch (value.Tag)
+            switch (value.DataType)
             {
-                case Tag.None:
+                case DataType.None:
                     sb.Append("None");
                     return;
                 
-                case Tag.Boolean:
-                    sb.Append(value.BooleanValue ? "True" : "False");
+                case DataType.Bool:
+                    sb.Append(value.AsType<bool>() ? "True" : "False");
                     return;
                 
-                case Tag.Int:
-                    sb.Append(value.IntegerValue);
+                case DataType.Int:
+                    sb.Append(value.AsType<long>());
                     return;
                 
-                case Tag.Float:
-                    var f = value.FloatValue;
+                case DataType.Float:
+                    var f = value.AsType<double>();
                     var fs = f.ToString("R", CultureInfo.InvariantCulture);
                     if (fs.IndexOfAny(new[] { '.', 'e', 'E', 'n', 'N', 'i', 'I' }) < 0)
                     {
@@ -257,18 +257,18 @@ namespace Chow.Interpreter.State.Values
                     sb.Append(fs);
                     return;
                 
-                case Tag.Str:
+                case DataType.Str:
                     sb.Append('\'');
-                    sb.Append(value.StringValue);
+                    sb.Append(value.AsType<string>());
                     sb.Append('\'');
                     return;
                 
-                case Tag.List:
-                    sb.Append(value.ListValue);
+                case DataType.List:
+                    sb.Append(value.AsType<InternalList>());
                     return;
                 
-                case Tag.Dict:
-                    sb.Append(value.DictValue);
+                case DataType.Dict:
+                    sb.Append(value.AsType<InternalDict>());
                     return;
                 
                 default:
@@ -277,27 +277,27 @@ namespace Chow.Interpreter.State.Values
             }
         }
 
-        static string KeyRepr(TaggedUnion key)
+        static string KeyRepr(ChowValue key)
         {
             var sb = new StringBuilder();
             Repr(sb, key);
             return sb.ToString();
         }
 
-        static string TypeName(Tag tag)
+        static string TypeName(DataType dataType)
         {
-            switch (tag)
+            switch (dataType)
             {
-                case Tag.List:
+                case DataType.List:
                     return "list";
-                case Tag.Dict:
+                case DataType.Dict:
                     return "dict";
                 default:
-                    return tag.ToString().ToLowerInvariant();
+                    return dataType.ToString().ToLowerInvariant();
             }
         }
 
-        static void ValidateArgCount(TaggedUnion[] args, int expectedCount)
+        static void ValidateArgCount(ChowValue[] args, int expectedCount)
         {
             var actualCount = args?.Length ?? 0;
             if (actualCount != expectedCount)
@@ -306,7 +306,7 @@ namespace Chow.Interpreter.State.Values
             }
         }
 
-        static void ValidateArgRange(TaggedUnion[] args, int min, int max)
+        static void ValidateArgRange(ChowValue[] args, int min, int max)
         {
             var actualCount = args?.Length ?? 0;
             if (actualCount < min || actualCount > max)
