@@ -1,5 +1,6 @@
 using Chow.Execution;
 using Chow.Interpreter;
+using System.Diagnostics;
 using ReplLoop = Chow.Repl.Repl;
 
 
@@ -29,6 +30,16 @@ namespace Chow.Cli
             {
                 var repl = new ReplLoop(_executor);
                 return repl.Run();
+            }
+
+            if (args.Length > 1)
+            {
+                var stopwatch = Stopwatch.StartNew();
+                var exitCode = ExecuteFile(args[0]);
+                stopwatch.Stop();
+
+                Console.Error.WriteLine($"Execution time: {stopwatch.ElapsedMilliseconds} ms");
+                return exitCode;
             }
 
             return ExecuteFile(args[0]);
