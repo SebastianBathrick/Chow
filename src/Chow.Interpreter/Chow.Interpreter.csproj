@@ -7,7 +7,7 @@
         <RepositoryType></RepositoryType>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
         <Copyright>Copyright © 2026 Sebastian Bathrick</Copyright>
-        <Version>0.1.31</Version>
+        <Version>0.1.32</Version>
         <AssemblyName>Chow</AssemblyName>
         <RootNamespace>Chow.Interpreter</RootNamespace>
         <GenerateDocumentationFile>True</GenerateDocumentationFile>
