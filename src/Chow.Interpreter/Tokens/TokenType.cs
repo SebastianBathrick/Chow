@@ -167,6 +167,9 @@ namespace Chow.Interpreter.Tokens
         /// <summary>String literal.</summary>
         LiteralStr,
 
+        /// <summary>Formatted string literal (f-string).</summary>
+        LiteralFString,
+
         LiteralInt,
 
         LiteralFloat,

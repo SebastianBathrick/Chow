@@ -164,6 +164,7 @@ namespace Chow.Interpreter
             foreach (var tag in AllTags)
             {
                 UnaryTypeMap[(ExpressionOperator.Not, tag)] = ConversionCase.NoConversion;
+                UnaryTypeMap[(ExpressionOperator.ToStr, tag)] = ConversionCase.NoConversion;
             }
         }
 

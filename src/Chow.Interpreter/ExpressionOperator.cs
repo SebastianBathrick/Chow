@@ -21,6 +21,7 @@ namespace Chow.Interpreter
         Not,
         BinaryOr,
         In,
-        NotIn
+        NotIn,
+        ToStr
     }
 }

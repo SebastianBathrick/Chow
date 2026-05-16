@@ -8,21 +8,21 @@ namespace Chow.Interpreter.State.Values
             switch (source.DataType)
             {
                 case DataType.List:
-                {
-                    return new InternalListIterator(source.AsType<InternalList>());
-                }
+                    {
+                        return new InternalListIterator(source.AsType<InternalList>());
+                    }
                 case DataType.Str:
-                {
-                    return new InternalStrIterator(source.AsType<string>());
-                }
+                    {
+                        return new InternalStrIterator(source.AsType<string>());
+                    }
                 case DataType.Range:
-                {
-                    return source.AsType<InternalRange>().GetIterator();
-                }
+                    {
+                        return source.AsType<InternalRange>().GetIterator();
+                    }
                 default:
-                {
-                    throw new TypeException($"'{TypeNameOf(source.DataType)}' object is not iterable");
-                }
+                    {
+                        throw new TypeException($"'{TypeNameOf(source.DataType)}' object is not iterable");
+                    }
             }
         }
 
@@ -31,25 +31,25 @@ namespace Chow.Interpreter.State.Values
             switch (dataType)
             {
                 case DataType.None:
-                {
-                    return "NoneType";
-                }
+                    {
+                        return "NoneType";
+                    }
                 case DataType.Bool:
-                {
-                    return "bool";
-                }
+                    {
+                        return "bool";
+                    }
                 case DataType.Int:
-                {
-                    return "int";
-                }
+                    {
+                        return "int";
+                    }
                 case DataType.Float:
-                {
-                    return "float";
-                }
+                    {
+                        return "float";
+                    }
                 default:
-                {
-                    return dataType.ToString().ToLowerInvariant();
-                }
+                    {
+                        return dataType.ToString().ToLowerInvariant();
+                    }
             }
         }
     }

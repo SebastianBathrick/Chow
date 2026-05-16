@@ -49,6 +49,7 @@ namespace Chow.Interpreter.Bytecode
         NotIn,
         GetIterator,
         ForIterNextOrJump,
-        Pop
+        Pop,
+        CoerceToStr
     }
 }

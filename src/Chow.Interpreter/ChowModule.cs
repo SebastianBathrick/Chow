@@ -23,13 +23,13 @@ namespace Chow.Interpreter
             {
                 if (_globalScope.IsVariableDefined(name))
                 {
-                    return _globalScope.GetVariableValue(name);
+                    return _globalScope.GetVariableValue(name).AsType<object>();
                 }
 
                 throw new GlobalAccessException(name, $"undefined name '{name}'");
             }
         }
-        
+
         public ChowModule()
         {
             foreach (var type in BuiltIns.AllTypes)

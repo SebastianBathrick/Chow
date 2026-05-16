@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Tokens;
 namespace Chow.Interpreter
@@ -99,7 +100,12 @@ namespace Chow.Interpreter
                 }
             }
 
-            if (IsNameLeadingChar())
+            if (IsFStringPrefix())
+            {
+                MoveToNextChar(); // skip f/F
+                ScanFStringToken();
+            }
+            else if (IsNameLeadingChar())
             {
                 ScanNameToken();
             }
@@ -253,154 +259,154 @@ namespace Chow.Interpreter
             switch (CurrentChar)
             {
                 case ',':
-                {
-                    tokenType = TokenType.SymbolComma;
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolComma;
+                        break;
+                    }
 
 
                 case '.':
-                {
-                    tokenType = TokenType.SymbolDot;
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolDot;
+                        break;
+                    }
 
                 case ':':
-                {
-                    tokenType = TokenType.SymbolColon;
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolColon;
+                        break;
+                    }
 
                 case '+':
-                {
-                    tokenType = TokenType.SymbolPlus;
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolPlus;
+                        break;
+                    }
 
                 case '-':
-                {
-                    tokenType = TokenType.SymbolMinus;
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolMinus;
+                        break;
+                    }
 
                 case '*':
-                {
-                    if (TryScanCompoundOp('*', TokenType.SymbolExponent, "**"))
                     {
-                        return true;
-                    }
+                        if (TryScanCompoundOp('*', TokenType.SymbolExponent, "**"))
+                        {
+                            return true;
+                        }
 
-                    tokenType = TokenType.SymbolMultiply;
-                    break;
-                }
+                        tokenType = TokenType.SymbolMultiply;
+                        break;
+                    }
 
                 case '/':
-                {
-                    if (TryScanCompoundOp('/', TokenType.SymbolFloorDivide, "//"))
                     {
-                        return true;
-                    }
+                        if (TryScanCompoundOp('/', TokenType.SymbolFloorDivide, "//"))
+                        {
+                            return true;
+                        }
 
-                    tokenType = TokenType.SymbolDivide;
-                    break;
-                }
+                        tokenType = TokenType.SymbolDivide;
+                        break;
+                    }
 
                 case '%':
-                {
-                    tokenType = TokenType.SymbolPercent;
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolPercent;
+                        break;
+                    }
 
                 case '|':
-                {
-                    tokenType = TokenType.SymbolPipe;
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolPipe;
+                        break;
+                    }
 
                 case '!':
-                {
-                    return TryScanCompoundOp('=', TokenType.SymbolNotEqual, "!=");
-                }
+                    {
+                        return TryScanCompoundOp('=', TokenType.SymbolNotEqual, "!=");
+                    }
 
                 case '=':
-                {
-                    if (TryScanCompoundOp('=', TokenType.SymbolEqualTo, "=="))
                     {
-                        return true;
-                    }
+                        if (TryScanCompoundOp('=', TokenType.SymbolEqualTo, "=="))
+                        {
+                            return true;
+                        }
 
-                    tokenType = TokenType.SymbolAssign;
-                    break;
-                }
+                        tokenType = TokenType.SymbolAssign;
+                        break;
+                    }
 
                 case '>':
-                {
-                    if (TryScanCompoundOp('=', TokenType.SymbolGreaterEqual, ">="))
                     {
-                        return true;
-                    }
+                        if (TryScanCompoundOp('=', TokenType.SymbolGreaterEqual, ">="))
+                        {
+                            return true;
+                        }
 
-                    tokenType = TokenType.SymbolGreater;
-                    break;
-                }
+                        tokenType = TokenType.SymbolGreater;
+                        break;
+                    }
                 case '<':
-                {
-                    if (TryScanCompoundOp('=', TokenType.SymbolLessEqual, "<="))
                     {
-                        return true;
-                    }
+                        if (TryScanCompoundOp('=', TokenType.SymbolLessEqual, "<="))
+                        {
+                            return true;
+                        }
 
-                    tokenType = TokenType.SymbolLess;
-                    break;
-                }
+                        tokenType = TokenType.SymbolLess;
+                        break;
+                    }
 
                 // Indentation and line-break rules are not enforced (for lists and dictionary declarations)
                 case '[':
-                {
-                    tokenType = TokenType.SymbolLeftBracket;
-                    PushOpeningBracket('[');
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolLeftBracket;
+                        PushOpeningBracket('[');
+                        break;
+                    }
 
                 case ']':
-                {
-                    tokenType = TokenType.SymbolRightBracket;
-                    PopClosingBracket(']', '[');
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolRightBracket;
+                        PopClosingBracket(']', '[');
+                        break;
+                    }
 
                 case '{':
-                {
-                    tokenType = TokenType.SymbolLeftCurly;
-                    PushOpeningBracket('{');
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolLeftCurly;
+                        PushOpeningBracket('{');
+                        break;
+                    }
 
                 case '}':
-                {
-                    tokenType = TokenType.SymbolRightCurly;
-                    PopClosingBracket('}', '{');
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolRightCurly;
+                        PopClosingBracket('}', '{');
+                        break;
+                    }
 
                 case '(':
-                {
-                    tokenType = TokenType.SymbolLeftParen;
-                    PushOpeningBracket('(');
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolLeftParen;
+                        PushOpeningBracket('(');
+                        break;
+                    }
 
                 case ')':
-                {
-                    tokenType = TokenType.SymbolRightParen;
-                    PopClosingBracket(')', '(');
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolRightParen;
+                        PopClosingBracket(')', '(');
+                        break;
+                    }
 
                 default:
-                {
-                    return false;
-                }
+                    {
+                        return false;
+                    }
             }
 
             var lexeme = CurrentChar.ToString();
@@ -494,26 +500,23 @@ namespace Chow.Interpreter
             var startIdx = _charIdx;
             MoveToNextChar();
 
-            var contentStartIdx = _charIdx;
-
-            ScanStringContent(quoteChar);
+            var literal = ScanStringContent(quoteChar);
 
             if (!IsCharToScan)
             {
                 throw new ScannerEx("Unterminated string literal", _lineNum);
             }
 
-            var contentEndIdx = _charIdx;
             MoveToNextChar();
 
             var lexeme = _sourceCode.Substring(startIdx, _charIdx - startIdx);
-            var literal = _sourceCode.Substring(contentStartIdx, contentEndIdx - contentStartIdx);
 
             AddNewToken(TokenType.LiteralStr, lexeme, _lineNum, literal);
         }
 
-        void ScanStringContent(char quoteChar)
+        string ScanStringContent(char quoteChar)
         {
+            var builder = new StringBuilder();
 
             while (IsCharToScan && CurrentChar != quoteChar)
             {
@@ -522,8 +525,229 @@ namespace Chow.Interpreter
                     throw new ScannerEx("Unterminated string literal", _lineNum);
                 }
 
+                if (CurrentChar == '\\')
+                {
+                    MoveToNextChar();
+
+                    if (!IsCharToScan)
+                    {
+                        throw new ScannerEx("Unterminated string literal", _lineNum);
+                    }
+
+                    builder.Append(DecodeEscape(CurrentChar));
+                }
+                else
+                {
+                    builder.Append(CurrentChar);
+                }
+
                 MoveToNextChar();
             }
+
+            return builder.ToString();
+        }
+
+        char DecodeEscape(char c)
+        {
+            switch (c)
+            {
+                case 'n':
+                    return '\n';
+                case 't':
+                    return '\t';
+                case 'r':
+                    return '\r';
+                case '\\':
+                    return '\\';
+                case '\'':
+                    return '\'';
+                case '"':
+                    return '"';
+                case '0':
+                    return '\0';
+                case 'a':
+                    return '\a';
+                case 'b':
+                    return '\b';
+                case 'f':
+                    return '\f';
+                case 'v':
+                    return '\v';
+                default:
+                    throw new ScannerEx($"Unknown escape sequence '\\{c}'", _lineNum);
+            }
+        }
+
+        void ScanFStringToken()
+        {
+            var startIdx = _charIdx - 1; // position of f/F
+            var quoteChar = CurrentChar;
+            MoveToNextChar(); // skip opening quote
+
+            var stringParts = new List<string>();
+            var exprParts = new List<string>();
+            var currentPart = new StringBuilder();
+
+            while (IsCharToScan && CurrentChar != quoteChar)
+            {
+                if (IsNewlineChar())
+                {
+                    throw new ScannerEx("Unterminated f-string literal", _lineNum);
+                }
+
+                if (CurrentChar == '{')
+                {
+                    if (PeekNextChar() == '{')
+                    {
+                        currentPart.Append('{');
+                        MoveToNextChar();
+                        MoveToNextChar();
+                        continue;
+                    }
+
+                    MoveToNextChar(); // skip opening {
+                    stringParts.Add(currentPart.ToString());
+                    currentPart.Clear();
+                    exprParts.Add(ScanFStringSlot());
+                    continue;
+                }
+
+                if (CurrentChar == '}')
+                {
+                    if (PeekNextChar() == '}')
+                    {
+                        currentPart.Append('}');
+                        MoveToNextChar();
+                        MoveToNextChar();
+                        continue;
+                    }
+
+                    throw new ScannerEx("Single '}' is not allowed in f-string", _lineNum);
+                }
+
+                if (CurrentChar == '\\')
+                {
+                    MoveToNextChar();
+
+                    if (!IsCharToScan)
+                    {
+                        throw new ScannerEx("Unterminated f-string literal", _lineNum);
+                    }
+
+                    currentPart.Append(DecodeEscape(CurrentChar));
+                    MoveToNextChar();
+                    continue;
+                }
+
+                currentPart.Append(CurrentChar);
+                MoveToNextChar();
+            }
+
+            if (!IsCharToScan)
+            {
+                throw new ScannerEx("Unterminated f-string literal", _lineNum);
+            }
+
+            stringParts.Add(currentPart.ToString());
+            MoveToNextChar(); // skip closing quote
+
+            var lexeme = _sourceCode.Substring(startIdx, _charIdx - startIdx);
+            var payload = new FStringTokenPayload(stringParts, exprParts);
+            AddNewToken(TokenType.LiteralFString, lexeme, _lineNum, payload);
+        }
+
+        string ScanFStringSlot()
+        {
+            var slotSource = new StringBuilder();
+            var depth = 1;
+
+            while (IsCharToScan && depth > 0)
+            {
+                if (IsNewlineChar())
+                {
+                    throw new ScannerEx("Unterminated f-string expression", _lineNum);
+                }
+
+                var c = CurrentChar;
+
+                if (c == '{')
+                {
+                    depth++;
+                    slotSource.Append(c);
+                    MoveToNextChar();
+                    continue;
+                }
+
+                if (c == '}')
+                {
+                    depth--;
+
+                    if (depth == 0)
+                    {
+                        break;
+                    }
+
+                    slotSource.Append(c);
+                    MoveToNextChar();
+                    continue;
+                }
+
+                if (c == '\'' || c == '"')
+                {
+                    slotSource.Append(c);
+                    MoveToNextChar();
+
+                    while (IsCharToScan && CurrentChar != c)
+                    {
+                        if (IsNewlineChar())
+                        {
+                            throw new ScannerEx("Unterminated string in f-string expression", _lineNum);
+                        }
+
+                        if (CurrentChar == '\\')
+                        {
+                            slotSource.Append(CurrentChar);
+                            MoveToNextChar();
+
+                            if (!IsCharToScan)
+                            {
+                                throw new ScannerEx("Unterminated string in f-string expression", _lineNum);
+                            }
+                        }
+
+                        slotSource.Append(CurrentChar);
+                        MoveToNextChar();
+                    }
+
+                    if (!IsCharToScan)
+                    {
+                        throw new ScannerEx("Unterminated string in f-string expression", _lineNum);
+                    }
+
+                    slotSource.Append(CurrentChar); // closing quote
+                    MoveToNextChar();
+                    continue;
+                }
+
+                slotSource.Append(c);
+                MoveToNextChar();
+            }
+
+            if (!IsCharToScan)
+            {
+                throw new ScannerEx("Unterminated f-string expression", _lineNum);
+            }
+
+            MoveToNextChar(); // skip closing }
+
+            var result = slotSource.ToString().Trim();
+
+            if (result.Length == 0)
+            {
+                throw new ScannerEx("f-string: empty expression not allowed", _lineNum);
+            }
+
+            return result;
         }
 
         #endregion
@@ -585,6 +809,11 @@ namespace Chow.Interpreter
             return CurrentChar == '\'' || CurrentChar == '"';
         }
 
+        bool IsFStringPrefix()
+        {
+            return (CurrentChar == 'f' || CurrentChar == 'F') && (PeekNextChar() == '\'' || PeekNextChar() == '"');
+        }
+
         bool IsNameLeadingChar()
         {
             return IsAlphaChar() || CurrentChar == '_';
@@ -604,25 +833,25 @@ namespace Chow.Interpreter
             switch (CurrentChar)
             {
                 case '\n':
-                {
-                    // Unix/Linux/macOS newline
-                    MoveToNextChar();
-                    break;
-                }
-
-                case '\r':
-                {
-                    // Older Mac newline (if not followed by \n)
-                    MoveToNextChar();
-
-                    if (IsCharToScan && CurrentChar == '\n')
                     {
-                        // Windows/MS-DOS newline
+                        // Unix/Linux/macOS newline
                         MoveToNextChar();
+                        break;
                     }
 
-                    break;
-                }
+                case '\r':
+                    {
+                        // Older Mac newline (if not followed by \n)
+                        MoveToNextChar();
+
+                        if (IsCharToScan && CurrentChar == '\n')
+                        {
+                            // Windows/MS-DOS newline
+                            MoveToNextChar();
+                        }
+
+                        break;
+                    }
             }
 
             _isLineBegin = true;

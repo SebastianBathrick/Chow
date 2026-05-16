@@ -924,5 +924,134 @@ namespace Chow.Interpreter.Tests
         {
             Assert.That(() => Tokenize(source), Throws.TypeOf<ScannerEx>());
         }
+
+        // ============================================================================================================
+        // O. Escape sequences
+        // ============================================================================================================
+
+        [TestCase(@"'\n'", "\n")]
+        [TestCase(@"'\t'", "\t")]
+        [TestCase(@"'\r'", "\r")]
+        [TestCase(@"'\\'", "\\")]
+        [TestCase(@"'\''", "'")]
+        [TestCase("\"\\\"\"", "\"")]
+        [TestCase(@"'\0'", "\0")]
+        [TestCase(@"'\a'", "\a")]
+        [TestCase(@"'\b'", "\b")]
+        [TestCase(@"'\f'", "\f")]
+        [TestCase(@"'\v'", "\v")]
+        public void ScanTokens_EscapeSequence_DecodesCorrectly(string source, string expectedLiteral)
+        {
+            var tokens = Tokenize(source);
+
+            AssertToken(tokens[0], TokenType.LiteralStr, source, 1, expectedLiteral);
+        }
+
+        [Test]
+        public void ScanTokens_EscapedQuoteDoesNotTerminateString()
+        {
+            var tokens = Tokenize(@"'can\'t'");
+
+            AssertToken(tokens[0], TokenType.LiteralStr, @"'can\'t'", 1, "can't");
+        }
+
+        [Test]
+        public void ScanTokens_EscapedDoubleQuoteDoesNotTerminateString()
+        {
+            var tokens = Tokenize("\"say \\\"hi\\\"\"");
+
+            AssertToken(tokens[0], TokenType.LiteralStr, "\"say \\\"hi\\\"\"", 1, "say \"hi\"");
+        }
+
+        [Test]
+        public void ScanTokens_UnknownEscapeSequence_ThrowsScannerException()
+        {
+            Assert.That(() => Tokenize(@"'\q'"), Throws.TypeOf<ScannerEx>());
+        }
+
+        // ============================================================================================================
+        // P. F-string literals
+        // ============================================================================================================
+
+        [Test]
+        public void ScanTokens_FStringNoSlots_ProducesLiteralFStringWithOneStringPart()
+        {
+            var tokens = Tokenize("f\"hello\"");
+
+            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.LiteralFString));
+            var payload = (FStringTokenPayload)tokens[0].Literal;
+            Assert.Multiple(() =>
+            {
+                Assert.That(payload.StringParts, Has.Count.EqualTo(1));
+                Assert.That(payload.StringParts[0], Is.EqualTo("hello"));
+                Assert.That(payload.ExprSourceParts, Is.Empty);
+            });
+        }
+
+        [Test]
+        public void ScanTokens_FStringSingleSlot_ProducesOneExprPart()
+        {
+            var tokens = Tokenize("f\"x={value}!\"");
+
+            var payload = (FStringTokenPayload)tokens[0].Literal;
+            Assert.Multiple(() =>
+            {
+                Assert.That(payload.StringParts, Has.Count.EqualTo(2));
+                Assert.That(payload.StringParts[0], Is.EqualTo("x="));
+                Assert.That(payload.StringParts[1], Is.EqualTo("!"));
+                Assert.That(payload.ExprSourceParts, Has.Count.EqualTo(1));
+                Assert.That(payload.ExprSourceParts[0], Is.EqualTo("value"));
+            });
+        }
+
+        [Test]
+        public void ScanTokens_FStringMultipleSlots_ProducesMultipleExprParts()
+        {
+            var tokens = Tokenize("f\"{a} and {b}\"");
+
+            var payload = (FStringTokenPayload)tokens[0].Literal;
+            Assert.Multiple(() =>
+            {
+                Assert.That(payload.ExprSourceParts, Has.Count.EqualTo(2));
+                Assert.That(payload.ExprSourceParts[0], Is.EqualTo("a"));
+                Assert.That(payload.ExprSourceParts[1], Is.EqualTo("b"));
+            });
+        }
+
+        [Test]
+        public void ScanTokens_FStringBraceEscapes_DecodesLiteralBraces()
+        {
+            var tokens = Tokenize("f\"{{}}\"");
+
+            var payload = (FStringTokenPayload)tokens[0].Literal;
+            Assert.That(payload.StringParts[0], Is.EqualTo("{}"));
+        }
+
+        [Test]
+        public void ScanTokens_FStringUppercasePrefix_RecognizedAsFString()
+        {
+            var tokens = Tokenize("F\"hi\"");
+
+            Assert.That(tokens[0].Type, Is.EqualTo(TokenType.LiteralFString));
+        }
+
+        [TestCase("f\"unterminated")]
+        [TestCase("f\"open {expr\"")]
+        public void ScanTokens_UnterminatedFString_ThrowsScannerException(string source)
+        {
+            Assert.That(() => Tokenize(source), Throws.TypeOf<ScannerEx>());
+        }
+
+        [Test]
+        public void ScanTokens_FStringEmptySlot_ThrowsScannerException()
+        {
+            Assert.That(() => Tokenize("f\"{}\""), Throws.TypeOf<ScannerEx>());
+        }
+
+        [Test]
+        public void ScanTokens_FStringStandaloneClosingBrace_ThrowsScannerException()
+        {
+            Assert.That(() => Tokenize("f\"abc}def\""), Throws.TypeOf<ScannerEx>());
+        }
     }
 }

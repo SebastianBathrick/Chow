@@ -25,6 +25,18 @@ namespace Chow.Interpreter.Tests
             return vm.ValStackTop;
         }
 
+        static ChowValue ExecuteSource(string expr)
+        {
+            var source = "__r = " + expr;
+            var tokens = new Scanner(source).ScanTokens();
+            var tree = new Parser(tokens).BuildTree();
+            new SemanticAnalyzer(tree).Analyze();
+            var chunk = new Compiler(tree).CompileRoot();
+            var scope = new Scope();
+            new VirtualMachine(chunk, scope).EvaluateChunk();
+            return scope.GetVariableValue("__r");
+        }
+
         static void PushIntegerConstant(Chunk chunk, int value)
         {
             var index = chunk.RegisterConstant(new ChowValue(value));
@@ -444,6 +456,87 @@ namespace Chow.Interpreter.Tests
             var right = new ChowValue("xyz");
 
             Assert.That(left.Equals(right), Is.False);
+        }
+
+        [Test]
+        public void ExecuteChunk_StringConcatenation_ReturnsConcatenatedString()
+        {
+            var chunk = BuildChunk(c =>
+            {
+                var left = c.RegisterConstant(new ChowValue("hello, "));
+                c.AddInstruction(OperationCode.PushConstant, LINE, left);
+                var right = c.RegisterConstant(new ChowValue("world"));
+                c.AddInstruction(OperationCode.PushConstant, LINE, right);
+                c.AddInstruction(OperationCode.Add, LINE);
+            });
+
+            var result = Execute(chunk);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.IsOfType<string>(), Is.True);
+                Assert.That(result.AsType<string>(), Is.EqualTo("hello, world"));
+            });
+        }
+
+        // ============================================================================================================
+        // I. F-strings
+        // ============================================================================================================
+
+        [Test]
+        public void Execute_FStringPlain_ReturnsLiteralString()
+        {
+            var result = ExecuteSource("f\"hello, world\"");
+
+            Assert.That(result.AsType<string>(), Is.EqualTo("hello, world"));
+        }
+
+        [Test]
+        public void Execute_FStringSingleSlotInt_ReturnsConcatenated()
+        {
+            var result = ExecuteSource("f\"x={1+2}\"");
+
+            Assert.That(result.AsType<string>(), Is.EqualTo("x=3"));
+        }
+
+        [Test]
+        public void Execute_FStringMultipleSlots_ReturnsConcatenated()
+        {
+            var result = ExecuteSource("f\"{1} and {2}\"");
+
+            Assert.That(result.AsType<string>(), Is.EqualTo("1 and 2"));
+        }
+
+        [Test]
+        public void Execute_FStringBraceEscape_ReturnsLiteralBrace()
+        {
+            var result = ExecuteSource("f\"{{literal}}\"");
+
+            Assert.That(result.AsType<string>(), Is.EqualTo("{literal}"));
+        }
+
+        [Test]
+        public void Execute_FStringFloatSlot_UsesToStr()
+        {
+            var result = ExecuteSource("f\"v={1.5}\"");
+
+            Assert.That(result.AsType<string>(), Is.EqualTo("v=1.5"));
+        }
+
+        [Test]
+        public void Execute_FStringNoneSlot_PrintsNone()
+        {
+            var result = ExecuteSource("f\"{None}\"");
+
+            Assert.That(result.AsType<string>(), Is.EqualTo("None"));
+        }
+
+        [Test]
+        public void Execute_FStringSlotWithNestedArithmetic_Evaluates()
+        {
+            var result = ExecuteSource("f\"result={2**8}\"");
+
+            Assert.That(result.AsType<string>(), Is.EqualTo("result=256"));
         }
     }
 }
