@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using Chow.Interpreter.State.Values;
 
@@ -6,38 +7,125 @@ namespace Chow.Interpreter
 {
     public readonly struct ChowValue
     {
-
         #region Fields
 
+        static readonly Dictionary<Type, DataType> _dataTypeMap = new Dictionary<Type, DataType>()
+        {
+            { null, DataType.None },
+            { typeof(bool), DataType.Bool },
+            { typeof(long), DataType.Int },
+            { typeof(double), DataType.Float },
+            { typeof(string), DataType.Str },
+            { typeof(InternalDict), DataType.List },
+            { typeof(InternalRange), DataType.Range },
+            { typeof(InternalList), DataType.List },
+        };
+        
         public static readonly ChowValue None = new ChowValue(DataType.None);
 
-        readonly DataType _type;
+        readonly DataType _dataType;
         readonly bool _boolValue;
         readonly object _objectValue;
+        
+        // In Chow integers are 64 bits instead of 32 bits like C# (hence the "int" and "64" in a field of type long)
         readonly long _int64Value;
+        
+        // Naming convention is for a similar reason to _int64Value
         readonly double _float64Value;
 
         #endregion
 
+        #region Properties
+        
+        bool IsNullableType => 
+            _dataType == DataType.Object ||  _dataType == DataType.List ||   _dataType == DataType.Dict ||   _dataType == DataType.Range;
+
+        #endregion
+        
         ChowValue(
-            DataType type = DataType.None, 
+            DataType dataType = DataType.None, 
             bool boolValue = DEFAULT_BOOL_VALUE, 
             object objectValue = DEFAULT_OBJECT_VALUE, 
             long int64Value = DEFAULT_INT64_VALUE, 
             double float64Value = DEFAULT_FLOAT64_VALUE)
         {
-            _type = type;
+            _dataType = dataType;
             _boolValue = boolValue;
             _objectValue = objectValue;
             _int64Value = int64Value;
             _float64Value = float64Value;
+
+            if (IsNullableType && _objectValue == null)
+            {
+                throw new ArgumentNullException(nameof(objectValue));
+            }
+        }
+
+        public TDataType AsType<TDataType>()
+        {
+            if (!_dataTypeMap.TryGetValue(typeof(TDataType), out var targetDataType))
+            {
+                if (_objectValue is TDataType typedObject)
+                {
+                    return typedObject;
+                }
+
+                throw new InvalidOperationException($"Cannot convert {_dataType} to {typeof(TDataType)}");
+            }
+
+            switch (targetDataType)
+            {
+                case DataType.Bool:
+                {
+                    return (TDataType)(object)ToBool();
+                }
+                case DataType.Int:
+                {
+                    return (TDataType)(object)ToInt64();
+                }
+                case DataType.Float:
+                {
+                    return (TDataType)(object)ToFloat64();
+                }
+                case DataType.Str:
+                {
+                    return (TDataType)(object)ToStr();
+                }
+                case DataType.List:
+                case DataType.Dict:
+                case DataType.Range:
+                {
+                    if (_objectValue is TDataType typedObject)
+                    {
+                        return typedObject;
+                    }
+
+                    break;
+                }
+            }
+
+            throw new InvalidOperationException($"Cannot convert {_dataType} to {typeof(TDataType)}");
+        }
+
+        public bool IsOfType<TDataType>()
+        {
+            // If it is not a type defined by the DataType enum
+            if (!_dataTypeMap.ContainsKey(typeof(TDataType)))
+            {
+                return _dataType == DataType.Object && _objectValue is TDataType;
+            }
+            
+            // The map includes values representing data types that are from the Chow.Interpreter namespace
+            var chowDataType = _dataTypeMap[typeof(TDataType)];
+            return _dataType == chowDataType;
         }
 
         #region Conversion Methods
-
+        // These methods can be indirectly accessed via the AsType<T>() method. Even the VirtualMachine does not need direct access to these.
+        
         bool ToBool()
         {
-            switch (_type)
+            switch (_dataType)
             {
                 case DataType.None:
                 {
@@ -82,7 +170,7 @@ namespace Chow.Interpreter
 
         long ToInt64()
         {
-            switch (_type)
+            switch (_dataType)
             {
                 case DataType.None:
                 {
@@ -127,7 +215,7 @@ namespace Chow.Interpreter
 
         double ToFloat64()
         {
-            switch (_type)
+            switch (_dataType)
             {
                 case DataType.None:
                 {
@@ -172,7 +260,7 @@ namespace Chow.Interpreter
 
         string ToStr()
         {
-            switch (_type)
+            switch (_dataType)
             {
                 case DataType.None:
                 {
@@ -202,7 +290,7 @@ namespace Chow.Interpreter
                     if (_objectValue == null)
                     {
                         // This should never happen, but we'll check just in case
-                        throw new InvalidOperationException($"{nameof(ChowValue)} object with type {_type} null");
+                        throw new InvalidOperationException($"{nameof(ChowValue)} object with type {_dataType} null");
                     }
 
                     return _objectValue.ToString();
