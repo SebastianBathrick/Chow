@@ -438,6 +438,7 @@ namespace Chow.Interpreter.State.Values
             {
                 return new TaggedUnion((long)Math.Floor(BoolAsInt(left) / (double)BoolAsInt(right)));
             }
+            
             if (EitherIsFloat(left, right))
             {
                 return new TaggedUnion(Math.Floor(AsFloat(left) / AsFloat(right)));
