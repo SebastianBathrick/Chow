@@ -74,86 +74,21 @@ namespace Chow.Interpreter
                     #region Binary Operators
 
                     case OperationCode.Add:
-                    {
-                        EvaluateBinaryOperation((l, r) => l.CreateSum(r));
-                        break;
-                    }
-
                     case OperationCode.Subtract:
-                    {
-                        EvaluateBinaryOperation((l, r) => l.CreateDifference(r));
-                        break;
-                    }
-
                     case OperationCode.Multiply:
-                    {
-                        EvaluateBinaryOperation((l, r) => l.CreateProduct(r));
-                        break;
-                    }
-
                     case OperationCode.Divide:
-                    {
-                        EvaluateBinaryOperation((l, r) => l.CreateQuotient(r));
-                        break;
-                    }
-
                     case OperationCode.Modulus:
-                    {
-                        EvaluateBinaryOperation((l, r) => l.CreateModulus(r));
-                        break;
-                    }
-
                     case OperationCode.Exponentiate:
-                    {
-                        EvaluateBinaryOperation((l, r) => l.CreatePower(r));
-                        break;
-                    }
-
                     case OperationCode.FloorDivide:
-                    {
-                        EvaluateBinaryOperation((l, r) => l.CreateFloorQuotient(r));
-                        break;
-                    }
-
                     case OperationCode.Equal:
-                    {
-                        EvaluateBinaryOperation((l, r) => new ChowValue(l.IsEqualTo(r)));
-                        break;
-                    }
-
                     case OperationCode.NotEqual:
-                    {
-                        EvaluateBinaryOperation((l, r) => new ChowValue(l.IsNotEqualTo(r)));
-                        break;
-                    }
-
                     case OperationCode.Less:
-                    {
-                        EvaluateBinaryOperation((l, r) => new ChowValue(l.IsLessThan(r)));
-                        break;
-                    }
-
                     case OperationCode.Greater:
-                    {
-                        EvaluateBinaryOperation((l, r) => new ChowValue(l.IsGreaterThan(r)));
-                        break;
-                    }
-
                     case OperationCode.LessEqual:
-                    {
-                        EvaluateBinaryOperation((l, r) => new ChowValue(l.IsLessOrEqualTo(r)));
-                        break;
-                    }
-
                     case OperationCode.GreaterEqual:
-                    {
-                        EvaluateBinaryOperation((l, r) => new ChowValue(l.IsGreaterOrEqualTo(r)));
-                        break;
-                    }
-
                     case OperationCode.BinaryOr:
                     {
-                        EvaluateBinaryOperation((l, r) => l.CreateUnion(r));
+                        EvaluateBinaryOperation(CurrentOperation.Code);
                         break;
                     }
 
@@ -613,12 +548,103 @@ namespace Chow.Interpreter
 
         #region Expression Evaluation Methods
 
-        void EvaluateBinaryOperation(Func<ChowValue, ChowValue, ChowValue> operation)
+        void EvaluateBinaryOperation(OperationCode opCode)
         {
             // Float/bool promotion happens inside ChowValue's instance operator methods (CreateSum etc.)
             var right = _valStack.Pop();
             var left = _valStack.Pop();
-            _valStack.Push(operation(left, right));
+
+            switch (opCode)
+            {
+                case OperationCode.Add:
+                {
+                    _valStack.Push(left.CreateSum(right));
+                    break;
+                }
+
+                case OperationCode.Subtract:
+                {
+                    _valStack.Push(left.CreateDifference(right));
+                    break;
+                }
+
+                case OperationCode.Multiply:
+                {
+                    _valStack.Push(left.CreateProduct(right));
+                    break;
+                }
+
+                case OperationCode.Divide:
+                {
+                    _valStack.Push(left.CreateQuotient(right));
+                    break;
+                }
+
+                case OperationCode.Modulus:
+                {
+                    _valStack.Push(left.CreateModulus(right));
+                    break;
+                }
+
+                case OperationCode.Exponentiate:
+                {
+                    _valStack.Push(left.CreatePower(right));
+                    break;
+                }
+
+                case OperationCode.FloorDivide:
+                {
+                    _valStack.Push(left.CreateFloorQuotient(right));
+                    break;
+                }
+
+                case OperationCode.Equal:
+                {
+                    _valStack.Push(new ChowValue(left.IsEqualTo(right)));
+                    break;
+                }
+
+                case OperationCode.NotEqual:
+                {
+                    _valStack.Push(new ChowValue(left.IsNotEqualTo(right)));
+                    break;
+                }
+
+                case OperationCode.Less:
+                {
+                    _valStack.Push(new ChowValue(left.IsLessThan(right)));
+                    break;
+                }
+
+                case OperationCode.Greater:
+                {
+                    _valStack.Push(new ChowValue(left.IsGreaterThan(right)));
+                    break;
+                }
+
+                case OperationCode.LessEqual:
+                {
+                    _valStack.Push(new ChowValue(left.IsLessOrEqualTo(right)));
+                    break;
+                }
+
+                case OperationCode.GreaterEqual:
+                {
+                    _valStack.Push(new ChowValue(left.IsGreaterOrEqualTo(right)));
+                    break;
+                }
+
+                case OperationCode.BinaryOr:
+                {
+                    _valStack.Push(left.CreateUnion(right));
+                    break;
+                }
+
+                default:
+                {
+                    throw new NotImplementedException($"Execution of {opCode} is not implemented.");
+                }
+            }
         }
 
         void EvaluateNegation()
@@ -639,30 +665,22 @@ namespace Chow.Interpreter
             var needle = _valStack.Pop();
             var found = false;
 
-            switch (container.DataType)
+            if (container.DataType == DataType.Dict)
             {
-                case DataType.Dict:
+                found = container.AsType<InternalDict>().ContainsKey(needle);
+            }
+            else if (container.DataType == DataType.List)
+            {
+                var list = container.AsType<InternalList>();
+
+                for (var i = 0; i < list.Count && !found; i++)
                 {
-                    found = container.AsType<InternalDict>().ContainsKey(needle);
-                    break;
+                    found = list[i].IsEqualTo(needle);
                 }
-
-                case DataType.List:
-                {
-                    var list = container.AsType<InternalList>();
-
-                    for (var i = 0; i < list.Count && !found; i++)
-                    {
-                        found = list[i].IsEqualTo(needle);
-                    }
-
-                    break;
-                }
-
-                default:
-                {
-                    throw new TypeException($"argument of type '{container.DataType}' is not iterable");
-                }
+            }
+            else
+            {
+                throw new TypeException($"argument of type '{container.DataType}' is not iterable");
             }
 
             _valStack.Push(new ChowValue(negate ? !found : found));
@@ -677,32 +695,30 @@ namespace Chow.Interpreter
             var index = _valStack.Pop();
             var target = _valStack.Pop();
 
-            // TODO: Add a tag case here for strings.
-            switch (target.DataType)
+            // TODO: Add a branch here for strings.
+            if (target.DataType == DataType.Dict)
             {
-                case DataType.Dict:
+                try
                 {
-                    try
-                    {
-                        _valStack.Push(target.AsType<InternalDict>()[index]);
-                    }
-                    catch (DictKeyException ex)
-                    {
-                        throw new DictKeyException(ex.KeyRepr, GetCurrentLineNumber());
-                    }
-
-                    return;
+                    _valStack.Push(target.AsType<InternalDict>()[index]);
                 }
-                case DataType.List:
+                catch (DictKeyException ex)
                 {
-                    if (index.DataType != DataType.Int)
-                    {
-                        throw new TypeException($"list indices must be integers, not {index.DataType}");
-                    }
-
-                    _valStack.Push(target.AsType<InternalList>()[(int)index.AsType<long>()]);
-                    return;
+                    throw new DictKeyException(ex.KeyRepr, GetCurrentLineNumber());
                 }
+
+                return;
+            }
+
+            if (target.DataType == DataType.List)
+            {
+                if (index.DataType != DataType.Int)
+                {
+                    throw new TypeException($"list indices must be integers, not {index.DataType}");
+                }
+
+                _valStack.Push(target.AsType<InternalList>()[(int)index.AsType<long>()]);
+                return;
             }
 
             throw new TypeException($"'{ParseDataTypeName(target.DataType)}' object is not subscriptable");
@@ -730,24 +746,21 @@ namespace Chow.Interpreter
             var index = _valStack.Pop();
             var target = _valStack.Pop();
 
-            switch (target.DataType)
+            if (target.DataType == DataType.Dict)
             {
-                case DataType.Dict:
+                target.AsType<InternalDict>()[index] = value;
+                return;
+            }
+
+            if (target.DataType == DataType.List)
+            {
+                if (index.DataType != DataType.Int)
                 {
-                    target.AsType<InternalDict>()[index] = value;
-                    return;
+                    throw new TypeException($"list indices must be integers, not {index.DataType}");
                 }
 
-                case DataType.List:
-                {
-                    if (index.DataType != DataType.Int)
-                    {
-                        throw new TypeException($"list indices must be integers, not {index.DataType}");
-                    }
-
-                    target.AsType<InternalList>()[(int)index.AsType<long>()] = value;
-                    return;
-                }
+                target.AsType<InternalList>()[(int)index.AsType<long>()] = value;
+                return;
             }
 
             throw new TypeException($"'{ParseDataTypeName(target.DataType)}' object does not support item assignment");
