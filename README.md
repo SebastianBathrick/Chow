@@ -1,11 +1,13 @@
 # Chow
 
 ## Current Features
+
 - Pythonic syntax
 - REPL (`src/Chow/`, assembly `chw`)
 - Data types: `int`, `float`, `bool`, `str`, `None`, list, dict, function (source-defined)
 - Opaque object passthrough — arbitrary host objects can be assigned to Chow globals and round-tripped back unchanged
-- Internal extension point (`InteropClassObject`) for adding built-in "class-like" types with attribute/method dispatch (used internally; not part of the public host API yet)
+- Internal extension point (`InteropClassObject`) for adding built-in "class-like" types with attribute/method
+  dispatch (used internally; not part of the public host API yet)
 - Arithmetic, comparison, and logical expressions (with chained comparisons)
 - Membership (`in` / `not in`) on lists and dicts
 - Top-level statements and expression statements
@@ -18,13 +20,16 @@
 - Expression-statement hook for REPL-style output
 
 ## Tests
+
 456/456 passing tests
 
 ## Big TODOs
+
 - Refactor the Scope class to remove the stack system
 - Move logic for wrapping values in tagged union to ApiConverter
 
 ## Small TODOs
+
 - Refactor ChowValue to remove ToString()
 - Remove top-level return statements (not needed)
 - Add ChowSyntaxErrorException and use it for top-level return statements
@@ -34,7 +39,9 @@
 - Add user-defined `class X:` syntax (separate from `InteropClassObject`, which is host-defined)
 
 ## Behavior to Investigate
+
 REPL output:
+
 ```python
 >>> 1 == True
     False
@@ -43,7 +50,9 @@ REPL output:
 >>> 1 == 1 == True
     False
 ```
+
 Expected output:
+
 ```python
 >>> 1 == True
     True
@@ -54,7 +63,9 @@ Expected output:
 ```
 
 # Language
+
 ## Literals
+
 - **Integer:** `0`, `-2`, `3`
 - **Float:** `0.0`, `-2.0`, `3.0`, `4.5`, `81.`
 - **Bool:** `True`, `False`
@@ -64,6 +75,7 @@ Expected output:
 - **Dict:** `{1: 'a', 2: 'b'}`, `{}`
 
 ## Operators
+
 - **Arithmetic:** `+`, `-`, `*`, `/`, `//`, `%`, `**`
 - **Comparison:** `==`, `!=`, `<`, `>`, `<=`, `>=` (chained: `a < b < c` desugars to `a < b and b < c`)
 - **Logical:** `and`, `or`, `not` (short-circuiting)
@@ -76,12 +88,14 @@ Expected output:
 - **Call:** `f(args)`
 
 ## Comments
+
 ```python
 # This is a comment!
 print("Hello World") # Another comment!
 ```
 
 ## Variable Declarations & Assignments
+
 ```python
 # The variable is an int based on the expression assigned
 myVar = 2
@@ -91,6 +105,7 @@ myVar = "String expression"
 ```
 
 ## If Statements
+
 ```python
 print("Please enter an integer: ")
 
@@ -106,7 +121,9 @@ elif x == 1:
 else:
     print('More')
 ```
+
 ## Functions
+
 ```python
 def select_int():
     print("Please enter an integer: ")
@@ -128,6 +145,7 @@ x(selection)
 ```
 
 ### Closures
+
 ```python
 def make_adder(x):
     def add(y):
@@ -151,6 +169,7 @@ print(f())          # 99
 ```
 
 ## Expression Statements
+
 ```python
 # The expression will be evaluated and ignored
 # To access the result of an evaluated expression, register an `IExpressionStatementHook`.
@@ -158,6 +177,7 @@ print(f())          # 99
 ```
 
 ## While Loops
+
 ```python
 i = 0
 while i < 5:
@@ -179,13 +199,17 @@ while i < 5:
     print(i)   # prints 1, 2, 4, 5
 ```
 
-`break` and `continue` outside a loop are caught at compile time. Like Python, Chow has no block scope: a name first assigned inside an `if`/`elif`/`else`/`while` body is bound in the enclosing function (or module) scope and remains visible after the block. The name only exists if the assignment actually executed at runtime — reading a name that no branch bound raises an error.
+`break` and `continue` outside a loop are caught at compile time. Like Python, Chow has no block scope: a name first
+assigned inside an `if`/`elif`/`else`/`while` body is bound in the enclosing function (or module) scope and remains
+visible after the block. The name only exists if the assignment actually executed at runtime — reading a name that no
+branch bound raises an error.
 
 ## Lists
 
 Lists hold an ordered, mutable sequence of values. Elements can be any type, including other lists.
 
 ### Literals
+
 ```python
 empty = []
 nums = [1, 2, 3]
@@ -194,7 +218,9 @@ nested = [[1, 2], [3, 4]]
 ```
 
 ### Indexing
+
 Indices are zero-based. Negative indices wrap from the end.
+
 ```python
 a = [10, 20, 30]
 
@@ -208,6 +234,7 @@ a[-1] = 0
 ```
 
 ### Slicing
+
 ```python
 a = [0, 1, 2, 3, 4]
 
@@ -220,9 +247,11 @@ a[::-1]   # [4, 3, 2, 1, 0]   (reversed)
 a[1:5:2]  # [1, 3]
 ```
 
-Slicing always returns a new list. A step of `0` raises an error. Slice assignment (`a[1:3] = [9, 9]`) is not yet supported.
+Slicing always returns a new list. A step of `0` raises an error. Slice assignment (`a[1:3] = [9, 9]`) is not yet
+supported.
 
 ### Methods
+
 ```python
 a = [1, 2, 3]
 
@@ -235,7 +264,9 @@ a.reverse()   # a is [3, 1]
 a.clear()     # a is []
 ```
 
-Methods are first-class values — they can be stored in variables and called later. The method stays bound to the original list:
+Methods are first-class values — they can be stored in variables and called later. The method stays bound to the
+original list:
+
 ```python
 a = [1]
 f = a.append
@@ -245,12 +276,14 @@ f(3)
 ```
 
 Accessing an attribute that isn't a list method raises an `AttributeError`:
+
 ```python
 [1].fake
 # AttributeError: 'list' object has no attribute 'fake' on line 1
 ```
 
 ### Operators
+
 ```python
 [1, 2] + [3, 4]   # [1, 2, 3, 4]   concatenation
 [0] * 3           # [0, 0, 0]      repetition
@@ -263,7 +296,9 @@ Accessing an attribute that isn't a list method raises an `AttributeError`:
 ```
 
 ### Truthiness
+
 Empty lists are falsy, non-empty are truthy.
+
 ```python
 if []:
     "never"
@@ -273,9 +308,11 @@ else:
 
 ## Dicts
 
-Dicts hold an ordered, mutable mapping of hashable keys to values. Insertion order is preserved. Keys may be `None`, `bool`, `int`, `float`, or `str`; lists and dicts are not hashable and cannot be used as keys.
+Dicts hold an ordered, mutable mapping of hashable keys to values. Insertion order is preserved. Keys may be `None`,
+`bool`, `int`, `float`, or `str`; lists and dicts are not hashable and cannot be used as keys.
 
 ### Literals
+
 ```python
 empty = {}
 ages = {"alice": 30, "bob": 25}
@@ -284,6 +321,7 @@ nested = {1: {2: "inner"}}
 ```
 
 ### Subscript
+
 ```python
 d = {1: "a", 2: "b"}
 
@@ -296,6 +334,7 @@ d[[1]]        # TypeError: unhashable type: 'list'
 ```
 
 ### Methods
+
 ```python
 d = {1: "a", 2: "b"}
 
@@ -316,6 +355,7 @@ d.clear()             # d is {}
 ```
 
 Like list methods, dict methods are first-class values bound to the original dict:
+
 ```python
 d = {}
 f = d.setdefault
@@ -325,12 +365,14 @@ f(2, "b")
 ```
 
 Accessing an attribute that isn't a dict method raises an `AttributeError`:
+
 ```python
 {}.fake
 # AttributeError: 'dict' object has no attribute 'fake' on line 1
 ```
 
 ### Operators
+
 ```python
 {1: "a", 2: "b"} | {2: "z", 3: "c"}   # {1: "a", 2: "z", 3: "c"}   merge (right wins)
 
@@ -340,7 +382,9 @@ Accessing an attribute that isn't a dict method raises an `AttributeError`:
 ```
 
 ### Membership (`in` / `not in`)
+
 `in` and `not in` work on dicts (testing keys) and lists (testing elements):
+
 ```python
 1 in {1: "a"}        # True
 99 not in {1: "a"}   # True
@@ -353,7 +397,9 @@ Accessing an attribute that isn't a dict method raises an `AttributeError`:
 ```
 
 ### Truthiness
+
 Empty dicts are falsy, non-empty are truthy.
+
 ```python
 if {}:
     "never"
@@ -363,9 +409,11 @@ else:
 
 # Library API
 
-Host C# code exposes variables and callable functions to Chow source through `ChowModule`. Values flow in and out as `ChowValue` instances; callables are plain C# delegates assigned through the module indexer.
+Host C# code exposes variables and callable functions to Chow source through `ChowModule`. Values flow in and out as
+`ChowValue` instances; callables are plain C# delegates assigned through the module indexer.
 
 ## Exposing variables
+
 ```csharp
 ChowModule module = new ChowModule();
 
@@ -378,19 +426,23 @@ module.Execute("result = count * 2");
 long doubled = module.GetGlobal("result").As<long>();
 ```
 
-The `ChowModule` indexer's setter accepts either a `ChowValue` (passed through unchanged) or any other `object` (boxed into the underlying `TaggedUnion`). Its getter returns the raw boxed object (`long`/`double`/`bool`/`string`/etc.). Prefer `GetGlobal(name)` when you want a typed `ChowValue` to call `.As<T>()` / pattern-match against. Reading an unset name throws `GlobalAccessException`.
+The `ChowModule` indexer's setter accepts either a `ChowValue` (passed through unchanged) or any other `object` (boxed
+into the underlying `TaggedUnion`). Its getter returns the raw boxed object (`long`/`double`/`bool`/`string`/etc.).
+Prefer `GetGlobal(name)` when you want a typed `ChowValue` to call `.As<T>()` / pattern-match against. Reading an unset
+name throws `GlobalAccessException`.
 
 ## Exposing functions
+
 Assign a delegate directly to the indexer — no wrapper type is required. Supported signatures:
 
-| Delegate                              | Behavior                          |
-|---------------------------------------|-----------------------------------|
-| `Func<ChowValue>`                     | Zero-arg, returns a value         |
-| `Func<ChowValue, ChowValue>`          | One-arg, returns a value          |
-| `Func<ChowValue[], ChowValue>`        | Variadic, returns a value         |
-| `Action`                              | Zero-arg, returns `None`          |
-| `Action<ChowValue>`                   | One-arg, returns `None`           |
-| `Action<ChowValue[]>`                 | Variadic, returns `None`          |
+| Delegate                       | Behavior                  |
+|--------------------------------|---------------------------|
+| `Func<ChowValue>`              | Zero-arg, returns a value |
+| `Func<ChowValue, ChowValue>`   | One-arg, returns a value  |
+| `Func<ChowValue[], ChowValue>` | Variadic, returns a value |
+| `Action`                       | Zero-arg, returns `None`  |
+| `Action<ChowValue>`            | One-arg, returns `None`   |
+| `Action<ChowValue[]>`          | Variadic, returns `None`  |
 
 ```csharp
 // Zero args
@@ -413,7 +465,9 @@ module["log"] = (ChowValue v) => Console.WriteLine(v);
 ```
 
 ## Inspecting `ChowValue` inside a delegate
-The tag-typed `Is<T>()` / `As<T>()` use the underlying .NET primitive — `long` for Chow `int`, `double` for Chow `float`, `bool` for Chow `bool`. `As<int>()` / `As<float>()` are not supported and will throw.
+
+The tag-typed `Is<T>()` / `As<T>()` use the underlying .NET primitive — `long` for Chow `int`, `double` for Chow
+`float`, `bool` for Chow `bool`. `As<int>()` / `As<float>()` are not supported and will throw.
 
 ```csharp
 val.IsNone                // None check
@@ -427,10 +481,14 @@ val is ChowDict d         // dict pattern match
 val is ChowDynamic dyn    // arbitrary host object passthrough: dyn.Value
 ```
 
-`ChowDynamic` is the wrapper used for opaque host objects round-tripped through Chow — assign one to a global when you need a handle that Chow code can pass around but never inspect.
+`ChowDynamic` is the wrapper used for opaque host objects round-tripped through Chow — assign one to a global when you
+need a handle that Chow code can pass around but never inspect.
 
 ## Example: REPL builtins
-The Chow CLI registers `print`, `input`, `int`, `float`, `bool`, `str`, `list`, `dict`, `len`, `type`, `abs`, `round`, `min`, `max` through this mechanism. Excerpt from `src/Chow/Program.cs`:
+
+The Chow CLI registers `print`, `input`, `int`, `float`, `bool`, `str`, `list`, `dict`, `len`, `type`, `abs`, `round`,
+`min`, `max` through this mechanism. Excerpt from `src/Chow/Program.cs`:
+
 ```csharp
 var module = new ChowModule
 {
@@ -453,6 +511,7 @@ var module = new ChowModule
 ```
 
 Once registered, the names are callable from Chow source like any other function:
+
 ```python
 n = int(input())
 print(n * 2)

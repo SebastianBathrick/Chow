@@ -4,7 +4,7 @@ using System.Globalization;
 using Chow.Interpreter.State.Values;
 namespace Chow.Interpreter
 {
-    internal enum BuiltInType
+    enum BuiltInType
     {
         Print,
         Input,
@@ -20,49 +20,49 @@ namespace Chow.Interpreter
         Round,
         Min,
         Max,
-        Range,
+        Range
     }
 
-    internal static class BuiltIns
+    static class BuiltIns
     {
         static readonly Dictionary<BuiltInType, string> Names = new Dictionary<BuiltInType, string>
         {
             { BuiltInType.Print, "print" },
             { BuiltInType.Input, "input" },
             { BuiltInType.Float, "float" },
-            { BuiltInType.Str,   "str"   },
-            { BuiltInType.Int,   "int"   },
-            { BuiltInType.Bool,  "bool"  },
-            { BuiltInType.List,  "list"  },
-            { BuiltInType.Dict,  "dict"  },
-            { BuiltInType.Len,   "len"   },
-            { BuiltInType.Type,  "type"  },
-            { BuiltInType.Abs,   "abs"   },
+            { BuiltInType.Str, "str" },
+            { BuiltInType.Int, "int" },
+            { BuiltInType.Bool, "bool" },
+            { BuiltInType.List, "list" },
+            { BuiltInType.Dict, "dict" },
+            { BuiltInType.Len, "len" },
+            { BuiltInType.Type, "type" },
+            { BuiltInType.Abs, "abs" },
             { BuiltInType.Round, "round" },
-            { BuiltInType.Min,   "min"   },
-            { BuiltInType.Max,   "max"   },
-            { BuiltInType.Range, "range" },
+            { BuiltInType.Min, "min" },
+            { BuiltInType.Max, "max" },
+            { BuiltInType.Range, "range" }
         };
 
         static readonly Dictionary<BuiltInType, Func<ChowValue[], ChowValue>> Defaults =
             new Dictionary<BuiltInType, Func<ChowValue[], ChowValue>>
-        {
-            { BuiltInType.Print, Print },
-            { BuiltInType.Input, Input },
-            { BuiltInType.Float, Float },
-            { BuiltInType.Str,   Str   },
-            { BuiltInType.Int,   Int   },
-            { BuiltInType.Bool,  Bool  },
-            { BuiltInType.List,  List  },
-            { BuiltInType.Dict,  Dict  },
-            { BuiltInType.Len,   Len   },
-            { BuiltInType.Type,  Type  },
-            { BuiltInType.Abs,   Abs   },
-            { BuiltInType.Round, Round },
-            { BuiltInType.Min,   Min   },
-            { BuiltInType.Max,   Max   },
-            { BuiltInType.Range, Range },
-        };
+            {
+                { BuiltInType.Print, Print },
+                { BuiltInType.Input, Input },
+                { BuiltInType.Float, Float },
+                { BuiltInType.Str, Str },
+                { BuiltInType.Int, Int },
+                { BuiltInType.Bool, Bool },
+                { BuiltInType.List, List },
+                { BuiltInType.Dict, Dict },
+                { BuiltInType.Len, Len },
+                { BuiltInType.Type, Type },
+                { BuiltInType.Abs, Abs },
+                { BuiltInType.Round, Round },
+                { BuiltInType.Min, Min },
+                { BuiltInType.Max, Max },
+                { BuiltInType.Range, Range }
+            };
 
         public static IEnumerable<BuiltInType> AllTypes => Names.Keys;
 
@@ -119,10 +119,12 @@ namespace Chow.Interpreter
                 case DataType.Str:
                 {
                     double parsed;
+
                     if (double.TryParse(val.AsType<string>(), NumberStyles.Float, CultureInfo.InvariantCulture, out parsed))
                     {
                         return new ChowValue(parsed);
                     }
+
                     throw new InvalidOperationException($"could not convert string to float: '{val.AsType<string>()}'");
                 }
             }
@@ -158,15 +160,18 @@ namespace Chow.Interpreter
                 case DataType.Str:
                 {
                     long parsed;
+
                     if (long.TryParse(val.AsType<string>(), out parsed))
                     {
                         return new ChowValue(parsed);
                     }
+
                     throw new InvalidOperationException($"invalid literal for int() with base 10: '{val.AsType<string>()}'");
                 }
             }
 
-            throw new InvalidOperationException($"int() argument must be a string, a bytes-like object or a real number, not '{DataTypeName(val.DataType)}'");
+            throw new InvalidOperationException(
+                $"int() argument must be a string, a bytes-like object or a real number, not '{DataTypeName(val.DataType)}'");
         }
 
         static ChowValue Bool(ChowValue[] args)
@@ -190,6 +195,7 @@ namespace Chow.Interpreter
                 {
                     return new ChowValue(InternalList.Concat(args[0].AsType<InternalList>(), new InternalList()));
                 }
+
                 throw new InvalidOperationException($"'{DataTypeName(args[0].DataType)}' object is not iterable");
             }
 
@@ -211,6 +217,7 @@ namespace Chow.Interpreter
                 {
                     return new ChowValue(InternalDict.Merge(args[0].AsType<InternalDict>(), new InternalDict()));
                 }
+
                 throw new InvalidOperationException($"'{DataTypeName(args[0].DataType)}' object is not iterable");
             }
 

@@ -2,7 +2,7 @@ using Chow.Interpreter.Exceptions;
 namespace Chow.Interpreter.Tests
 {
     [TestFixture]
-    internal class DataTypeConversionMapTests
+    class DataTypeConversionMapTests
     {
         [TestCase(ExpressionOperator.Add, DataType.Bool, DataType.Bool, ConversionCase.PromoteToInt)]
         [TestCase(ExpressionOperator.Add, DataType.Bool, DataType.Int, ConversionCase.PromoteToInt)]

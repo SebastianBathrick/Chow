@@ -3,7 +3,7 @@ namespace Chow.Repl
     /// <summary>
     /// Reads a single interactive, possibly multi-line, Chow source submission from the console.
     /// </summary>
-    internal sealed class ConsoleLineEditor
+    sealed class ConsoleLineEditor
     {
         const char NEWLINE_CHAR = '\n';
 
@@ -57,6 +57,7 @@ namespace Chow.Repl
                             MoveToAfterEditor(editorTop, lines.Count);
                             return string.Join(NEWLINE_CHAR, lines);
                         }
+
                         break;
 
                     case ConsoleKey.L when (keyInfo.Modifiers & ConsoleModifiers.Control) == ConsoleModifiers.Control:
@@ -75,6 +76,7 @@ namespace Chow.Repl
                         {
                             cursorColumn--;
                         }
+
                         break;
 
                     case ConsoleKey.RightArrow:
@@ -82,6 +84,7 @@ namespace Chow.Repl
                         {
                             cursorColumn++;
                         }
+
                         break;
 
                     case ConsoleKey.Home:
@@ -109,6 +112,7 @@ namespace Chow.Repl
                         {
                             InsertCharacter(keyInfo.KeyChar, lines, currentLine, ref cursorColumn, editorTop, promptStyle);
                         }
+
                         break;
                 }
 
@@ -200,6 +204,7 @@ namespace Chow.Repl
             Console.Write(line);
 
             var remainingWidth = Console.BufferWidth - prompt.Length - line.Length - 1;
+
             if (remainingWidth > 0)
             {
                 // Clear characters left over from a longer previous rendering of the same row.
@@ -212,6 +217,7 @@ namespace Chow.Repl
             MoveCursor(0, cursorTop);
 
             var clearWidth = Math.Max(0, Console.BufferWidth - 1);
+
             if (clearWidth > 0)
             {
                 Console.Write(new string(' ', clearWidth));

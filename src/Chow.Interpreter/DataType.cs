@@ -10,6 +10,6 @@ namespace Chow.Interpreter
         Str,
         List,
         Dict,
-        Range,
+        Range
     }
 }

@@ -22,10 +22,12 @@ namespace Chow.Interpreter.ImplTests
         static List<Instruction> Instructions(Chunk chunk)
         {
             var result = new List<Instruction>();
+
             for (var i = 0; i < chunk.InstructionCount; i++)
             {
                 result.Add(chunk[i]);
             }
+
             return result;
         }
 
@@ -34,16 +36,20 @@ namespace Chow.Interpreter.ImplTests
             for (var i = 0; i < chunk.InstructionCount; i++)
             {
                 var op = chunk[i];
+
                 if (op.Code != OperationCode.PushConstant)
                 {
                     continue;
                 }
+
                 var constant = chunk.ReadConstant(op.Operand);
+
                 if (constant.IsOfType<ClosureTemplate>())
                 {
                     return constant.AsType<ClosureTemplate>();
                 }
             }
+
             return null;
         }
 
@@ -154,16 +160,19 @@ namespace Chow.Interpreter.ImplTests
             // is not optimized away.
             var returnValueCount = 0;
             var pushNoneBeforeReturnCount = 0;
+
             for (var i = 0; i < ops.Count; i++)
             {
                 if (ops[i].Code != OperationCode.PushReturnValue)
                 {
                     continue;
                 }
+
                 returnValueCount++;
 
                 Assert.That(i, Is.GreaterThan(0), "PushReturnValue cannot be the first op");
                 var prev = ops[i - 1];
+
                 if (prev.Code == OperationCode.PushConstant && body.ReadConstant(prev.Operand).DataType == DataType.None)
                 {
                     pushNoneBeforeReturnCount++;
@@ -217,6 +226,7 @@ namespace Chow.Interpreter.ImplTests
 
             // Scan for the CallFunction op; verify operand and preceding ops.
             var callIdx = -1;
+
             for (var i = 0; i < ops.Count; i++)
             {
                 if (ops[i].Code == OperationCode.CallFunction)
@@ -244,6 +254,7 @@ namespace Chow.Interpreter.ImplTests
 
             var ops = Instructions(chunk);
             var callIdx = -1;
+
             for (var i = 0; i < ops.Count; i++)
             {
                 if (ops[i].Code == OperationCode.CallFunction)

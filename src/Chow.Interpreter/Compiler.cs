@@ -15,10 +15,18 @@ namespace Chow.Interpreter
     sealed class Compiler
     {
         readonly Chunk _chunk;
-        readonly Node _root;
         readonly Stack<LoopContext> _loopContextStack;
+        readonly Node _root;
 
         List<int> _pendingEndJumps;
+
+        sealed class LoopContext
+        {
+            public readonly List<int> PendingBreaks = new List<int>();
+            // True for `for` loops; the iterator sits on the stack across iterations, so `break` must Pop before jumping.
+            public bool HasIteratorOnStack;
+            public int LoopStartIdx;
+        }
 
         #region Primary Methods
 
@@ -282,7 +290,8 @@ namespace Chow.Interpreter
             // If a variable with the same name already exists in the chunk, the index of the existing variable will be returned.
             // Otherwise, the new variable will be added to the chunk and its new index will be returned.
             var varNameIdx = _chunk.RegisterVariableName(variableAssignStatementNode.Name);
-            _chunk.AddInstruction(GetScopeAssignOpCode(variableAssignStatementNode.Resolution), variableAssignStatementNode.LineNumber, varNameIdx);
+            _chunk.AddInstruction(GetScopeAssignOpCode(variableAssignStatementNode.Resolution), variableAssignStatementNode.LineNumber,
+                varNameIdx);
         }
 
         void CompileReturnStatement(ReturnStatementNode returnStatementNode)
@@ -298,7 +307,7 @@ namespace Chow.Interpreter
                 _chunk.AddInstruction(OperationCode.PushConstant, returnStatementNode.LineNumber, noneIdx);
             }
 
-            _chunk.AddInstruction(code: OperationCode.PushReturnValue, returnStatementNode.LineNumber);
+            _chunk.AddInstruction(OperationCode.PushReturnValue, returnStatementNode.LineNumber);
         }
 
         void CompileExpressionStatement(ExpressionStatementNode expressionStmtNode)
@@ -385,7 +394,7 @@ namespace Chow.Interpreter
 
             var loopContext = new LoopContext
             {
-                LoopStartIdx = loopStartIdx,
+                LoopStartIdx = loopStartIdx
             };
 
             _loopContextStack.Push(loopContext);
@@ -424,7 +433,7 @@ namespace Chow.Interpreter
             var loopContext = new LoopContext
             {
                 LoopStartIdx = loopStartIdx,
-                HasIteratorOnStack = true,
+                HasIteratorOnStack = true
             };
 
             _loopContextStack.Push(loopContext);
@@ -531,8 +540,8 @@ namespace Chow.Interpreter
         {
             CompileTargetNode(expressionNode.Left);
 
-            var jumpCode = expressionNode.Operator == ExpressionOperator.And 
-                ? OperationCode.JumpIfFalseOrPop 
+            var jumpCode = expressionNode.Operator == ExpressionOperator.And
+                ? OperationCode.JumpIfFalseOrPop
                 : OperationCode.JumpIfTrueOrPop;
 
             // Emit jump with placeholder operand; the real target is unknown until the right side is compiled
@@ -566,6 +575,7 @@ namespace Chow.Interpreter
                     {
                         return new ChowValue(intVal);
                     }
+
                     break;
                 }
 
@@ -575,6 +585,7 @@ namespace Chow.Interpreter
                     {
                         return new ChowValue(floatVal);
                     }
+
                     break;
                 }
 
@@ -584,6 +595,7 @@ namespace Chow.Interpreter
                     {
                         return new ChowValue(boolVal);
                     }
+
                     break;
                 }
 
@@ -598,6 +610,7 @@ namespace Chow.Interpreter
                     {
                         return new ChowValue(strVal);
                     }
+
                     break;
                 }
 
@@ -666,7 +679,7 @@ namespace Chow.Interpreter
         void CompileAttributeAccess(AttributeAccessNode node)
         {
             CompileTargetNode(node.Target);
-            
+
             var varNameIdx = _chunk.RegisterVariableName(node.AttributeName);
             _chunk.AddInstruction(OperationCode.GetObjectAttribute, node.LineNumber, varNameIdx);
         }
@@ -837,14 +850,6 @@ namespace Chow.Interpreter
         }
 
         #endregion
-
-        sealed class LoopContext
-        {
-            public int LoopStartIdx;
-            // True for `for` loops; the iterator sits on the stack across iterations, so `break` must Pop before jumping.
-            public bool HasIteratorOnStack;
-            public readonly List<int> PendingBreaks = new List<int>();
-        }
 
     }
 }

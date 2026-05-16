@@ -7,7 +7,10 @@ namespace Chow.Interpreter.ImplTests
     [TestFixture]
     public class CallStackClosureTests
     {
-        static ChowValue Int(long v) => new ChowValue(v);
+        static ChowValue Int(long v)
+        {
+            return new ChowValue(v);
+        }
 
         static (CallStack stack, Scope module) NewStack()
         {
@@ -28,7 +31,7 @@ namespace Chow.Interpreter.ImplTests
         [Test]
         public void NewStack_IsModuleLevel()
         {
-            (var stack, var _) = NewStack();
+            (var stack, _) = NewStack();
 
             Assert.That(stack.IsModuleLevel, Is.True);
         }

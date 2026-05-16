@@ -35,12 +35,15 @@ namespace Chow.Interpreter.State.Values
         int NormalizeIndex(int index)
         {
             var idx = index < 0 ? _elements.Count + index : index;
+
             if (idx < 0 || idx >= _elements.Count)
             {
                 throw new IndexOutOfRangeException();
             }
+
             return idx;
         }
+
         // Will throw if method name is invalid, which is the expected behavior
         public ChowValue this[string name] => new ChowValue(GetMethod(name));
 
@@ -93,23 +96,28 @@ namespace Chow.Interpreter.State.Values
             {
                 throw new ArgumentException($"Method 'pop' takes at most 1 argument, but {args.Length} were provided");
             }
+
             if (_elements.Count == 0)
             {
                 throw new InvalidOperationException("pop from empty list");
             }
 
             var index = _elements.Count - 1;
+
             if (args != null && args.Length == 1)
             {
                 if (args[0].DataType != DataType.Int)
                 {
                     throw new ArgumentException($"Argument 0 must be of type {DataType.Int}, but was {args[0].DataType}");
                 }
+
                 index = (int)args[0].AsType<long>();
+
                 if (index < 0)
                 {
                     index = _elements.Count + index;
                 }
+
                 if (index < 0 || index >= _elements.Count)
                 {
                     throw new IndexOutOfRangeException();
@@ -125,6 +133,7 @@ namespace Chow.Interpreter.State.Values
         ChowValue Remove(ChowValue[] args)
         {
             ValidateArguments(args, 1);
+
             for (var i = 0; i < _elements.Count; i++)
             {
                 if (_elements[i].IsEqualTo(args[0]))
@@ -133,6 +142,7 @@ namespace Chow.Interpreter.State.Values
                     return ChowValue.None;
                 }
             }
+
             throw new ArgumentException("list.remove(x): x not in list");
         }
 
@@ -219,6 +229,7 @@ namespace Chow.Interpreter.State.Values
             {
                 return false;
             }
+
             for (var i = 0; i < a._elements.Count; i++)
             {
                 if (!a._elements[i].IsEqualTo(b._elements[i]))
@@ -226,6 +237,7 @@ namespace Chow.Interpreter.State.Values
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -235,10 +247,12 @@ namespace Chow.Interpreter.State.Values
             unchecked
             {
                 var hash = 17;
+
                 for (var i = 0; i < a._elements.Count; i++)
                 {
                     hash = hash * 31 + a._elements[i].GetHashCode();
                 }
+
                 return hash;
             }
         }
@@ -254,14 +268,17 @@ namespace Chow.Interpreter.State.Values
         public static InternalList Repeat(InternalList a, int n)
         {
             var result = new InternalList();
+
             if (n <= 0)
             {
                 return result;
             }
+
             for (var i = 0; i < n; i++)
             {
                 result._elements.AddRange(a._elements);
             }
+
             return result;
         }
 
@@ -271,6 +288,7 @@ namespace Chow.Interpreter.State.Values
             var length = _elements.Count;
 
             var step = SliceArgOrDefault(stepValue, 1);
+
             if (step == 0)
             {
                 throw new ArgumentException("slice step cannot be zero");
@@ -278,6 +296,7 @@ namespace Chow.Interpreter.State.Values
 
             int lower;
             int upper;
+
             if (step > 0)
             {
                 lower = 0;
@@ -290,6 +309,7 @@ namespace Chow.Interpreter.State.Values
             }
 
             int start;
+
             if (startValue.DataType == DataType.None)
             {
                 start = step < 0 ? upper : lower;
@@ -297,14 +317,17 @@ namespace Chow.Interpreter.State.Values
             else
             {
                 start = SliceArgOrDefault(startValue, 0);
+
                 if (start < 0)
                 {
                     start += length;
                 }
+
                 if (start < lower)
                 {
                     start = lower;
                 }
+
                 if (start > upper)
                 {
                     start = upper;
@@ -312,6 +335,7 @@ namespace Chow.Interpreter.State.Values
             }
 
             int stop;
+
             if (stopValue.DataType == DataType.None)
             {
                 stop = step < 0 ? lower : upper;
@@ -319,14 +343,17 @@ namespace Chow.Interpreter.State.Values
             else
             {
                 stop = SliceArgOrDefault(stopValue, 0);
+
                 if (stop < 0)
                 {
                     stop += length;
                 }
+
                 if (stop < lower)
                 {
                     stop = lower;
                 }
+
                 if (stop > upper)
                 {
                     stop = upper;
@@ -334,6 +361,7 @@ namespace Chow.Interpreter.State.Values
             }
 
             var sliced = new InternalList();
+
             if (step > 0)
             {
                 for (var i = start; i < stop; i += step)
@@ -348,6 +376,7 @@ namespace Chow.Interpreter.State.Values
                     sliced._elements.Add(_elements[i]);
                 }
             }
+
             return new ChowValue(sliced);
         }
 
@@ -357,10 +386,12 @@ namespace Chow.Interpreter.State.Values
             {
                 return defaultValue;
             }
+
             if (value.DataType != DataType.Int)
             {
                 throw new ArgumentException($"slice indices must be integers or None, got {value.DataType}");
             }
+
             return (int)value.AsType<long>();
         }
 
@@ -369,14 +400,17 @@ namespace Chow.Interpreter.State.Values
             // FUTURE: once dicts/class instances exist, Repr below will grow branches for them.
             var sb = new StringBuilder();
             sb.Append('[');
+
             for (var i = 0; i < _elements.Count; i++)
             {
                 if (i > 0)
                 {
                     sb.Append(", ");
                 }
+
                 Repr(sb, _elements[i]);
             }
+
             sb.Append(']');
             return sb.ToString();
         }
@@ -400,10 +434,12 @@ namespace Chow.Interpreter.State.Values
                     // Python prints `1.0`, not `1`. C#'s default float.ToString() may drop the trailing zero.
                     var f = value.AsType<double>();
                     var fs = f.ToString("R", CultureInfo.InvariantCulture);
+
                     if (fs.IndexOfAny(new[] { '.', 'e', 'E', 'n', 'N', 'i', 'I' }) < 0)
                     {
                         fs += ".0";
                     }
+
                     sb.Append(fs);
                     return;
                 case DataType.Str:

@@ -9,6 +9,7 @@ namespace Chow.Interpreter
 {
     sealed class VirtualMachine
     {
+
         #region Fields
 
         readonly Scope _globalScope;
@@ -44,7 +45,7 @@ namespace Chow.Interpreter
         #endregion
 
         #region Public API
-        
+
         public Scope EvaluateChunk()
         {
             while (_callStack.IsInstrToRun)
@@ -105,7 +106,7 @@ namespace Chow.Interpreter
 
                     #endregion
 
-                    #region Negation
+                    #region Unary Operators
 
                     case OperationCode.Not:
                     {
@@ -322,14 +323,14 @@ namespace Chow.Interpreter
                     }
                 }
 
-                _callStack.MoveToNextInstr();
+                _callStack.MoveToNextInstruction();
             }
 
             return _globalScope;
         }
 
         /// <summary>
-        /// Calls a function stored in a global variable with the name provided.
+        ///     Calls a function stored in a global variable with the name provided.
         /// </summary>
         /// <param name="callVarName">The name of a variable declared in the global scope</param>
         /// <param name="args">The arguments to pass to the function. If there are not any, this parameter can be null.</param>
@@ -353,7 +354,7 @@ namespace Chow.Interpreter
                 }
             }
 
-            CallFunction(argCount: args != null ? args.Count : 0, out var isClosure);
+            CallFunction(args != null ? args.Count : 0, out var isClosure);
 
             if (isClosure)
             {
@@ -488,7 +489,6 @@ namespace Chow.Interpreter
             _valStack.Push(new ChowValue(closure));
         }
 
-
         #endregion
 
         #region Function CallFunction Methods
@@ -539,7 +539,7 @@ namespace Chow.Interpreter
             }
 
             // Advance caller's IP BEFORE pushing the frame so PushReturnValue lands at the next caller instruction.
-            _callStack.MoveToNextInstr();
+            _callStack.MoveToNextInstruction();
             _callStack.EnterFunctionCall(closure);
         }
 
@@ -785,10 +785,8 @@ namespace Chow.Interpreter
                 }
 
                 _valStack.Push(list[attrName]);
-                return;
             }
-
-            if (target.DataType == DataType.Dict)
+            else if (target.DataType == DataType.Dict)
             {
                 var dict = target.AsType<InternalDict>();
 
@@ -798,10 +796,11 @@ namespace Chow.Interpreter
                 }
 
                 _valStack.Push(dict[attrName]);
-                return;
             }
-
-            throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
+            else
+            {
+                throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
+            }
         }
 
         void SetInteropObjectAttribute()
@@ -830,5 +829,6 @@ namespace Chow.Interpreter
         }
 
         #endregion
+
     }
 }

@@ -16,15 +16,17 @@ namespace Chow.Interpreter.Tests
         // Helpers
         // ------------------------------------------------------------------------------------------------------------
 
-        static Node Parse(string source) =>
-            UnwrapAssignmentExpression(new Parser(new Scanner("x = " + source).ScanTokens()).BuildTree());
+        static Node Parse(string source)
+        {
+            return UnwrapAssignmentExpression(new Parser(new Scanner("x = " + source).ScanTokens()).BuildTree());
+        }
 
         static Node ParseTokens(params Token[] tokens)
         {
             var wrapped = new List<Token>
             {
                 Token(TokenType.Identifier, "x", 1),
-                Token(TokenType.SymbolAssign, "=", 1),
+                Token(TokenType.SymbolAssign, "=", 1)
             };
             wrapped.AddRange(tokens);
             return UnwrapAssignmentExpression(new Parser(wrapped).BuildTree());
@@ -36,8 +38,10 @@ namespace Chow.Interpreter.Tests
             return ((VariableAssignStatementNode)statement).Expression;
         }
 
-        static Token Token(TokenType type, string lexeme, int lineNumber, object literal = null!) =>
-            new Token(type, lexeme, lineNumber, literal);
+        static Token Token(TokenType type, string lexeme, int lineNumber, object literal = null!)
+        {
+            return new Token(type, lexeme, lineNumber, literal);
+        }
 
         static void AssertLiteral(Node node, object expectedValue, LiteralDataType expectedType)
         {

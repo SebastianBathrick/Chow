@@ -25,11 +25,13 @@ namespace Chow.Interpreter.ImplTests
             foreach (var stmt in root.Statements)
             {
                 var found = FindFunctionIn(stmt, name);
+
                 if (found != null)
                 {
                     return found;
                 }
             }
+
             Assert.Fail($"Function '{name}' not found.");
             return null!;
         }
@@ -46,11 +48,13 @@ namespace Chow.Interpreter.ImplTests
                     foreach (var stmt in block.Statements)
                     {
                         var nested = FindFunctionIn(stmt, name);
+
                         if (nested != null)
                         {
                             return nested;
                         }
                     }
+
                     return null;
                 default:
                     return null;
@@ -68,20 +72,24 @@ namespace Chow.Interpreter.ImplTests
                     foreach (var stmt in block.Statements)
                     {
                         var nested = TryFindAssign(stmt, name);
+
                         if (nested != null)
                         {
                             return nested;
                         }
                     }
+
                     break;
                 }
                 case FunctionNode func:
                 {
                     var nested = TryFindAssign(func.Body, name);
+
                     if (nested != null)
                     {
                         return nested;
                     }
+
                     break;
                 }
                 case IfStatementNode ifNode:
@@ -89,6 +97,7 @@ namespace Chow.Interpreter.ImplTests
                     return TryFindAssign(ifNode.Block, name) ?? TryFindAssign(ifNode.Branch, name)!;
                 }
             }
+
             Assert.Fail($"Assignment to '{name}' not found.");
             return null!;
         }
@@ -99,6 +108,7 @@ namespace Chow.Interpreter.ImplTests
             {
                 return null;
             }
+
             switch (node)
             {
                 case VariableAssignStatementNode v when v.Name == name:
@@ -107,11 +117,13 @@ namespace Chow.Interpreter.ImplTests
                     foreach (var stmt in block.Statements)
                     {
                         var nested = TryFindAssign(stmt, name);
+
                         if (nested != null)
                         {
                             return nested;
                         }
                     }
+
                     return null;
                 case FunctionNode func:
                     return TryFindAssign(func.Body, name);
@@ -125,10 +137,12 @@ namespace Chow.Interpreter.ImplTests
         static NameNode FindRead(Node node, string name)
         {
             var found = TryFindRead(node, name);
+
             if (found == null)
             {
                 Assert.Fail($"Read of '{name}' not found.");
             }
+
             return found!;
         }
 
@@ -138,6 +152,7 @@ namespace Chow.Interpreter.ImplTests
             {
                 return null;
             }
+
             switch (node)
             {
                 case NameNode n when n.Name == name:
@@ -146,11 +161,13 @@ namespace Chow.Interpreter.ImplTests
                     foreach (var stmt in block.Statements)
                     {
                         var nested = TryFindRead(stmt, name);
+
                         if (nested != null)
                         {
                             return nested;
                         }
                     }
+
                     return null;
                 case FunctionNode func:
                     return TryFindRead(func.Body, name);
@@ -165,18 +182,22 @@ namespace Chow.Interpreter.ImplTests
                 case CallNode call:
                 {
                     var nested = TryFindRead(call.CallName, name);
+
                     if (nested != null)
                     {
                         return nested;
                     }
+
                     foreach (var arg in call.Args)
                     {
                         nested = TryFindRead(arg, name);
+
                         if (nested != null)
                         {
                             return nested;
                         }
                     }
+
                     return null;
                 }
                 case IfStatementNode ifNode:
@@ -264,6 +285,7 @@ namespace Chow.Interpreter.ImplTests
             var root = Analyze("def outer():\n    global foo\n    def foo():\n        return 1");
             var outer = FindFunction(root, "outer");
             FunctionNode? fooDef = null;
+
             foreach (var stmt in ((BlockNode)outer.Body).Statements)
             {
                 if (stmt is FunctionNode fn && fn.Name == "foo")
@@ -272,6 +294,7 @@ namespace Chow.Interpreter.ImplTests
                     break;
                 }
             }
+
             Assert.That(fooDef, Is.Not.Null);
             Assert.That(fooDef!.Resolution, Is.EqualTo(ScopeType.Global));
         }

@@ -3,7 +3,7 @@ namespace Chow.Cli
     /// <summary>
     /// Process exit codes returned by the Chow command-line application.
     /// </summary>
-    internal static class ExitCodes
+    static class ExitCodes
     {
         /// <summary>
         /// The command completed successfully.

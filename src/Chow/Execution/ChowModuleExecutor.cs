@@ -4,7 +4,7 @@ namespace Chow.Execution
     /// <summary>
     /// Adapts <see cref="ChowModule"/> to the CLI executor interface.
     /// </summary>
-    internal sealed class ChowModuleExecutor : IChowExecutor
+    sealed class ChowModuleExecutor : IChowExecutor
     {
         readonly ChowModule _module = new ChowModule();
 

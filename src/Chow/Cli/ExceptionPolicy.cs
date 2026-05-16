@@ -3,7 +3,7 @@ namespace Chow.Cli
     /// <summary>
     /// Centralizes CLI exception handling decisions.
     /// </summary>
-    internal static class ExceptionPolicy
+    static class ExceptionPolicy
     {
         /// <summary>
         /// Determines whether the exception represents a host failure that the CLI should not swallow.

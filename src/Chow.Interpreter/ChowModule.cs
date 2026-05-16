@@ -2,10 +2,10 @@ using Chow.Interpreter.State.Scopes;
 namespace Chow.Interpreter
 {
     /// <summary>
-    /// The primary entry point for embedding the Chow interpreter. Manages a persistent global scope
-    /// across multiple <see cref="Execute"/> calls so that variables and functions defined in one call
-    /// are available in subsequent calls. The standard built-in functions are seeded into the global
-    /// scope at construction.
+    ///     The primary entry point for embedding the Chow interpreter. Manages a persistent global scope
+    ///     across multiple <see cref="Execute" /> calls so that variables and functions defined in one call
+    ///     are available in subsequent calls. The standard built-in functions are seeded into the global
+    ///     scope at construction.
     /// </summary>
     public class ChowModule
     {
@@ -20,9 +20,9 @@ namespace Chow.Interpreter
         }
 
         /// <summary>
-        /// Compiles and executes a string of Chow source code. The global scope persists across calls, so
-        /// variables and functions defined in one call are available in subsequent calls.
-        /// <see langword="null"/>, empty, and whitespace-only strings are accepted and treated as no-ops.
+        ///     Compiles and executes a string of Chow source code. The global scope persists across calls, so
+        ///     variables and functions defined in one call are available in subsequent calls.
+        ///     <see langword="null" />, empty, and whitespace-only strings are accepted and treated as no-ops.
         /// </summary>
         /// <param name="sourceCode">The Chow source code to execute.</param>
         /// <exception cref="Exceptions.ChowRuntimeException">A runtime error occurs during execution.</exception>

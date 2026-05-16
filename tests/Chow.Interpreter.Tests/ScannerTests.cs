@@ -9,9 +9,15 @@ namespace Chow.Interpreter.Tests
         // Helpers
         // ------------------------------------------------------------------------------------------------------------
 
-        static List<Token> Tokenize(string source) => new Scanner(source).ScanTokens();
+        static List<Token> Tokenize(string source)
+        {
+            return new Scanner(source).ScanTokens();
+        }
 
-        static List<TokenType> TokenTypes(string source) => Tokenize(source).Select(token => token.Type).ToList();
+        static List<TokenType> TokenTypes(string source)
+        {
+            return Tokenize(source).Select(token => token.Type).ToList();
+        }
 
         static void AssertToken(
             Token token,

@@ -6,7 +6,10 @@ namespace Chow.Interpreter.ImplTests
     [TestFixture]
     public class ClosureTests
     {
-        static ChowValue Int(long v) => new ChowValue(v);
+        static ChowValue Int(long v)
+        {
+            return new ChowValue(v);
+        }
 
         // ============================================================================================================
         // A. Construction

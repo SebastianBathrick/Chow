@@ -21,6 +21,6 @@ namespace Chow.Interpreter.SyntaxTrees.Scope
         /// Binding/reference targets the nearest enclosing function scope that already binds the
         /// name (declared <c>nonlocal</c>). The module scope is excluded from the walk.
         /// </summary>
-        Nonlocal,
+        Nonlocal
     }
 }

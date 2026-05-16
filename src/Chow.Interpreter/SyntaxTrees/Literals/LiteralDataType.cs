@@ -6,6 +6,6 @@ namespace Chow.Interpreter.SyntaxTrees.Literals
         Float,
         None,
         Boolean,
-        String,
+        String
     }
 }

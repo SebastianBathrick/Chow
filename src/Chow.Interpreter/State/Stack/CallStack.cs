@@ -172,7 +172,7 @@ namespace Chow.Interpreter.State.Stack
         }
 
         /// <summary>Advances the current frame's instruction pointer by one.</summary>
-        public void MoveToNextInstr()
+        public void MoveToNextInstruction()
         {
             CurrFrame.MoveToNextInstr();
         }

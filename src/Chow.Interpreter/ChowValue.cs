@@ -8,6 +8,7 @@ namespace Chow.Interpreter
 {
     public readonly struct ChowValue
     {
+
         #region Fields
 
         static readonly Dictionary<Type, DataType> DataTypeMap = new Dictionary<Type, DataType>
@@ -19,12 +20,11 @@ namespace Chow.Interpreter
             { typeof(string), DataType.Str },
             { typeof(InternalDict), DataType.Dict },
             { typeof(InternalRange), DataType.Range },
-            { typeof(InternalList), DataType.List },
+            { typeof(InternalList), DataType.List }
         };
 
         public static readonly ChowValue None = new ChowValue(DataType.None);
 
-        readonly DataType _dataType;
         readonly bool _boolValue;
         readonly object _objectValue;
 
@@ -38,10 +38,11 @@ namespace Chow.Interpreter
 
         #region Properties
 
-        internal DataType DataType => _dataType;
+        internal DataType DataType { get; }
 
         bool IsNullableType =>
-            _dataType == DataType.Object || _dataType == DataType.List || _dataType == DataType.Dict || _dataType == DataType.Range || _dataType == DataType.Str;
+            DataType == DataType.Object || DataType == DataType.List || DataType == DataType.Dict || DataType == DataType.Range ||
+            DataType == DataType.Str;
 
         #endregion
 
@@ -54,7 +55,7 @@ namespace Chow.Interpreter
             long int64Value = DEFAULT_INT64_VALUE,
             double float64Value = DEFAULT_FLOAT64_VALUE)
         {
-            _dataType = dataType;
+            DataType = dataType;
             _boolValue = boolValue;
             _objectValue = objectValue;
             _int64Value = int64Value;
@@ -66,13 +67,19 @@ namespace Chow.Interpreter
             }
         }
 
-        internal ChowValue(long value)          : this(DataType.Int,   int64Value:   value) {}
-        internal ChowValue(double value)        : this(DataType.Float, float64Value: value) {}
-        internal ChowValue(bool value)          : this(DataType.Bool,  boolValue:    value) {}
-        internal ChowValue(string value)        : this(DataType.Str,   objectValue:  value) {}
-        internal ChowValue(InternalList list)   : this(DataType.List,  objectValue:  list)  {}
-        internal ChowValue(InternalDict dict)   : this(DataType.Dict,  objectValue:  dict)  {}
-        internal ChowValue(InternalRange range) : this(DataType.Range, objectValue:  range) {}
+        internal ChowValue(long value) : this(DataType.Int, int64Value: value) {}
+
+        internal ChowValue(double value) : this(DataType.Float, float64Value: value) {}
+
+        internal ChowValue(bool value) : this(DataType.Bool, value) {}
+
+        internal ChowValue(string value) : this(DataType.Str, objectValue: value) {}
+
+        internal ChowValue(InternalList list) : this(DataType.List, objectValue: list) {}
+
+        internal ChowValue(InternalDict dict) : this(DataType.Dict, objectValue: dict) {}
+
+        internal ChowValue(InternalRange range) : this(DataType.Range, objectValue: range) {}
 
         // Re-dispatches to a typed ctor when obj happens to be a recognized interpreter value, so callers
         // holding an `object` reference don't accidentally land in Tag.Object. Unknown types (interop
@@ -127,7 +134,7 @@ namespace Chow.Interpreter
                 }
                 default:
                 {
-                    _dataType = DataType.Object;
+                    DataType = DataType.Object;
                     _boolValue = DEFAULT_BOOL_VALUE;
                     _objectValue = obj;
                     _int64Value = DEFAULT_INT64_VALUE;
@@ -150,7 +157,7 @@ namespace Chow.Interpreter
                     return typedObject;
                 }
 
-                throw new InvalidOperationException($"Cannot convert {_dataType} to {typeof(TDataType)}");
+                throw new InvalidOperationException($"Cannot convert {DataType} to {typeof(TDataType)}");
             }
 
             switch (targetDataType)
@@ -167,6 +174,7 @@ namespace Chow.Interpreter
                     {
                         return (TDataType)(object)(int)ToInt64();
                     }
+
                     return (TDataType)(object)ToInt64();
                 }
                 case DataType.Float:
@@ -190,7 +198,7 @@ namespace Chow.Interpreter
                 }
             }
 
-            throw new InvalidOperationException($"Cannot convert {_dataType} to {typeof(TDataType)}");
+            throw new InvalidOperationException($"Cannot convert {DataType} to {typeof(TDataType)}");
         }
 
         public bool IsOfType<TDataType>()
@@ -200,12 +208,12 @@ namespace Chow.Interpreter
             // If it is not a type defined by the DataType enum
             if (!DataTypeMap.ContainsKey(checkType))
             {
-                return _dataType == DataType.Object && _objectValue is TDataType;
+                return DataType == DataType.Object && _objectValue is TDataType;
             }
 
             // The map includes values representing data types that are from the Chow.Interpreter namespace
             var chowDataType = DataTypeMap[checkType];
-            return _dataType == chowDataType;
+            return DataType == chowDataType;
         }
 
         internal bool IsTruthy()
@@ -216,6 +224,7 @@ namespace Chow.Interpreter
         #endregion
 
         #region Arithmetic & Logical Operations
+
         // Instance methods to avoid passing two ChowValues as parameters. Each returns a new ChowValue
         // (the struct is readonly, so no risk of accidentally mutating this instance's internal state).
         // Promotion rules come from DataTypeConversionMap (the single source of truth). Carve-outs for
@@ -236,14 +245,16 @@ namespace Chow.Interpreter
                 }
                 case ConversionCase.NoConversion:
                 {
-                    if (_dataType == DataType.List && rightOperand._dataType == DataType.List)
+                    if (DataType == DataType.List && rightOperand.DataType == DataType.List)
                     {
                         return new ChowValue(InternalList.Concat(AsType<InternalList>(), rightOperand.AsType<InternalList>()));
                     }
-                    if (_dataType == DataType.Str && rightOperand._dataType == DataType.Str)
+
+                    if (DataType == DataType.Str && rightOperand.DataType == DataType.Str)
                     {
                         return new ChowValue(AsType<string>() + rightOperand.AsType<string>());
                     }
+
                     break;
                 }
             }
@@ -283,22 +294,26 @@ namespace Chow.Interpreter
                 case ConversionCase.NoConversion:
                 {
                     // Python treats bool as a subtype of int, so [1] * True and "ab" * True are valid.
-                    if (_dataType == DataType.List && IsIntegerTag(rightOperand._dataType))
+                    if (DataType == DataType.List && IsIntegerTag(rightOperand.DataType))
                     {
                         return new ChowValue(InternalList.Repeat(AsType<InternalList>(), rightOperand.AsType<int>()));
                     }
-                    if (IsIntegerTag(_dataType) && rightOperand._dataType == DataType.List)
+
+                    if (IsIntegerTag(DataType) && rightOperand.DataType == DataType.List)
                     {
                         return new ChowValue(InternalList.Repeat(rightOperand.AsType<InternalList>(), AsType<int>()));
                     }
-                    if (_dataType == DataType.Str && IsIntegerTag(rightOperand._dataType))
+
+                    if (DataType == DataType.Str && IsIntegerTag(rightOperand.DataType))
                     {
                         return new ChowValue(RepeatString(AsType<string>(), rightOperand.AsType<int>()));
                     }
-                    if (IsIntegerTag(_dataType) && rightOperand._dataType == DataType.Str)
+
+                    if (IsIntegerTag(DataType) && rightOperand.DataType == DataType.Str)
                     {
                         return new ChowValue(RepeatString(rightOperand.AsType<string>(), AsType<int>()));
                     }
+
                     break;
                 }
             }
@@ -314,10 +329,12 @@ namespace Chow.Interpreter
                 case ConversionCase.PromoteToFloat:
                 {
                     var divisor = rightOperand.PromoteToDouble();
+
                     if (divisor == 0.0)
                     {
                         throw new ZeroDivisionException();
                     }
+
                     return new ChowValue(PromoteToDouble() / divisor);
                 }
             }
@@ -334,20 +351,24 @@ namespace Chow.Interpreter
                 {
                     var a = PromoteToLong();
                     var b = rightOperand.PromoteToLong();
+
                     if (b == 0L)
                     {
                         throw new ZeroDivisionException();
                     }
+
                     return new ChowValue((a % b + b) % b);
                 }
                 case ConversionCase.PromoteToFloat:
                 {
                     var l = PromoteToDouble();
                     var r = rightOperand.PromoteToDouble();
+
                     if (r == 0.0)
                     {
                         throw new ZeroDivisionException();
                     }
+
                     return new ChowValue((l % r + r) % r);
                 }
             }
@@ -365,24 +386,30 @@ namespace Chow.Interpreter
                 {
                     var a = PromoteToLong();
                     var b = rightOperand.PromoteToLong();
+
                     if (b == 0L)
                     {
                         throw new ZeroDivisionException();
                     }
+
                     var q = a / b;
-                    if (a % b != 0L && (a < 0L) != (b < 0L))
+
+                    if (a % b != 0L && a < 0L != b < 0L)
                     {
                         q--;
                     }
+
                     return new ChowValue(q);
                 }
                 case ConversionCase.PromoteToFloat:
                 {
                     var divisor = rightOperand.PromoteToDouble();
+
                     if (divisor == 0.0)
                     {
                         throw new ZeroDivisionException();
                     }
+
                     return new ChowValue(Math.Floor(PromoteToDouble() / divisor));
                 }
             }
@@ -397,6 +424,7 @@ namespace Chow.Interpreter
             // (depends on the runtime exponent's sign), not type-dependent, so it cannot live in the
             // type-keyed map. Every other dispatch path defers to DataTypeConversionMap.
             var conv = LookupBinary(ExpressionOperator.Exponentiate, rightOperand);
+
             if (conv == ConversionCase.PromoteToInt && rightOperand.PromoteToLong() < 0)
             {
                 conv = ConversionCase.PromoteToFloat;
@@ -423,7 +451,7 @@ namespace Chow.Interpreter
         internal ChowValue CreateUnion(ChowValue rightOperand)
         {
             if (LookupBinary(ExpressionOperator.BinaryOr, rightOperand) == ConversionCase.NoConversion
-                && _dataType == DataType.Dict && rightOperand._dataType == DataType.Dict)
+                && DataType == DataType.Dict && rightOperand.DataType == DataType.Dict)
             {
                 return new ChowValue(InternalDict.Merge(AsType<InternalDict>(), rightOperand.AsType<InternalDict>()));
             }
@@ -516,10 +544,11 @@ namespace Chow.Interpreter
                 }
                 case ConversionCase.NoConversion:
                 {
-                    if (_dataType == DataType.Str && other._dataType == DataType.Str)
+                    if (DataType == DataType.Str && other.DataType == DataType.Str)
                     {
                         return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) < 0;
                     }
+
                     break;
                 }
             }
@@ -541,10 +570,11 @@ namespace Chow.Interpreter
                 }
                 case ConversionCase.NoConversion:
                 {
-                    if (_dataType == DataType.Str && other._dataType == DataType.Str)
+                    if (DataType == DataType.Str && other.DataType == DataType.Str)
                     {
                         return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) > 0;
                     }
+
                     break;
                 }
             }
@@ -566,10 +596,11 @@ namespace Chow.Interpreter
                 }
                 case ConversionCase.NoConversion:
                 {
-                    if (_dataType == DataType.Str && other._dataType == DataType.Str)
+                    if (DataType == DataType.Str && other.DataType == DataType.Str)
                     {
                         return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) <= 0;
                     }
+
                     break;
                 }
             }
@@ -591,10 +622,11 @@ namespace Chow.Interpreter
                 }
                 case ConversionCase.NoConversion:
                 {
-                    if (_dataType == DataType.Str && other._dataType == DataType.Str)
+                    if (DataType == DataType.Str && other.DataType == DataType.Str)
                     {
                         return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) >= 0;
                     }
+
                     break;
                 }
             }
@@ -608,9 +640,9 @@ namespace Chow.Interpreter
 
         internal ChowValue CallInterop(ChowValue[] args)
         {
-            if (_dataType != DataType.Object)
+            if (DataType != DataType.Object)
             {
-                throw new InvalidOperationException($"'{_dataType}' object is not callable");
+                throw new InvalidOperationException($"'{DataType}' object is not callable");
             }
 
             if (_objectValue is Func<ChowValue[], ChowValue> methodDelegate)
@@ -632,7 +664,7 @@ namespace Chow.Interpreter
 
         public override int GetHashCode()
         {
-            switch (_dataType)
+            switch (DataType)
             {
                 case DataType.Int:
                 {
@@ -662,7 +694,7 @@ namespace Chow.Interpreter
                 }
                 default:
                 {
-                    return _dataType.GetHashCode();
+                    return DataType.GetHashCode();
                 }
             }
         }
@@ -675,11 +707,12 @@ namespace Chow.Interpreter
         #endregion
 
         #region Conversion Methods
+
         // These methods can be indirectly accessed via the AsType<T>() method. Even the VirtualMachine does not need direct access to these.
 
         bool ToBool()
         {
-            switch (_dataType)
+            switch (DataType)
             {
                 case DataType.None:
                 {
@@ -724,7 +757,7 @@ namespace Chow.Interpreter
 
         long ToInt64()
         {
-            switch (_dataType)
+            switch (DataType)
             {
                 case DataType.None:
                 {
@@ -769,7 +802,7 @@ namespace Chow.Interpreter
 
         double ToFloat64()
         {
-            switch (_dataType)
+            switch (DataType)
             {
                 case DataType.None:
                 {
@@ -814,7 +847,7 @@ namespace Chow.Interpreter
 
         string ToStr()
         {
-            switch (_dataType)
+            switch (DataType)
             {
                 case DataType.None:
                 {
@@ -844,7 +877,7 @@ namespace Chow.Interpreter
                     if (_objectValue == null)
                     {
                         // This should never happen, but we'll check just in case
-                        throw new InvalidOperationException($"{nameof(ChowValue)} object with type {_dataType} null");
+                        throw new InvalidOperationException($"{nameof(ChowValue)} object with type {DataType} null");
                     }
 
                     return _objectValue.ToString();
@@ -943,8 +976,8 @@ namespace Chow.Interpreter
         static bool IsFractionalSuffix(string formatted)
         {
             return formatted.IndexOf(FLOAT64_DECIMAL_POINT_CHAR) == CHAR_NOT_FOUND_INDEX
-                   && formatted.IndexOf(FLOAT64_EXPONENT_LOWER_CHAR) == CHAR_NOT_FOUND_INDEX
-                   && formatted.IndexOf(FLOAT64_EXPONENT_UPPER_CHAR) == CHAR_NOT_FOUND_INDEX;
+                && formatted.IndexOf(FLOAT64_EXPONENT_LOWER_CHAR) == CHAR_NOT_FOUND_INDEX
+                && formatted.IndexOf(FLOAT64_EXPONENT_UPPER_CHAR) == CHAR_NOT_FOUND_INDEX;
         }
 
         string StrToStr()
@@ -960,33 +993,34 @@ namespace Chow.Interpreter
         #endregion
 
         #region Operator Dispatch Helpers
+
         // Promotion-rule lookup and result-coercion helpers used by the arithmetic/comparison instance
         // methods above. Operand promotion is intentionally limited to the three numeric tags
         // (Bool/Int/Float); the map guarantees PromoteToInt/PromoteToFloat is only reported for those.
 
         ConversionCase LookupBinary(ExpressionOperator op, ChowValue right)
         {
-            return DataTypeConversionMap.GetLeftRightConversionCase(op, _dataType, right._dataType);
+            return DataTypeConversionMap.GetLeftRightConversionCase(op, DataType, right.DataType);
         }
 
         ConversionCase LookupUnary(ExpressionOperator op)
         {
-            return DataTypeConversionMap.GetOperandConversionCase(op, _dataType);
+            return DataTypeConversionMap.GetOperandConversionCase(op, DataType);
         }
 
         TypeException UnsupportedBinary(ExpressionOperator op, ChowValue right)
         {
-            return new TypeException($"unsupported operand type(s) for {op}: '{_dataType}' and '{right._dataType}'");
+            return new TypeException($"unsupported operand type(s) for {op}: '{DataType}' and '{right.DataType}'");
         }
 
         TypeException UnsupportedUnary(ExpressionOperator op)
         {
-            return new TypeException($"bad operand type for unary {op}: '{_dataType}'");
+            return new TypeException($"bad operand type for unary {op}: '{DataType}'");
         }
 
         long PromoteToLong()
         {
-            switch (_dataType)
+            switch (DataType)
             {
                 case DataType.Bool:
                 {
@@ -998,14 +1032,14 @@ namespace Chow.Interpreter
                 }
                 default:
                 {
-                    throw new InvalidOperationException($"Cannot promote {_dataType} to int");
+                    throw new InvalidOperationException($"Cannot promote {DataType} to int");
                 }
             }
         }
 
         double PromoteToDouble()
         {
-            switch (_dataType)
+            switch (DataType)
             {
                 case DataType.Bool:
                 {
@@ -1021,7 +1055,7 @@ namespace Chow.Interpreter
                 }
                 default:
                 {
-                    throw new InvalidOperationException($"Cannot promote {_dataType} to float");
+                    throw new InvalidOperationException($"Cannot promote {DataType} to float");
                 }
             }
         }
@@ -1031,12 +1065,12 @@ namespace Chow.Interpreter
         // delegate to the underlying value's identity/structural equality.
         bool EqualsNoConversion(ChowValue other)
         {
-            if (_dataType != other._dataType)
+            if (DataType != other.DataType)
             {
                 return false;
             }
 
-            switch (_dataType)
+            switch (DataType)
             {
                 case DataType.None:
                 {
@@ -1074,6 +1108,7 @@ namespace Chow.Interpreter
             }
 
             var builder = new StringBuilder(source.Length * count);
+
             for (var index = 0; index < count; index++)
             {
                 builder.Append(source);
@@ -1092,16 +1127,19 @@ namespace Chow.Interpreter
         // float by CreatePower before this is reached). Overflow wraps silently.
         static long IntPow(long b, long e)
         {
-            long result = 1L;
+            var result = 1L;
+
             while (e > 0L)
             {
                 if ((e & 1L) == 1L)
                 {
                     result *= b;
                 }
+
                 b *= b;
                 e >>= 1;
             }
+
             return result;
         }
 
@@ -1150,5 +1188,6 @@ namespace Chow.Interpreter
         const int CHAR_NOT_FOUND_INDEX = -1;
 
         #endregion
+
     }
 }

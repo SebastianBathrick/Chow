@@ -6,7 +6,7 @@ namespace Chow.Cli
     /// <summary>
     /// Dispatches command-line input to the appropriate Chow CLI behavior.
     /// </summary>
-    internal sealed class CliApp
+    sealed class CliApp
     {
         readonly IChowExecutor _executor;
 

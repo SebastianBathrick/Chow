@@ -16,10 +16,10 @@ namespace Chow.Interpreter.Tokens
 
         public Token(TokenType type, string lexeme, int lineNum, object literal)
         {
-            this.Type = type;
-            this.Lexeme = lexeme;
-            this.LineNum = lineNum;
-            this.Literal = literal;
+            Type = type;
+            Lexeme = lexeme;
+            LineNum = lineNum;
+            Literal = literal;
         }
 
         public override string ToString()

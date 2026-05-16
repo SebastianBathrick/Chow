@@ -24,10 +24,12 @@ namespace Chow.Interpreter.State.Values
             get
             {
                 ValidateHashable(key);
+
                 if (!_entries.TryGetValue(key, out var value))
                 {
                     throw new DictKeyException(KeyRepr(key));
                 }
+
                 return value;
             }
             set => Add(key, value);
@@ -46,10 +48,12 @@ namespace Chow.Interpreter.State.Values
         public void Add(ChowValue key, ChowValue value)
         {
             ValidateHashable(key);
+
             if (!_entries.ContainsKey(key))
             {
                 _keys.Add(key);
             }
+
             _entries[key] = value;
         }
 
@@ -64,10 +68,12 @@ namespace Chow.Interpreter.State.Values
             ValidateArgRange(args, 1, 2);
             var key = args[0];
             ValidateHashable(key);
+
             if (_entries.TryGetValue(key, out var value))
             {
                 return value;
             }
+
             return args.Length == 2 ? args[1] : ChowValue.None;
         }
 
@@ -84,31 +90,38 @@ namespace Chow.Interpreter.State.Values
             ValidateArgRange(args, 1, 2);
             var key = args[0];
             ValidateHashable(key);
+
             if (_entries.TryGetValue(key, out var value))
             {
                 _entries.Remove(key);
                 _keys.Remove(key);
                 return value;
             }
+
             if (args.Length == 2)
             {
                 return args[1];
             }
+
             throw new DictKeyException(KeyRepr(key));
         }
 
         ChowValue Update(ChowValue[] args)
         {
             ValidateArgCount(args, 1);
+
             if (args[0].DataType != DataType.Dict)
             {
                 throw new TypeException($"'{args[0].DataType}' object is not a dict");
             }
+
             var other = args[0].AsType<InternalDict>();
+
             foreach (var key in other._keys)
             {
                 Add(key, other._entries[key]);
             }
+
             return ChowValue.None;
         }
 
@@ -117,10 +130,12 @@ namespace Chow.Interpreter.State.Values
             ValidateArgRange(args, 1, 2);
             var key = args[0];
             ValidateHashable(key);
+
             if (_entries.TryGetValue(key, out var existing))
             {
                 return existing;
             }
+
             var def = args.Length == 2 ? args[1] : ChowValue.None;
             Add(key, def);
             return def;
@@ -141,7 +156,7 @@ namespace Chow.Interpreter.State.Values
                 case METHOD_SET_DEFAULT_NAME:
                     return SetDefault;
             }
-            
+
             throw new NotImplementedException($"Method '{methodName}' is not implemented for InternalDict");
         }
 
@@ -166,17 +181,20 @@ namespace Chow.Interpreter.State.Values
             {
                 return false;
             }
+
             foreach (var key in a._keys)
             {
                 if (!b._entries.TryGetValue(key, out var bValue))
                 {
                     return false;
                 }
+
                 if (!a._entries[key].IsEqualTo(bValue))
                 {
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -186,12 +204,14 @@ namespace Chow.Interpreter.State.Values
             unchecked
             {
                 var hash = 0;
+
                 foreach (var key in a._keys)
                 {
                     var keyHash = key.GetHashCode();
                     var valueHash = a._entries[key].GetHashCode();
-                    hash ^= (keyHash * 31) ^ valueHash;
+                    hash ^= keyHash * 31 ^ valueHash;
                 }
+
                 return hash;
             }
         }
@@ -199,14 +219,17 @@ namespace Chow.Interpreter.State.Values
         public static InternalDict Merge(InternalDict a, InternalDict b)
         {
             var result = new InternalDict();
+
             foreach (var key in a._keys)
             {
                 result.Add(key, a._entries[key]);
             }
+
             foreach (var key in b._keys)
             {
                 result.Add(key, b._entries[key]);
             }
+
             return result;
         }
 
@@ -229,17 +252,20 @@ namespace Chow.Interpreter.State.Values
         {
             var sb = new StringBuilder();
             sb.Append('{');
+
             for (var i = 0; i < _keys.Count; i++)
             {
                 if (i > 0)
                 {
                     sb.Append(", ");
                 }
+
                 var key = _keys[i];
                 Repr(sb, key);
                 sb.Append(": ");
                 Repr(sb, _entries[key]);
             }
+
             sb.Append('}');
             return sb.ToString();
         }
@@ -253,39 +279,41 @@ namespace Chow.Interpreter.State.Values
                 case DataType.None:
                     sb.Append("None");
                     return;
-                
+
                 case DataType.Bool:
                     sb.Append(value.AsType<bool>() ? "True" : "False");
                     return;
-                
+
                 case DataType.Int:
                     sb.Append(value.AsType<long>());
                     return;
-                
+
                 case DataType.Float:
                     var f = value.AsType<double>();
                     var fs = f.ToString("R", CultureInfo.InvariantCulture);
+
                     if (fs.IndexOfAny(new[] { '.', 'e', 'E', 'n', 'N', 'i', 'I' }) < 0)
                     {
                         fs += ".0";
                     }
+
                     sb.Append(fs);
                     return;
-                
+
                 case DataType.Str:
                     sb.Append('\'');
                     sb.Append(value.AsType<string>());
                     sb.Append('\'');
                     return;
-                
+
                 case DataType.List:
                     sb.Append(value.AsType<InternalList>());
                     return;
-                
+
                 case DataType.Dict:
                     sb.Append(value.AsType<InternalDict>());
                     return;
-                
+
                 default:
                     sb.Append(value.ToString());
                     return;
@@ -315,6 +343,7 @@ namespace Chow.Interpreter.State.Values
         static void ValidateArgCount(ChowValue[] args, int expectedCount)
         {
             var actualCount = args?.Length ?? 0;
+
             if (actualCount != expectedCount)
             {
                 throw new ArgumentException($"Method requires {expectedCount} arguments, but {actualCount} were provided");
@@ -324,6 +353,7 @@ namespace Chow.Interpreter.State.Values
         static void ValidateArgRange(ChowValue[] args, int min, int max)
         {
             var actualCount = args?.Length ?? 0;
+
             if (actualCount < min || actualCount > max)
             {
                 throw new ArgumentException($"Method requires between {min} and {max} arguments, but {actualCount} were provided");

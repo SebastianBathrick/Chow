@@ -3,7 +3,7 @@ namespace Chow.Repl
     /// <summary>
     /// Defines the prompts used by the interactive Chow line editor.
     /// </summary>
-    internal readonly struct PromptStyle
+    readonly struct PromptStyle
     {
         /// <summary>
         /// Initializes a prompt style for first-line and continuation-line input.
@@ -48,17 +48,11 @@ namespace Chow.Repl
         /// <summary>
         /// Gets the shared prompt width used to align cursor movement across input lines.
         /// </summary>
-        public int IndicatorLength
-        {
-            get { return StartIndicator.Length; }
-        }
+        public int IndicatorLength => StartIndicator.Length;
 
         /// <summary>
         /// Gets the default Chow REPL prompt style.
         /// </summary>
-        public static PromptStyle Default
-        {
-            get { return new PromptStyle(">>> ", "... "); }
-        }
+        public static PromptStyle Default => new PromptStyle(">>> ", "... ");
     }
 }

@@ -3,27 +3,32 @@ using Chow.Interpreter.State.Values;
 namespace Chow.Interpreter.Tests
 {
     [TestFixture]
-    internal class ChowValueTests
+    class ChowValueTests
     {
+
         #region Helpers
 
         static InternalList ListOf(params ChowValue[] elements)
         {
             var list = new InternalList();
+
             foreach (var element in elements)
             {
                 list.Add(element);
             }
+
             return list;
         }
 
         static InternalDict DictOf(params (ChowValue key, ChowValue value)[] pairs)
         {
             var dict = new InternalDict();
+
             foreach (var pair in pairs)
             {
                 dict.Add(pair.key, pair.value);
             }
+
             return dict;
         }
 
@@ -386,5 +391,6 @@ namespace Chow.Interpreter.Tests
         }
 
         #endregion
+
     }
 }

@@ -345,7 +345,7 @@ namespace Chow.Interpreter.Tests
 
             var vm = new VirtualMachine(chunk, new Scope());
             vm.EvaluateChunk();
-            ChowValue result = vm.ValStackTop;
+            var result = vm.ValStackTop;
 
             AssertIntegerResult(result, 5);
         }
@@ -362,7 +362,7 @@ namespace Chow.Interpreter.Tests
 
             var vm = new VirtualMachine(chunk, new Scope());
             vm.EvaluateChunk();
-            ChowValue result = vm.ValStackTop;
+            var result = vm.ValStackTop;
 
             AssertIntegerResult(result, 7);
         }
@@ -381,7 +381,7 @@ namespace Chow.Interpreter.Tests
 
             var vm = new VirtualMachine(chunk, new Scope());
             vm.EvaluateChunk();
-            ChowValue result = vm.ValStackTop;
+            var result = vm.ValStackTop;
 
             AssertIntegerResult(result, 3);
         }

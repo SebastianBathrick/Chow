@@ -32,7 +32,7 @@ namespace Chow.Interpreter.Tokens
             { "except", TokenType.KeywordExcept },
             { "finally", TokenType.KeywordFinally },
             { "raise", TokenType.KeywordRaise },
-            { "assert", TokenType.KeywordAssert },
+            { "assert", TokenType.KeywordAssert }
         };
 
         static readonly IReadOnlyDictionary<TokenType, string> TypeToKeyword;
@@ -40,10 +40,12 @@ namespace Chow.Interpreter.Tokens
         static ReservedKeywords()
         {
             var reverse = new Dictionary<TokenType, string>(KeywordTypeMap.Count);
+
             foreach (var pair in KeywordTypeMap)
             {
                 reverse[pair.Value] = pair.Key;
             }
+
             TypeToKeyword = reverse;
         }
 

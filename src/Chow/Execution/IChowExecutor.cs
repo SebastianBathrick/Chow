@@ -3,7 +3,7 @@ namespace Chow.Execution
     /// <summary>
     /// Executes Chow source code for CLI features without exposing the REPL to interpreter API details.
     /// </summary>
-    internal interface IChowExecutor
+    interface IChowExecutor
     {
         /// <summary>
         /// Executes a single Chow source-code submission.

@@ -5,6 +5,7 @@ namespace Chow.Interpreter
 {
     static class DataTypeConversionMap
     {
+
         #region Fields
 
         static readonly Dictionary<(ExpressionOperator op, DataType left, DataType right), ConversionCase> BinaryTypeMap =
@@ -16,11 +17,11 @@ namespace Chow.Interpreter
         static readonly DataType[] NumericTags = { DataType.Bool, DataType.Int, DataType.Float };
 
         static readonly DataType[] AllTags = (DataType[])Enum.GetValues(typeof(DataType));
-        
+
         #endregion
-        
+
         #region Public API
-        
+
         public static ConversionCase GetLeftRightConversionCase(ExpressionOperator op, DataType left, DataType right)
         {
             // Note: ExpressionOperator.And/Or are not registered here. The Compiler short-circuits them
@@ -45,7 +46,7 @@ namespace Chow.Interpreter
         }
 
         #endregion
-        
+
         #region Initialization
 
         static DataTypeConversionMap()
@@ -81,8 +82,8 @@ namespace Chow.Interpreter
             {
                 foreach (var right in NumericTags)
                 {
-                    ConversionCase conversionCase = ConversionCase.PromoteToInt;
-                    
+                    var conversionCase = ConversionCase.PromoteToInt;
+
                     if (EitherIsFloat(left, right))
                     {
                         conversionCase = ConversionCase.PromoteToFloat;
@@ -119,7 +120,7 @@ namespace Chow.Interpreter
                 foreach (var right in AllTags)
                 {
                     if (!BinaryTypeMap.ContainsKey((op, left, right)))
-                    { 
+                    {
                         BinaryTypeMap[(op, left, right)] = ConversionCase.NoConversion;
                     }
                 }
@@ -172,5 +173,6 @@ namespace Chow.Interpreter
         }
 
         #endregion
+
     }
 }

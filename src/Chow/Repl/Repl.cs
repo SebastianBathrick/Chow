@@ -5,7 +5,7 @@ namespace Chow.Repl
     /// <summary>
     /// Runs the interactive Chow read-evaluate-print loop.
     /// </summary>
-    internal sealed class Repl
+    sealed class Repl
     {
         readonly IChowExecutor _executor;
         readonly ConsoleLineEditor _lineEditor;
@@ -82,6 +82,7 @@ namespace Chow.Repl
                 while (!isExitRequested())
                 {
                     var sourceCode = _lineEditor.ReadSubmission(_promptStyle);
+
                     if (sourceCode == null)
                     {
                         return ExitCodes.Success;
@@ -110,6 +111,7 @@ namespace Chow.Repl
                 }
 
                 var sourceCode = Console.ReadLine();
+
                 if (sourceCode == null)
                 {
                     return ExitCodes.Success;

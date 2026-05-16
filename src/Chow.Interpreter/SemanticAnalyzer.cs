@@ -103,6 +103,7 @@ namespace Chow.Interpreter
                     {
                         PreScan(stmt);
                     }
+
                     break;
                 }
 
@@ -132,6 +133,7 @@ namespace Chow.Interpreter
                     {
                         RecordGlobalDecl(name, globalNode.LineNumber);
                     }
+
                     break;
                 }
 
@@ -141,6 +143,7 @@ namespace Chow.Interpreter
                     {
                         RecordNonlocalDecl(name, nonlocalNode.LineNumber);
                     }
+
                     break;
                 }
 
@@ -199,10 +202,12 @@ namespace Chow.Interpreter
                 case CallNode callNode:
                 {
                     PreScan(callNode.CallName);
+
                     foreach (var arg in callNode.Args)
                     {
                         PreScan(arg);
                     }
+
                     break;
                 }
 
@@ -212,6 +217,7 @@ namespace Chow.Interpreter
                     {
                         PreScan(element);
                     }
+
                     break;
                 }
 
@@ -222,6 +228,7 @@ namespace Chow.Interpreter
                         PreScan(dictNode.Keys[i]);
                         PreScan(dictNode.Values[i]);
                     }
+
                     break;
                 }
 
@@ -291,6 +298,7 @@ namespace Chow.Interpreter
                     {
                         Annotate(stmt);
                     }
+
                     break;
                 }
 
@@ -374,10 +382,12 @@ namespace Chow.Interpreter
                 case CallNode callNode:
                 {
                     Annotate(callNode.CallName);
+
                     foreach (var arg in callNode.Args)
                     {
                         Annotate(arg);
                     }
+
                     break;
                 }
 
@@ -387,6 +397,7 @@ namespace Chow.Interpreter
                     {
                         Annotate(element);
                     }
+
                     break;
                 }
 
@@ -397,6 +408,7 @@ namespace Chow.Interpreter
                         Annotate(dictNode.Keys[i]);
                         Annotate(dictNode.Values[i]);
                     }
+
                     break;
                 }
 
@@ -636,12 +648,13 @@ namespace Chow.Interpreter
 
             public static ScopeFrame NewModule()
             {
-                return new ScopeFrame(isModule: true, parameters: new HashSet<string>());
+                return new ScopeFrame(true, new HashSet<string>());
             }
 
             public static ScopeFrame NewFunction(FunctionNode funcNode)
             {
                 var parameters = new HashSet<string>();
+
                 foreach (var param in funcNode.Params)
                 {
                     if (param is NameNode nameNode)
@@ -650,7 +663,7 @@ namespace Chow.Interpreter
                     }
                 }
 
-                return new ScopeFrame(isModule: false, parameters: parameters);
+                return new ScopeFrame(false, parameters);
             }
         }
     }

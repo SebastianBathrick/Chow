@@ -4,6 +4,6 @@ namespace Chow.Interpreter
     {
         NoConversion,
         PromoteToInt,
-        PromoteToFloat,
+        PromoteToFloat
     }
 }

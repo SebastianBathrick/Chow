@@ -1,15 +1,15 @@
 ﻿using Chow.Interpreter;
-ChowModule module = new ChowModule();
+var module = new ChowModule();
 
 var code =
     """
     counter = 0 
-    
+
     # start is called once before the first execution of update after the behavior is created
     def start():
     	global game_object
     	print("start called")
-    
+
     # update is called once per frame
     def update():
     	global game_object, counter
@@ -20,4 +20,3 @@ var code =
     """;
 
 module.Execute(code);
-
