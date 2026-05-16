@@ -14,11 +14,6 @@ namespace Chow.Interpreter
 
         public object this[string name]
         {
-            set
-            {
-                var chowValue = new ChowValue(value);
-                _globalScope.AssignVariableValue(name, chowValue);
-            }
             get
             {
                 if (_globalScope.IsVariableDefined(name))
@@ -27,6 +22,11 @@ namespace Chow.Interpreter
                 }
 
                 throw new GlobalAccessException(name, $"undefined name '{name}'");
+            }
+            set
+            {
+                var chowValue = new ChowValue(value);
+                _globalScope.AssignVariableValue(name, chowValue);
             }
         }
 

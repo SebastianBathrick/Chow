@@ -68,34 +68,34 @@ namespace Chow.Interpreter.ImplTests
                 case VariableAssignStatementNode v when v.Name == name:
                     return v;
                 case BlockNode block:
+                {
+                    foreach (var stmt in block.Statements)
                     {
-                        foreach (var stmt in block.Statements)
-                        {
-                            var nested = TryFindAssign(stmt, name);
-
-                            if (nested != null)
-                            {
-                                return nested;
-                            }
-                        }
-
-                        break;
-                    }
-                case FunctionNode func:
-                    {
-                        var nested = TryFindAssign(func.Body, name);
+                        var nested = TryFindAssign(stmt, name);
 
                         if (nested != null)
                         {
                             return nested;
                         }
+                    }
 
-                        break;
-                    }
-                case IfStatementNode ifNode:
+                    break;
+                }
+                case FunctionNode func:
+                {
+                    var nested = TryFindAssign(func.Body, name);
+
+                    if (nested != null)
                     {
-                        return TryFindAssign(ifNode.Block, name) ?? TryFindAssign(ifNode.Branch, name)!;
+                        return nested;
                     }
+
+                    break;
+                }
+                case IfStatementNode ifNode:
+                {
+                    return TryFindAssign(ifNode.Block, name) ?? TryFindAssign(ifNode.Branch, name)!;
+                }
             }
 
             Assert.Fail($"Assignment to '{name}' not found.");
@@ -180,26 +180,26 @@ namespace Chow.Interpreter.ImplTests
                 case ReturnStatementNode r:
                     return TryFindRead(r.Expression, name);
                 case CallNode call:
+                {
+                    var nested = TryFindRead(call.CallName, name);
+
+                    if (nested != null)
                     {
-                        var nested = TryFindRead(call.CallName, name);
+                        return nested;
+                    }
+
+                    foreach (var arg in call.Args)
+                    {
+                        nested = TryFindRead(arg, name);
 
                         if (nested != null)
                         {
                             return nested;
                         }
-
-                        foreach (var arg in call.Args)
-                        {
-                            nested = TryFindRead(arg, name);
-
-                            if (nested != null)
-                            {
-                                return nested;
-                            }
-                        }
-
-                        return null;
                     }
+
+                    return null;
+                }
                 case IfStatementNode ifNode:
                     return TryFindRead(ifNode.Expression, name)
                         ?? TryFindRead(ifNode.Block, name)

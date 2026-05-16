@@ -105,28 +105,28 @@ namespace Chow.Interpreter
             switch (val.DataType)
             {
                 case DataType.Float:
-                    {
-                        return val;
-                    }
+                {
+                    return val;
+                }
                 case DataType.Int:
-                    {
-                        return new ChowValue((double)val.AsType<long>());
-                    }
+                {
+                    return new ChowValue((double)val.AsType<long>());
+                }
                 case DataType.Bool:
-                    {
-                        return new ChowValue(val.AsType<bool>() ? 1.0 : 0.0);
-                    }
+                {
+                    return new ChowValue(val.AsType<bool>() ? 1.0 : 0.0);
+                }
                 case DataType.Str:
+                {
+                    double parsed;
+
+                    if (double.TryParse(val.AsType<string>(), NumberStyles.Float, CultureInfo.InvariantCulture, out parsed))
                     {
-                        double parsed;
-
-                        if (double.TryParse(val.AsType<string>(), NumberStyles.Float, CultureInfo.InvariantCulture, out parsed))
-                        {
-                            return new ChowValue(parsed);
-                        }
-
-                        throw new InvalidOperationException($"could not convert string to float: '{val.AsType<string>()}'");
+                        return new ChowValue(parsed);
                     }
+
+                    throw new InvalidOperationException($"could not convert string to float: '{val.AsType<string>()}'");
+                }
             }
 
             throw new InvalidOperationException($"float() argument must be a string or a number, not '{DataTypeName(val.DataType)}'");
@@ -146,28 +146,28 @@ namespace Chow.Interpreter
             switch (val.DataType)
             {
                 case DataType.Int:
-                    {
-                        return val;
-                    }
+                {
+                    return val;
+                }
                 case DataType.Float:
-                    {
-                        return new ChowValue((long)val.AsType<double>());
-                    }
+                {
+                    return new ChowValue((long)val.AsType<double>());
+                }
                 case DataType.Bool:
-                    {
-                        return new ChowValue(val.AsType<bool>() ? 1L : 0L);
-                    }
+                {
+                    return new ChowValue(val.AsType<bool>() ? 1L : 0L);
+                }
                 case DataType.Str:
+                {
+                    long parsed;
+
+                    if (long.TryParse(val.AsType<string>(), out parsed))
                     {
-                        long parsed;
-
-                        if (long.TryParse(val.AsType<string>(), out parsed))
-                        {
-                            return new ChowValue(parsed);
-                        }
-
-                        throw new InvalidOperationException($"invalid literal for int() with base 10: '{val.AsType<string>()}'");
+                        return new ChowValue(parsed);
                     }
+
+                    throw new InvalidOperationException($"invalid literal for int() with base 10: '{val.AsType<string>()}'");
+                }
             }
 
             throw new InvalidOperationException(
@@ -232,17 +232,17 @@ namespace Chow.Interpreter
             switch (val.DataType)
             {
                 case DataType.Str:
-                    {
-                        return new ChowValue(val.AsType<string>().Length);
-                    }
+                {
+                    return new ChowValue(val.AsType<string>().Length);
+                }
                 case DataType.List:
-                    {
-                        return new ChowValue(val.AsType<InternalList>().Count);
-                    }
+                {
+                    return new ChowValue(val.AsType<InternalList>().Count);
+                }
                 case DataType.Dict:
-                    {
-                        return new ChowValue(val.AsType<InternalDict>().Count);
-                    }
+                {
+                    return new ChowValue(val.AsType<InternalDict>().Count);
+                }
             }
 
             throw new InvalidOperationException($"object of type '{DataTypeName(val.DataType)}' has no len()");
@@ -262,17 +262,17 @@ namespace Chow.Interpreter
             switch (val.DataType)
             {
                 case DataType.Int:
-                    {
-                        return new ChowValue(Math.Abs(val.AsType<long>()));
-                    }
+                {
+                    return new ChowValue(Math.Abs(val.AsType<long>()));
+                }
                 case DataType.Float:
-                    {
-                        return new ChowValue(Math.Abs(val.AsType<double>()));
-                    }
+                {
+                    return new ChowValue(Math.Abs(val.AsType<double>()));
+                }
                 case DataType.Bool:
-                    {
-                        return new ChowValue(val.AsType<bool>() ? 1L : 0L);
-                    }
+                {
+                    return new ChowValue(val.AsType<bool>() ? 1L : 0L);
+                }
             }
 
             throw new InvalidOperationException($"bad operand type for abs(): '{DataTypeName(val.DataType)}'");
@@ -286,17 +286,17 @@ namespace Chow.Interpreter
             switch (val.DataType)
             {
                 case DataType.Int:
-                    {
-                        return val;
-                    }
+                {
+                    return val;
+                }
                 case DataType.Float:
-                    {
-                        return new ChowValue((long)Math.Round(val.AsType<double>(), MidpointRounding.ToEven));
-                    }
+                {
+                    return new ChowValue((long)Math.Round(val.AsType<double>(), MidpointRounding.ToEven));
+                }
                 case DataType.Bool:
-                    {
-                        return new ChowValue(val.AsType<bool>() ? 1L : 0L);
-                    }
+                {
+                    return new ChowValue(val.AsType<bool>() ? 1L : 0L);
+                }
             }
 
             throw new InvalidOperationException($"type {DataTypeName(val.DataType)} doesn't define __round__ method");
@@ -396,17 +396,17 @@ namespace Chow.Interpreter
             switch (val.DataType)
             {
                 case DataType.Int:
-                    {
-                        return val.AsType<long>();
-                    }
+                {
+                    return val.AsType<long>();
+                }
                 case DataType.Float:
-                    {
-                        return val.AsType<double>();
-                    }
+                {
+                    return val.AsType<double>();
+                }
                 case DataType.Bool:
-                    {
-                        return val.AsType<bool>() ? 1.0 : 0.0;
-                    }
+                {
+                    return val.AsType<bool>() ? 1.0 : 0.0;
+                }
             }
 
             throw new InvalidOperationException("Value is not numeric");
@@ -417,29 +417,29 @@ namespace Chow.Interpreter
             switch (val.DataType)
             {
                 case DataType.None:
-                    {
-                        return "None";
-                    }
+                {
+                    return "None";
+                }
                 case DataType.Bool:
-                    {
-                        return val.AsType<bool>() ? "True" : "False";
-                    }
+                {
+                    return val.AsType<bool>() ? "True" : "False";
+                }
                 case DataType.Int:
-                    {
-                        return val.AsType<long>().ToString(CultureInfo.InvariantCulture);
-                    }
+                {
+                    return val.AsType<long>().ToString(CultureInfo.InvariantCulture);
+                }
                 case DataType.Float:
-                    {
-                        return val.AsType<double>().ToString(CultureInfo.InvariantCulture);
-                    }
+                {
+                    return val.AsType<double>().ToString(CultureInfo.InvariantCulture);
+                }
                 case DataType.Str:
-                    {
-                        return val.AsType<string>();
-                    }
+                {
+                    return val.AsType<string>();
+                }
                 default:
-                    {
-                        return val.ToString() ?? string.Empty;
-                    }
+                {
+                    return val.ToString() ?? string.Empty;
+                }
             }
         }
 
@@ -448,41 +448,41 @@ namespace Chow.Interpreter
             switch (dataType)
             {
                 case DataType.None:
-                    {
-                        return "NoneType";
-                    }
+                {
+                    return "NoneType";
+                }
                 case DataType.Bool:
-                    {
-                        return "bool";
-                    }
+                {
+                    return "bool";
+                }
                 case DataType.Int:
-                    {
-                        return "int";
-                    }
+                {
+                    return "int";
+                }
                 case DataType.Float:
-                    {
-                        return "float";
-                    }
+                {
+                    return "float";
+                }
                 case DataType.Str:
-                    {
-                        return "str";
-                    }
+                {
+                    return "str";
+                }
                 case DataType.List:
-                    {
-                        return "list";
-                    }
+                {
+                    return "list";
+                }
                 case DataType.Dict:
-                    {
-                        return "dict";
-                    }
+                {
+                    return "dict";
+                }
                 case DataType.Range:
-                    {
-                        return "range";
-                    }
+                {
+                    return "range";
+                }
                 default:
-                    {
-                        return dataType.ToString().ToLowerInvariant();
-                    }
+                {
+                    return dataType.ToString().ToLowerInvariant();
+                }
             }
         }
     }
