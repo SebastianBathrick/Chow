@@ -776,32 +776,30 @@ namespace Chow.Interpreter
             var target = _valStack.Pop();
 
             // TODO: class instances add a branch that consults the instance attribute table, then the class method table.
-            switch (target.DataType)
+            if (target.DataType == DataType.List)
             {
-                case DataType.List:
+                var list = target.AsType<InternalList>();
+
+                if (!list.HasMethod(attrName))
                 {
-                    var list = target.AsType<InternalList>();
-
-                    if (!list.HasMethod(attrName))
-                    {
-                        throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
-                    }
-
-                    _valStack.Push(list[attrName]);
-                    return;
+                    throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
                 }
-                case DataType.Dict:
+
+                _valStack.Push(list[attrName]);
+                return;
+            }
+
+            if (target.DataType == DataType.Dict)
+            {
+                var dict = target.AsType<InternalDict>();
+
+                if (!dict.HasMethod(attrName))
                 {
-                    var dict = target.AsType<InternalDict>();
-
-                    if (!dict.HasMethod(attrName))
-                    {
-                        throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
-                    }
-
-                    _valStack.Push(dict[attrName]);
-                    return;
+                    throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
                 }
+
+                _valStack.Push(dict[attrName]);
+                return;
             }
 
             throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
