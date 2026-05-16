@@ -60,6 +60,10 @@ namespace Chow.Interpreter.Tests
         [TestCase(ExpressionOperator.Multiply, DataType.Int, DataType.List)]
         [TestCase(ExpressionOperator.Multiply, DataType.Str, DataType.Int)]
         [TestCase(ExpressionOperator.Multiply, DataType.Int, DataType.Str)]
+        [TestCase(ExpressionOperator.Multiply, DataType.List, DataType.Bool)]
+        [TestCase(ExpressionOperator.Multiply, DataType.Bool, DataType.List)]
+        [TestCase(ExpressionOperator.Multiply, DataType.Str, DataType.Bool)]
+        [TestCase(ExpressionOperator.Multiply, DataType.Bool, DataType.Str)]
         [TestCase(ExpressionOperator.BinaryOr, DataType.Dict, DataType.Dict)]
         public void GetLeftRightConversionCase_ContainerCarveOuts_ReturnsNoConversion(
             ExpressionOperator op, DataType left, DataType right)
