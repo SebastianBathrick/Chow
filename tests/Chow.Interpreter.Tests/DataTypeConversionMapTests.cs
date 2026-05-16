@@ -1,5 +1,4 @@
 using Chow.Interpreter.Exceptions;
-
 namespace Chow.Interpreter.Tests
 {
     [TestFixture]

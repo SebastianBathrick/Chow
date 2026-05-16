@@ -1,6 +1,5 @@
 using Chow.Cli;
 using Chow.Execution;
-
 namespace Chow.Repl
 {
     /// <summary>

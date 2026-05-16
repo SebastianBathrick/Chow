@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State.Values;
-
 namespace Chow.Interpreter
 {
     public readonly struct ChowValue
     {
         #region Fields
 
-        static readonly Dictionary<Type, DataType> _dataTypeMap = new Dictionary<Type, DataType>()
+        static readonly Dictionary<Type, DataType> DataTypeMap = new Dictionary<Type, DataType>
         {
             { typeof(bool), DataType.Bool },
             { typeof(long), DataType.Int },
@@ -97,7 +97,7 @@ namespace Chow.Interpreter
                 }
                 case int intValue:
                 {
-                    this = new ChowValue((long)intValue);
+                    this = new ChowValue(intValue);
                     return;
                 }
                 case double doubleValue:
@@ -143,7 +143,7 @@ namespace Chow.Interpreter
 
         public TDataType AsType<TDataType>()
         {
-            if (!_dataTypeMap.TryGetValue(typeof(TDataType), out var targetDataType))
+            if (!DataTypeMap.TryGetValue(typeof(TDataType), out var targetDataType))
             {
                 if (_objectValue is TDataType typedObject)
                 {
@@ -198,13 +198,13 @@ namespace Chow.Interpreter
             var checkType = typeof(TDataType);
 
             // If it is not a type defined by the DataType enum
-            if (!_dataTypeMap.ContainsKey(checkType))
+            if (!DataTypeMap.ContainsKey(checkType))
             {
                 return _dataType == DataType.Object && _objectValue is TDataType;
             }
 
             // The map includes values representing data types that are from the Chow.Interpreter namespace
-            var chowDataType = _dataTypeMap[checkType];
+            var chowDataType = DataTypeMap[checkType];
             return _dataType == chowDataType;
         }
 
@@ -860,9 +860,7 @@ namespace Chow.Interpreter
 
         bool StrToBool()
         {
-            var strValue = _objectValue as string;
-
-            if (strValue != null)
+            if (_objectValue is string strValue)
             {
                 return strValue.Length != STR_LENGTH_REP_BOOL_FALSE;
             }
@@ -872,9 +870,7 @@ namespace Chow.Interpreter
 
         bool ListToBool()
         {
-            var listValue = _objectValue as InternalList;
-
-            if (listValue != null)
+            if (_objectValue is InternalList listValue)
             {
                 return listValue.Count != LIST_COUNT_REP_BOOL_FALSE;
             }
@@ -884,9 +880,7 @@ namespace Chow.Interpreter
 
         bool DictToBool()
         {
-            var dictValue = _objectValue as InternalDict;
-
-            if (dictValue != null)
+            if (_objectValue is InternalDict dictValue)
             {
                 return dictValue.Count != DICT_COUNT_REP_BOOL_FALSE;
             }
@@ -896,9 +890,7 @@ namespace Chow.Interpreter
 
         bool RangeToBool()
         {
-            var rangeValue = _objectValue as InternalRange;
-
-            if (rangeValue != null)
+            if (_objectValue is InternalRange rangeValue)
             {
                 return rangeValue.Count != RANGE_COUNT_REP_BOOL_FALSE;
             }
@@ -908,9 +900,7 @@ namespace Chow.Interpreter
 
         long StrToInt64()
         {
-            var strValue = _objectValue as string;
-
-            if (strValue == null)
+            if (!(_objectValue is string strValue))
             {
                 throw new InvalidOperationException("Expected string value for int64 conversion");
             }
@@ -925,9 +915,7 @@ namespace Chow.Interpreter
 
         double StrToFloat64()
         {
-            var strValue = _objectValue as string;
-
-            if (strValue == null)
+            if (!(_objectValue is string strValue))
             {
                 throw new InvalidOperationException("Expected string value for float64 conversion");
             }
@@ -961,9 +949,7 @@ namespace Chow.Interpreter
 
         string StrToStr()
         {
-            var strValue = _objectValue as string;
-
-            if (strValue != null)
+            if (_objectValue is string strValue)
             {
                 return strValue;
             }
@@ -1087,7 +1073,7 @@ namespace Chow.Interpreter
                 return string.Empty;
             }
 
-            var builder = new System.Text.StringBuilder(source.Length * count);
+            var builder = new StringBuilder(source.Length * count);
             for (var index = 0; index < count; index++)
             {
                 builder.Append(source);

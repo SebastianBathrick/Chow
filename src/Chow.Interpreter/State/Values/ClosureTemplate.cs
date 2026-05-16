@@ -1,5 +1,4 @@
 using Chow.Interpreter.Bytecode;
-
 namespace Chow.Interpreter.State.Values
 {
     /// <summary>

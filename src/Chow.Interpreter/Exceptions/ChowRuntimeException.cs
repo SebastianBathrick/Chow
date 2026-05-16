@@ -1,5 +1,4 @@
 ﻿using System;
-
 namespace Chow.Interpreter.Exceptions
 {
     public abstract class ChowRuntimeException : Exception

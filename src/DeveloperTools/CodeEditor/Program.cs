@@ -1,6 +1,5 @@
-using Chow.Interpreter;
 using System.Diagnostics;
-
+using Chow.Interpreter;
 namespace CodeEditor;
 
 static class Program

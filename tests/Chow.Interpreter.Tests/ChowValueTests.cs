@@ -1,7 +1,5 @@
-using System;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State.Values;
-
 namespace Chow.Interpreter.Tests
 {
     [TestFixture]
@@ -334,7 +332,7 @@ namespace Chow.Interpreter.Tests
             // Interop wraps (e.g. Compiler.cs:243, ChowModule.cs:20) intentionally cast delegates and
             // ClosureTemplate/IChowIterator to object so they land under Tag.Object — preserve that.
             Func<ChowValue[], ChowValue> del = args => ChowValue.None;
-            var cv = new ChowValue((object)del);
+            var cv = new ChowValue(del);
             Assert.That(cv.IsOfType<Func<ChowValue[], ChowValue>>(), Is.True);
         }
 

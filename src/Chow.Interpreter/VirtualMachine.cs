@@ -1,11 +1,10 @@
+using System;
+using System.Collections.Generic;
 using Chow.Interpreter.Bytecode;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State.Scopes;
 using Chow.Interpreter.State.Stack;
 using Chow.Interpreter.State.Values;
-using System.Collections.Generic;
-using System;
-
 namespace Chow.Interpreter
 {
     sealed class VirtualMachine
@@ -180,7 +179,7 @@ namespace Chow.Interpreter
                     {
                         var source = _valStack.Pop();
                         var iter = IteratorFactory.GetIterator(source);
-                        _valStack.Push(new ChowValue((object)iter));
+                        _valStack.Push(new ChowValue(iter));
                         break;
                     }
 

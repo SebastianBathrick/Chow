@@ -1,8 +1,7 @@
-using Chow.Interpreter.State.Values;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-
+using Chow.Interpreter.State.Values;
 namespace Chow.Interpreter
 {
     internal enum BuiltInType
@@ -26,7 +25,7 @@ namespace Chow.Interpreter
 
     internal static class BuiltIns
     {
-        static readonly Dictionary<BuiltInType, string> _names = new Dictionary<BuiltInType, string>
+        static readonly Dictionary<BuiltInType, string> Names = new Dictionary<BuiltInType, string>
         {
             { BuiltInType.Print, "print" },
             { BuiltInType.Input, "input" },
@@ -45,7 +44,7 @@ namespace Chow.Interpreter
             { BuiltInType.Range, "range" },
         };
 
-        static readonly Dictionary<BuiltInType, Func<ChowValue[], ChowValue>> _defaults =
+        static readonly Dictionary<BuiltInType, Func<ChowValue[], ChowValue>> Defaults =
             new Dictionary<BuiltInType, Func<ChowValue[], ChowValue>>
         {
             { BuiltInType.Print, Print },
@@ -65,16 +64,16 @@ namespace Chow.Interpreter
             { BuiltInType.Range, Range },
         };
 
-        public static IEnumerable<BuiltInType> AllTypes => _names.Keys;
+        public static IEnumerable<BuiltInType> AllTypes => Names.Keys;
 
         public static string NameOf(BuiltInType type)
         {
-            return _names[type];
+            return Names[type];
         }
 
         public static Func<ChowValue[], ChowValue> DefaultOf(BuiltInType type)
         {
-            return _defaults[type];
+            return Defaults[type];
         }
 
         static ChowValue Print(ChowValue[] args)
@@ -227,15 +226,15 @@ namespace Chow.Interpreter
             {
                 case DataType.Str:
                 {
-                    return new ChowValue((long)val.AsType<string>().Length);
+                    return new ChowValue(val.AsType<string>().Length);
                 }
                 case DataType.List:
                 {
-                    return new ChowValue((long)val.AsType<InternalList>().Count);
+                    return new ChowValue(val.AsType<InternalList>().Count);
                 }
                 case DataType.Dict:
                 {
-                    return new ChowValue((long)val.AsType<InternalDict>().Count);
+                    return new ChowValue(val.AsType<InternalDict>().Count);
                 }
             }
 

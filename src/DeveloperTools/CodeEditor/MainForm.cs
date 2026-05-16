@@ -1,14 +1,13 @@
 using System.Diagnostics;
 using System.Text;
-
 namespace CodeEditor;
 
 public partial class MainForm : Form
 {
-    const string FileExtension = ".chw";
-    const string FileFilter = "Chow files (*.chw)|*.chw";
-    const string UntitledName = "Untitled";
-    const string DefaultZoomText = "Zoom 100%";
+    const string FILE_EXTENSION = ".chw";
+    const string FILE_FILTER = "Chow files (*.chw)|*.chw";
+    const string UNTITLED_NAME = "Untitled";
+    const string DEFAULT_ZOOM_TEXT = "Zoom 100%";
 
     static readonly string[] ZoomOptions =
     {
@@ -89,7 +88,7 @@ public partial class MainForm : Form
     {
         if (_zoomComboBox == null)
         {
-            ApplyZoom(DefaultZoomText);
+            ApplyZoom(DEFAULT_ZOOM_TEXT);
             return;
         }
 
@@ -97,8 +96,8 @@ public partial class MainForm : Form
         _zoomComboBox.Items.AddRange(ZoomOptions);
         _zoomComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         _zoomComboBox.MaxDropDownItems = ZoomOptions.Length;
-        _zoomComboBox.SelectedItem = DefaultZoomText;
-        ApplyZoom(DefaultZoomText);
+        _zoomComboBox.SelectedItem = DEFAULT_ZOOM_TEXT;
+        ApplyZoom(DEFAULT_ZOOM_TEXT);
     }
 
     void ConfigureKeyboardShortcuts()
@@ -112,16 +111,16 @@ public partial class MainForm : Form
 
     void ConfigureDialogs()
     {
-        openFileDialog.Filter = FileFilter;
-        openFileDialog.DefaultExt = FileExtension.TrimStart('.');
+        openFileDialog.Filter = FILE_FILTER;
+        openFileDialog.DefaultExt = FILE_EXTENSION.TrimStart('.');
         openFileDialog.AddExtension = true;
         openFileDialog.CheckFileExists = true;
         openFileDialog.Multiselect = false;
         openFileDialog.FileName = string.Empty;
         openFileDialog.Title = "Open Chow File";
 
-        saveFileDialog.Filter = FileFilter;
-        saveFileDialog.DefaultExt = FileExtension.TrimStart('.');
+        saveFileDialog.Filter = FILE_FILTER;
+        saveFileDialog.DefaultExt = FILE_EXTENSION.TrimStart('.');
         saveFileDialog.AddExtension = true;
         saveFileDialog.OverwritePrompt = true;
         saveFileDialog.FileName = string.Empty;
@@ -172,7 +171,7 @@ public partial class MainForm : Form
         var path = openFileDialog.FileName;
         if (!IsChowFile(path))
         {
-            ShowError($"Only {FileExtension} files can be opened.");
+            ShowError($"Only {FILE_EXTENSION} files can be opened.");
             return;
         }
 
@@ -211,7 +210,7 @@ public partial class MainForm : Form
         SetState(EditorState.Running);
         AppendEditorLog(EditorLogLevel.Information, "Starting module...");
 
-        var tempFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}{FileExtension}");
+        var tempFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}{FILE_EXTENSION}");
         _runTempFilePath = tempFilePath;
 
         try
@@ -463,7 +462,7 @@ public partial class MainForm : Form
                 return SaveDocumentTo(path);
             }
 
-            ShowError($"Only {FileExtension} files can be saved.");
+            ShowError($"Only {FILE_EXTENSION} files can be saved.");
         }
     }
 
@@ -669,7 +668,7 @@ public partial class MainForm : Form
 
             try
             {
-                BeginInvoke(new Action(() => AppendOutputLine(text, fontStyle)));
+                BeginInvoke(() => AppendOutputLine(text, fontStyle));
             }
             catch (InvalidOperationException)
             {
@@ -700,12 +699,12 @@ public partial class MainForm : Form
 
     static bool IsChowFile(string path)
     {
-        return string.Equals(Path.GetExtension(path), FileExtension, StringComparison.OrdinalIgnoreCase);
+        return string.Equals(Path.GetExtension(path), FILE_EXTENSION, StringComparison.OrdinalIgnoreCase);
     }
 
     void UpdateTitle()
     {
-        var name = _currentFilePath == null ? UntitledName : Path.GetFileName(_currentFilePath);
+        var name = _currentFilePath == null ? UNTITLED_NAME : Path.GetFileName(_currentFilePath);
         Text = $"{(_isDirty ? "*" : string.Empty)}{name} - Chow Code Editor";
     }
 

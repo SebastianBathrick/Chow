@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-
 namespace Chow.Interpreter.State.Scopes
 {
     /// <summary>

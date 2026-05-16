@@ -1,6 +1,4 @@
 using Chow.Interpreter.State.Scopes;
-using Chow.Interpreter.Tokens;
-
 namespace Chow.Interpreter
 {
     /// <summary>
@@ -17,7 +15,7 @@ namespace Chow.Interpreter
         {
             foreach (var type in BuiltIns.AllTypes)
             {
-                _globalScope.AssignVariableValue(BuiltIns.NameOf(type), new ChowValue((object)BuiltIns.DefaultOf(type)));
+                _globalScope.AssignVariableValue(BuiltIns.NameOf(type), new ChowValue(BuiltIns.DefaultOf(type)));
             }
         }
 
@@ -27,8 +25,6 @@ namespace Chow.Interpreter
         /// <see langword="null"/>, empty, and whitespace-only strings are accepted and treated as no-ops.
         /// </summary>
         /// <param name="sourceCode">The Chow source code to execute.</param>
-        /// <exception cref="Exceptions.ScannerException">The source code contains a lexical error.</exception>
-        /// <exception cref="Exceptions.ParserException">The source code contains a syntax error.</exception>
         /// <exception cref="Exceptions.ChowRuntimeException">A runtime error occurs during execution.</exception>
         public void Execute(string sourceCode)
         {

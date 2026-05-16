@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.Text;
-
 namespace Chow.Interpreter.Bytecode
 {
     class Chunk

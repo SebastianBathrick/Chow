@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
-
 namespace Chow.Interpreter.Tokens
 {
     static class ReservedKeywords
     {
-        static readonly IReadOnlyDictionary<string, TokenType> _keywordTypeMap = new Dictionary<string, TokenType>
+        static readonly IReadOnlyDictionary<string, TokenType> KeywordTypeMap = new Dictionary<string, TokenType>
         {
             { "True", TokenType.KeywordTrue },
             { "False", TokenType.KeywordFalse },
@@ -36,32 +35,32 @@ namespace Chow.Interpreter.Tokens
             { "assert", TokenType.KeywordAssert },
         };
 
-        static readonly IReadOnlyDictionary<TokenType, string> _typeToKeyword;
+        static readonly IReadOnlyDictionary<TokenType, string> TypeToKeyword;
 
         static ReservedKeywords()
         {
-            var reverse = new Dictionary<TokenType, string>(_keywordTypeMap.Count);
-            foreach (var pair in _keywordTypeMap)
+            var reverse = new Dictionary<TokenType, string>(KeywordTypeMap.Count);
+            foreach (var pair in KeywordTypeMap)
             {
                 reverse[pair.Value] = pair.Key;
             }
-            _typeToKeyword = reverse;
+            TypeToKeyword = reverse;
         }
 
         // Assumes Contains was called first
         public static TokenType GetTokenType(string keyword)
         {
-            return _keywordTypeMap[keyword];
+            return KeywordTypeMap[keyword];
         }
 
         public static bool Contains(string keyword)
         {
-            return _keywordTypeMap.ContainsKey(keyword);
+            return KeywordTypeMap.ContainsKey(keyword);
         }
 
         public static string GetKeyword(TokenType tokenType)
         {
-            return _typeToKeyword[tokenType];
+            return TypeToKeyword[tokenType];
         }
     }
 }

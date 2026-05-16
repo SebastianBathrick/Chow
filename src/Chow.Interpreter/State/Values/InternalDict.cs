@@ -1,9 +1,8 @@
-using Chow.Interpreter.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-
+using Chow.Interpreter.Exceptions;
 namespace Chow.Interpreter.State.Values
 {
     class InternalDict
@@ -36,7 +35,7 @@ namespace Chow.Interpreter.State.Values
 
         public ChowValue this[string name] =>
             // Will throw if method name is invalid, which is the expected behavior
-            new ChowValue((object)GetMethod(name));
+            new ChowValue(GetMethod(name));
 
         public InternalDict()
         {

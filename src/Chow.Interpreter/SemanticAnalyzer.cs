@@ -1,14 +1,13 @@
-using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.SyntaxTrees;
-using Chow.Interpreter.SyntaxTrees.Expressions;
-using Chow.Interpreter.SyntaxTrees.Statements;
 using System;
 using System.Collections.Generic;
+using Chow.Interpreter.Exceptions;
+using Chow.Interpreter.SyntaxTrees;
 using Chow.Interpreter.SyntaxTrees.Attributes;
+using Chow.Interpreter.SyntaxTrees.Expressions;
 using Chow.Interpreter.SyntaxTrees.Literals;
 using Chow.Interpreter.SyntaxTrees.Scope;
+using Chow.Interpreter.SyntaxTrees.Statements;
 using Chow.Interpreter.SyntaxTrees.Subscripts;
-
 namespace Chow.Interpreter
 {
     /// <summary>

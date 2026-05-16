@@ -17,7 +17,7 @@ namespace Chow.Repl
         /// </returns>
         public string? ReadSubmission(PromptStyle promptStyle)
         {
-            var lines = new List<string>() { string.Empty };
+            var lines = new List<string> { string.Empty };
             var currentLine = 0;
             var cursorColumn = 0;
             var editorTop = Console.CursorTop;

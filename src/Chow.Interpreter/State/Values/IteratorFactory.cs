@@ -1,5 +1,4 @@
 using Chow.Interpreter.Exceptions;
-
 namespace Chow.Interpreter.State.Values
 {
     static class IteratorFactory

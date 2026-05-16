@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
-
 namespace Chow.Interpreter.State.Values
 {
     class InternalList
@@ -42,7 +42,7 @@ namespace Chow.Interpreter.State.Values
             return idx;
         }
         // Will throw if method name is invalid, which is the expected behavior
-        public ChowValue this[string name] => new ChowValue((object)GetMethod(name));
+        public ChowValue this[string name] => new ChowValue(GetMethod(name));
 
         public InternalList()
         {
@@ -399,7 +399,7 @@ namespace Chow.Interpreter.State.Values
                 case DataType.Float:
                     // Python prints `1.0`, not `1`. C#'s default float.ToString() may drop the trailing zero.
                     var f = value.AsType<double>();
-                    var fs = f.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+                    var fs = f.ToString("R", CultureInfo.InvariantCulture);
                     if (fs.IndexOfAny(new[] { '.', 'e', 'E', 'n', 'N', 'i', 'I' }) < 0)
                     {
                         fs += ".0";

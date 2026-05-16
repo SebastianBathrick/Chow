@@ -1,16 +1,15 @@
+using System;
+using System.Collections.Generic;
 using Chow.Interpreter.Bytecode;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State.Values;
-using System.Collections.Generic;
 using Chow.Interpreter.SyntaxTrees;
-using Chow.Interpreter.SyntaxTrees.Expressions;
-using Chow.Interpreter.SyntaxTrees.Statements;
 using Chow.Interpreter.SyntaxTrees.Attributes;
+using Chow.Interpreter.SyntaxTrees.Expressions;
 using Chow.Interpreter.SyntaxTrees.Literals;
 using Chow.Interpreter.SyntaxTrees.Scope;
+using Chow.Interpreter.SyntaxTrees.Statements;
 using Chow.Interpreter.SyntaxTrees.Subscripts;
-using System;
-
 namespace Chow.Interpreter
 {
     sealed class Compiler
@@ -240,7 +239,7 @@ namespace Chow.Interpreter
             var funcChunk = funcCompiler.CompileFunctionBody();
 
             var template = new ClosureTemplate(funcChunk, funcNode.Name, funcNode.Params.Count);
-            var templateIdx = _chunk.RegisterConstant(new ChowValue((object)template));
+            var templateIdx = _chunk.RegisterConstant(new ChowValue(template));
 
             // Push template, then runtime PushNewClosureFromTemplate captures the active scope and wraps it as a Closure.
             _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNumber, templateIdx);
@@ -532,16 +531,9 @@ namespace Chow.Interpreter
         {
             CompileTargetNode(expressionNode.Left);
 
-            OperationCode jumpCode;
-
-            if (expressionNode.Operator == ExpressionOperator.And)
-            {
-                jumpCode = OperationCode.JumpIfFalseOrPop;
-            }
-            else
-            {
-                jumpCode = OperationCode.JumpIfTrueOrPop;
-            }
+            var jumpCode = expressionNode.Operator == ExpressionOperator.And 
+                ? OperationCode.JumpIfFalseOrPop 
+                : OperationCode.JumpIfTrueOrPop;
 
             // Emit jump with placeholder operand; the real target is unknown until the right side is compiled
             _chunk.AddInstruction(jumpCode, expressionNode.LineNumber);

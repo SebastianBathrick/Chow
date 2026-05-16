@@ -3,7 +3,6 @@ using Chow.Interpreter.SyntaxTrees;
 using Chow.Interpreter.SyntaxTrees.Expressions;
 using Chow.Interpreter.SyntaxTrees.Scope;
 using Chow.Interpreter.SyntaxTrees.Statements;
-
 namespace Chow.Interpreter.ImplTests
 {
     [TestFixture]

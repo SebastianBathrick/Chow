@@ -1,5 +1,4 @@
 using System;
-
 namespace Chow.Interpreter.State.Values
 {
     /// <summary>

@@ -1,9 +1,8 @@
-using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-
+using Chow.Interpreter.Exceptions;
+using Chow.Interpreter.Tokens;
 namespace Chow.Interpreter
 {
     /// <summary>
@@ -650,7 +649,7 @@ namespace Chow.Interpreter
                 }
                 else
                 {
-                    throw new ScannerEx($"Unexpected indentation.", _lineNum);
+                    throw new ScannerEx("Unexpected indentation.", _lineNum);
                 }
             }
         }

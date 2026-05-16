@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-
 namespace Chow.Interpreter.SyntaxTrees
 {
     sealed class BlockNode : Node

@@ -1,6 +1,4 @@
 ﻿using Chow.Interpreter;
-
-
 ChowModule module = new ChowModule();
 
 var code =

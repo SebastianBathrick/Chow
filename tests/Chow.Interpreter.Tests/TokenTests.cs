@@ -1,5 +1,4 @@
 using Chow.Interpreter.Tokens;
-
 namespace Chow.Interpreter.Tests
 {
     [TestFixture]

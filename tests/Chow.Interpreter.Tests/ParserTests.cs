@@ -7,7 +7,6 @@ using Chow.Interpreter.SyntaxTrees.Scope;
 using Chow.Interpreter.SyntaxTrees.Statements;
 using Chow.Interpreter.SyntaxTrees.Subscripts;
 using Chow.Interpreter.Tokens;
-
 namespace Chow.Interpreter.Tests
 {
     [TestFixture]

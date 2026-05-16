@@ -1,7 +1,5 @@
 using Chow.Interpreter.Bytecode;
 using Chow.Interpreter.State.Scopes;
-using Chow.Interpreter.State.Values;
-
 namespace Chow.Interpreter.Tests
 {
     [TestFixture]
@@ -29,13 +27,13 @@ namespace Chow.Interpreter.Tests
 
         static void PushIntegerConstant(Chunk chunk, int value)
         {
-            var index = chunk.RegisterConstant(new ChowValue((long)value));
+            var index = chunk.RegisterConstant(new ChowValue(value));
             chunk.AddInstruction(OperationCode.PushConstant, LINE, index);
         }
 
         static void PushFloatConstant(Chunk chunk, float value)
         {
-            var index = chunk.RegisterConstant(new ChowValue((double)value));
+            var index = chunk.RegisterConstant(new ChowValue(value));
             chunk.AddInstruction(OperationCode.PushConstant, LINE, index);
         }
 
