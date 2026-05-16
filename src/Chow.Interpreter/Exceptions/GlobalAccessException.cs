@@ -14,6 +14,7 @@ namespace Chow.Interpreter.Exceptions
         /// <summary>Gets the variable name that triggered the exception.</summary>
         public string Name { get; }
 
+        // TODO: Change so that the client doesn't need to write the whole message each time this throws
         /// <summary>Initialises a new <see cref="GlobalAccessException"/> for the given variable name.</summary>
         /// <param name="name">The variable name that caused the error.</param>
         /// <param name="msg">A message describing the specific violation.</param>

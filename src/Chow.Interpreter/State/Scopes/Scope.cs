@@ -40,7 +40,7 @@ namespace Chow.Interpreter.State.Scopes
         {
             return _varMap[name];
         }
-
+        
         /// <summary>
         /// Removes the binding for <paramref name="name"/> from this scope. Returns <c>true</c> if a binding
         /// was removed, <c>false</c> if no such binding existed. Does not consult <see cref="ParentOrNull"/>.

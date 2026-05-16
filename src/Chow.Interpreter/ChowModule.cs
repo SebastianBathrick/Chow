@@ -1,3 +1,4 @@
+using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State.Scopes;
 namespace Chow.Interpreter
 {
@@ -11,6 +12,24 @@ namespace Chow.Interpreter
     {
         readonly Scope _globalScope = new Scope();
 
+        public object this[string name]
+        {
+            set
+            {
+                var chowValue = new ChowValue(value);
+                _globalScope.AssignVariableValue(name, chowValue);
+            }
+            get
+            {
+                if (_globalScope.IsVariableDefined(name))
+                {
+                    return _globalScope.GetVariableValue(name);
+                }
+
+                throw new GlobalAccessException(name, $"undefined name '{name}'");
+            }
+        }
+        
         public ChowModule()
         {
             foreach (var type in BuiltIns.AllTypes)

@@ -150,14 +150,21 @@ namespace Chow.Interpreter
 
         public TDataType AsType<TDataType>()
         {
-            if (!DataTypeMap.TryGetValue(typeof(TDataType), out var targetDataType))
+            var typeOf = typeof(TDataType);
+
+            if (typeOf == typeof(object))
+            {
+                return (TDataType)ToObject();
+            }
+            
+            if (!DataTypeMap.TryGetValue(typeOf, out var targetDataType))
             {
                 if (_objectValue is TDataType typedObject)
                 {
                     return typedObject;
                 }
 
-                throw new InvalidOperationException($"Cannot convert {DataType} to {typeof(TDataType)}");
+                throw new InvalidOperationException($"Cannot convert {DataType} to {typeOf}");
             }
 
             switch (targetDataType)
@@ -170,7 +177,7 @@ namespace Chow.Interpreter
                 {
                     // The map aliases both typeof(long) and typeof(int) to DataType.Int.
                     // For T == int we truncate; for T == long we return the full 64-bit value.
-                    if (typeof(TDataType) == typeof(int))
+                    if (typeOf == typeof(int))
                     {
                         return (TDataType)(object)(int)ToInt64();
                     }
@@ -839,6 +846,39 @@ namespace Chow.Interpreter
                 case DataType.Range:
                 {
                     throw new InvalidOperationException("Cannot convert Range to float64");
+                }
+            }
+
+            throw new InvalidOperationException();
+        }
+
+        object ToObject()
+        {
+            switch (DataType)
+            {
+                case DataType.None:
+                {
+                    return null;
+                }
+                case DataType.Bool:
+                {
+                    return _boolValue;
+                }
+                case DataType.Int:
+                {
+                    return _int64Value;
+                }
+                case DataType.Float:
+                {
+                    return _float64Value;
+                }
+                case DataType.Str:
+                case DataType.Object:
+                case DataType.List:
+                case DataType.Dict:
+                case DataType.Range:
+                {
+                    return _objectValue;
                 }
             }
 
