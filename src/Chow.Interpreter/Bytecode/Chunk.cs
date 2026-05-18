@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using Chow.Interpreter.Values;
 namespace Chow.Interpreter.Bytecode
 {
@@ -132,6 +134,51 @@ namespace Chow.Interpreter.Bytecode
             var operand = _varNames.Count;
             _varNames.Add(varName);
             return operand;
+        }
+
+        #endregion
+
+        #region Json Serialization Methods
+
+        public string ToJson()
+        {
+            var w = new JsonWriter();
+            w.OpenObject();
+
+            w.OpenArray("instructions");
+
+            for (var i = 0; i < _instructions.Count; i++)
+            {
+                var instr = _instructions[i];
+                w.OpenObject();
+                w.WriteString("instruction", instr.Code.ToString());
+                w.WriteRaw("operand", instr.Operand.ToString());
+                w.WriteRaw("line", _instrLines[i].ToString());
+                w.CloseObject();
+            }
+
+            w.CloseArray();
+
+            w.OpenArray("constantPool");
+
+            foreach (var c in _constantPool)
+            {
+                w.WriteStringItem(c.ToString());
+            }
+
+            w.CloseArray();
+
+            w.OpenArray("variableNames");
+
+            foreach (var name in _varNames)
+            {
+                w.WriteStringItem(name);
+            }
+
+            w.CloseArray();
+
+            w.CloseObject();
+            return w.ToString();
         }
 
         #endregion

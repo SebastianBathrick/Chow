@@ -22,7 +22,7 @@ namespace Chow.Interpreter
             var vm = new VirtualMachine(new Scope(), chunk);
             return vm.EvaluateChunk();
         }
-        
+
         internal static ChowValue ExecuteModuleCode(string sourceCode, Scope moduleGlobalScope)
         {
             var scanner = new Scanner(sourceCode);
@@ -41,9 +41,10 @@ namespace Chow.Interpreter
             return vm.EvaluateChunk();
         }
 
-        internal static ChowValue CallModuleFunction(string sourceCode, Scope moduleGlobalScope)
+        internal static ChowValue CallModuleFunction(Scope moduleGlobalScope, string functionName, ChowValue[] args)
         {
-            throw new NotImplementedException();
+            var vm = new VirtualMachine(moduleGlobalScope);
+            return vm.CallGlobalFunction(functionName, args);
         }
     }
 }

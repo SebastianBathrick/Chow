@@ -32,7 +32,7 @@ namespace Chow.Interpreter
             : this(globalScope, chunk)
         {
         }
-        
+
         // Chunk is null when the client is exclusively calling a closure
         public VirtualMachine(Scope globalScope = null, Chunk chunk = null)
         {
@@ -42,71 +42,43 @@ namespace Chow.Interpreter
             _valStack = new Stack<ChowValue>();
         }
 
-        public VirtualMachine(string targetFuncName, Scope globalScope, object[] callArguments)
-        {
-            // This constructor should be called if the function being invoked is a Closure and NOT an interop function
-            _globalScope = globalScope;
-            
-            // Assumes ChowModule checks if variable is within scope in case a GlobalAccessExceptions must be thrown
-            // GlobalAccessExceptions are intended to be thrown from the ChowModule
-            var globalVariable = _globalScope.GetVariableValue(targetFuncName);
-
-            if (!IsClosure(globalVariable))
-            {
-                throw new TypeException($"'{targetFuncName}' is a {globalVariable.DataType} which are not callable");
-            }
-
-            var funcChunk = ((Closure)globalVariable.ToObject()).Chunk;
-            _callStack = new CallStack(funcChunk, globalScope);
-            _valStack = new Stack<ChowValue>();
-            
-            if (callArguments == null)
-            {
-                return;
-            }
-
-            for (var i = 0; i < callArguments.Length; i++)
-            {
-                // If the argument is of type ChowValue, it will NOT be wrapped in another ChowValue struct
-                _valStack.Push(new ChowValue(callArguments[i]));
-            }
-        }
         #endregion
 
         #region Public API
 
         public ChowValue EvaluateChunk()
         {
-            ChowValue lastExprStmntValue = ChowValue.None;
+            var lastExprStmntValue = ChowValue.None;
 
             while (_callStack.IsInstrToRun)
             {
                 switch (CurrentOperation.Code)
                 {
                     case OperationCode.PushConstant:
-                        {
-                            _valStack.Push(_callStack.CurrentChunk.ReadConstant(CurrentOperation.Operand));
-                            break;
-                        }
+                    {
+                        _valStack.Push(_callStack.CurrentChunk.ReadConstant(CurrentOperation.Operand));
+                        break;
+                    }
 
                     case OperationCode.CallFunction:
-                        {
-                            CallFunction(CurrentOperation.Operand, out var isClosureEntered);
-                            if (isClosureEntered)
-                            {
-                                // Do not advance the instruction pointer, because this is not the
-                                // same Chunk this iteration started with. Now the pointer refers to
-                                // the closure's Chunk instruction pointer and pointed at its first
-                                // instruction. Use continue so the first instruction is evaluated
-                                // and not skipped.
-                                continue;
-                            }
+                    {
+                        CallFunction(CurrentOperation.Operand, out var isClosureEntered);
 
-                            // An interop call would have already returned and this is the same Chunk
-                            // this iteration started with, and no function Chunk instructions need to
-                            // be evaluated.
-                            break;
+                        if (isClosureEntered)
+                        {
+                            // Do not advance the instruction pointer, because this is not the
+                            // same Chunk this iteration started with. Now the pointer refers to
+                            // the closure's Chunk instruction pointer and pointed at its first
+                            // instruction. Use continue so the first instruction is evaluated
+                            // and not skipped.
+                            continue;
                         }
+
+                        // An interop call would have already returned and this is the same Chunk
+                        // this iteration started with, and no function Chunk instructions need to
+                        // be evaluated.
+                        break;
+                    }
 
                     #region Binary Operators
 
@@ -124,247 +96,247 @@ namespace Chow.Interpreter
                     case OperationCode.LessEqual:
                     case OperationCode.GreaterEqual:
                     case OperationCode.BinaryOr:
-                        {
-                            EvaluateBinaryOperation(CurrentOperation.Code);
-                            break;
-                        }
+                    {
+                        EvaluateBinaryOperation(CurrentOperation.Code);
+                        break;
+                    }
 
                     case OperationCode.In:
-                        {
-                            EvaluateIn(negate: false);
-                            break;
-                        }
+                    {
+                        EvaluateIn(negate: false);
+                        break;
+                    }
 
                     case OperationCode.NotIn:
-                        {
-                            EvaluateIn(negate: true);
-                            break;
-                        }
+                    {
+                        EvaluateIn(negate: true);
+                        break;
+                    }
 
                     #endregion
 
                     #region Unary Operators
 
                     case OperationCode.Not:
-                        {
-                            EvaluateNot();
-                            break;
-                        }
+                    {
+                        EvaluateNot();
+                        break;
+                    }
 
                     case OperationCode.Negate:
-                        {
-                            EvaluateNegation();
-                            break;
-                        }
+                    {
+                        EvaluateNegation();
+                        break;
+                    }
 
                     case OperationCode.CoerceToStr:
-                        {
-                            EvaluateCoerceToStr();
-                            break;
-                        }
+                    {
+                        EvaluateCoerceToStr();
+                        break;
+                    }
 
                     #endregion
 
                     #region Jumps
 
                     case OperationCode.JumpIfFalseOrPop:
+                    {
+                        if (!_valStack.Peek().IsTruthy())
                         {
-                            if (!_valStack.Peek().IsTruthy())
-                            {
-                                // Leave the falsy value on the stack as the result of the short-circuited `and`
-                                _callStack.JumpToInstr(CurrentOperation.Operand);
-                                continue;
-                            }
-
-                            _valStack.Pop();
-                            break;
+                            // Leave the falsy value on the stack as the result of the short-circuited `and`
+                            _callStack.JumpToInstr(CurrentOperation.Operand);
+                            continue;
                         }
+
+                        _valStack.Pop();
+                        break;
+                    }
 
                     case OperationCode.JumpIfTrueOrPop:
+                    {
+                        if (_valStack.Peek().IsTruthy())
                         {
-                            if (_valStack.Peek().IsTruthy())
-                            {
-                                // Leave the truthy value on the stack as the result of the short-circuited `or`
-                                _callStack.JumpToInstr(CurrentOperation.Operand);
-                                continue;
-                            }
-
-                            _valStack.Pop();
-                            break;
+                            // Leave the truthy value on the stack as the result of the short-circuited `or`
+                            _callStack.JumpToInstr(CurrentOperation.Operand);
+                            continue;
                         }
+
+                        _valStack.Pop();
+                        break;
+                    }
 
                     case OperationCode.JumpIfFalse:
+                    {
+                        // Always pops; jumps past the branch body when the condition is false
+                        if (!_valStack.Pop().IsTruthy())
                         {
-                            // Always pops; jumps past the branch body when the condition is false
-                            if (!_valStack.Pop().IsTruthy())
-                            {
-                                _callStack.JumpToInstr(CurrentOperation.Operand);
-                                continue;
-                            }
-
-                            break;
+                            _callStack.JumpToInstr(CurrentOperation.Operand);
+                            continue;
                         }
+
+                        break;
+                    }
 
                     case OperationCode.JumpPastElseBranches:
-                        {
-                            // Unconditional jump emitted at the end of a taken if/elif body to skip remaining branches
-                            _callStack.JumpToInstr(CurrentOperation.Operand);
-                            continue;
-                        }
+                    {
+                        // Unconditional jump emitted at the end of a taken if/elif body to skip remaining branches
+                        _callStack.JumpToInstr(CurrentOperation.Operand);
+                        continue;
+                    }
 
                     case OperationCode.JumpToLoopStart:
-                        {
-                            // Unconditional backward jump emitted at the bottom of a loop body (and for `continue`)
-                            _callStack.JumpToInstr(CurrentOperation.Operand);
-                            continue;
-                        }
+                    {
+                        // Unconditional backward jump emitted at the bottom of a loop body (and for `continue`)
+                        _callStack.JumpToInstr(CurrentOperation.Operand);
+                        continue;
+                    }
 
                     case OperationCode.GetIterator:
-                        {
-                            var source = _valStack.Pop();
-                            var iter = IteratorFactory.GetIterator(source);
-                            _valStack.Push(new ChowValue(iter));
-                            break;
-                        }
+                    {
+                        var source = _valStack.Pop();
+                        var iter = IteratorFactory.GetIterator(source);
+                        _valStack.Push(new ChowValue(iter));
+                        break;
+                    }
 
                     case OperationCode.ForIterNextOrJump:
+                    {
+                        // Peek the iterator (kept on stack for the whole loop); push next value or jump to exhaust target.
+                        var iter = (IChowIterator)_valStack.Peek().ToObject();
+
+                        if (iter.TryMoveNext(out var current))
                         {
-                            // Peek the iterator (kept on stack for the whole loop); push next value or jump to exhaust target.
-                            var iter = (IChowIterator)_valStack.Peek().ToObject();
-
-                            if (iter.TryMoveNext(out var current))
-                            {
-                                _valStack.Push(current);
-                                break;
-                            }
-
-                            _valStack.Pop();
-                            _callStack.JumpToInstr(CurrentOperation.Operand);
-                            continue;
-                        }
-
-                    case OperationCode.Pop:
-                        {
-                            _valStack.Pop();
+                            _valStack.Push(current);
                             break;
                         }
+
+                        _valStack.Pop();
+                        _callStack.JumpToInstr(CurrentOperation.Operand);
+                        continue;
+                    }
+
+                    case OperationCode.Pop:
+                    {
+                        _valStack.Pop();
+                        break;
+                    }
 
                     #endregion
 
                     #region Push/Pop
 
                     case OperationCode.PopAndAssignToVariable:
-                        {
-                            PopAndAssignToVariable();
-                            break;
-                        }
+                    {
+                        PopAndAssignToVariable();
+                        break;
+                    }
 
                     case OperationCode.PushVariableValue:
-                        {
-                            PushVariableValue();
-                            break;
-                        }
+                    {
+                        PushVariableValue();
+                        break;
+                    }
 
                     case OperationCode.PopAndAssignToGlobal:
-                        {
-                            PopAndAssignToGlobal();
-                            break;
-                        }
+                    {
+                        PopAndAssignToGlobal();
+                        break;
+                    }
 
                     case OperationCode.PushGlobalValue:
-                        {
-                            PushGlobalValue();
-                            break;
-                        }
+                    {
+                        PushGlobalValue();
+                        break;
+                    }
 
                     case OperationCode.PopAndAssignToNonlocal:
-                        {
-                            PopAndAssignToNonlocal();
-                            break;
-                        }
+                    {
+                        PopAndAssignToNonlocal();
+                        break;
+                    }
 
                     case OperationCode.PushNonlocalValue:
-                        {
-                            PushNonlocalValue();
-                            break;
-                        }
+                    {
+                        PushNonlocalValue();
+                        break;
+                    }
 
                     case OperationCode.PushNewInternalList:
-                        {
-                            PushNewInternalList(CurrentOperation.Operand);
-                            break;
-                        }
+                    {
+                        PushNewInternalList(CurrentOperation.Operand);
+                        break;
+                    }
 
                     case OperationCode.PushNewClosureFromTemplate:
-                        {
-                            PushNewClosureFromTemplate();
-                            break;
-                        }
+                    {
+                        PushNewClosureFromTemplate();
+                        break;
+                    }
 
                     case OperationCode.PushNewInternalDict:
-                        {
-                            PushNewInternalDict(CurrentOperation.Operand);
-                            break;
-                        }
+                    {
+                        PushNewInternalDict(CurrentOperation.Operand);
+                        break;
+                    }
 
                     case OperationCode.PushReturnValue:
-                        {
-                            _callStack.ExitFunctionCall();
+                    {
+                        _callStack.ExitFunctionCall();
 
-                            // Caller's IP was advanced before the call; resume the caller without auto-advancing the freshly-restored frame.
-                            continue;
-                        }
+                        // Caller's IP was advanced before the call; resume the caller without auto-advancing the freshly-restored frame.
+                        continue;
+                    }
 
                     case OperationCode.PopExpressionStatementResult:
-                        {
-                            lastExprStmntValue = _valStack.Pop();
-                            break;
-                        }
+                    {
+                        lastExprStmntValue = _valStack.Pop();
+                        break;
+                    }
 
                     #endregion
 
                     #region Subscripts
 
                     case OperationCode.Subscript:
-                        {
-                            EvaluateSubscript();
-                            break;
-                        }
+                    {
+                        EvaluateSubscript();
+                        break;
+                    }
 
                     case OperationCode.SubscriptSlice:
-                        {
-                            EvaluateSubscriptSlice();
-                            break;
-                        }
+                    {
+                        EvaluateSubscriptSlice();
+                        break;
+                    }
 
                     case OperationCode.SubscriptSet:
-                        {
-                            EvaluateSubscriptSet();
-                            break;
-                        }
+                    {
+                        EvaluateSubscriptSet();
+                        break;
+                    }
 
                     #endregion
 
                     #region Attributes
 
                     case OperationCode.GetObjectAttribute:
-                        {
-                            GetObjectAttribute();
-                            break;
-                        }
+                    {
+                        GetObjectAttribute();
+                        break;
+                    }
 
                     case OperationCode.SetInteropObjectAttribute:
-                        {
-                            SetInteropObjectAttribute();
-                            break;
-                        }
+                    {
+                        SetInteropObjectAttribute();
+                        break;
+                    }
 
                     #endregion
 
                     default:
-                        {
-                            throw new NotImplementedException($"Execution of {CurrentOperation.Code} is not implemented.");
-                        }
+                    {
+                        throw new NotImplementedException($"Execution of {CurrentOperation.Code} is not implemented.");
+                    }
                 }
 
                 _callStack.MoveToNextInstruction();
@@ -384,29 +356,23 @@ namespace Chow.Interpreter
         /// <summary>
         ///     Calls a function stored in a global variable with the name provided.
         /// </summary>
-        /// <param name="callVarName">The name of a variable declared in the global scope</param>
+        /// <param name="callVarName">The name of a variable declared in the global scope. Caller is responsible for verifying the name is defined.</param>
         /// <param name="args">The arguments to pass to the function. If there are not any, this parameter can be null.</param>
         /// <returns>The result of the function call.</returns>
-        /// <exception cref="UndefinedNameException">Thrown if the variable is not defined.</exception>
         /// <remarks>Assumes that there is a global scope already set up that was provided to the constructor.</remarks>
-        public ChowValue CallGlobalFunction(string callVarName, List<ChowValue> args)
+        public ChowValue CallGlobalFunction(string callVarName, ChowValue[] args)
         {
-            if (!_callStack.IsVariableDefined(callVarName))
-            {
-                throw new UndefinedNameException(callVarName, -1);
-            }
-
             _valStack.Push(_callStack.GetVariableValue(callVarName));
 
             if (args != null)
             {
-                for(int i = 0; i < args.Count; i++)
+                for (var i = 0; i < args.Length; i++)
                 {
                     _valStack.Push(args[i]);
                 }
             }
 
-            CallFunction(args != null ? args.Count : 0, out var isClosure);
+            CallFunction(args != null ? args.Length : 0, out var isClosure);
 
             if (isClosure)
             {
@@ -605,93 +571,93 @@ namespace Chow.Interpreter
             switch (opCode)
             {
                 case OperationCode.Add:
-                    {
-                        _valStack.Push(left.CreateSum(right));
-                        break;
-                    }
+                {
+                    _valStack.Push(left.CreateSum(right));
+                    break;
+                }
 
                 case OperationCode.Subtract:
-                    {
-                        _valStack.Push(left.CreateDifference(right));
-                        break;
-                    }
+                {
+                    _valStack.Push(left.CreateDifference(right));
+                    break;
+                }
 
                 case OperationCode.Multiply:
-                    {
-                        _valStack.Push(left.CreateProduct(right));
-                        break;
-                    }
+                {
+                    _valStack.Push(left.CreateProduct(right));
+                    break;
+                }
 
                 case OperationCode.Divide:
-                    {
-                        _valStack.Push(left.CreateQuotient(right));
-                        break;
-                    }
+                {
+                    _valStack.Push(left.CreateQuotient(right));
+                    break;
+                }
 
                 case OperationCode.Modulus:
-                    {
-                        _valStack.Push(left.CreateModulus(right));
-                        break;
-                    }
+                {
+                    _valStack.Push(left.CreateModulus(right));
+                    break;
+                }
 
                 case OperationCode.Exponentiate:
-                    {
-                        _valStack.Push(left.CreatePower(right));
-                        break;
-                    }
+                {
+                    _valStack.Push(left.CreatePower(right));
+                    break;
+                }
 
                 case OperationCode.FloorDivide:
-                    {
-                        _valStack.Push(left.CreateFloorQuotient(right));
-                        break;
-                    }
+                {
+                    _valStack.Push(left.CreateFloorQuotient(right));
+                    break;
+                }
 
                 case OperationCode.Equal:
-                    {
-                        _valStack.Push(new ChowValue(left.IsTypeAgnosticEqualTo(right)));
-                        break;
-                    }
+                {
+                    _valStack.Push(new ChowValue(left.IsTypeAgnosticEqualTo(right)));
+                    break;
+                }
 
                 case OperationCode.NotEqual:
-                    {
-                        _valStack.Push(new ChowValue(left.IsNotEqualTo(right)));
-                        break;
-                    }
+                {
+                    _valStack.Push(new ChowValue(left.IsNotEqualTo(right)));
+                    break;
+                }
 
                 case OperationCode.Less:
-                    {
-                        _valStack.Push(new ChowValue(left.IsLessThan(right)));
-                        break;
-                    }
+                {
+                    _valStack.Push(new ChowValue(left.IsLessThan(right)));
+                    break;
+                }
 
                 case OperationCode.Greater:
-                    {
-                        _valStack.Push(new ChowValue(left.IsGreaterThan(right)));
-                        break;
-                    }
+                {
+                    _valStack.Push(new ChowValue(left.IsGreaterThan(right)));
+                    break;
+                }
 
                 case OperationCode.LessEqual:
-                    {
-                        _valStack.Push(new ChowValue(left.IsLessOrEqualTo(right)));
-                        break;
-                    }
+                {
+                    _valStack.Push(new ChowValue(left.IsLessOrEqualTo(right)));
+                    break;
+                }
 
                 case OperationCode.GreaterEqual:
-                    {
-                        _valStack.Push(new ChowValue(left.IsGreaterOrEqualTo(right)));
-                        break;
-                    }
+                {
+                    _valStack.Push(new ChowValue(left.IsGreaterOrEqualTo(right)));
+                    break;
+                }
 
                 case OperationCode.BinaryOr:
-                    {
-                        _valStack.Push(left.CreateUnion(right));
-                        break;
-                    }
+                {
+                    _valStack.Push(left.CreateUnion(right));
+                    break;
+                }
 
                 default:
-                    {
-                        throw new NotImplementedException($"Execution of {opCode} is not implemented.");
-                    }
+                {
+                    throw new NotImplementedException($"Execution of {opCode} is not implemented.");
+                }
             }
         }
 

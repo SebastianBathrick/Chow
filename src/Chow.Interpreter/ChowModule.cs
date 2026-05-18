@@ -1,6 +1,7 @@
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State;
 using Chow.Interpreter.Values;
+using Chow.Interpreter.Values.DataTypes;
 using System;
 namespace Chow.Interpreter
 {
@@ -44,7 +45,7 @@ namespace Chow.Interpreter
         {
             _name = name;
             _globalScope = new Scope();
-            
+
             foreach (var type in BuiltIns.AllTypes)
             {
                 _globalScope.AssignVariableValue(BuiltIns.NameOf(type), new ChowValue(BuiltIns.DefaultOf(type)));
@@ -59,14 +60,49 @@ namespace Chow.Interpreter
             return ChowEngine.ExecuteModuleCode(sourceCode, _globalScope);
         }
 
+        /// <summary>Invokes a callable stored in the module's global scope and returns its result.</summary>
+        /// <param name="functionName">Name of the global to call (interop delegate or Chow closure).</param>
+        /// <param name="args">Host arguments; each is converted via <see cref="ChowValue(object)"/>.</param>
+        /// <exception cref="GlobalAccessException">The name is not defined in the module's global scope.</exception>
+        /// <exception cref="TypeException">The global exists but is not callable, or arity does not match.</exception>
         public ChowValue Call(string functionName, params object[] args)
         {
             if (!_globalScope.IsVariableDefined(functionName))
             {
                 throw new GlobalAccessException(functionName, $"'{functionName}' is undefined and cannot be called");
             }
-            
-            throw new NotImplementedException();
+
+            var callee = _globalScope.GetVariableValue(functionName);
+            var chowArgs = ConvertArgs(args);
+
+            if (callee.IsOfType<Func<ChowValue[], ChowValue>>())
+            {
+                return callee.CallInterop(chowArgs);
+            }
+
+            if (callee.IsOfType<Closure>())
+            {
+                return ChowEngine.CallModuleFunction(_globalScope, functionName, chowArgs);
+            }
+
+            throw new TypeException($"'{functionName}' is a {callee.DataType} which is not callable");
+        }
+
+        static ChowValue[] ConvertArgs(object[] args)
+        {
+            if (args == null || args.Length == 0)
+            {
+                return Array.Empty<ChowValue>();
+            }
+
+            var result = new ChowValue[args.Length];
+
+            for (var i = 0; i < args.Length; i++)
+            {
+                result[i] = new ChowValue(args[i]);
+            }
+
+            return result;
         }
 
         #region Global Scope API Methods
@@ -87,7 +123,7 @@ namespace Chow.Interpreter
         }
 
         #endregion
-        
+
         #region Built-Ins API Methods
 
         public void EnableBuiltIns(params BuiltInType[] types)
@@ -141,5 +177,6 @@ namespace Chow.Interpreter
         }
 
         #endregion
+
     }
 }

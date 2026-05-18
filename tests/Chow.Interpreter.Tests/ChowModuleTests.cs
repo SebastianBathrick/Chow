@@ -1,4 +1,6 @@
 using Chow.Interpreter.Exceptions;
+using Chow.Interpreter.Values;
+using Chow.Interpreter.Values.DataTypes;
 namespace Chow.Interpreter.Tests
 {
     [TestFixture]
@@ -30,6 +32,7 @@ namespace Chow.Interpreter.Tests
         public void Indexer_GetUndefinedName_NamePropertyExposesMissingName()
         {
             var module = NewModule();
+
             try
             {
                 _ = module["missing_thing"];
@@ -149,7 +152,7 @@ namespace Chow.Interpreter.Tests
         public void Indexer_SetNullValue_ThrowsArgumentNullException()
         {
             var module = NewModule();
-            Assert.That(() => module["x"] = null!, Throws.TypeOf<System.ArgumentNullException>());
+            Assert.That(() => module["x"] = null!, Throws.TypeOf<ArgumentNullException>());
         }
 
         [Test]
@@ -343,6 +346,7 @@ namespace Chow.Interpreter.Tests
         public void Constructor_AllBuiltInsSeeded_NoneThrowOnAccess()
         {
             var module = NewModule();
+
             foreach (var name in AllBuiltInNames)
             {
                 Assert.That(() => module[name], Throws.Nothing, $"built-in '{name}' missing");
@@ -1119,6 +1123,7 @@ namespace Chow.Interpreter.Tests
         public void Indexer_GetUndefinedAfterFailedExecute_StillThrows()
         {
             var module = NewModule();
+
             try
             {
                 module.Execute("syntax !! error !!");
@@ -1127,6 +1132,7 @@ namespace Chow.Interpreter.Tests
             {
                 // ignore — verifying the failure didn't leak partial state
             }
+
             Assert.That(() => module["never_defined"], Throws.TypeOf<GlobalAccessException>());
         }
 
@@ -1134,6 +1140,7 @@ namespace Chow.Interpreter.Tests
         public void Execute_AssignAfterFailedExecute_StillWorks()
         {
             var module = NewModule();
+
             try
             {
                 module.Execute("definitely $$$ broken");
@@ -1142,6 +1149,7 @@ namespace Chow.Interpreter.Tests
             {
                 // ignore
             }
+
             module.Execute("x = 7");
             Assert.That(module["x"], Is.EqualTo(7L));
         }
@@ -1546,7 +1554,6 @@ namespace Chow.Interpreter.Tests
 
         #region Python Parity - Runtime Errors
 
-
         [Test]
         public void Execute_IntDivByZero_ThrowsZeroDivisionException()
         {
@@ -1613,6 +1620,7 @@ namespace Chow.Interpreter.Tests
                 Throws.InstanceOf<ChowRuntimeException>());
         }
         */
+
         #endregion
 
         #region Python Parity - Float Edge Cases
@@ -1642,5 +1650,444 @@ namespace Chow.Interpreter.Tests
         }
 
         #endregion
+
+        #region Call - Errors
+
+        [Test]
+        public void Call_UndefinedName_ThrowsGlobalAccessException()
+        {
+            var module = NewModule();
+            Assert.That(() => module.Call("nope"), Throws.TypeOf<GlobalAccessException>()
+                .With.Property(nameof(GlobalAccessException.Name)).EqualTo("nope"));
+        }
+
+        [Test]
+        public void Call_UndefinedName_NamePropertyMatches()
+        {
+            var module = NewModule();
+
+            try
+            {
+                module.Call("missing_func", 1, 2);
+                Assert.Fail();
+            }
+            catch (GlobalAccessException ex)
+            {
+                Assert.That(ex.Name, Is.EqualTo("missing_func"));
+            }
+        }
+
+        [Test]
+        public void Call_IntGlobal_ThrowsTypeException()
+        {
+            var module = NewModule();
+            module["x"] = 42;
+            Assert.That(() => module.Call("x"), Throws.TypeOf<TypeException>());
+        }
+
+        [Test]
+        public void Call_StringGlobal_ThrowsTypeException()
+        {
+            var module = NewModule();
+            module["s"] = "hello";
+            Assert.That(() => module.Call("s"), Throws.TypeOf<TypeException>());
+        }
+
+        [Test]
+        public void Call_BoolGlobal_ThrowsTypeException()
+        {
+            var module = NewModule();
+            module["b"] = true;
+            Assert.That(() => module.Call("b"), Throws.TypeOf<TypeException>());
+        }
+
+        [Test]
+        public void Call_DoubleGlobal_ThrowsTypeException()
+        {
+            var module = NewModule();
+            module["d"] = 1.5;
+            Assert.That(() => module.Call("d"), Throws.TypeOf<TypeException>());
+        }
+
+        [Test]
+        public void Call_ListGlobalFromExecute_ThrowsTypeException()
+        {
+            var module = NewModule();
+            module.Execute("xs = [1, 2, 3]");
+            Assert.That(() => module.Call("xs"), Throws.TypeOf<TypeException>());
+        }
+
+        [Test]
+        public void Call_NullObjectArg_ThrowsArgumentNullException()
+        {
+            var module = NewModule();
+            module.Execute("def f(x):\n    return x");
+            Assert.That(() => module.Call("f", new object?[] { null }!),
+                Throws.TypeOf<ArgumentNullException>());
+        }
+
+        #endregion
+
+        #region Call - Interop (host delegates)
+
+        [Test]
+        public void Call_HostDelegateNoArgs_ReturnsLiteral()
+        {
+            var module = NewModule();
+            module["host"] = (Func<ChowValue[], ChowValue>)(_ => new ChowValue(123L));
+
+            var result = module.Call("host");
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(123L));
+        }
+
+        [Test]
+        public void Call_HostDelegate_ReceivesIntArg()
+        {
+            var module = NewModule();
+            module["host"] = (Func<ChowValue[], ChowValue>)(args => new ChowValue(args[0].AsType<long>() * 2));
+
+            var result = module.Call("host", 7);
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(14L));
+        }
+
+        [Test]
+        public void Call_HostDelegate_ReceivesMultipleMixedArgs()
+        {
+            var module = NewModule();
+            module["host"] = (Func<ChowValue[], ChowValue>)(args =>
+            {
+                var i = args[0].AsType<long>();
+                var s = args[1].AsType<string>();
+                var b = args[2].AsType<bool>();
+                return new ChowValue($"{i}|{s}|{b}");
+            });
+
+            var result = module.Call("host", 5, "abc", true);
+
+            Assert.That(result.AsType<string>(), Is.EqualTo("5|abc|True"));
+        }
+
+        [Test]
+        public void Call_HostDelegate_LongArgPreserved()
+        {
+            var module = NewModule();
+            module["host"] = (Func<ChowValue[], ChowValue>)(args => args[0]);
+
+            var result = module.Call("host", 9_999_999_999L);
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(9_999_999_999L));
+        }
+
+        [Test]
+        public void Call_HostDelegate_DoubleArgPreserved()
+        {
+            var module = NewModule();
+            module["host"] = (Func<ChowValue[], ChowValue>)(args => args[0]);
+
+            var result = module.Call("host", 2.5);
+
+            Assert.That(result.AsType<double>(), Is.EqualTo(2.5));
+        }
+
+        [Test]
+        public void Call_HostDelegate_InvocationFiresOnce()
+        {
+            var module = NewModule();
+            var count = 0;
+            module["host"] = (Func<ChowValue[], ChowValue>)(_ =>
+            {
+                count++;
+                return ChowValue.None;
+            });
+
+            module.Call("host");
+            module.Call("host");
+
+            Assert.That(count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void Call_HostDelegate_NoArgs_PassesEmptyArray()
+        {
+            var module = NewModule();
+            int? receivedLength = null;
+            module["host"] = (Func<ChowValue[], ChowValue>)(args =>
+            {
+                receivedLength = args.Length;
+                return ChowValue.None;
+            });
+
+            module.Call("host");
+
+            Assert.That(receivedLength, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Call_BuiltinAbs_NegativeInt_ReturnsAbsolute()
+        {
+            var module = NewModule();
+            var result = module.Call("abs", -42);
+            Assert.That(result.AsType<long>(), Is.EqualTo(42L));
+        }
+
+        [Test]
+        public void Call_BuiltinLen_String_ReturnsLength()
+        {
+            var module = NewModule();
+            var result = module.Call("len", "hello");
+            Assert.That(result.AsType<long>(), Is.EqualTo(5L));
+        }
+
+        [Test]
+        public void Call_BuiltinStr_Int_ReturnsString()
+        {
+            var module = NewModule();
+            var result = module.Call("str", 7);
+            Assert.That(result.AsType<string>(), Is.EqualTo("7"));
+        }
+
+        [Test]
+        public void Call_BuiltinMin_TwoInts_ReturnsLower()
+        {
+            var module = NewModule();
+            var result = module.Call("min", 3, 1);
+            Assert.That(result.AsType<long>(), Is.EqualTo(1L));
+        }
+
+        [Test]
+        public void Call_BuiltinMax_TwoInts_ReturnsHigher()
+        {
+            var module = NewModule();
+            var result = module.Call("max", 3, 1);
+            Assert.That(result.AsType<long>(), Is.EqualTo(3L));
+        }
+
+        #endregion
+
+        #region Call - Closures (Chow def)
+
+        [Test]
+        public void Call_DefinedClosureNoArgs_ReturnsLiteral()
+        {
+            var module = NewModule();
+            module.Execute("def f():\n    return 42");
+
+            var result = module.Call("f");
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(42L));
+        }
+
+        [Test]
+        public void Call_DefinedClosure_AddsTwoInts()
+        {
+            var module = NewModule();
+            module.Execute("def add(a, b):\n    return a + b");
+
+            var result = module.Call("add", 2, 3);
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(5L));
+        }
+
+        [Test]
+        public void Call_DefinedClosure_ArgOrderPreserved()
+        {
+            var module = NewModule();
+            module.Execute("def sub(a, b):\n    return a - b");
+
+            var result = module.Call("sub", 10, 3);
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(7L));
+        }
+
+        [Test]
+        public void Call_DefinedClosure_StringConcat()
+        {
+            var module = NewModule();
+            module.Execute("def join(a, b):\n    return a + b");
+
+            var result = module.Call("join", "foo", "bar");
+
+            Assert.That(result.AsType<string>(), Is.EqualTo("foobar"));
+        }
+
+        [Test]
+        public void Call_DefinedClosureNoExplicitReturn_ReturnsNone()
+        {
+            var module = NewModule();
+            module.Execute("def f():\n    x = 1");
+
+            var result = module.Call("f");
+
+            Assert.That(result.DataType, Is.EqualTo(DataType.None));
+        }
+
+        [Test]
+        public void Call_DefinedClosure_TooFewArgs_ThrowsTypeException()
+        {
+            var module = NewModule();
+            module.Execute("def add(a, b):\n    return a + b");
+
+            Assert.That(() => module.Call("add", 1), Throws.TypeOf<TypeException>());
+        }
+
+        [Test]
+        public void Call_DefinedClosure_TooManyArgs_ThrowsTypeException()
+        {
+            var module = NewModule();
+            module.Execute("def add(a, b):\n    return a + b");
+
+            Assert.That(() => module.Call("add", 1, 2, 3), Throws.TypeOf<TypeException>());
+        }
+
+        [Test]
+        public void Call_DefinedClosure_CalledTwiceWithDifferentArgs_NoStateBleed()
+        {
+            var module = NewModule();
+            module.Execute("def square(x):\n    return x * x");
+
+            var first = module.Call("square", 3);
+            var second = module.Call("square", 5);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(first.AsType<long>(), Is.EqualTo(9L));
+                Assert.That(second.AsType<long>(), Is.EqualTo(25L));
+            });
+        }
+
+        [Test]
+        public void Call_DefinedClosure_ReadsModuleGlobal()
+        {
+            var module = NewModule();
+            module.Execute("base = 100\ndef addBase(x):\n    return base + x");
+
+            var result = module.Call("addBase", 7);
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(107L));
+        }
+
+        [Test]
+        public void Call_DefinedClosure_ReadsGlobalSetViaIndexer()
+        {
+            var module = NewModule();
+            module["base"] = 50;
+            module.Execute("def addBase(x):\n    return base + x");
+
+            var result = module.Call("addBase", 4);
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(54L));
+        }
+
+        [Test]
+        public void Call_DefinedClosure_CallsOtherClosure()
+        {
+            var module = NewModule();
+            module.Execute("def inc(x):\n    return x + 1\ndef twice(x):\n    return inc(inc(x))");
+
+            var result = module.Call("twice", 5);
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(7L));
+        }
+
+        [Test]
+        public void Call_DefinedClosure_Recursive_Factorial()
+        {
+            var module = NewModule();
+            module.Execute("def fact(n):\n    if n <= 1:\n        return 1\n    return n * fact(n - 1)");
+
+            var result = module.Call("fact", 5);
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(120L));
+        }
+
+        [Test]
+        public void Call_DefinedClosure_UsingBuiltinFromBody()
+        {
+            var module = NewModule();
+            module.Execute("def absPlusOne(x):\n    return abs(x) + 1");
+
+            var result = module.Call("absPlusOne", -10);
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(11L));
+        }
+
+        [Test]
+        public void Call_DefinedClosure_BoolArg_PromotedToInt()
+        {
+            var module = NewModule();
+            module.Execute("def add(a, b):\n    return a + b");
+
+            var result = module.Call("add", true, 5);
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(6L));
+        }
+
+        [Test]
+        public void Call_DefinedClosure_DoubleArg_ReturnsFloat()
+        {
+            var module = NewModule();
+            module.Execute("def halve(x):\n    return x / 2");
+
+            var result = module.Call("halve", 5.0);
+
+            Assert.That(result.AsType<double>(), Is.EqualTo(2.5));
+        }
+
+        [Test]
+        public void Call_DefinedClosure_ZeroArgsAfterMultipleExecutes()
+        {
+            var module = NewModule();
+            module.Execute("a = 1");
+            module.Execute("b = 2");
+            module.Execute("def sum():\n    return a + b");
+
+            var result = module.Call("sum");
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(3L));
+        }
+
+        [Test]
+        public void Call_DefinedClosure_AfterIndexerReassign_SeesNewValue()
+        {
+            var module = NewModule();
+            module.Execute("def get():\n    return v");
+            module["v"] = 10;
+            var first = module.Call("get");
+            module["v"] = 20;
+            var second = module.Call("get");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(first.AsType<long>(), Is.EqualTo(10L));
+                Assert.That(second.AsType<long>(), Is.EqualTo(20L));
+            });
+        }
+
+        [Test]
+        public void Call_FactoryClosureReturned_BoundViaExecute_Callable()
+        {
+            var module = NewModule();
+            module.Execute("def makeAdder():\n    def add(a, b):\n        return a + b\n    return add\nadder = makeAdder()");
+
+            var result = module.Call("adder", 4, 6);
+
+            Assert.That(result.AsType<long>(), Is.EqualTo(10L));
+        }
+
+        [Test]
+        public void Call_DefinedClosure_StringArgPreserved()
+        {
+            var module = NewModule();
+            module.Execute("def identity(x):\n    return x");
+
+            var result = module.Call("identity", "world");
+
+            Assert.That(result.AsType<string>(), Is.EqualTo("world"));
+        }
+
+        #endregion
+
     }
 }
