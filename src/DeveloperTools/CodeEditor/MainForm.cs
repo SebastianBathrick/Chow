@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 namespace CodeEditor
 {
@@ -38,7 +39,7 @@ namespace CodeEditor
 
         Process? _runProcess;
         string? _runTempFilePath;
-        long? _lastExecutionDurationMs;
+        double? _lastExecutionDurationMs;
         ToolStripComboBox? _zoomComboBox;
         string? _currentFilePath;
         bool _isDirty;
@@ -637,7 +638,8 @@ namespace CodeEditor
                 return;
             }
 
-            AppendOutputLine($"Execution time: {_lastExecutionDurationMs.Value} ms");
+            AppendOutputLine(
+                $"Execution time: {_lastExecutionDurationMs.Value.ToString("F5", CultureInfo.InvariantCulture)} ms");
         }
 
         bool TryCaptureExecutionDuration(string text)
@@ -649,9 +651,13 @@ namespace CodeEditor
 
             var rawDuration = text.Substring(Program.ExecutionDurationPrefix.Length);
 
-            if (long.TryParse(rawDuration, out var durationMs))
+            if (double.TryParse(rawDuration, NumberStyles.Float, CultureInfo.InvariantCulture, out var durationMs))
             {
                 _lastExecutionDurationMs = durationMs;
+            }
+            else if (long.TryParse(rawDuration, NumberStyles.Integer, CultureInfo.InvariantCulture, out var wholeDurationMs))
+            {
+                _lastExecutionDurationMs = wholeDurationMs;
             }
 
             return true;

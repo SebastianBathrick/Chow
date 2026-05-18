@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using Chow.Interpreter;
 namespace CodeEditor
 {
@@ -35,14 +36,14 @@ namespace CodeEditor
                 {
                     module.Execute(source);
                     stopwatch.Stop();
-                    WriteExecutionDuration(includeExecutionDuration, stopwatch.ElapsedMilliseconds);
+                    WriteExecutionDuration(includeExecutionDuration, stopwatch.Elapsed);
                     return 0;
                 }
                 catch (Exception ex)
                 {
                     stopwatch.Stop();
                     Console.Error.WriteLine(ex);
-                    WriteExecutionDuration(includeExecutionDuration, stopwatch.ElapsedMilliseconds);
+                    WriteExecutionDuration(includeExecutionDuration, stopwatch.Elapsed);
                     return 1;
                 }
             }
@@ -53,11 +54,12 @@ namespace CodeEditor
             }
         }
 
-        static void WriteExecutionDuration(bool includeExecutionDuration, long elapsedMilliseconds)
+        static void WriteExecutionDuration(bool includeExecutionDuration, TimeSpan elapsed)
         {
             if (includeExecutionDuration)
             {
-                Console.Error.WriteLine($"{ExecutionDurationPrefix}{elapsedMilliseconds}");
+                var milliseconds = elapsed.TotalMilliseconds.ToString("F5", CultureInfo.InvariantCulture);
+                Console.Error.WriteLine($"{ExecutionDurationPrefix}{milliseconds}");
             }
         }
     }

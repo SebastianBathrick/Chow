@@ -1,5 +1,6 @@
 using Chow.Interpreter;
 using System.Diagnostics;
+using System.Globalization;
 using ReplLoop = Chow.Repl.Repl;
 
 
@@ -33,7 +34,9 @@ namespace Chow.Cli
                 var exitCode = ExecuteFile(args[0]);
                 stopwatch.Stop();
 
-                Console.WriteLine($"Execution time: {stopwatch.Elapsed.TotalMilliseconds:0.#####} ms");
+                Console.Error.WriteLine(
+    $"Execution time: {stopwatch.Elapsed.TotalMilliseconds.ToString("F8", CultureInfo.InvariantCulture)} ms"
+);
                 return exitCode;
             }
 
