@@ -189,7 +189,7 @@ namespace Chow.Interpreter.Values.DataTypes
                     return false;
                 }
 
-                if (!a._entries[key].IsEqualTo(bValue))
+                if (!a._entries[key].IsTypeAgnosticEqualTo(bValue))
                 {
                     return false;
                 }

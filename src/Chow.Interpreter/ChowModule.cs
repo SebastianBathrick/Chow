@@ -41,7 +41,7 @@ namespace Chow.Interpreter
                 _globalScope.AssignVariableValue(BuiltIns.NameOf(type), new ChowValue(BuiltIns.DefaultOf(type)));
             }
         }
-        
+
         /// <summary>Compiles and executes a string containing Chow source code.</summary>
         /// <param name="sourceCode">String containing Chow source code or null.</param>
         public void Execute(string sourceCode)

@@ -2,7 +2,7 @@ using Chow.Interpreter.Bytecode;
 using Chow.Interpreter.State;
 using Chow.Interpreter.Values;
 using Chow.Interpreter.Values.DataTypes;
-namespace Chow.Interpreter.ImplTests
+namespace Chow.Interpreter.Tests
 {
     [TestFixture]
     public class CallStackClosureTests

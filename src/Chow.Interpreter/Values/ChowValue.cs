@@ -12,7 +12,7 @@ namespace Chow.Interpreter.Values
     /// </summary>
     public readonly struct ChowValue
     {
-
+        // TODO: Make helper function that is operator agnostic for converting operands to different types
         #region Fields
 
         static readonly Dictionary<Type, DataType> DataTypeMap = new Dictionary<Type, DataType>
@@ -516,7 +516,7 @@ namespace Chow.Interpreter.Values
 
         #region Comparison Operations
 
-        internal bool IsEqualTo(ChowValue other)
+        internal bool IsTypeAgnosticEqualTo(ChowValue other)
         {
             switch (LookupBinary(ExpressionOperator.Equal, other))
             {
@@ -686,59 +686,67 @@ namespace Chow.Interpreter.Values
         #region Object Overrides
 
         /// <summary>
-        /// If this is of the same type as <paramref name="obj"/> and the Chow values are the same 
-        /// or if either's Chow value can be converted to the other's type and they are equal after 
-        /// conversion, then true; otherwise, false.
+        /// Strict structural equality: returns <c>true</c> only when <paramref name="obj"/> is a
+        /// <see cref="ChowValue"/> of the same <see cref="DataType"/> with the same underlying value.
+        /// No cross-type conversion is performed — <c>True</c> is not equal to <c>1</c>, and
+        /// <c>1</c> is not equal to <c>1.0</c>. For Python <c>==</c> semantics that promote across
+        /// numeric types, use <see cref="IsTypeAgnosticEqualTo"/> instead.
         /// </summary>
         /// <param name="obj">The object to compare with this instance or <c>null</c>.</param>
-        /// <returns><c>true</c> if the objects are equal; otherwise, <c>false</c>.</returns>
+        /// <returns><c>true</c> if the objects are structurally equal; otherwise, <c>false</c>.</returns>
         public override bool Equals(object obj)
         {
-            return obj is ChowValue other && IsEqualTo(other);
+            return obj is ChowValue other && EqualsNoConversion(other);
         }
 
         /// <inheritdoc/>
         public override int GetHashCode()
         {
+            int valueHash;
+
             switch (DataType)
             {
                 case DataType.Int:
                     {
-                        return _int64Value.GetHashCode();
+                        valueHash = _int64Value.GetHashCode();
+                        break;
                     }
                 case DataType.Float:
                     {
-                        return _float64Value.GetHashCode();
+                        valueHash = _float64Value.GetHashCode();
+                        break;
                     }
                 case DataType.Bool:
                     {
-                        return _boolValue.GetHashCode();
-                    }
-                case DataType.Str:
-                case DataType.Object:
-                case DataType.Range:
-                    {
-                        return _objectValue?.GetHashCode() ?? 0;
+                        valueHash = _boolValue.GetHashCode();
+                        break;
                     }
                 case DataType.List:
                     {
-                        return InternalList.ElementsHashCode((InternalList)_objectValue);
+                        valueHash = InternalList.ElementsHashCode((InternalList)_objectValue);
+                        break;
                     }
                 case DataType.Dict:
                     {
-                        return InternalDict.ElementsHashCode((InternalDict)_objectValue);
+                        valueHash = InternalDict.ElementsHashCode((InternalDict)_objectValue);
+                        break;
                     }
                 default:
                     {
-                        return DataType.GetHashCode();
+                        valueHash = _objectValue?.GetHashCode() ?? 0;
+                        break;
                     }
+            }
+
+            unchecked
+            {
+                return (DataType.GetHashCode() * HASH_COMBINE_PRIME) ^ valueHash;
             }
         }
 
         /// <summary>
         /// Returns a string representation of this instance with the same format as a Chow <b>str</b> value.
         /// </summary>
-        /// <returns></returns>
         public override string ToString()
         {
             return ToStr();
@@ -1149,6 +1157,18 @@ namespace Chow.Interpreter.Values
                     {
                         return true;
                     }
+                case DataType.Bool:
+                    {
+                        return _boolValue == other._boolValue;
+                    }
+                case DataType.Int:
+                    {
+                        return _int64Value == other._int64Value;
+                    }
+                case DataType.Float:
+                    {
+                        return _float64Value.Equals(other._float64Value);
+                    }
                 case DataType.Str:
                     {
                         return (string)_objectValue == (string)other._objectValue;
@@ -1196,6 +1216,7 @@ namespace Chow.Interpreter.Values
             return dataType == DataType.Int || dataType == DataType.Bool;
         }
 
+        // TODO: Make it so an overflow throws an exception instead of wrapping silently.
         // Exponent-by-squaring. Caller guarantees exponent >= 0 (negative exponents are promoted to
         // float by CreatePower before this is reached). Overflow wraps silently.
         static long IntPow(long b, long e)
@@ -1219,6 +1240,9 @@ namespace Chow.Interpreter.Values
         #endregion
 
         #region Constants
+
+        // GetHashCode mixing multiplier (standard small prime for combining hashes)
+        const int HASH_COMBINE_PRIME = 397;
 
         // Constructor defaults
         const bool DEFAULT_BOOL_VALUE = false;

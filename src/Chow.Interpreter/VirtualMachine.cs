@@ -605,7 +605,7 @@ namespace Chow.Interpreter
 
                 case OperationCode.Equal:
                     {
-                        _valStack.Push(new ChowValue(left.IsEqualTo(right)));
+                        _valStack.Push(new ChowValue(left.IsTypeAgnosticEqualTo(right)));
                         break;
                     }
 
@@ -686,7 +686,7 @@ namespace Chow.Interpreter
 
                 for (var i = 0; i < list.Count && !found; i++)
                 {
-                    found = list[i].IsEqualTo(needle);
+                    found = list[i].IsTypeAgnosticEqualTo(needle);
                 }
             }
             else

@@ -187,8 +187,8 @@ namespace Chow.Interpreter.Tests
         {
             Assert.Multiple(() =>
             {
-                Assert.That(new ChowValue(1L).IsEqualTo(new ChowValue(1.0)), Is.True);
-                Assert.That(new ChowValue(true).IsEqualTo(new ChowValue(1L)), Is.True);
+                Assert.That(new ChowValue(1L).IsTypeAgnosticEqualTo(new ChowValue(1.0)), Is.True);
+                Assert.That(new ChowValue(true).IsTypeAgnosticEqualTo(new ChowValue(1L)), Is.True);
             });
         }
 
@@ -389,6 +389,46 @@ namespace Chow.Interpreter.Tests
         public void Ctor_StringNull_ThrowsArgumentNullException()
         {
             Assert.That(() => new ChowValue((string)null), Throws.TypeOf<ArgumentNullException>());
+        }
+
+        #endregion
+
+        #region None
+
+        [Test]
+        public void None_AsTypeObject_ReturnsNull()
+        {
+            Assert.That(ChowValue.None.AsType<object>(), Is.Null);
+        }
+
+        [Test]
+        public void None_IsOfTypeObject_ReturnsFalse()
+        {
+            Assert.That(ChowValue.None.IsOfType<object>(), Is.False);
+        }
+
+        [Test]
+        public void None_IsOfTypeLong_ReturnsFalse()
+        {
+            Assert.That(ChowValue.None.IsOfType<long>(), Is.False);
+        }
+
+        [Test]
+        public void None_EqualsNone_ReturnsTrue()
+        {
+            Assert.That(ChowValue.None.Equals(ChowValue.None), Is.True);
+        }
+
+        [Test]
+        public void None_EqualsZero_ReturnsFalse()
+        {
+            Assert.That(ChowValue.None.Equals(new ChowValue(0L)), Is.False);
+        }
+
+        [Test]
+        public void None_ToString_ReturnsNoneLiteral()
+        {
+            Assert.That(ChowValue.None.ToString(), Is.EqualTo("None"));
         }
 
         #endregion

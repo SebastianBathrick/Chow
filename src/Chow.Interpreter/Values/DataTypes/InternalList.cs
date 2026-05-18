@@ -136,7 +136,7 @@ namespace Chow.Interpreter.Values.DataTypes
 
             for (var i = 0; i < _elements.Count; i++)
             {
-                if (_elements[i].IsEqualTo(args[0]))
+                if (_elements[i].IsTypeAgnosticEqualTo(args[0]))
                 {
                     _elements.RemoveAt(i);
                     return ChowValue.None;
@@ -232,7 +232,7 @@ namespace Chow.Interpreter.Values.DataTypes
 
             for (var i = 0; i < a._elements.Count; i++)
             {
-                if (!a._elements[i].IsEqualTo(b._elements[i]))
+                if (!a._elements[i].IsTypeAgnosticEqualTo(b._elements[i]))
                 {
                     return false;
                 }

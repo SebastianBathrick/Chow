@@ -17,9 +17,6 @@
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
             <_Parameter1>Chow.Interpreter.Tests</_Parameter1>
         </AssemblyAttribute>
-        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-            <_Parameter1>Chow.Interpreter.ImplTests</_Parameter1>
-        </AssemblyAttribute>
     </ItemGroup>
 
     <ItemGroup>
