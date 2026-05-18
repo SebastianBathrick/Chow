@@ -1,6 +1,5 @@
 using Chow.Interpreter.Bytecode;
-using Chow.Interpreter.State.Scopes;
-namespace Chow.Interpreter.State.Stack
+namespace Chow.Interpreter.State
 {
     /// <summary>
     /// One slot on the <see cref="CallStack"/>. Pairs a <see cref="Chunk"/> being executed with its associated

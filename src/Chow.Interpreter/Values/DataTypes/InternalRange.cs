@@ -1,5 +1,5 @@
 using System;
-namespace Chow.Interpreter.State.Values
+namespace Chow.Interpreter.Values.DataTypes
 {
     /// <summary>
     /// Low-level immutable representation of a Python-style <c>range</c>. Stores the start, stop,

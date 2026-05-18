@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using Chow.Interpreter.Bytecode;
-using Chow.Interpreter.State.Scopes;
-using Chow.Interpreter.State.Values;
-namespace Chow.Interpreter.State.Stack
+using Chow.Interpreter.Values;
+using Chow.Interpreter.Values.DataTypes;
+namespace Chow.Interpreter.State
 {
     /// <summary>
     /// Owns the module frame plus a stack of function-call frames, and exposes scope-aware

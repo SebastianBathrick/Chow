@@ -1,5 +1,5 @@
 using Chow.Interpreter.Bytecode;
-namespace Chow.Interpreter.State.Values
+namespace Chow.Interpreter.Values.DataTypes
 {
     /// <summary>
     /// Compile-time-only representation of a function. Stored as a constant in the parent chunk

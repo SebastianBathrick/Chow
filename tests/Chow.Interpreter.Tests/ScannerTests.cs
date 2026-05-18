@@ -1,5 +1,6 @@
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Tokens;
+using Chow.Interpreter.Values.DataTypes;
 namespace Chow.Interpreter.Tests
 {
     [TestFixture]

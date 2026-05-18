@@ -1,4 +1,4 @@
-namespace Chow.Interpreter.State.Values
+namespace Chow.Interpreter.Values.DataTypes
 {
     sealed class InternalStrIterator : IChowIterator
     {

@@ -1,4 +1,4 @@
-namespace Chow.Interpreter.State.Values
+namespace Chow.Interpreter.Values.DataTypes
 {
     /// <summary>
     /// Internal iteration protocol used by the virtual machine to drive Chow-language <c>for</c> loops.

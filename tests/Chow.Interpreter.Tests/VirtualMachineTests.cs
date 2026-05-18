@@ -1,5 +1,6 @@
 using Chow.Interpreter.Bytecode;
-using Chow.Interpreter.State.Scopes;
+using Chow.Interpreter.State;
+using Chow.Interpreter.Values;
 namespace Chow.Interpreter.Tests
 {
     [TestFixture]

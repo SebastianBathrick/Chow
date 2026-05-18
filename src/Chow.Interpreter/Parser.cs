@@ -10,6 +10,8 @@ using Chow.Interpreter.SyntaxTrees.Statements;
 using Chow.Interpreter.SyntaxTrees.Subscripts;
 using Chow.Interpreter.Tokens;
 using System.Linq;
+using Chow.Interpreter.Values;
+using Chow.Interpreter.Values.DataTypes;
 namespace Chow.Interpreter
 {
     /// <summary>
@@ -78,9 +80,9 @@ namespace Chow.Interpreter
                     continue;
                 }
 
-                var isFuncOrCompound = newStatement is FunctionNode 
-                    || newStatement is IfStatementNode 
-                    || newStatement is WhileStatementNode 
+                var isFuncOrCompound = newStatement is FunctionNode
+                    || newStatement is IfStatementNode
+                    || newStatement is WhileStatementNode
                     || newStatement is ForStatementNode;
 
                 if (isFuncOrCompound)
@@ -136,49 +138,49 @@ namespace Chow.Interpreter
             switch (CurrentToken.Type)
             {
                 case TokenType.KeywordReturn:
-                {
-                    return ParseReturnStatement();
-                }
+                    {
+                        return ParseReturnStatement();
+                    }
 
                 case TokenType.KeywordIf:
-                {
-                    return ParseIfStatement();
-                }
+                    {
+                        return ParseIfStatement();
+                    }
 
                 case TokenType.KeywordDef:
-                {
-                    return ParseFunctionDefinition();
-                }
+                    {
+                        return ParseFunctionDefinition();
+                    }
 
                 case TokenType.KeywordWhile:
-                {
-                    return ParseWhileStatement();
-                }
+                    {
+                        return ParseWhileStatement();
+                    }
 
                 case TokenType.KeywordFor:
-                {
-                    return ParseForStatement();
-                }
+                    {
+                        return ParseForStatement();
+                    }
 
                 case TokenType.KeywordBreak:
-                {
-                    return ParseBreakStatement();
-                }
+                    {
+                        return ParseBreakStatement();
+                    }
 
                 case TokenType.KeywordContinue:
-                {
-                    return ParseContinueStatement();
-                }
+                    {
+                        return ParseContinueStatement();
+                    }
 
                 case TokenType.KeywordGlobal:
-                {
-                    return ParseGlobalDeclaration();
-                }
+                    {
+                        return ParseGlobalDeclaration();
+                    }
 
                 case TokenType.KeywordNonlocal:
-                {
-                    return ParseNonlocalDeclaration();
-                }
+                    {
+                        return ParseNonlocalDeclaration();
+                    }
             }
 
             if (!IsPrimaryToken())
@@ -541,25 +543,25 @@ namespace Chow.Interpreter
                 switch (CurrentToken.Type)
                 {
                     case TokenType.SymbolDot:
-                    {
-                        node = ParseAttributeAccessTail(node);
-                        break;
-                    }
+                        {
+                            node = ParseAttributeAccessTail(node);
+                            break;
+                        }
                     case TokenType.SymbolLeftBracket:
-                    {
-                        node = ParseSubscriptTail(node);
-                        break;
-                    }
+                        {
+                            node = ParseSubscriptTail(node);
+                            break;
+                        }
                     case TokenType.SymbolLeftParen:
-                    {
-                        node = ParseInvokeTail(node);
-                        break;
-                    }
+                        {
+                            node = ParseInvokeTail(node);
+                            break;
+                        }
                     default:
-                    {
-                        isDone = true;
-                        break;
-                    }
+                        {
+                            isDone = true;
+                            break;
+                        }
                 }
             }
             while (!isDone);
@@ -724,68 +726,68 @@ namespace Chow.Interpreter
             switch (CurrentToken.Type)
             {
                 case TokenType.Identifier:
-                {
-                    var idToken = CurrentToken;
-                    ConsumeToken();
-                    return new NameNode(idToken.Lexeme, idToken.LineNum);
-                }
+                    {
+                        var idToken = CurrentToken;
+                        ConsumeToken();
+                        return new NameNode(idToken.Lexeme, idToken.LineNum);
+                    }
 
                 case TokenType.LiteralInt:
                 case TokenType.LiteralFloat:
                 case TokenType.LiteralStr:
-                {
-                    var numToken = CurrentToken;
-                    ConsumeToken();
-                    return new LiteralNode(numToken.Literal, numToken.LineNum);
-                }
+                    {
+                        var numToken = CurrentToken;
+                        ConsumeToken();
+                        return new LiteralNode(numToken.Literal, numToken.LineNum);
+                    }
 
                 case TokenType.LiteralFString:
-                {
-                    var fstrToken = CurrentToken;
-                    ConsumeToken();
-                    return ParseFString((FStringTokenPayload)fstrToken.Literal, fstrToken.LineNum);
-                }
+                    {
+                        var fstrToken = CurrentToken;
+                        ConsumeToken();
+                        return ParseFString((FStringTokenPayload)fstrToken.Literal, fstrToken.LineNum);
+                    }
 
                 case TokenType.KeywordNone:
-                {
-                    ConsumeToken(TokenType.KeywordNone);
-                    return new LiteralNode(null, PreviousToken.LineNum);
-                }
+                    {
+                        ConsumeToken(TokenType.KeywordNone);
+                        return new LiteralNode(null, PreviousToken.LineNum);
+                    }
 
                 case TokenType.KeywordTrue:
-                {
-                    ConsumeToken(TokenType.KeywordTrue);
-                    return new LiteralNode(true, PreviousToken.LineNum);
-                }
+                    {
+                        ConsumeToken(TokenType.KeywordTrue);
+                        return new LiteralNode(true, PreviousToken.LineNum);
+                    }
 
                 case TokenType.KeywordFalse:
-                {
-                    ConsumeToken(TokenType.KeywordFalse);
-                    return new LiteralNode(false, PreviousToken.LineNum);
-                }
+                    {
+                        ConsumeToken(TokenType.KeywordFalse);
+                        return new LiteralNode(false, PreviousToken.LineNum);
+                    }
 
                 case TokenType.SymbolLeftParen:
-                {
-                    ConsumeToken();
-                    var inner = ParseExpression();
-                    ConsumeToken(TokenType.SymbolRightParen);
-                    return inner;
-                }
+                    {
+                        ConsumeToken();
+                        var inner = ParseExpression();
+                        ConsumeToken(TokenType.SymbolRightParen);
+                        return inner;
+                    }
 
                 case TokenType.SymbolLeftBracket:
-                {
-                    return ParseListLiteral();
-                }
+                    {
+                        return ParseListLiteral();
+                    }
 
                 case TokenType.SymbolLeftCurly:
-                {
-                    return ParseDictLiteral();
-                }
+                    {
+                        return ParseDictLiteral();
+                    }
 
                 default:
-                {
-                    throw new ParserEx("Expected expression.", CurrentToken.LineNum);
-                }
+                    {
+                        throw new ParserEx("Expected expression.", CurrentToken.LineNum);
+                    }
             }
         }
 
@@ -856,9 +858,9 @@ namespace Chow.Interpreter
                 case TokenType.SymbolLeftParen:
                 case TokenType.SymbolLeftBracket:
                 case TokenType.SymbolLeftCurly:
-                {
-                    return true;
-                }
+                    {
+                        return true;
+                    }
             }
 
             return false;
@@ -873,18 +875,18 @@ namespace Chow.Interpreter
             switch (target)
             {
                 case NameNode nameNode:
-                {
-                    return new VariableAssignStatementNode(nameNode.Name, value, line);
+                    {
+                        return new VariableAssignStatementNode(nameNode.Name, value, line);
 
-                }
+                    }
                 case SubscriptNode subscriptNode:
-                {
-                    return new SubscriptAssignNode(subscriptNode.Target, subscriptNode.Index, value, line);
-                }
+                    {
+                        return new SubscriptAssignNode(subscriptNode.Target, subscriptNode.Index, value, line);
+                    }
                 case AttributeAccessNode attrNode:
-                {
-                    return new AttributeAssignNode(attrNode.Target, attrNode.AttributeName, value, line);
-                }
+                    {
+                        return new AttributeAssignNode(attrNode.Target, attrNode.AttributeName, value, line);
+                    }
             }
 
             throw new ParserEx("Invalid assignment target.", line);
@@ -895,94 +897,94 @@ namespace Chow.Interpreter
             switch (type)
             {
                 case TokenType.SymbolPlus:
-                {
-                    return ExpressionOperator.Add;
-                }
+                    {
+                        return ExpressionOperator.Add;
+                    }
 
                 case TokenType.SymbolMinus:
-                {
-                    return ExpressionOperator.Subtract;
-                }
+                    {
+                        return ExpressionOperator.Subtract;
+                    }
 
                 case TokenType.SymbolMultiply:
-                {
-                    return ExpressionOperator.Multiply;
-                }
+                    {
+                        return ExpressionOperator.Multiply;
+                    }
 
                 case TokenType.SymbolDivide:
-                {
-                    return ExpressionOperator.Divide;
-                }
+                    {
+                        return ExpressionOperator.Divide;
+                    }
 
                 case TokenType.SymbolPercent:
-                {
-                    return ExpressionOperator.Modulus;
-                }
+                    {
+                        return ExpressionOperator.Modulus;
+                    }
 
                 case TokenType.SymbolExponent:
-                {
-                    return ExpressionOperator.Exponentiate;
-                }
+                    {
+                        return ExpressionOperator.Exponentiate;
+                    }
 
                 case TokenType.SymbolFloorDivide:
-                {
-                    return ExpressionOperator.FloorDivide;
-                }
+                    {
+                        return ExpressionOperator.FloorDivide;
+                    }
 
                 case TokenType.SymbolEqualTo:
-                {
-                    return ExpressionOperator.Equal;
-                }
+                    {
+                        return ExpressionOperator.Equal;
+                    }
 
                 case TokenType.SymbolNotEqual:
-                {
-                    return ExpressionOperator.NotEqual;
-                }
+                    {
+                        return ExpressionOperator.NotEqual;
+                    }
 
                 case TokenType.SymbolLess:
-                {
-                    return ExpressionOperator.Less;
-                }
+                    {
+                        return ExpressionOperator.Less;
+                    }
 
                 case TokenType.SymbolGreater:
-                {
-                    return ExpressionOperator.Greater;
-                }
+                    {
+                        return ExpressionOperator.Greater;
+                    }
 
                 case TokenType.SymbolLessEqual:
-                {
-                    return ExpressionOperator.LessEqual;
-                }
+                    {
+                        return ExpressionOperator.LessEqual;
+                    }
 
                 case TokenType.SymbolGreaterEqual:
-                {
-                    return ExpressionOperator.GreaterEqual;
-                }
+                    {
+                        return ExpressionOperator.GreaterEqual;
+                    }
 
                 case TokenType.KeywordAnd:
-                {
-                    return ExpressionOperator.And;
-                }
+                    {
+                        return ExpressionOperator.And;
+                    }
 
                 case TokenType.KeywordOr:
-                {
-                    return ExpressionOperator.Or;
-                }
+                    {
+                        return ExpressionOperator.Or;
+                    }
 
                 case TokenType.SymbolPipe:
-                {
-                    return ExpressionOperator.BinaryOr;
-                }
+                    {
+                        return ExpressionOperator.BinaryOr;
+                    }
 
                 case TokenType.KeywordIn:
-                {
-                    return ExpressionOperator.In;
-                }
+                    {
+                        return ExpressionOperator.In;
+                    }
 
                 default:
-                {
-                    throw new InvalidOperationException();
-                }
+                    {
+                        throw new InvalidOperationException();
+                    }
             }
         }
 

@@ -1,7 +1,7 @@
 using Chow.Interpreter.Bytecode;
-using Chow.Interpreter.State.Scopes;
-using Chow.Interpreter.State.Stack;
-using Chow.Interpreter.State.Values;
+using Chow.Interpreter.State;
+using Chow.Interpreter.Values;
+using Chow.Interpreter.Values.DataTypes;
 namespace Chow.Interpreter.ImplTests
 {
     [TestFixture]

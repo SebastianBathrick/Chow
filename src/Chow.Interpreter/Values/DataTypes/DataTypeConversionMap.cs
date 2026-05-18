@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Chow.Interpreter.Exceptions;
-namespace Chow.Interpreter
+namespace Chow.Interpreter.Values.DataTypes
 {
     static class DataTypeConversionMap
     {

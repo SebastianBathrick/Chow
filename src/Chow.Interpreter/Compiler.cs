@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Chow.Interpreter.Bytecode;
 using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.State.Values;
 using Chow.Interpreter.SyntaxTrees;
 using Chow.Interpreter.SyntaxTrees.Attributes;
 using Chow.Interpreter.SyntaxTrees.Expressions;
@@ -10,6 +9,8 @@ using Chow.Interpreter.SyntaxTrees.Literals;
 using Chow.Interpreter.SyntaxTrees.Scope;
 using Chow.Interpreter.SyntaxTrees.Statements;
 using Chow.Interpreter.SyntaxTrees.Subscripts;
+using Chow.Interpreter.Values;
+using Chow.Interpreter.Values.DataTypes;
 namespace Chow.Interpreter
 {
     sealed class Compiler
@@ -85,151 +86,151 @@ namespace Chow.Interpreter
             switch (targetNode)
             {
                 case BlockNode blockNode:
-                {
-                    CompileBlockNode(blockNode);
-                    break;
-                }
+                    {
+                        CompileBlockNode(blockNode);
+                        break;
+                    }
 
                 case LiteralNode literalNode:
-                {
-                    CompileLiteral(literalNode);
-                    break;
-                }
+                    {
+                        CompileLiteral(literalNode);
+                        break;
+                    }
 
                 case FStringNode fStringNode:
-                {
-                    CompileFString(fStringNode);
-                    break;
-                }
+                    {
+                        CompileFString(fStringNode);
+                        break;
+                    }
 
                 case ExpressionNode exprNode:
-                {
-                    CompileExpression(exprNode);
-                    break;
-                }
+                    {
+                        CompileExpression(exprNode);
+                        break;
+                    }
 
                 case VariableAssignStatementNode varAssignNode:
-                {
-                    CompileVariableAssign(varAssignNode);
-                    break;
-                }
+                    {
+                        CompileVariableAssign(varAssignNode);
+                        break;
+                    }
 
                 case NameNode varFactorNode:
-                {
-                    CompileVariableFactor(varFactorNode);
-                    break;
-                }
+                    {
+                        CompileVariableFactor(varFactorNode);
+                        break;
+                    }
 
                 case ReturnStatementNode returnNode:
-                {
-                    // If it returns early, still parse the remaining code in the chunk for debugging (subject to change)
-                    CompileReturnStatement(returnNode);
-                    break;
-                }
+                    {
+                        // If it returns early, still parse the remaining code in the chunk for debugging (subject to change)
+                        CompileReturnStatement(returnNode);
+                        break;
+                    }
 
                 case ExpressionStatementNode exprStmtNode:
-                {
-                    CompileExpressionStatement(exprStmtNode);
-                    break;
-                }
+                    {
+                        CompileExpressionStatement(exprStmtNode);
+                        break;
+                    }
 
                 case IfStatementNode ifNode:
-                {
-                    CompileIfStatement(ifNode);
-                    break;
-                }
+                    {
+                        CompileIfStatement(ifNode);
+                        break;
+                    }
 
                 case BranchStatementNode branchNode:
-                {
-                    CompileBranchStatement(branchNode);
-                    break;
-                }
+                    {
+                        CompileBranchStatement(branchNode);
+                        break;
+                    }
 
                 case WhileStatementNode whileNode:
-                {
-                    CompileWhileStatement(whileNode);
-                    break;
-                }
+                    {
+                        CompileWhileStatement(whileNode);
+                        break;
+                    }
 
                 case ForStatementNode forNode:
-                {
-                    CompileForStatement(forNode);
-                    break;
-                }
+                    {
+                        CompileForStatement(forNode);
+                        break;
+                    }
 
                 case BreakStatementNode breakNode:
-                {
-                    CompileBreakStatement(breakNode);
-                    break;
-                }
+                    {
+                        CompileBreakStatement(breakNode);
+                        break;
+                    }
 
                 case ContinueStatementNode continueNode:
-                {
-                    CompileContinueStatement(continueNode);
-                    break;
-                }
+                    {
+                        CompileContinueStatement(continueNode);
+                        break;
+                    }
 
                 case FunctionNode funcNode:
-                {
-                    CompileFunctionDeclaration(funcNode);
-                    break;
-                }
+                    {
+                        CompileFunctionDeclaration(funcNode);
+                        break;
+                    }
 
                 case CallNode callNode:
-                {
-                    CompileCall(callNode);
-                    break;
-                }
+                    {
+                        CompileCall(callNode);
+                        break;
+                    }
 
                 case ListLiteralNode listLiteralNode:
-                {
-                    // TODO: Check if CompileListLiteral & CompileDictLiteral should be grouped with all the other literals
-                    CompileListLiteral(listLiteralNode);
-                    break;
-                }
+                    {
+                        // TODO: Check if CompileListLiteral & CompileDictLiteral should be grouped with all the other literals
+                        CompileListLiteral(listLiteralNode);
+                        break;
+                    }
 
                 case DictLiteralNode dictLiteralNode:
-                {
-                    CompileDictLiteral(dictLiteralNode);
-                    break;
-                }
+                    {
+                        CompileDictLiteral(dictLiteralNode);
+                        break;
+                    }
 
                 case SubscriptNode subscrNode:
-                {
-                    CompileSubscript(subscrNode);
-                    break;
-                }
+                    {
+                        CompileSubscript(subscrNode);
+                        break;
+                    }
 
                 case AttributeAccessNode attrAccessNode:
-                {
-                    CompileAttributeAccess(attrAccessNode);
-                    break;
-                }
+                    {
+                        CompileAttributeAccess(attrAccessNode);
+                        break;
+                    }
 
                 case SubscriptAssignNode subscrAssignNode:
-                {
-                    CompileSubscriptAssign(subscrAssignNode);
-                    break;
-                }
+                    {
+                        CompileSubscriptAssign(subscrAssignNode);
+                        break;
+                    }
 
                 case AttributeAssignNode attrAssignNode:
-                {
-                    CompileAttributeAssign(attrAssignNode);
-                    break;
-                }
+                    {
+                        CompileAttributeAssign(attrAssignNode);
+                        break;
+                    }
 
                 case GlobalDeclarationNode _:
                 case NonlocalDeclarationNode _:
-                {
-                    // Declarations are compile-time directives consumed by SemanticAnalysis;
-                    // they emit no bytecode.
-                    break;
-                }
+                    {
+                        // Declarations are compile-time directives consumed by SemanticAnalysis;
+                        // they emit no bytecode.
+                        break;
+                    }
 
                 default:
-                {
-                    throw new InvalidOperationException();
-                }
+                    {
+                        throw new InvalidOperationException();
+                    }
             }
         }
 
@@ -593,54 +594,54 @@ namespace Chow.Interpreter
             switch (literalNode.Type)
             {
                 case LiteralDataType.Integer:
-                {
-                    if (literalNode.Value is long intVal)
                     {
-                        return new ChowValue(intVal);
-                    }
+                        if (literalNode.Value is long intVal)
+                        {
+                            return new ChowValue(intVal);
+                        }
 
-                    break;
-                }
+                        break;
+                    }
 
                 case LiteralDataType.Float:
-                {
-                    if (literalNode.Value is double floatVal)
                     {
-                        return new ChowValue(floatVal);
-                    }
+                        if (literalNode.Value is double floatVal)
+                        {
+                            return new ChowValue(floatVal);
+                        }
 
-                    break;
-                }
+                        break;
+                    }
 
                 case LiteralDataType.Boolean:
-                {
-                    if (literalNode.Value is bool boolVal)
                     {
-                        return new ChowValue(boolVal);
-                    }
+                        if (literalNode.Value is bool boolVal)
+                        {
+                            return new ChowValue(boolVal);
+                        }
 
-                    break;
-                }
+                        break;
+                    }
 
                 case LiteralDataType.None:
-                {
-                    return ChowValue.None;
-                }
-
-                case LiteralDataType.String:
-                {
-                    if (literalNode.Value is string strVal)
                     {
-                        return new ChowValue(strVal);
+                        return ChowValue.None;
                     }
 
-                    break;
-                }
+                case LiteralDataType.String:
+                    {
+                        if (literalNode.Value is string strVal)
+                        {
+                            return new ChowValue(strVal);
+                        }
+
+                        break;
+                    }
 
                 default:
-                {
-                    throw new NotImplementedException($"Compilation of literal type {literalNode.Type} is not implemented.");
-                }
+                    {
+                        throw new NotImplementedException($"Compilation of literal type {literalNode.Type} is not implemented.");
+                    }
             }
 
             // Reached only when the boxed Value's CLR type doesn't match its declared LiteralDataType (parser bug).
@@ -738,17 +739,17 @@ namespace Chow.Interpreter
             switch (resolution)
             {
                 case ScopeType.Global:
-                {
-                    return OperationCode.PopAndAssignToGlobal;
-                }
+                    {
+                        return OperationCode.PopAndAssignToGlobal;
+                    }
                 case ScopeType.Nonlocal:
-                {
-                    return OperationCode.PopAndAssignToNonlocal;
-                }
+                    {
+                        return OperationCode.PopAndAssignToNonlocal;
+                    }
                 default:
-                {
-                    return OperationCode.PopAndAssignToVariable;
-                }
+                    {
+                        return OperationCode.PopAndAssignToVariable;
+                    }
             }
         }
 
@@ -757,17 +758,17 @@ namespace Chow.Interpreter
             switch (resolution)
             {
                 case ScopeType.Global:
-                {
-                    return OperationCode.PushGlobalValue;
-                }
+                    {
+                        return OperationCode.PushGlobalValue;
+                    }
                 case ScopeType.Nonlocal:
-                {
-                    return OperationCode.PushNonlocalValue;
-                }
+                    {
+                        return OperationCode.PushNonlocalValue;
+                    }
                 default:
-                {
-                    return OperationCode.PushVariableValue;
-                }
+                    {
+                        return OperationCode.PushVariableValue;
+                    }
             }
         }
 
@@ -776,99 +777,99 @@ namespace Chow.Interpreter
             switch (expressionNode.Operator)
             {
                 case ExpressionOperator.Add:
-                {
-                    return OperationCode.Add;
-                }
+                    {
+                        return OperationCode.Add;
+                    }
 
                 case ExpressionOperator.Subtract:
-                {
-                    return OperationCode.Subtract;
-                }
+                    {
+                        return OperationCode.Subtract;
+                    }
 
                 case ExpressionOperator.Multiply:
-                {
-                    return OperationCode.Multiply;
-                }
+                    {
+                        return OperationCode.Multiply;
+                    }
 
                 case ExpressionOperator.Divide:
-                {
-                    return OperationCode.Divide;
-                }
+                    {
+                        return OperationCode.Divide;
+                    }
 
                 case ExpressionOperator.Modulus:
-                {
-                    return OperationCode.Modulus;
-                }
+                    {
+                        return OperationCode.Modulus;
+                    }
 
                 case ExpressionOperator.Exponentiate:
-                {
-                    return OperationCode.Exponentiate;
-                }
+                    {
+                        return OperationCode.Exponentiate;
+                    }
 
                 case ExpressionOperator.FloorDivide:
-                {
-                    return OperationCode.FloorDivide;
-                }
+                    {
+                        return OperationCode.FloorDivide;
+                    }
 
                 case ExpressionOperator.Negate:
-                {
-                    return OperationCode.Negate;
-                }
+                    {
+                        return OperationCode.Negate;
+                    }
 
                 case ExpressionOperator.Equal:
-                {
-                    return OperationCode.Equal;
-                }
+                    {
+                        return OperationCode.Equal;
+                    }
 
                 case ExpressionOperator.NotEqual:
-                {
-                    return OperationCode.NotEqual;
-                }
+                    {
+                        return OperationCode.NotEqual;
+                    }
 
                 case ExpressionOperator.Less:
-                {
-                    return OperationCode.Less;
-                }
+                    {
+                        return OperationCode.Less;
+                    }
 
                 case ExpressionOperator.Greater:
-                {
-                    return OperationCode.Greater;
-                }
+                    {
+                        return OperationCode.Greater;
+                    }
 
                 case ExpressionOperator.LessEqual:
-                {
-                    return OperationCode.LessEqual;
-                }
+                    {
+                        return OperationCode.LessEqual;
+                    }
 
                 case ExpressionOperator.GreaterEqual:
-                {
-                    return OperationCode.GreaterEqual;
-                }
+                    {
+                        return OperationCode.GreaterEqual;
+                    }
 
                 case ExpressionOperator.Not:
-                {
-                    return OperationCode.Not;
-                }
+                    {
+                        return OperationCode.Not;
+                    }
 
                 case ExpressionOperator.BinaryOr:
-                {
-                    return OperationCode.BinaryOr;
-                }
+                    {
+                        return OperationCode.BinaryOr;
+                    }
 
                 case ExpressionOperator.In:
-                {
-                    return OperationCode.In;
-                }
+                    {
+                        return OperationCode.In;
+                    }
 
                 case ExpressionOperator.NotIn:
-                {
-                    return OperationCode.NotIn;
-                }
+                    {
+                        return OperationCode.NotIn;
+                    }
 
                 default:
-                {
-                    throw new NotImplementedException(nameof(expressionNode.Operator));
-                }
+                    {
+                        throw new NotImplementedException(nameof(expressionNode.Operator));
+                    }
             }
         }
 

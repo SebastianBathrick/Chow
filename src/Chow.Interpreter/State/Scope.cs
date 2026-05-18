@@ -1,5 +1,6 @@
 using System.Collections.Generic;
-namespace Chow.Interpreter.State.Scopes
+using Chow.Interpreter.Values;
+namespace Chow.Interpreter.State
 {
     /// <summary>
     /// A flat variable-binding store linked to an optional parent for LEGB chain walking. Used for both module-level

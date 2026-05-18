@@ -1,21 +1,26 @@
 using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.State.Scopes;
+using Chow.Interpreter.State;
+using Chow.Interpreter.Values;
 namespace Chow.Interpreter
 {
     /// <summary>
-    ///     The primary entry point for embedding the Chow interpreter. Manages a persistent global scope
-    ///     across multiple <see cref="Execute" /> calls so that variables and functions defined in one call
-    ///     are available in subsequent calls. The standard built-in functions are seeded into the global
-    ///     scope at construction.
+    /// An executable containing a global scope that contains variables and functions that are accessible
+    /// via the public API.
     /// </summary>
     public class ChowModule
     {
         readonly Scope _globalScope = new Scope();
 
+        /// <summary>
+        /// Gets the values of and declares variables and functions declared in the global scope.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <exception cref="GlobalAccessException"></exception>
         public object this[string name]
         {
             get
             {
+                // TODO: Add logic to check if the variable name is valid
                 if (_globalScope.IsVariableDefined(name))
                 {
                     return _globalScope.GetVariableValue(name).AsType<object>();
@@ -37,14 +42,9 @@ namespace Chow.Interpreter
                 _globalScope.AssignVariableValue(BuiltIns.NameOf(type), new ChowValue(BuiltIns.DefaultOf(type)));
             }
         }
-
-        /// <summary>
-        ///     Compiles and executes a string of Chow source code. The global scope persists across calls, so
-        ///     variables and functions defined in one call are available in subsequent calls.
-        ///     <see langword="null" />, empty, and whitespace-only strings are accepted and treated as no-ops.
-        /// </summary>
-        /// <param name="sourceCode">The Chow source code to execute.</param>
-        /// <exception cref="Exceptions.ChowRuntimeException">A runtime error occurs during execution.</exception>
+        
+        /// <summary>Compiles and executes a string containing Chow source code.</summary>
+        /// <param name="sourceCode">String containing Chow source code or null.</param>
         public void Execute(string sourceCode)
         {
             var scanner = new Scanner(sourceCode);
@@ -60,7 +60,6 @@ namespace Chow.Interpreter
             var chunk = compiler.CompileRoot();
 
             var vm = new VirtualMachine(_globalScope, chunk);
-
             vm.EvaluateChunk();
         }
     }

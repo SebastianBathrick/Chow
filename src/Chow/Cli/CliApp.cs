@@ -13,7 +13,7 @@ namespace Chow.Cli
         {
             _module = module ?? throw new ArgumentNullException(nameof(module));
         }
-        
+
         public int Run(string[] args)
         {
             if (args == null)

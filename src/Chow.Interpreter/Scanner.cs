@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Tokens;
+using Chow.Interpreter.Values.DataTypes;
 namespace Chow.Interpreter
 {
     /// <summary>
@@ -259,154 +260,154 @@ namespace Chow.Interpreter
             switch (CurrentChar)
             {
                 case ',':
-                {
-                    tokenType = TokenType.SymbolComma;
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolComma;
+                        break;
+                    }
 
 
                 case '.':
-                {
-                    tokenType = TokenType.SymbolDot;
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolDot;
+                        break;
+                    }
 
                 case ':':
-                {
-                    tokenType = TokenType.SymbolColon;
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolColon;
+                        break;
+                    }
 
                 case '+':
-                {
-                    tokenType = TokenType.SymbolPlus;
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolPlus;
+                        break;
+                    }
 
                 case '-':
-                {
-                    tokenType = TokenType.SymbolMinus;
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolMinus;
+                        break;
+                    }
 
                 case '*':
-                {
-                    if (TryScanCompoundOp('*', TokenType.SymbolExponent, "**"))
                     {
-                        return true;
-                    }
+                        if (TryScanCompoundOp('*', TokenType.SymbolExponent, "**"))
+                        {
+                            return true;
+                        }
 
-                    tokenType = TokenType.SymbolMultiply;
-                    break;
-                }
+                        tokenType = TokenType.SymbolMultiply;
+                        break;
+                    }
 
                 case '/':
-                {
-                    if (TryScanCompoundOp('/', TokenType.SymbolFloorDivide, "//"))
                     {
-                        return true;
-                    }
+                        if (TryScanCompoundOp('/', TokenType.SymbolFloorDivide, "//"))
+                        {
+                            return true;
+                        }
 
-                    tokenType = TokenType.SymbolDivide;
-                    break;
-                }
+                        tokenType = TokenType.SymbolDivide;
+                        break;
+                    }
 
                 case '%':
-                {
-                    tokenType = TokenType.SymbolPercent;
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolPercent;
+                        break;
+                    }
 
                 case '|':
-                {
-                    tokenType = TokenType.SymbolPipe;
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolPipe;
+                        break;
+                    }
 
                 case '!':
-                {
-                    return TryScanCompoundOp('=', TokenType.SymbolNotEqual, "!=");
-                }
+                    {
+                        return TryScanCompoundOp('=', TokenType.SymbolNotEqual, "!=");
+                    }
 
                 case '=':
-                {
-                    if (TryScanCompoundOp('=', TokenType.SymbolEqualTo, "=="))
                     {
-                        return true;
-                    }
+                        if (TryScanCompoundOp('=', TokenType.SymbolEqualTo, "=="))
+                        {
+                            return true;
+                        }
 
-                    tokenType = TokenType.SymbolAssign;
-                    break;
-                }
+                        tokenType = TokenType.SymbolAssign;
+                        break;
+                    }
 
                 case '>':
-                {
-                    if (TryScanCompoundOp('=', TokenType.SymbolGreaterEqual, ">="))
                     {
-                        return true;
-                    }
+                        if (TryScanCompoundOp('=', TokenType.SymbolGreaterEqual, ">="))
+                        {
+                            return true;
+                        }
 
-                    tokenType = TokenType.SymbolGreater;
-                    break;
-                }
+                        tokenType = TokenType.SymbolGreater;
+                        break;
+                    }
                 case '<':
-                {
-                    if (TryScanCompoundOp('=', TokenType.SymbolLessEqual, "<="))
                     {
-                        return true;
-                    }
+                        if (TryScanCompoundOp('=', TokenType.SymbolLessEqual, "<="))
+                        {
+                            return true;
+                        }
 
-                    tokenType = TokenType.SymbolLess;
-                    break;
-                }
+                        tokenType = TokenType.SymbolLess;
+                        break;
+                    }
 
                 // Indentation and line-break rules are not enforced (for lists and dictionary declarations)
                 case '[':
-                {
-                    tokenType = TokenType.SymbolLeftBracket;
-                    PushOpeningBracket('[');
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolLeftBracket;
+                        PushOpeningBracket('[');
+                        break;
+                    }
 
                 case ']':
-                {
-                    tokenType = TokenType.SymbolRightBracket;
-                    PopClosingBracket(']', '[');
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolRightBracket;
+                        PopClosingBracket(']', '[');
+                        break;
+                    }
 
                 case '{':
-                {
-                    tokenType = TokenType.SymbolLeftCurly;
-                    PushOpeningBracket('{');
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolLeftCurly;
+                        PushOpeningBracket('{');
+                        break;
+                    }
 
                 case '}':
-                {
-                    tokenType = TokenType.SymbolRightCurly;
-                    PopClosingBracket('}', '{');
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolRightCurly;
+                        PopClosingBracket('}', '{');
+                        break;
+                    }
 
                 case '(':
-                {
-                    tokenType = TokenType.SymbolLeftParen;
-                    PushOpeningBracket('(');
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolLeftParen;
+                        PushOpeningBracket('(');
+                        break;
+                    }
 
                 case ')':
-                {
-                    tokenType = TokenType.SymbolRightParen;
-                    PopClosingBracket(')', '(');
-                    break;
-                }
+                    {
+                        tokenType = TokenType.SymbolRightParen;
+                        PopClosingBracket(')', '(');
+                        break;
+                    }
 
                 default:
-                {
-                    return false;
-                }
+                    {
+                        return false;
+                    }
             }
 
             var lexeme = CurrentChar.ToString();
@@ -833,25 +834,25 @@ namespace Chow.Interpreter
             switch (CurrentChar)
             {
                 case '\n':
-                {
-                    // Unix/Linux/macOS newline
-                    MoveToNextChar();
-                    break;
-                }
-
-                case '\r':
-                {
-                    // Older Mac newline (if not followed by \n)
-                    MoveToNextChar();
-
-                    if (IsCharToScan && CurrentChar == '\n')
                     {
-                        // Windows/MS-DOS newline
+                        // Unix/Linux/macOS newline
                         MoveToNextChar();
+                        break;
                     }
 
-                    break;
-                }
+                case '\r':
+                    {
+                        // Older Mac newline (if not followed by \n)
+                        MoveToNextChar();
+
+                        if (IsCharToScan && CurrentChar == '\n')
+                        {
+                            // Windows/MS-DOS newline
+                            MoveToNextChar();
+                        }
+
+                        break;
+                    }
             }
 
             _isLineBegin = true;
