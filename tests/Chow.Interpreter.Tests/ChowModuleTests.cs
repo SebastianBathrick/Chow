@@ -2171,11 +2171,11 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             var captured = new List<string>();
-            module.SetBuiltIn(BuiltInType.Print, args =>
+            module.SetBuiltIn(BuiltInType.Print, (Func<ChowValue[], ChowValue>)(args =>
             {
                 captured.Add(args[0].AsType<string>());
                 return ChowValue.None;
-            });
+            }));
             module.Execute("print(\"hi\")");
             Assert.That(captured, Is.EqualTo(new[] { "hi" }));
         }

@@ -1,5 +1,6 @@
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State;
+using Chow.Interpreter.Tokens;
 using Chow.Interpreter.Values;
 using Chow.Interpreter.Values.DataTypes;
 using System;
@@ -7,8 +8,8 @@ using System.Collections.Generic;
 namespace Chow.Interpreter
 {
     /// <summary>
-    /// An executable containing a global scope that contains variables and functions that are accessible
-    /// via the public API.
+    /// An executable containing a global scope that contains variables and functions that are
+    /// accessible via the public API.
     /// </summary>
     public class ChowModule
     {
@@ -17,11 +18,17 @@ namespace Chow.Interpreter
         readonly Dictionary<BuiltInType, Func<ChowValue[], ChowValue>> _overrides
             = new Dictionary<BuiltInType, Func<ChowValue[], ChowValue>>();
 
-        #region Indexer
+        #region Properties
 
-        /// <summary>Gets the values of and declares variables and functions declared/defined in the global scope.</summary>
+        public string Name => _name;
+
+        /// <summary>
+        /// Gets the values of and declares variables and functions declared/defined in the
+        /// global scope of this module.
+        /// </summary>
         /// <param name="name">Name of variable or function to set/get.</param>
-        /// <exception cref="GlobalAccessException">Thrown if the value being retrieved is undefined in the global scope.</exception>
+        /// <exception cref="GlobalAccessException">Thrown if the value being retrieved is undefined
+        /// in the global scope.</exception>
         public object this[string name]
         {
             get
@@ -123,19 +130,97 @@ namespace Chow.Interpreter
 
         #region Global Scope API Methods
 
+        /// <summary>
+        /// Returns the <see cref="ChowValue"/> bound to <paramref name="name"/> in the module's
+        /// global scope.
+        /// </summary>
+        /// <exception cref="GlobalAccessException">Thrown when <paramref name="name"/> is <see
+        /// langword="null"/>, empty, or whitespace; is a reserved keyword; does not satisfy Chow
+        /// identifier rules; or is not defined in the global scope.</exception>
         public ChowValue GetGlobal(string name)
         {
-            throw new NotImplementedException();
+            ValidateIdentifier(name);
+
+            if (!_globalScope.IsVariableDefined(name))
+            {
+                throw new GlobalAccessException(name, $"undefined name '{name}'");
+            }
+
+            return _globalScope.GetVariableValue(name);
         }
 
+        /// <summary>
+        /// Binds <paramref name="name"/> to <paramref name="value"/> in the module's global scope,
+        /// creating or overwriting the binding.
+        /// </summary>
+        /// <exception cref="GlobalAccessException">
+        /// Thrown when <paramref name="name"/> is <see langword="null"/>, empty, or whitespace; is
+        /// a reserved keyword; or does not satisfy Chow identifier rules.</exception>
         public void SetGlobal(string name, ChowValue value)
         {
-            throw new NotImplementedException();
+            ValidateIdentifier(name);
+            _globalScope.AssignVariableValue(name, value);
         }
 
+        /// <summary>
+        /// Returns <see langword="true"/> if <paramref name="name"/> is defined in the module's
+        /// global scope.
+        /// </summary>
+        /// <exception cref="GlobalAccessException">Thrown when <paramref name="name"/> is <see
+        /// langword="null"/>, empty, or whitespace; is a reserved keyword; or does not satisfy
+        /// Chow identifier rules.</exception>
         public bool IsGlobal(string name)
         {
-            throw new NotImplementedException();
+            ValidateIdentifier(name);
+            return _globalScope.IsVariableDefined(name);
+        }
+
+        static void ValidateIdentifier(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new GlobalAccessException(name, "name must not be null, empty, or whitespace");
+            }
+
+            if (ReservedKeywords.Contains(name))
+            {
+                throw new GlobalAccessException(name, $"'{name}' is a reserved keyword and cannot be used as a variable name");
+            }
+
+            if (!IsValidChowIdentifier(name))
+            {
+                throw new GlobalAccessException(name, $"'{name}' is not a valid Chow identifier");
+            }
+        }
+
+        static bool IsValidChowIdentifier(string name)
+        {
+            var first = name[0];
+            if (!IsAlpha(first) && first != '_')
+            {
+                return false;
+            }
+
+            for (var i = 1; i < name.Length; i++)
+            {
+                var c = name[i];
+                if (!IsAlpha(c) && !IsDigit(c) && c != '_')
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        static bool IsAlpha(char c)
+        {
+            return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
+        }
+
+        static bool IsDigit(char c)
+        {
+            return c >= '0' && c <= '9';
         }
 
         #endregion
@@ -184,81 +269,80 @@ namespace Chow.Interpreter
             }
         }
 
-        public void SetBuiltIn(BuiltInType type, Func<ChowValue[], ChowValue> builtInFunc)
+        /// <summary>
+        /// Overrides the implementation of a built-in function.
+        /// 
+        /// <para>Supported delegate types:</para>
+        /// <list type="bullet">
+        /// 
+        /// <item><see cref="Func{TResult}"/> where TResult is <see cref="ChowValue"/> —
+        /// zero-argument function</item>
+        /// 
+        /// <item><see cref="Func{T, TResult}"/> where T and TResult are <see cref="ChowValue"/> —
+        /// single-argument function</item>
+        /// 
+        ///<item><see cref="Func{T, TResult}"/> where T is <see cref="ChowValue"/>[] and TResult
+        /// is <see cref="ChowValue"/> — variadic function</item>
+        /// 
+        /// <item><see cref="Action"/> — zero-argument action</item>
+        /// 
+        /// <item><see cref="Action{T}"/> where T is <see cref="ChowValue"/> — single-argument action</item>
+        /// 
+        /// <item><see cref="Action{T}"/> where T is <see cref="ChowValue"/>[] — variadic action</item>
+        /// 
+        /// </list>
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builtIn"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="builtIn"/> is not one of the supported delegate types.</exception>
+        public void SetBuiltIn(BuiltInType type, Delegate builtIn)
         {
-            if (builtInFunc == null)
+            if (builtIn == null)
             {
-                throw new ArgumentNullException(nameof(builtInFunc));
+                throw new ArgumentNullException(nameof(builtIn));
             }
 
-            _overrides[type] = builtInFunc;
+            Func<ChowValue[], ChowValue> impl;
+
+            switch (builtIn)
+            {
+                case Func<ChowValue[], ChowValue> variadicFunc:
+                    impl = variadicFunc;
+                    break;
+
+                case Func<ChowValue, ChowValue> unaryFunc:
+                    BuiltIns.DefinitionOf(type).RequireFixedArity(1, "Func<ChowValue, ChowValue>");
+                    impl = args => unaryFunc(args[0]);
+                    break;
+
+                case Func<ChowValue> nullaryFunc:
+                    BuiltIns.DefinitionOf(type).RequireFixedArity(0, "Func<ChowValue>");
+                    impl = _ => nullaryFunc();
+                    break;
+
+                case Action<ChowValue[]> variadicAction:
+                    impl = args => { variadicAction(args); return ChowValue.None; };
+                    break;
+
+                case Action<ChowValue> unaryAction:
+                    BuiltIns.DefinitionOf(type).RequireFixedArity(1, "Action<ChowValue>");
+                    impl = args => { unaryAction(args[0]); return ChowValue.None; };
+                    break;
+
+                case Action nullaryAction:
+                    BuiltIns.DefinitionOf(type).RequireFixedArity(0, "Action");
+                    impl = _ => { nullaryAction(); return ChowValue.None; };
+                    break;
+
+                default:
+                    throw new ArgumentException(
+                        $"Unsupported delegate type '{builtIn.GetType()}'. " +
+                        $"Expected one of: {nameof(Func<ChowValue[], ChowValue>)}, {nameof(Func<ChowValue, ChowValue>)}, " +
+                        $"{nameof(Func<ChowValue>)}, {nameof(Action<ChowValue[]>)}, {nameof(Action<ChowValue>)}, or {nameof(Action)}.",
+                        nameof(builtIn));
+            }
+
+            _overrides[type] = impl;
             SeedBuiltIn(type);
-        }
-
-        public void SetBuiltIn(BuiltInType type, Func<ChowValue, ChowValue> builtInFunc)
-        {
-            if (builtInFunc == null)
-            {
-                throw new ArgumentNullException(nameof(builtInFunc));
-            }
-
-            BuiltIns.DefinitionOf(type).RequireFixedArity(1, "Func<ChowValue, ChowValue>");
-            SetBuiltIn(type, args => builtInFunc(args[0]));
-        }
-
-        public void SetBuiltIn(BuiltInType type, Func<ChowValue> builtInFunc)
-        {
-            if (builtInFunc == null)
-            {
-                throw new ArgumentNullException(nameof(builtInFunc));
-            }
-
-            BuiltIns.DefinitionOf(type).RequireFixedArity(0, "Func<ChowValue>");
-            SetBuiltIn(type, (ChowValue[] _) => builtInFunc());
-        }
-
-        public void SetBuiltIn(BuiltInType type, Action<ChowValue[]> builtInAction)
-        {
-            if (builtInAction == null)
-            {
-                throw new ArgumentNullException(nameof(builtInAction));
-            }
-
-            SetBuiltIn(type, args =>
-            {
-                builtInAction(args);
-                return ChowValue.None;
-            });
-        }
-
-        public void SetBuiltIn(BuiltInType type, Action<ChowValue> builtInAction)
-        {
-            if (builtInAction == null)
-            {
-                throw new ArgumentNullException(nameof(builtInAction));
-            }
-
-            BuiltIns.DefinitionOf(type).RequireFixedArity(1, "Action<ChowValue>");
-            SetBuiltIn(type, args =>
-            {
-                builtInAction(args[0]);
-                return ChowValue.None;
-            });
-        }
-
-        public void SetBuiltIn(BuiltInType type, Action builtInAction)
-        {
-            if (builtInAction == null)
-            {
-                throw new ArgumentNullException(nameof(builtInAction));
-            }
-
-            BuiltIns.DefinitionOf(type).RequireFixedArity(0, "Action");
-            SetBuiltIn(type, (ChowValue[] _) =>
-            {
-                builtInAction();
-                return ChowValue.None;
-            });
         }
 
         #endregion
