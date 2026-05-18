@@ -137,6 +137,12 @@ namespace Chow.Interpreter.Values
                         this = new ChowValue(rangeValue);
                         return;
                     }
+                case ChowValue chowValue:
+                    {
+                        // Don't wrap a ChowValue inside another ChowValue
+                        this = chowValue;
+                        return;
+                    }
                 default:
                     {
                         DataType = DataType.Object;

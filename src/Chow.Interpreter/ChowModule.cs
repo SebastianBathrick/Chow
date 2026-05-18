@@ -10,7 +10,8 @@ namespace Chow.Interpreter
     /// </summary>
     public class ChowModule
     {
-        readonly Scope _globalScope = new Scope();
+        readonly string _name;
+        readonly Scope _globalScope;
 
         #region Indexer
 
@@ -39,8 +40,11 @@ namespace Chow.Interpreter
         #endregion
 
         /// <summary>Initializes a ChowModule with built-in functions.</summary>
-        public ChowModule()
+        public ChowModule(string name = nameof(ChowModule))
         {
+            _name = name;
+            _globalScope = new Scope();
+            
             foreach (var type in BuiltIns.AllTypes)
             {
                 _globalScope.AssignVariableValue(BuiltIns.NameOf(type), new ChowValue(BuiltIns.DefaultOf(type)));
@@ -52,24 +56,16 @@ namespace Chow.Interpreter
         /// <param name="sourceCode">String containing Chow source code or null.</param>
         public ChowValue Execute(string sourceCode)
         {
-            var scanner = new Scanner(sourceCode);
-            var tokens = scanner.ScanTokens();
-
-            var parser = new Parser(tokens);
-            var syntaxTreeRoot = parser.BuildTree();
-
-            var semanticAnalyzer = new SemanticAnalyzer(syntaxTreeRoot);
-            semanticAnalyzer.Analyze();
-               
-            var compiler = new Compiler(syntaxTreeRoot);
-            var chunk = compiler.CompileRoot();
-
-            var vm = new VirtualMachine(_globalScope, chunk);
-            return vm.EvaluateChunk();
+            return ChowEngine.ExecuteModuleCode(sourceCode, _globalScope);
         }
 
         public ChowValue Call(string functionName, params object[] args)
         {
+            if (!_globalScope.IsVariableDefined(functionName))
+            {
+                throw new GlobalAccessException(functionName, $"'{functionName}' is undefined and cannot be called");
+            }
+            
             throw new NotImplementedException();
         }
 
@@ -91,8 +87,7 @@ namespace Chow.Interpreter
         }
 
         #endregion
-
-
+        
         #region Built-Ins API Methods
 
         public void EnableBuiltIns(params BuiltInType[] types)

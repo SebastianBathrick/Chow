@@ -32,7 +32,7 @@ namespace Chow.Interpreter
             : this(globalScope, chunk)
         {
         }
-
+        
         // Chunk is null when the client is exclusively calling a closure
         public VirtualMachine(Scope globalScope = null, Chunk chunk = null)
         {
@@ -42,6 +42,35 @@ namespace Chow.Interpreter
             _valStack = new Stack<ChowValue>();
         }
 
+        public VirtualMachine(string targetFuncName, Scope globalScope, object[] callArguments)
+        {
+            // This constructor should be called if the function being invoked is a Closure and NOT an interop function
+            _globalScope = globalScope;
+            
+            // Assumes ChowModule checks if variable is within scope in case a GlobalAccessExceptions must be thrown
+            // GlobalAccessExceptions are intended to be thrown from the ChowModule
+            var globalVariable = _globalScope.GetVariableValue(targetFuncName);
+
+            if (!IsClosure(globalVariable))
+            {
+                throw new TypeException($"'{targetFuncName}' is a {globalVariable.DataType} which are not callable");
+            }
+
+            var funcChunk = ((Closure)globalVariable.ToObject()).Chunk;
+            _callStack = new CallStack(funcChunk, globalScope);
+            _valStack = new Stack<ChowValue>();
+            
+            if (callArguments == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < callArguments.Length; i++)
+            {
+                // If the argument is of type ChowValue, it will NOT be wrapped in another ChowValue struct
+                _valStack.Push(new ChowValue(callArguments[i]));
+            }
+        }
         #endregion
 
         #region Public API
@@ -509,7 +538,7 @@ namespace Chow.Interpreter
         #region Function Call Methods
 
         // Use an out parameter just so it's more explicit
-        void CallFunction(int argCount, out bool isClosureEntered)
+        void CallFunction(int argCount, out bool isClosure)
         {
             var args = new ChowValue[argCount];
 
@@ -519,11 +548,10 @@ namespace Chow.Interpreter
             }
 
             var calleeValue = _valStack.Pop();
+            isClosure = IsClosure(calleeValue);
 
             // If the ChowValue is storing a closure inside (i.e. a function made up of bytecode)
-            isClosureEntered = calleeValue.DataType == DataType.Object && calleeValue.ToObject() is Closure;
-
-            if (isClosureEntered)
+            if (isClosure)
             {
                 // Switches to the closure's frame, so EvaluateChunk will next execute the first instruction of the closure's chunk.
                 PushClosureStackFrame(argCount, (Closure)calleeValue.ToObject(), args);
@@ -533,6 +561,12 @@ namespace Chow.Interpreter
                 // Will push its return value onto the stack.
                 CallInteropFunction(argCount, calleeValue, args);
             }
+        }
+
+        static bool IsClosure(ChowValue calleeValue)
+        {
+
+            return calleeValue.DataType == DataType.Object && calleeValue.ToObject() is Closure;
         }
 
         void CallInteropFunction(int argCount, ChowValue calleeValue, ChowValue[] args)
