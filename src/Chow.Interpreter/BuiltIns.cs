@@ -8,71 +8,53 @@ namespace Chow.Interpreter
 
     static class BuiltIns
     {
-        static readonly Dictionary<BuiltInType, string> Names = new Dictionary<BuiltInType, string>
-        {
-            { BuiltInType.Print, "print" },
-            { BuiltInType.Input, "input" },
-            { BuiltInType.Clear, "clear" },
-            { BuiltInType.Float, "float" },
-            { BuiltInType.Str, "str" },
-            { BuiltInType.Int, "int" },
-            { BuiltInType.Bool, "bool" },
-            { BuiltInType.List, "list" },
-            { BuiltInType.Dict, "dict" },
-            { BuiltInType.Len, "len" },
-            { BuiltInType.Type, "type" },
-            { BuiltInType.Abs, "abs" },
-            { BuiltInType.Round, "round" },
-            { BuiltInType.Min, "min" },
-            { BuiltInType.Max, "max" },
-            { BuiltInType.Range, "range" }
-        };
-
-        static readonly Dictionary<BuiltInType, Func<ChowValue[], ChowValue>> Defaults =
-            new Dictionary<BuiltInType, Func<ChowValue[], ChowValue>>
+        static readonly Dictionary<BuiltInType, BuiltInDefinition> Definitions =
+            new Dictionary<BuiltInType, BuiltInDefinition>
             {
-                { BuiltInType.Print, Print },
-                { BuiltInType.Input, Input },
-                { BuiltInType.Clear, Clear },
-                { BuiltInType.Float, Float },
-                { BuiltInType.Str, Str },
-                { BuiltInType.Int, Int },
-                { BuiltInType.Bool, Bool },
-                { BuiltInType.List, List },
-                { BuiltInType.Dict, Dict },
-                { BuiltInType.Len, Len },
-                { BuiltInType.Type, Type },
-                { BuiltInType.Abs, Abs },
-                { BuiltInType.Round, Round },
-                { BuiltInType.Min, Min },
-                { BuiltInType.Max, Max },
-                { BuiltInType.Range, Range }
+                { BuiltInType.Print, new BuiltInDefinition("print", Print, 1) },
+                { BuiltInType.Input, new BuiltInDefinition("input", Input, 0, 1) },
+                { BuiltInType.Clear, new BuiltInDefinition("clear", Clear, 0) },
+                { BuiltInType.Float, new BuiltInDefinition("float", Float, 1) },
+                { BuiltInType.Str, new BuiltInDefinition("str", Str, 1) },
+                { BuiltInType.Int, new BuiltInDefinition("int", Int, 1) },
+                { BuiltInType.Bool, new BuiltInDefinition("bool", Bool, 1) },
+                { BuiltInType.List, new BuiltInDefinition("list", List, 0, 1) },
+                { BuiltInType.Dict, new BuiltInDefinition("dict", Dict, 0, 1) },
+                { BuiltInType.Len, new BuiltInDefinition("len", Len, 1) },
+                { BuiltInType.Type, new BuiltInDefinition("type", Type, 1) },
+                { BuiltInType.Abs, new BuiltInDefinition("abs", Abs, 1) },
+                { BuiltInType.Round, new BuiltInDefinition("round", Round, 1) },
+                { BuiltInType.Min, new BuiltInDefinition("min", Min, 2) },
+                { BuiltInType.Max, new BuiltInDefinition("max", Max, 2) },
+                { BuiltInType.Range, new BuiltInDefinition("range", Range, 1, 3) }
             };
 
-        public static IEnumerable<BuiltInType> AllTypes => Names.Keys;
+        public static IEnumerable<BuiltInType> AllTypes => Definitions.Keys;
+
+        public static BuiltInDefinition DefinitionOf(BuiltInType type)
+        {
+            return Definitions[type];
+        }
 
         public static string NameOf(BuiltInType type)
         {
-            return Names[type];
+            return Definitions[type].Name;
         }
 
         public static Func<ChowValue[], ChowValue> DefaultOf(BuiltInType type)
         {
-            return Defaults[type];
+            return Definitions[type].Implementation;
         }
 
         static ChowValue Print(ChowValue[] args)
         {
-            RequireArity("print", args, 1);
             Console.WriteLine(FormatForPrint(args[0]));
             return ChowValue.None;
         }
 
         static ChowValue Input(ChowValue[] args)
         {
-            var argCount = RequireArity("input", args, 0, 1);
-
-            if (argCount == 1)
+            if (args.Length == 1)
             {
                 Console.Write(args[0]);
             }
@@ -89,15 +71,12 @@ namespace Chow.Interpreter
 
         static ChowValue Clear(ChowValue[] args)
         {
-            RequireArity("clear", args, 0);
-
             Console.Clear();
             return ChowValue.None;
         }
 
         static ChowValue Float(ChowValue[] args)
         {
-            RequireArity("float", args, 1);
             var val = args[0];
 
             switch (val.DataType)
@@ -132,13 +111,11 @@ namespace Chow.Interpreter
 
         static ChowValue Str(ChowValue[] args)
         {
-            RequireArity("str", args, 1);
             return new ChowValue(FormatForPrint(args[0]));
         }
 
         static ChowValue Int(ChowValue[] args)
         {
-            RequireArity("int", args, 1);
             var val = args[0];
 
             switch (val.DataType)
@@ -174,57 +151,41 @@ namespace Chow.Interpreter
 
         static ChowValue Bool(ChowValue[] args)
         {
-            RequireArity("bool", args, 1);
             return new ChowValue(args[0].IsTruthy());
         }
 
         static ChowValue List(ChowValue[] args)
         {
-            var argCount = args == null ? 0 : args.Length;
-
-            if (argCount == 0)
+            if (args.Length == 0)
             {
                 return new ChowValue(new InternalList());
             }
 
-            if (argCount == 1)
+            if (args[0].DataType == DataType.List)
             {
-                if (args[0].DataType == DataType.List)
-                {
-                    return new ChowValue(InternalList.Concat(args[0].AsType<InternalList>(), new InternalList()));
-                }
-
-                throw new InvalidOperationException($"'{DataTypeName(args[0].DataType)}' object is not iterable");
+                return new ChowValue(InternalList.Concat(args[0].AsType<InternalList>(), new InternalList()));
             }
 
-            throw new InvalidOperationException($"list expected at most 1 argument, got {argCount}");
+            throw new InvalidOperationException($"'{DataTypeName(args[0].DataType)}' object is not iterable");
         }
 
         static ChowValue Dict(ChowValue[] args)
         {
-            var argCount = args == null ? 0 : args.Length;
-
-            if (argCount == 0)
+            if (args.Length == 0)
             {
                 return new ChowValue(new InternalDict());
             }
 
-            if (argCount == 1)
+            if (args[0].DataType == DataType.Dict)
             {
-                if (args[0].DataType == DataType.Dict)
-                {
-                    return new ChowValue(InternalDict.Merge(args[0].AsType<InternalDict>(), new InternalDict()));
-                }
-
-                throw new InvalidOperationException($"'{DataTypeName(args[0].DataType)}' object is not iterable");
+                return new ChowValue(InternalDict.Merge(args[0].AsType<InternalDict>(), new InternalDict()));
             }
 
-            throw new InvalidOperationException($"dict expected at most 1 argument, got {argCount}");
+            throw new InvalidOperationException($"'{DataTypeName(args[0].DataType)}' object is not iterable");
         }
 
         static ChowValue Len(ChowValue[] args)
         {
-            RequireArity("len", args, 1);
             var val = args[0];
 
             switch (val.DataType)
@@ -248,13 +209,11 @@ namespace Chow.Interpreter
 
         static ChowValue Type(ChowValue[] args)
         {
-            RequireArity("type", args, 1);
             return new ChowValue(DataTypeName(args[0].DataType));
         }
 
         static ChowValue Abs(ChowValue[] args)
         {
-            RequireArity("abs", args, 1);
             var val = args[0];
 
             switch (val.DataType)
@@ -278,7 +237,6 @@ namespace Chow.Interpreter
 
         static ChowValue Round(ChowValue[] args)
         {
-            RequireArity("round", args, 1);
             var val = args[0];
 
             switch (val.DataType)
@@ -302,8 +260,6 @@ namespace Chow.Interpreter
 
         static ChowValue Min(ChowValue[] args)
         {
-            RequireArity("min", args, 2);
-
             if (!IsNumeric(args[0]) || !IsNumeric(args[1]))
             {
                 throw new InvalidOperationException("min() arguments must be numbers");
@@ -314,8 +270,6 @@ namespace Chow.Interpreter
 
         static ChowValue Max(ChowValue[] args)
         {
-            RequireArity("max", args, 2);
-
             if (!IsNumeric(args[0]) || !IsNumeric(args[1]))
             {
                 throw new InvalidOperationException("max() arguments must be numbers");
@@ -326,24 +280,17 @@ namespace Chow.Interpreter
 
         static ChowValue Range(ChowValue[] args)
         {
-            var argCount = args == null ? 0 : args.Length;
-
-            if (argCount == 0 || argCount > 3)
-            {
-                throw new InvalidOperationException($"range expected 1 to 3 arguments, got {argCount}");
-            }
-
             long start;
             long stop;
             long step;
 
-            if (argCount == 1)
+            if (args.Length == 1)
             {
                 start = 0;
                 stop = RequireRangeInt(args[0], 0);
                 step = 1;
             }
-            else if (argCount == 2)
+            else if (args.Length == 2)
             {
                 start = RequireRangeInt(args[0], 0);
                 stop = RequireRangeInt(args[1], 1);
@@ -372,28 +319,6 @@ namespace Chow.Interpreter
             }
 
             return arg.AsType<long>();
-        }
-
-        static void RequireArity(string name, ChowValue[] args, int expected)
-        {
-            var actual = args?.Length ?? 0;
-
-            if (actual != expected)
-            {
-                throw new InvalidOperationException($"{name}() expected {expected} arguments, got {actual}");
-            }
-        }
-
-        static int RequireArity(string name, ChowValue[] args, int minExpected, int maxExpected)
-        {
-            var actual = args?.Length ?? 0;
-
-            if (actual < minExpected || actual > maxExpected)
-            {
-                throw new InvalidOperationException($"{name}() expected {minExpected} to {maxExpected} arguments, got {actual}");
-            }
-
-            return args?.Length ?? 0;
         }
 
         static bool IsNumeric(ChowValue val)

@@ -33,7 +33,7 @@ namespace Chow.Cli
                 var exitCode = ExecuteFile(args[0]);
                 stopwatch.Stop();
 
-                Console.Error.WriteLine($"Execution time: {stopwatch.ElapsedMilliseconds} ms");
+                Console.WriteLine($"Execution time: {stopwatch.Elapsed.TotalMilliseconds:0.#####} ms");
                 return exitCode;
             }
 

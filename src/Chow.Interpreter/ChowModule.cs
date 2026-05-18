@@ -3,6 +3,7 @@ using Chow.Interpreter.State;
 using Chow.Interpreter.Values;
 using Chow.Interpreter.Values.DataTypes;
 using System;
+using System.Collections.Generic;
 namespace Chow.Interpreter
 {
     /// <summary>
@@ -13,6 +14,8 @@ namespace Chow.Interpreter
     {
         readonly string _name;
         readonly Scope _globalScope;
+        readonly Dictionary<BuiltInType, Func<ChowValue[], ChowValue>> _overrides
+            = new Dictionary<BuiltInType, Func<ChowValue[], ChowValue>>();
 
         #region Indexer
 
@@ -48,8 +51,21 @@ namespace Chow.Interpreter
 
             foreach (var type in BuiltIns.AllTypes)
             {
-                _globalScope.AssignVariableValue(BuiltIns.NameOf(type), new ChowValue(BuiltIns.DefaultOf(type)));
+                SeedBuiltIn(type);
             }
+        }
+
+        void SeedBuiltIn(BuiltInType type)
+        {
+            var def = BuiltIns.DefinitionOf(type);
+            Func<ChowValue[], ChowValue> rawImpl;
+
+            if (!_overrides.TryGetValue(type, out rawImpl))
+            {
+                rawImpl = def.Implementation;
+            }
+
+            _globalScope.AssignVariableValue(def.Name, new ChowValue(def.WrapWithArityCheck(rawImpl)));
         }
 
 
@@ -128,52 +144,121 @@ namespace Chow.Interpreter
 
         public void EnableBuiltIns(params BuiltInType[] types)
         {
-            throw new NotImplementedException();
+            if (types == null)
+            {
+                return;
+            }
+
+            foreach (var t in types)
+            {
+                SeedBuiltIn(t);
+            }
         }
 
         public void EnableAllBuiltIns()
         {
-            throw new NotImplementedException();
+            foreach (var t in BuiltIns.AllTypes)
+            {
+                SeedBuiltIn(t);
+            }
         }
 
         public void DisableBuiltIns(params BuiltInType[] types)
         {
-            throw new NotImplementedException();
+            if (types == null)
+            {
+                return;
+            }
+
+            foreach (var t in types)
+            {
+                _globalScope.RemoveVariable(BuiltIns.NameOf(t));
+            }
         }
 
         public void DisableAllBuiltIns()
         {
-            throw new NotImplementedException();
+            foreach (var t in BuiltIns.AllTypes)
+            {
+                _globalScope.RemoveVariable(BuiltIns.NameOf(t));
+            }
         }
 
         public void SetBuiltIn(BuiltInType type, Func<ChowValue[], ChowValue> builtInFunc)
         {
-            throw new NotImplementedException();
+            if (builtInFunc == null)
+            {
+                throw new ArgumentNullException(nameof(builtInFunc));
+            }
+
+            _overrides[type] = builtInFunc;
+            SeedBuiltIn(type);
         }
 
         public void SetBuiltIn(BuiltInType type, Func<ChowValue, ChowValue> builtInFunc)
         {
-            throw new NotImplementedException();
+            if (builtInFunc == null)
+            {
+                throw new ArgumentNullException(nameof(builtInFunc));
+            }
+
+            BuiltIns.DefinitionOf(type).RequireFixedArity(1, "Func<ChowValue, ChowValue>");
+            SetBuiltIn(type, args => builtInFunc(args[0]));
         }
 
         public void SetBuiltIn(BuiltInType type, Func<ChowValue> builtInFunc)
         {
-            throw new NotImplementedException();
+            if (builtInFunc == null)
+            {
+                throw new ArgumentNullException(nameof(builtInFunc));
+            }
+
+            BuiltIns.DefinitionOf(type).RequireFixedArity(0, "Func<ChowValue>");
+            SetBuiltIn(type, (ChowValue[] _) => builtInFunc());
         }
 
         public void SetBuiltIn(BuiltInType type, Action<ChowValue[]> builtInAction)
         {
-            throw new NotImplementedException();
+            if (builtInAction == null)
+            {
+                throw new ArgumentNullException(nameof(builtInAction));
+            }
+
+            SetBuiltIn(type, args =>
+            {
+                builtInAction(args);
+                return ChowValue.None;
+            });
         }
 
         public void SetBuiltIn(BuiltInType type, Action<ChowValue> builtInAction)
         {
-            throw new NotImplementedException();
+            if (builtInAction == null)
+            {
+                throw new ArgumentNullException(nameof(builtInAction));
+            }
+
+            BuiltIns.DefinitionOf(type).RequireFixedArity(1, "Action<ChowValue>");
+            SetBuiltIn(type, args =>
+            {
+                builtInAction(args[0]);
+                return ChowValue.None;
+            });
         }
 
         public void SetBuiltIn(BuiltInType type, Action builtInAction)
         {
-            throw new NotImplementedException();
+            if (builtInAction == null)
+            {
+                throw new ArgumentNullException(nameof(builtInAction));
+            }
+
+            BuiltIns.DefinitionOf(type).RequireFixedArity(0, "Action");
+            SetBuiltIn(type, (ChowValue[] _) =>
+            {
+                builtInAction();
+                return ChowValue.None;
+            });
         }
 
         #endregion

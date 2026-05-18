@@ -2089,5 +2089,300 @@ namespace Chow.Interpreter.Tests
 
         #endregion
 
+        #region BuiltIns API - Enable / Disable
+
+        [Test]
+        public void FreshModule_LenBuiltIn_WorksFromChow()
+        {
+            var module = NewModule();
+            var result = module.Execute("len(\"abc\")");
+            Assert.That(result.AsType<long>(), Is.EqualTo(3L));
+        }
+
+        [Test]
+        public void DisableBuiltIns_LenRemoved_ChowCallFails()
+        {
+            var module = NewModule();
+            module.DisableBuiltIns(BuiltInType.Len);
+            Assert.That(() => module.Execute("len(\"x\")"), Throws.InstanceOf<Exception>());
+        }
+
+        [Test]
+        public void DisableAllBuiltIns_AllNamesUndefined()
+        {
+            var module = NewModule();
+            module.DisableAllBuiltIns();
+
+            foreach (var name in AllBuiltInNames)
+            {
+                Assert.That(() => module.Call(name), Throws.TypeOf<GlobalAccessException>(), $"Expected '{name}' to be undefined");
+            }
+        }
+
+        [Test]
+        public void EnableBuiltIns_AfterDisable_RestoresDefault()
+        {
+            var module = NewModule();
+            module.DisableBuiltIns(BuiltInType.Len);
+            module.EnableBuiltIns(BuiltInType.Len);
+            var result = module.Execute("len(\"abcd\")");
+            Assert.That(result.AsType<long>(), Is.EqualTo(4L));
+        }
+
+        [Test]
+        public void EnableAllBuiltIns_AfterDisableAll_RestoresAll()
+        {
+            var module = NewModule();
+            module.DisableAllBuiltIns();
+            module.EnableAllBuiltIns();
+            Assert.That(module.Execute("len(\"abc\")").AsType<long>(), Is.EqualTo(3L));
+            Assert.That(module.Execute("abs(-7)").AsType<long>(), Is.EqualTo(7L));
+            Assert.That(() => module.Call("range", 1L, 5L), Throws.Nothing);
+        }
+
+        [Test]
+        public void DisableBuiltIns_CalledTwice_IsSilentNoOp()
+        {
+            var module = NewModule();
+            module.DisableBuiltIns(BuiltInType.Print);
+            Assert.That(() => module.DisableBuiltIns(BuiltInType.Print), Throws.Nothing);
+        }
+
+        [Test]
+        public void DisableBuiltIns_NullArray_DoesNotThrow()
+        {
+            var module = NewModule();
+            Assert.That(() => module.DisableBuiltIns(null), Throws.Nothing);
+        }
+
+        [Test]
+        public void EnableBuiltIns_NullArray_DoesNotThrow()
+        {
+            var module = NewModule();
+            Assert.That(() => module.EnableBuiltIns(null), Throws.Nothing);
+        }
+
+        #endregion
+
+        #region BuiltIns API - SetBuiltIn
+
+        [Test]
+        public void SetBuiltIn_CanonicalFunc_CallableFromChow()
+        {
+            var module = NewModule();
+            var captured = new List<string>();
+            module.SetBuiltIn(BuiltInType.Print, args =>
+            {
+                captured.Add(args[0].AsType<string>());
+                return ChowValue.None;
+            });
+            module.Execute("print(\"hi\")");
+            Assert.That(captured, Is.EqualTo(new[] { "hi" }));
+        }
+
+        [Test]
+        public void SetBuiltIn_TypedSingleArgFunc_CallableFromChow()
+        {
+            var module = NewModule();
+            module.SetBuiltIn(BuiltInType.Abs, (ChowValue _) => new ChowValue(42L));
+            var result = module.Execute("abs(-5)");
+            Assert.That(result.AsType<long>(), Is.EqualTo(42L));
+        }
+
+        [Test]
+        public void SetBuiltIn_ActionOverload_ForClearRunsAndReturnsNone()
+        {
+            var module = NewModule();
+            var ran = false;
+            module.SetBuiltIn(BuiltInType.Clear, () => { ran = true; });
+            var result = module.Call("clear");
+            Assert.That(ran, Is.True);
+            Assert.That(result.DataType, Is.EqualTo(DataType.None));
+        }
+
+        [Test]
+        public void SetBuiltIn_OverrideSurvivesDisableEnableCycle()
+        {
+            var module = NewModule();
+            module.SetBuiltIn(BuiltInType.Len, (ChowValue _) => new ChowValue(999L));
+            module.DisableBuiltIns(BuiltInType.Len);
+            module.EnableBuiltIns(BuiltInType.Len);
+            var result = module.Execute("len(\"abc\")");
+            Assert.That(result.AsType<long>(), Is.EqualTo(999L));
+        }
+
+        [Test]
+        public void SetBuiltIn_OverridePersistsAcrossRepeatedEnable()
+        {
+            var module = NewModule();
+            module.SetBuiltIn(BuiltInType.Len, (ChowValue _) => new ChowValue(7L));
+            module.EnableBuiltIns(BuiltInType.Len);
+            module.EnableBuiltIns(BuiltInType.Len);
+            Assert.That(module.Execute("len(\"x\")").AsType<long>(), Is.EqualTo(7L));
+        }
+
+        [Test]
+        public void SetBuiltIn_VariadicCompatibleForRange_Succeeds()
+        {
+            var module = NewModule();
+            Assert.That(
+                () => module.SetBuiltIn(BuiltInType.Range, (Func<ChowValue[], ChowValue>)(args => new ChowValue((long)args.Length))),
+                Throws.Nothing);
+            Assert.That(module.Call("range", 1L, 2L, 3L).AsType<long>(), Is.EqualTo(3L));
+        }
+
+        [Test]
+        public void SetBuiltIn_ActionArrayForInput_Succeeds()
+        {
+            var module = NewModule();
+            Assert.That(
+                () => module.SetBuiltIn(BuiltInType.Input, (Action<ChowValue[]>)(_ => {})),
+                Throws.Nothing);
+        }
+
+        #endregion
+
+        #region BuiltIns API - Arity Enforcement
+
+        [Test]
+        public void DefaultBuiltIn_TooFewArgs_ThrowsTypeException()
+        {
+            var module = NewModule();
+            Assert.That(() => module.Call("len"), Throws.TypeOf<TypeException>());
+        }
+
+        [Test]
+        public void DefaultBuiltIn_TooManyArgs_ThrowsTypeException()
+        {
+            var module = NewModule();
+            Assert.That(() => module.Call("range", 1L, 2L, 3L, 4L), Throws.TypeOf<TypeException>());
+        }
+
+        [Test]
+        public void OverriddenBuiltIn_ArityStillEnforced()
+        {
+            var module = NewModule();
+            module.SetBuiltIn(BuiltInType.Len, (Func<ChowValue[], ChowValue>)(args => new ChowValue(0L)));
+            Assert.That(() => module.Call("len"), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.Call("len", "a", "b"), Throws.TypeOf<TypeException>());
+        }
+
+        [Test]
+        public void SetBuiltIn_TypedDelegateMismatch_ThrowsArgumentException()
+        {
+            var module = NewModule();
+            Assert.That(
+                () => module.SetBuiltIn(BuiltInType.Range, (ChowValue x) => x),
+                Throws.TypeOf<ArgumentException>()
+                    .With.Message.Contains("range")
+                    .And.Message.Contains("1 to 3"));
+        }
+
+        [Test]
+        public void SetBuiltIn_ZeroArgDelegateOnUnaryBuiltIn_ThrowsArgumentException()
+        {
+            var module = NewModule();
+            Assert.That(
+                () => module.SetBuiltIn(BuiltInType.Len, () => new ChowValue(0L)),
+                Throws.TypeOf<ArgumentException>().With.Message.Contains("len"));
+        }
+
+        [Test]
+        public void SetBuiltIn_UnaryDelegateOnZeroArgBuiltIn_ThrowsArgumentException()
+        {
+            var module = NewModule();
+            Assert.That(
+                () => module.SetBuiltIn(BuiltInType.Clear, (ChowValue _) => ChowValue.None),
+                Throws.TypeOf<ArgumentException>().With.Message.Contains("clear"));
+        }
+
+        #endregion
+
+        #region BuiltIns API - Null Delegates
+
+        [Test]
+        public void SetBuiltIn_NullFuncArray_ThrowsArgumentNullException()
+        {
+            var module = NewModule();
+            Assert.That(
+                () => module.SetBuiltIn(BuiltInType.Print, (Func<ChowValue[], ChowValue>)null),
+                Throws.TypeOf<ArgumentNullException>());
+        }
+
+        [Test]
+        public void SetBuiltIn_NullFuncSingle_ThrowsArgumentNullException()
+        {
+            var module = NewModule();
+            Assert.That(
+                () => module.SetBuiltIn(BuiltInType.Len, (Func<ChowValue, ChowValue>)null),
+                Throws.TypeOf<ArgumentNullException>());
+        }
+
+        [Test]
+        public void SetBuiltIn_NullFuncZero_ThrowsArgumentNullException()
+        {
+            var module = NewModule();
+            Assert.That(
+                () => module.SetBuiltIn(BuiltInType.Clear, (Func<ChowValue>)null),
+                Throws.TypeOf<ArgumentNullException>());
+        }
+
+        [Test]
+        public void SetBuiltIn_NullActionArray_ThrowsArgumentNullException()
+        {
+            var module = NewModule();
+            Assert.That(
+                () => module.SetBuiltIn(BuiltInType.Print, (Action<ChowValue[]>)null),
+                Throws.TypeOf<ArgumentNullException>());
+        }
+
+        [Test]
+        public void SetBuiltIn_NullActionSingle_ThrowsArgumentNullException()
+        {
+            var module = NewModule();
+            Assert.That(
+                () => module.SetBuiltIn(BuiltInType.Len, (Action<ChowValue>)null),
+                Throws.TypeOf<ArgumentNullException>());
+        }
+
+        [Test]
+        public void SetBuiltIn_NullActionZero_ThrowsArgumentNullException()
+        {
+            var module = NewModule();
+            Assert.That(
+                () => module.SetBuiltIn(BuiltInType.Clear, (Action)null),
+                Throws.TypeOf<ArgumentNullException>());
+        }
+
+        #endregion
+
+        #region BuiltInDefinition - Bugfix Sanity
+
+        [Test]
+        public void BuiltInDefinition_Range_IsVariadic()
+        {
+            var def = BuiltIns.DefinitionOf(BuiltInType.Range);
+            Assert.That(def.IsVariadic, Is.True);
+            Assert.That(def.HasParameters, Is.True);
+        }
+
+        [Test]
+        public void BuiltInDefinition_Clear_IsNotVariadicAndHasNoParameters()
+        {
+            var def = BuiltIns.DefinitionOf(BuiltInType.Clear);
+            Assert.That(def.IsVariadic, Is.False);
+            Assert.That(def.HasParameters, Is.False);
+        }
+
+        [Test]
+        public void BuiltInDefinition_Len_IsNotVariadicButHasParameters()
+        {
+            var def = BuiltIns.DefinitionOf(BuiltInType.Len);
+            Assert.That(def.IsVariadic, Is.False);
+            Assert.That(def.HasParameters, Is.True);
+        }
+
+        #endregion
+
     }
 }
