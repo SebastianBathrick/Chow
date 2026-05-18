@@ -22,7 +22,7 @@ namespace Chow.Interpreter
 
         Instruction CurrentOperation => _callStack.CurrentInstr;
 
-        public ChowValue ValStackTop => _valStack.Count > 0 ? _valStack.Peek() : ChowValue.None;
+        public ChowValue ValStackTop => _valStack.Count != 0 ? _valStack.Peek() : ChowValue.None;
 
         #endregion
 
@@ -48,6 +48,8 @@ namespace Chow.Interpreter
 
         public ChowValue EvaluateChunk()
         {
+            ChowValue lastExprStmntValue = ChowValue.None;
+
             while (_callStack.IsInstrToRun)
             {
                 switch (CurrentOperation.Code)
@@ -61,13 +63,19 @@ namespace Chow.Interpreter
                     case OperationCode.CallFunction:
                         {
                             CallFunction(CurrentOperation.Operand, out var isClosureEntered);
-
                             if (isClosureEntered)
                             {
-                                // A Closure was entered; caller's IP was already advanced and a new frame is active.
+                                // Do not advance the instruction pointer, because this is not the
+                                // same Chunk this iteration started with. Now the pointer refers to
+                                // the closure's Chunk instruction pointer and pointed at its first
+                                // instruction. Use continue so the first instruction is evaluated
+                                // and not skipped.
                                 continue;
                             }
 
+                            // An interop call would have already returned and this is the same Chunk
+                            // this iteration started with, and no function Chunk instructions need to
+                            // be evaluated.
                             break;
                         }
 
@@ -94,13 +102,13 @@ namespace Chow.Interpreter
 
                     case OperationCode.In:
                         {
-                            ExecuteIn(negate: false);
+                            EvaluateIn(negate: false);
                             break;
                         }
 
                     case OperationCode.NotIn:
                         {
-                            ExecuteIn(negate: true);
+                            EvaluateIn(negate: true);
                             break;
                         }
 
@@ -280,7 +288,7 @@ namespace Chow.Interpreter
 
                     case OperationCode.PopExpressionStatementResult:
                         {
-                            _valStack.Pop();
+                            lastExprStmntValue = _valStack.Pop();
                             break;
                         }
 
@@ -290,19 +298,19 @@ namespace Chow.Interpreter
 
                     case OperationCode.Subscript:
                         {
-                            ExecuteSubscript();
+                            EvaluateSubscript();
                             break;
                         }
 
                     case OperationCode.SubscriptSlice:
                         {
-                            ExecuteSubscriptSlice();
+                            EvaluateSubscriptSlice();
                             break;
                         }
 
                     case OperationCode.SubscriptSet:
                         {
-                            ExecuteSubscriptSet();
+                            EvaluateSubscriptSet();
                             break;
                         }
 
@@ -333,7 +341,7 @@ namespace Chow.Interpreter
                 _callStack.MoveToNextInstruction();
             }
 
-            return ValStackTop;
+            return lastExprStmntValue;
         }
 
         // No longer used in codebase, only here for old tests that used it
@@ -671,7 +679,7 @@ namespace Chow.Interpreter
             _valStack.Push(operand.CreateStr());
         }
 
-        void ExecuteIn(bool negate)
+        void EvaluateIn(bool negate)
         {
             var container = _valStack.Pop();
             var needle = _valStack.Pop();
@@ -702,7 +710,7 @@ namespace Chow.Interpreter
 
         #region Subscript Methods
 
-        void ExecuteSubscript()
+        void EvaluateSubscript()
         {
             var index = _valStack.Pop();
             var target = _valStack.Pop();
@@ -718,11 +726,8 @@ namespace Chow.Interpreter
                 {
                     throw new DictKeyException(ex.KeyRepr, GetCurrentLineNumber());
                 }
-
-                return;
             }
-
-            if (target.DataType == DataType.List)
+            else if (target.DataType == DataType.List)
             {
                 if (index.DataType != DataType.Int)
                 {
@@ -730,13 +735,14 @@ namespace Chow.Interpreter
                 }
 
                 _valStack.Push(((InternalList)target.ToObject())[(int)index.ToInt64()]);
-                return;
             }
-
-            throw new TypeException($"'{ParseDataTypeName(target.DataType)}' object is not subscriptable");
+            else
+            {
+                throw new TypeException($"'{ParseDataTypeName(target.DataType)}' object is not subscriptable");
+            }
         }
 
-        void ExecuteSubscriptSlice()
+        void EvaluateSubscriptSlice()
         {
             var step = _valStack.Pop();
             var stop = _valStack.Pop();
@@ -752,7 +758,7 @@ namespace Chow.Interpreter
             _valStack.Push(((InternalList)target.ToObject()).GetSlice(start, stop, step));
         }
 
-        void ExecuteSubscriptSet()
+        void EvaluateSubscriptSet()
         {
             var value = _valStack.Pop();
             var index = _valStack.Pop();
@@ -761,10 +767,8 @@ namespace Chow.Interpreter
             if (target.DataType == DataType.Dict)
             {
                 ((InternalDict)target.ToObject())[index] = value;
-                return;
             }
-
-            if (target.DataType == DataType.List)
+            else if (target.DataType == DataType.List)
             {
                 if (index.DataType != DataType.Int)
                 {
@@ -772,10 +776,11 @@ namespace Chow.Interpreter
                 }
 
                 ((InternalList)target.ToObject())[(int)index.ToInt64()] = value;
-                return;
             }
-
-            throw new TypeException($"'{ParseDataTypeName(target.DataType)}' object does not support item assignment");
+            else
+            {
+                throw new TypeException($"'{ParseDataTypeName(target.DataType)}' object does not support item assignment");
+            }
         }
 
         #endregion
@@ -801,6 +806,7 @@ namespace Chow.Interpreter
             }
             else if (target.DataType == DataType.Dict)
             {
+                // TODO: Create a ToInternalDict and ToInternalList to clean this up
                 var dict = (InternalDict)target.ToObject();
 
                 if (!dict.HasMethod(attrName))
