@@ -5,25 +5,6 @@ using Chow.Interpreter.Values;
 using Chow.Interpreter.Values.DataTypes;
 namespace Chow.Interpreter
 {
-    enum BuiltInType
-    {
-        Print,
-        Input,
-        Clear,
-        Float,
-        Str,
-        Int,
-        Bool,
-        List,
-        Dict,
-        Len,
-        Type,
-        Abs,
-        Round,
-        Min,
-        Max,
-        Range
-    }
 
     static class BuiltIns
     {

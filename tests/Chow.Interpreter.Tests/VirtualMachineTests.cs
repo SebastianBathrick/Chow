@@ -22,7 +22,7 @@ namespace Chow.Interpreter.Tests
         static ChowValue Execute(Chunk chunk)
         {
             var vm = new VirtualMachine(chunk, new Scope());
-            vm.EvaluateChunk();
+            vm.EvaluateChunkNoValue();
             return vm.ValStackTop;
         }
 
@@ -34,7 +34,7 @@ namespace Chow.Interpreter.Tests
             new SemanticAnalyzer(tree).Analyze();
             var chunk = new Compiler(tree).CompileRoot();
             var scope = new Scope();
-            new VirtualMachine(chunk, scope).EvaluateChunk();
+            new VirtualMachine(chunk, scope).EvaluateChunkNoValue();
             return scope.GetVariableValue("__r");
         }
 
@@ -357,7 +357,7 @@ namespace Chow.Interpreter.Tests
             });
 
             var vm = new VirtualMachine(chunk, new Scope());
-            vm.EvaluateChunk();
+            vm.EvaluateChunkNoValue();
             var result = vm.ValStackTop;
 
             AssertIntegerResult(result, 5);
@@ -374,7 +374,7 @@ namespace Chow.Interpreter.Tests
             });
 
             var vm = new VirtualMachine(chunk, new Scope());
-            vm.EvaluateChunk();
+            vm.EvaluateChunkNoValue();
             var result = vm.ValStackTop;
 
             AssertIntegerResult(result, 7);
@@ -393,7 +393,7 @@ namespace Chow.Interpreter.Tests
             });
 
             var vm = new VirtualMachine(chunk, new Scope());
-            vm.EvaluateChunk();
+            vm.EvaluateChunkNoValue();
             var result = vm.ValStackTop;
 
             AssertIntegerResult(result, 3);

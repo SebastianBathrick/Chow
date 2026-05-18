@@ -1,6 +1,7 @@
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State;
 using Chow.Interpreter.Values;
+using System;
 namespace Chow.Interpreter
 {
     /// <summary>
@@ -10,6 +11,8 @@ namespace Chow.Interpreter
     public class ChowModule
     {
         readonly Scope _globalScope = new Scope();
+
+        #region Indexer
 
         /// <summary>Gets the values of and declares variables and functions declared/defined in the global scope.</summary>
         /// <param name="name">Name of variable or function to set/get.</param>
@@ -33,6 +36,8 @@ namespace Chow.Interpreter
             }
         }
 
+        #endregion
+
         /// <summary>Initializes a ChowModule with built-in functions.</summary>
         public ChowModule()
         {
@@ -42,9 +47,10 @@ namespace Chow.Interpreter
             }
         }
 
+
         /// <summary>Compiles and executes a string containing Chow source code.</summary>
         /// <param name="sourceCode">String containing Chow source code or null.</param>
-        public void Execute(string sourceCode)
+        public ChowValue Execute(string sourceCode)
         {
             var scanner = new Scanner(sourceCode);
             var tokens = scanner.ScanTokens();
@@ -54,12 +60,91 @@ namespace Chow.Interpreter
 
             var semanticAnalyzer = new SemanticAnalyzer(syntaxTreeRoot);
             semanticAnalyzer.Analyze();
-
+               
             var compiler = new Compiler(syntaxTreeRoot);
             var chunk = compiler.CompileRoot();
 
             var vm = new VirtualMachine(_globalScope, chunk);
-            vm.EvaluateChunk();
+            return vm.EvaluateChunk();
         }
+
+        public ChowValue Call(string functionName, params object[] args)
+        {
+            throw new NotImplementedException();
+        }
+
+        #region Global Scope API Methods
+
+        public ChowValue GetGlobal(string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetGlobal(string name, ChowValue value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsGlobal(string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+
+        #region Built-Ins API Methods
+
+        public void EnableBuiltIns(params BuiltInType[] types)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void EnableAllBuiltIns()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DisableBuiltIns(params BuiltInType[] types)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DisableAllBuiltIns()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetBuiltIn(BuiltInType type, Func<ChowValue[], ChowValue> builtInFunc)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetBuiltIn(BuiltInType type, Func<ChowValue, ChowValue> builtInFunc)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetBuiltIn(BuiltInType type, Func<ChowValue> builtInFunc)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetBuiltIn(BuiltInType type, Action<ChowValue[]> builtInAction)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetBuiltIn(BuiltInType type, Action<ChowValue> builtInAction)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetBuiltIn(BuiltInType type, Action builtInAction)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
     }
 }

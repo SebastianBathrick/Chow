@@ -46,7 +46,7 @@ namespace Chow.Interpreter
 
         #region Public API
 
-        public Scope EvaluateChunk()
+        public ChowValue EvaluateChunk()
         {
             while (_callStack.IsInstrToRun)
             {
@@ -193,7 +193,7 @@ namespace Chow.Interpreter
                     case OperationCode.ForIterNextOrJump:
                         {
                             // Peek the iterator (kept on stack for the whole loop); push next value or jump to exhaust target.
-                            var iter = _valStack.Peek().AsType<IChowIterator>();
+                            var iter = (IChowIterator)_valStack.Peek().ToObject();
 
                             if (iter.TryMoveNext(out var current))
                             {
@@ -272,7 +272,8 @@ namespace Chow.Interpreter
 
                     case OperationCode.PushReturnValue:
                         {
-                            PushReturnValue();
+                            _callStack.ExitFunctionCall();
+
                             // Caller's IP was advanced before the call; resume the caller without auto-advancing the freshly-restored frame.
                             continue;
                         }
@@ -332,6 +333,14 @@ namespace Chow.Interpreter
                 _callStack.MoveToNextInstruction();
             }
 
+            return ValStackTop;
+        }
+
+        // No longer used in codebase, only here for old tests that used it
+        // The ChowModule already has a reference to the global scope, not the potential value that remains on the stack.
+        public Scope EvaluateChunkNoValue()
+        {
+            EvaluateChunk();
             return _globalScope;
         }
 
@@ -354,9 +363,9 @@ namespace Chow.Interpreter
 
             if (args != null)
             {
-                foreach (var arg in args)
+                for(int i = 0; i < args.Count; i++)
                 {
-                    _valStack.Push(arg);
+                    _valStack.Push(args[i]);
                 }
             }
 
@@ -373,15 +382,6 @@ namespace Chow.Interpreter
         #endregion
 
         #region Push/Pop Methods
-
-        void PushReturnValue()
-        {
-            // TODO: Revisit this after the scope system is refactored, this push-pop dance will likely be avoidable
-            var result = _valStack.Pop();
-            _callStack.ExitFunctionCall();
-
-            _valStack.Push(result);
-        }
 
         void PushVariableValue()
         {
@@ -487,7 +487,8 @@ namespace Chow.Interpreter
 
         void PushNewClosureFromTemplate()
         {
-            var template = _valStack.Pop().AsType<ClosureTemplate>();
+            // Type guarenteed to be at top of stack
+            var template = (ClosureTemplate)_valStack.Pop().ToObject();
 
             var captured = _callStack.CurrentScope;
             var closure = new Closure(template.Chunk, captured, template.Name, template.ParamCount);
@@ -512,12 +513,12 @@ namespace Chow.Interpreter
             var calleeValue = _valStack.Pop();
 
             // If the ChowValue is storing a closure inside (i.e. a function made up of bytecode)
-            isClosureEntered = calleeValue.IsOfType<Closure>();
+            isClosureEntered = calleeValue.DataType == DataType.Object && calleeValue.ToObject() is Closure;
 
             if (isClosureEntered)
             {
                 // Switches to the closure's frame, so EvaluateChunk will next execute the first instruction of the closure's chunk.
-                PushClosureStackFrame(argCount, calleeValue.AsType<Closure>(), args);
+                PushClosureStackFrame(argCount, (Closure)calleeValue.ToObject(), args);
             }
             else
             {
@@ -678,11 +679,11 @@ namespace Chow.Interpreter
 
             if (container.DataType == DataType.Dict)
             {
-                found = container.AsType<InternalDict>().ContainsKey(needle);
+                found = ((InternalDict)container.ToObject()).ContainsKey(needle);
             }
             else if (container.DataType == DataType.List)
             {
-                var list = container.AsType<InternalList>();
+                var list = (InternalList)container.ToObject();
 
                 for (var i = 0; i < list.Count && !found; i++)
                 {
@@ -711,7 +712,7 @@ namespace Chow.Interpreter
             {
                 try
                 {
-                    _valStack.Push(target.AsType<InternalDict>()[index]);
+                    _valStack.Push(((InternalDict)target.ToObject())[index]);
                 }
                 catch (DictKeyException ex)
                 {
@@ -728,7 +729,7 @@ namespace Chow.Interpreter
                     throw new TypeException($"list indices must be integers, not {index.DataType}");
                 }
 
-                _valStack.Push(target.AsType<InternalList>()[(int)index.AsType<long>()]);
+                _valStack.Push(((InternalList)target.ToObject())[(int)index.ToInt64()]);
                 return;
             }
 
@@ -748,7 +749,7 @@ namespace Chow.Interpreter
                 throw new TypeException($"'{target.DataType}' object is not subscriptable");
             }
 
-            _valStack.Push(target.AsType<InternalList>().GetSlice(start, stop, step));
+            _valStack.Push(((InternalList)target.ToObject()).GetSlice(start, stop, step));
         }
 
         void ExecuteSubscriptSet()
@@ -759,7 +760,7 @@ namespace Chow.Interpreter
 
             if (target.DataType == DataType.Dict)
             {
-                target.AsType<InternalDict>()[index] = value;
+                ((InternalDict)target.ToObject())[index] = value;
                 return;
             }
 
@@ -770,7 +771,7 @@ namespace Chow.Interpreter
                     throw new TypeException($"list indices must be integers, not {index.DataType}");
                 }
 
-                target.AsType<InternalList>()[(int)index.AsType<long>()] = value;
+                ((InternalList)target.ToObject())[(int)index.ToInt64()] = value;
                 return;
             }
 
@@ -789,7 +790,7 @@ namespace Chow.Interpreter
             // TODO: class instances add a branch that consults the instance attribute table, then the class method table.
             if (target.DataType == DataType.List)
             {
-                var list = target.AsType<InternalList>();
+                var list = (InternalList)target.ToObject();
 
                 if (!list.HasMethod(attrName))
                 {
@@ -800,7 +801,7 @@ namespace Chow.Interpreter
             }
             else if (target.DataType == DataType.Dict)
             {
-                var dict = target.AsType<InternalDict>();
+                var dict = (InternalDict)target.ToObject();
 
                 if (!dict.HasMethod(attrName))
                 {

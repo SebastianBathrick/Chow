@@ -758,7 +758,7 @@ namespace Chow.Interpreter.Values
 
         // These methods can be indirectly accessed via the AsType<T>() method. Even the VirtualMachine does not need direct access to these.
 
-        bool ToBool()
+        internal bool ToBool()
         {
             switch (DataType)
             {
@@ -803,7 +803,7 @@ namespace Chow.Interpreter.Values
             throw new InvalidOperationException();
         }
 
-        long ToInt64()
+        internal long ToInt64()
         {
             switch (DataType)
             {
@@ -848,7 +848,7 @@ namespace Chow.Interpreter.Values
             throw new InvalidOperationException();
         }
 
-        double ToFloat64()
+        internal double ToFloat64()
         {
             switch (DataType)
             {
@@ -893,7 +893,7 @@ namespace Chow.Interpreter.Values
             throw new InvalidOperationException();
         }
 
-        object ToObject()
+        internal object ToObject()
         {
             switch (DataType)
             {
@@ -926,7 +926,7 @@ namespace Chow.Interpreter.Values
             throw new InvalidOperationException();
         }
 
-        string ToStr()
+        internal string ToStr()
         {
             switch (DataType)
             {
