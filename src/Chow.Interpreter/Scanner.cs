@@ -8,12 +8,14 @@ using Chow.Interpreter.Values.DataTypes;
 namespace Chow.Interpreter
 {
     /// <summary>
+    /// <para>
     /// Instances facilitate the first phase of the interpreter, lexical analysis/scanning. The client provides source
     /// code via an argument passed to an instance's constructor.
+    /// </para>
     /// <para>
     /// To begin lexical analysis, the client must call the <see cref="ScanTokens"/> method, which tokenizes the source
-    /// code and returns a list of <see cref="Token"/>s. After <see cref="ScanTokens"/> returns its value, the client
-    /// should discard the Scanner instance, because it will be considered dirty.
+    /// code and returns a list of <see cref="Token"/>s. After <see cref="ScanTokens"/>, the Scanner instance will be
+    /// considered dirty, and cannot be used again.
     /// </para>
     /// </summary>
     sealed class Scanner
@@ -53,7 +55,8 @@ namespace Chow.Interpreter
         }
 
         /// <summary>
-        /// Scans the source code string provided during this instance's initialization, and generates a list of tokens.
+        /// Scans the source code string provided during this instance's initialization, and
+        /// generates a list of tokens.
         /// </summary>
         /// <returns>A list of tokens representing the scanned source code in the order they appear.</returns>
         public List<Token> ScanTokens()
