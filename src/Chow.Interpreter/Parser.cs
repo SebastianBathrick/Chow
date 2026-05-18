@@ -78,16 +78,19 @@ namespace Chow.Interpreter
                     continue;
                 }
 
-                var hasBlock = newStatement is FunctionNode || newStatement is IfStatementNode || newStatement is WhileStatementNode ||
-                    newStatement is ForStatementNode;
+                var isFuncOrCompound = newStatement is FunctionNode 
+                    || newStatement is IfStatementNode 
+                    || newStatement is WhileStatementNode 
+                    || newStatement is ForStatementNode;
 
-                if (hasBlock)
+                if (isFuncOrCompound)
                 {
                     TryConsumeCurrentTokenType(TokenType.Newline);
                     continue;
                 }
 
                 ConsumeToken(TokenType.Newline, "Expected newline after statement.");
+                isComplete = IsCurrentTokenType(TokenType.EndOfCode);
             }
 
             ConsumeToken(TokenType.EndOfCode, "Expected end of code.");
