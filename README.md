@@ -1,5 +1,5 @@
 # Chow
-**Chow** is an interpreter library for a Python-like embedded scripting language, written entirely in C#, and available on platforms such as .NET, Mono, and Unity3D. It's an in-development library with many new features on the horizon, so stay tuned.
+**Chow** is a mini-Python interpreter, written entirely in C#, available on platforms such as .NET, Mono, and Unity3D. It's an in-development library with many new features on the horizon, so stay tuned.
 
 ## Features
 ### Library:
