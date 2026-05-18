@@ -9,7 +9,6 @@ using Chow.Interpreter.SyntaxTrees.Scope;
 using Chow.Interpreter.SyntaxTrees.Statements;
 using Chow.Interpreter.SyntaxTrees.Subscripts;
 using Chow.Interpreter.Tokens;
-using System.Linq;
 using Chow.Interpreter.Values;
 using Chow.Interpreter.Values.DataTypes;
 namespace Chow.Interpreter

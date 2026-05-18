@@ -6,6 +6,10 @@ using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Values.DataTypes;
 namespace Chow.Interpreter.Values
 {
+    /// <summary>
+    /// Represents an immutable Chow value of varying Chow data types, with the main types being:
+    /// <b>int, float, str, bool, None, list, dict, and range</b>.
+    /// </summary>
     public readonly struct ChowValue
     {
 
@@ -23,6 +27,7 @@ namespace Chow.Interpreter.Values
             { typeof(InternalList), DataType.List }
         };
 
+        /// <summary>Represents the ChowValue equivalent to null/nil/none values.</summary>
         public static readonly ChowValue None = new ChowValue(DataType.None);
 
         readonly bool _boolValue;
@@ -148,6 +153,11 @@ namespace Chow.Interpreter.Values
 
         #region Type Inspection
 
+        /// <summary>Casts Chow value to specified host type, boxes, and returns it.</summary>
+        /// <typeparam name="TDataType">The type the value will be casted to.</typeparam>
+        /// <returns>The boxed and converted Chow value.</returns>
+        /// <exception cref="InvalidOperationException">Throws an exception if the value stored 
+        /// in this instance cannot be converted to the target type.</exception>
         public TDataType AsType<TDataType>()
         {
             var typeOf = typeof(TDataType);
@@ -179,6 +189,7 @@ namespace Chow.Interpreter.Values
                         // For T == int we truncate; for T == long we return the full 64-bit value.
                         if (typeOf == typeof(int))
                         {
+                            // TODO: Add error checking for overflow scenarios
                             return (TDataType)(object)(int)ToInt64();
                         }
 
@@ -208,6 +219,10 @@ namespace Chow.Interpreter.Values
             throw new InvalidOperationException($"Cannot convert {DataType} to {typeof(TDataType)}");
         }
 
+        /// <summary>Whether the Chow value of this instance is of the provided data type.</summary>
+        /// <typeparam name="TDataType">The data type to compare to the Chow value's data type.</typeparam>
+        /// <returns>True if the Chow value of this instance is of type <typeparamref name=
+        /// "TDataType"/>; otherwise, false.</returns>
         public bool IsOfType<TDataType>()
         {
             var checkType = typeof(TDataType);
@@ -670,11 +685,19 @@ namespace Chow.Interpreter.Values
 
         #region Object Overrides
 
+        /// <summary>
+        /// If this is of the same type as <paramref name="obj"/> and the Chow values are the same 
+        /// or if either's Chow value can be converted to the other's type and they are equal after 
+        /// conversion, then true; otherwise, false.
+        /// </summary>
+        /// <param name="obj">The object to compare with this instance or <c>null</c>.</param>
+        /// <returns><c>true</c> if the objects are equal; otherwise, <c>false</c>.</returns>
         public override bool Equals(object obj)
         {
             return obj is ChowValue other && IsEqualTo(other);
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             switch (DataType)
@@ -712,6 +735,10 @@ namespace Chow.Interpreter.Values
             }
         }
 
+        /// <summary>
+        /// Returns a string representation of this instance with the same format as a Chow <b>str</b> value.
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return ToStr();

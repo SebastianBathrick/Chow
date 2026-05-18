@@ -11,11 +11,9 @@ namespace Chow.Interpreter
     {
         readonly Scope _globalScope = new Scope();
 
-        /// <summary>
-        /// Gets the values of and declares variables and functions declared in the global scope.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <exception cref="GlobalAccessException"></exception>
+        /// <summary>Gets the values of and declares variables and functions declared/defined in the global scope.</summary>
+        /// <param name="name">Name of variable or function to set/get.</param>
+        /// <exception cref="GlobalAccessException">Thrown if the value being retrieved is undefined in the global scope.</exception>
         public object this[string name]
         {
             get
@@ -35,6 +33,7 @@ namespace Chow.Interpreter
             }
         }
 
+        /// <summary>Initializes a ChowModule with built-in functions.</summary>
         public ChowModule()
         {
             foreach (var type in BuiltIns.AllTypes)

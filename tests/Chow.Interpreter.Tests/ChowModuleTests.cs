@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using Chow.Interpreter.Exceptions;
 namespace Chow.Interpreter.Tests
 {
