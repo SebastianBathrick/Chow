@@ -1,4 +1,3 @@
-using Chow.Execution;
 using Chow.Interpreter;
 using System.Diagnostics;
 using ReplLoop = Chow.Repl.Repl;
@@ -6,17 +5,13 @@ using ReplLoop = Chow.Repl.Repl;
 
 namespace Chow.Cli
 {
-    /// <summary>
-    /// Dispatches command-line input to the appropriate Chow CLI behavior.
-    /// </summary>
     sealed class CliApp
     {
-        readonly IChowExecutor _executor;
+        readonly ChowModule _module;
 
-
-        public CliApp(IChowExecutor executor)
+        public CliApp(ChowModule module)
         {
-            _executor = executor ?? throw new ArgumentNullException(nameof(executor));
+            _module = module ?? throw new ArgumentNullException(nameof(module));
         }
         
         public int Run(string[] args)
@@ -28,7 +23,7 @@ namespace Chow.Cli
 
             if (args.Length == 0)
             {
-                var repl = new ReplLoop(_executor);
+                var repl = new ReplLoop(_module);
                 return repl.Run();
             }
 
@@ -56,7 +51,7 @@ namespace Chow.Cli
             try
             {
                 var sourceCode = File.ReadAllText(filePath);
-                _executor.Execute(sourceCode);
+                _module.Execute(sourceCode);
                 return ExitCodes.Success;
             }
             catch (Exception ex) when (!ExceptionPolicy.IsFatal(ex))

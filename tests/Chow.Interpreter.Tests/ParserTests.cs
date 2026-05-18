@@ -1068,5 +1068,17 @@ namespace Chow.Interpreter.Tests
             Assert.That(() => ParseStmt(source), Throws.TypeOf<ParserEx>());
         }
 
+        // ------------------------------------------------------------------------------------------------------------
+        // Regression tests
+        // ------------------------------------------------------------------------------------------------------------
+
+        [Test]
+        public void BuildTree_ExpressionStatementWithTrailingNewline_DoesNotThrow()
+        {
+            // Regression: after consuming the trailing newline on a non-block statement, isComplete was
+            // not updated. The loop re-entered with EndOfCode as the current token and threw "Expected statement."
+            Assert.That(() => new Parser(new Scanner("print(\"Hello World\")\n").ScanTokens()).BuildTree(), Throws.Nothing);
+        }
+
     }
 }

@@ -1,37 +1,21 @@
 using Chow.Cli;
-using Chow.Execution;
+using Chow.Interpreter;
 namespace Chow.Repl
 {
-    /// <summary>
-    /// Runs the interactive Chow read-evaluate-print loop.
-    /// </summary>
     sealed class Repl
     {
-        readonly IChowExecutor _executor;
+        readonly ChowModule _module;
         readonly ConsoleLineEditor _lineEditor;
         readonly PromptStyle _promptStyle;
 
-        /// <summary>
-        /// Initializes a REPL using the default console line editor and prompt style.
-        /// </summary>
-        /// <param name="executor">Executes submitted Chow source code.</param>
-        public Repl(IChowExecutor executor)
-            : this(executor, new ConsoleLineEditor(), PromptStyle.Default)
+        public Repl(ChowModule module)
+            : this(module, new ConsoleLineEditor(), PromptStyle.Default)
         {
         }
 
-        /// <summary>
-        /// Initializes a REPL with explicit input and prompt dependencies.
-        /// </summary>
-        /// <param name="executor">Executes submitted Chow source code.</param>
-        /// <param name="lineEditor">Reads interactive user submissions.</param>
-        /// <param name="promptStyle">Defines the prompt text displayed by the REPL.</param>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="executor"/> or <paramref name="lineEditor"/> is <see langword="null"/>.
-        /// </exception>
-        public Repl(IChowExecutor executor, ConsoleLineEditor lineEditor, PromptStyle promptStyle)
+        public Repl(ChowModule module, ConsoleLineEditor lineEditor, PromptStyle promptStyle)
         {
-            _executor = executor ?? throw new ArgumentNullException(nameof(executor));
+            _module = module ?? throw new ArgumentNullException(nameof(module));
             _lineEditor = lineEditor ?? throw new ArgumentNullException(nameof(lineEditor));
             _promptStyle = promptStyle;
         }
@@ -132,7 +116,7 @@ namespace Chow.Repl
 
             try
             {
-                _executor.Execute(sourceCode);
+                _module.Execute(sourceCode);
             }
             catch (Exception ex) when (!ExceptionPolicy.IsFatal(ex))
             {
