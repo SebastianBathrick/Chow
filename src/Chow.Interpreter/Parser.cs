@@ -14,17 +14,18 @@ using Chow.Interpreter.Values.DataTypes;
 namespace Chow.Interpreter
 {
     /// <summary>
-    ///     Instances perform syntax analysis on a list of <see cref="Token" />. The client provides the list of tokens from
-    ///     the interpreter's scanning phase via an argument passed to the Parser instance's constructor.
-    ///     <para>
-    ///         To begin syntax analysis, the client calls <see cref="BuildTree" />, which iterates over each token to
-    ///         determine
-    ///         whether the source code's grammar is valid and which constructs it is trying to define. While doing so, it
-    ///         builds
-    ///         an abstract syntax tree that outlines the constructs and any relevant information from the tokens. Once the
-    ///         tree
-    ///         is complete, BuildTree returns a <see cref="Node" /> object representing the root of the abstract syntax tree.
-    ///         After this point, the client should discard the Parser instance, because it will be considered dirty.
+    /// <para>
+    /// Instances perform syntax analysis on a list of <see cref="Token" />. The client provides
+    /// the list of tokens from the interpreter's scanning phase via an argument passed to the
+    /// Parser instance's constructor.
+    /// </para>
+    /// <para>
+    /// To begin syntax analysis, the client calls <see cref="BuildTree" />, which iterates over
+    /// each token to determine whether the source code's grammar is valid and which constructs it
+    /// is trying to define. While doing so, it builds an abstract syntax tree that outlines the
+    /// constructs and any relevant information from the tokens. Once the tree is complete,
+    /// BuildTree returns a <see cref="Node" /> object representing the root of the abstract syntax
+    /// tree.
     ///     </para>
     /// </summary>
     sealed class Parser
