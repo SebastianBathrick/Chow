@@ -1657,7 +1657,7 @@ namespace Chow.Interpreter.Tests
         public void Call_UndefinedName_ThrowsGlobalAccessException()
         {
             var module = NewModule();
-            Assert.That(() => module.Call("nope"), Throws.TypeOf<GlobalAccessException>()
+            Assert.That(() => module.InvokeVariable("nope"), Throws.TypeOf<GlobalAccessException>()
                 .With.Property(nameof(GlobalAccessException.Name)).EqualTo("nope"));
         }
 
@@ -1668,7 +1668,7 @@ namespace Chow.Interpreter.Tests
 
             try
             {
-                module.Call("missing_func", 1, 2);
+                module.InvokeVariable("missing_func", 1, 2);
                 Assert.Fail();
             }
             catch (GlobalAccessException ex)
@@ -1682,7 +1682,7 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             module["x"] = 42;
-            Assert.That(() => module.Call("x"), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeVariable("x"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -1690,7 +1690,7 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             module["s"] = "hello";
-            Assert.That(() => module.Call("s"), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeVariable("s"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -1698,7 +1698,7 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             module["b"] = true;
-            Assert.That(() => module.Call("b"), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeVariable("b"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -1706,7 +1706,7 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             module["d"] = 1.5;
-            Assert.That(() => module.Call("d"), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeVariable("d"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -1714,7 +1714,7 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             module.Execute("xs = [1, 2, 3]");
-            Assert.That(() => module.Call("xs"), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeVariable("xs"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -1722,7 +1722,7 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             module.Execute("def f(x):\n    return x");
-            Assert.That(() => module.Call("f", new object?[] { null }!),
+            Assert.That(() => module.InvokeVariable("f", new object?[] { null }!),
                 Throws.TypeOf<ArgumentNullException>());
         }
 
@@ -1736,7 +1736,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module["host"] = (Func<ChowValue[], ChowValue>)(_ => new ChowValue(123L));
 
-            var result = module.Call("host");
+            var result = module.InvokeVariable("host");
 
             Assert.That(result.AsType<long>(), Is.EqualTo(123L));
         }
@@ -1747,7 +1747,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module["host"] = (Func<ChowValue[], ChowValue>)(args => new ChowValue(args[0].AsType<long>() * 2));
 
-            var result = module.Call("host", 7);
+            var result = module.InvokeVariable("host", 7);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(14L));
         }
@@ -1764,7 +1764,7 @@ namespace Chow.Interpreter.Tests
                 return new ChowValue($"{i}|{s}|{b}");
             });
 
-            var result = module.Call("host", 5, "abc", true);
+            var result = module.InvokeVariable("host", 5, "abc", true);
 
             Assert.That(result.AsType<string>(), Is.EqualTo("5|abc|True"));
         }
@@ -1775,7 +1775,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module["host"] = (Func<ChowValue[], ChowValue>)(args => args[0]);
 
-            var result = module.Call("host", 9_999_999_999L);
+            var result = module.InvokeVariable("host", 9_999_999_999L);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(9_999_999_999L));
         }
@@ -1786,7 +1786,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module["host"] = (Func<ChowValue[], ChowValue>)(args => args[0]);
 
-            var result = module.Call("host", 2.5);
+            var result = module.InvokeVariable("host", 2.5);
 
             Assert.That(result.AsType<double>(), Is.EqualTo(2.5));
         }
@@ -1802,8 +1802,8 @@ namespace Chow.Interpreter.Tests
                 return ChowValue.None;
             });
 
-            module.Call("host");
-            module.Call("host");
+            module.InvokeVariable("host");
+            module.InvokeVariable("host");
 
             Assert.That(count, Is.EqualTo(2));
         }
@@ -1819,7 +1819,7 @@ namespace Chow.Interpreter.Tests
                 return ChowValue.None;
             });
 
-            module.Call("host");
+            module.InvokeVariable("host");
 
             Assert.That(receivedLength, Is.EqualTo(0));
         }
@@ -1828,7 +1828,7 @@ namespace Chow.Interpreter.Tests
         public void Call_BuiltinAbs_NegativeInt_ReturnsAbsolute()
         {
             var module = NewModule();
-            var result = module.Call("abs", -42);
+            var result = module.InvokeVariable("abs", -42);
             Assert.That(result.AsType<long>(), Is.EqualTo(42L));
         }
 
@@ -1836,7 +1836,7 @@ namespace Chow.Interpreter.Tests
         public void Call_BuiltinLen_String_ReturnsLength()
         {
             var module = NewModule();
-            var result = module.Call("len", "hello");
+            var result = module.InvokeVariable("len", "hello");
             Assert.That(result.AsType<long>(), Is.EqualTo(5L));
         }
 
@@ -1844,7 +1844,7 @@ namespace Chow.Interpreter.Tests
         public void Call_BuiltinStr_Int_ReturnsString()
         {
             var module = NewModule();
-            var result = module.Call("str", 7);
+            var result = module.InvokeVariable("str", 7);
             Assert.That(result.AsType<string>(), Is.EqualTo("7"));
         }
 
@@ -1852,7 +1852,7 @@ namespace Chow.Interpreter.Tests
         public void Call_BuiltinMin_TwoInts_ReturnsLower()
         {
             var module = NewModule();
-            var result = module.Call("min", 3, 1);
+            var result = module.InvokeVariable("min", 3, 1);
             Assert.That(result.AsType<long>(), Is.EqualTo(1L));
         }
 
@@ -1860,7 +1860,7 @@ namespace Chow.Interpreter.Tests
         public void Call_BuiltinMax_TwoInts_ReturnsHigher()
         {
             var module = NewModule();
-            var result = module.Call("max", 3, 1);
+            var result = module.InvokeVariable("max", 3, 1);
             Assert.That(result.AsType<long>(), Is.EqualTo(3L));
         }
 
@@ -1874,7 +1874,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def f():\n    return 42");
 
-            var result = module.Call("f");
+            var result = module.InvokeVariable("f");
 
             Assert.That(result.AsType<long>(), Is.EqualTo(42L));
         }
@@ -1885,7 +1885,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def add(a, b):\n    return a + b");
 
-            var result = module.Call("add", 2, 3);
+            var result = module.InvokeVariable("add", 2, 3);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(5L));
         }
@@ -1896,7 +1896,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def sub(a, b):\n    return a - b");
 
-            var result = module.Call("sub", 10, 3);
+            var result = module.InvokeVariable("sub", 10, 3);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(7L));
         }
@@ -1907,7 +1907,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def join(a, b):\n    return a + b");
 
-            var result = module.Call("join", "foo", "bar");
+            var result = module.InvokeVariable("join", "foo", "bar");
 
             Assert.That(result.AsType<string>(), Is.EqualTo("foobar"));
         }
@@ -1918,7 +1918,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def f():\n    x = 1");
 
-            var result = module.Call("f");
+            var result = module.InvokeVariable("f");
 
             Assert.That(result.DataType, Is.EqualTo(DataType.None));
         }
@@ -1929,7 +1929,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def add(a, b):\n    return a + b");
 
-            Assert.That(() => module.Call("add", 1), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeVariable("add", 1), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -1938,7 +1938,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def add(a, b):\n    return a + b");
 
-            Assert.That(() => module.Call("add", 1, 2, 3), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeVariable("add", 1, 2, 3), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -1947,8 +1947,8 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def square(x):\n    return x * x");
 
-            var first = module.Call("square", 3);
-            var second = module.Call("square", 5);
+            var first = module.InvokeVariable("square", 3);
+            var second = module.InvokeVariable("square", 5);
 
             Assert.Multiple(() =>
             {
@@ -1963,7 +1963,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("base = 100\ndef addBase(x):\n    return base + x");
 
-            var result = module.Call("addBase", 7);
+            var result = module.InvokeVariable("addBase", 7);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(107L));
         }
@@ -1975,7 +1975,7 @@ namespace Chow.Interpreter.Tests
             module["base"] = 50;
             module.Execute("def addBase(x):\n    return base + x");
 
-            var result = module.Call("addBase", 4);
+            var result = module.InvokeVariable("addBase", 4);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(54L));
         }
@@ -1986,7 +1986,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def inc(x):\n    return x + 1\ndef twice(x):\n    return inc(inc(x))");
 
-            var result = module.Call("twice", 5);
+            var result = module.InvokeVariable("twice", 5);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(7L));
         }
@@ -1997,7 +1997,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def fact(n):\n    if n <= 1:\n        return 1\n    return n * fact(n - 1)");
 
-            var result = module.Call("fact", 5);
+            var result = module.InvokeVariable("fact", 5);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(120L));
         }
@@ -2008,7 +2008,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def absPlusOne(x):\n    return abs(x) + 1");
 
-            var result = module.Call("absPlusOne", -10);
+            var result = module.InvokeVariable("absPlusOne", -10);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(11L));
         }
@@ -2019,7 +2019,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def add(a, b):\n    return a + b");
 
-            var result = module.Call("add", true, 5);
+            var result = module.InvokeVariable("add", true, 5);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(6L));
         }
@@ -2030,7 +2030,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def halve(x):\n    return x / 2");
 
-            var result = module.Call("halve", 5.0);
+            var result = module.InvokeVariable("halve", 5.0);
 
             Assert.That(result.AsType<double>(), Is.EqualTo(2.5));
         }
@@ -2043,7 +2043,7 @@ namespace Chow.Interpreter.Tests
             module.Execute("b = 2");
             module.Execute("def sum():\n    return a + b");
 
-            var result = module.Call("sum");
+            var result = module.InvokeVariable("sum");
 
             Assert.That(result.AsType<long>(), Is.EqualTo(3L));
         }
@@ -2054,9 +2054,9 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def get():\n    return v");
             module["v"] = 10;
-            var first = module.Call("get");
+            var first = module.InvokeVariable("get");
             module["v"] = 20;
-            var second = module.Call("get");
+            var second = module.InvokeVariable("get");
 
             Assert.Multiple(() =>
             {
@@ -2071,7 +2071,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def makeAdder():\n    def add(a, b):\n        return a + b\n    return add\nadder = makeAdder()");
 
-            var result = module.Call("adder", 4, 6);
+            var result = module.InvokeVariable("adder", 4, 6);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(10L));
         }
@@ -2082,7 +2082,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def identity(x):\n    return x");
 
-            var result = module.Call("identity", "world");
+            var result = module.InvokeVariable("identity", "world");
 
             Assert.That(result.AsType<string>(), Is.EqualTo("world"));
         }
@@ -2115,7 +2115,7 @@ namespace Chow.Interpreter.Tests
 
             foreach (var name in AllBuiltInNames)
             {
-                Assert.That(() => module.Call(name), Throws.TypeOf<GlobalAccessException>(), $"Expected '{name}' to be undefined");
+                Assert.That(() => module.InvokeVariable(name), Throws.TypeOf<GlobalAccessException>(), $"Expected '{name}' to be undefined");
             }
         }
 
@@ -2124,7 +2124,7 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             module.DisableBuiltIns(BuiltInType.Len);
-            module.EnableBuiltIns(BuiltInType.Len);
+            module.ToggleBuiltIns(BuiltInType.Len);
             var result = module.Execute("len(\"abcd\")");
             Assert.That(result.AsType<long>(), Is.EqualTo(4L));
         }
@@ -2137,7 +2137,7 @@ namespace Chow.Interpreter.Tests
             module.EnableAllBuiltIns();
             Assert.That(module.Execute("len(\"abc\")").AsType<long>(), Is.EqualTo(3L));
             Assert.That(module.Execute("abs(-7)").AsType<long>(), Is.EqualTo(7L));
-            Assert.That(() => module.Call("range", 1L, 5L), Throws.Nothing);
+            Assert.That(() => module.InvokeVariable("range", 1L, 5L), Throws.Nothing);
         }
 
         [Test]
@@ -2159,7 +2159,7 @@ namespace Chow.Interpreter.Tests
         public void EnableBuiltIns_NullArray_DoesNotThrow()
         {
             var module = NewModule();
-            Assert.That(() => module.EnableBuiltIns(null), Throws.Nothing);
+            Assert.That(() => module.ToggleBuiltIns(null), Throws.Nothing);
         }
 
         #endregion
@@ -2195,7 +2195,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             var ran = false;
             module.SetBuiltIn(BuiltInType.Clear, () => { ran = true; });
-            var result = module.Call("clear");
+            var result = module.InvokeVariable("clear");
             Assert.That(ran, Is.True);
             Assert.That(result.DataType, Is.EqualTo(DataType.None));
         }
@@ -2206,7 +2206,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.SetBuiltIn(BuiltInType.Len, (ChowValue _) => new ChowValue(999L));
             module.DisableBuiltIns(BuiltInType.Len);
-            module.EnableBuiltIns(BuiltInType.Len);
+            module.ToggleBuiltIns(BuiltInType.Len);
             var result = module.Execute("len(\"abc\")");
             Assert.That(result.AsType<long>(), Is.EqualTo(999L));
         }
@@ -2216,8 +2216,8 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             module.SetBuiltIn(BuiltInType.Len, (ChowValue _) => new ChowValue(7L));
-            module.EnableBuiltIns(BuiltInType.Len);
-            module.EnableBuiltIns(BuiltInType.Len);
+            module.ToggleBuiltIns(BuiltInType.Len);
+            module.ToggleBuiltIns(BuiltInType.Len);
             Assert.That(module.Execute("len(\"x\")").AsType<long>(), Is.EqualTo(7L));
         }
 
@@ -2228,7 +2228,7 @@ namespace Chow.Interpreter.Tests
             Assert.That(
                 () => module.SetBuiltIn(BuiltInType.Range, (Func<ChowValue[], ChowValue>)(args => new ChowValue((long)args.Length))),
                 Throws.Nothing);
-            Assert.That(module.Call("range", 1L, 2L, 3L).AsType<long>(), Is.EqualTo(3L));
+            Assert.That(module.InvokeVariable("range", 1L, 2L, 3L).AsType<long>(), Is.EqualTo(3L));
         }
 
         [Test]
@@ -2248,14 +2248,14 @@ namespace Chow.Interpreter.Tests
         public void DefaultBuiltIn_TooFewArgs_ThrowsTypeException()
         {
             var module = NewModule();
-            Assert.That(() => module.Call("len"), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeVariable("len"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
         public void DefaultBuiltIn_TooManyArgs_ThrowsTypeException()
         {
             var module = NewModule();
-            Assert.That(() => module.Call("range", 1L, 2L, 3L, 4L), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeVariable("range", 1L, 2L, 3L, 4L), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -2263,8 +2263,8 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             module.SetBuiltIn(BuiltInType.Len, (Func<ChowValue[], ChowValue>)(args => new ChowValue(0L)));
-            Assert.That(() => module.Call("len"), Throws.TypeOf<TypeException>());
-            Assert.That(() => module.Call("len", "a", "b"), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeVariable("len"), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeVariable("len", "a", "b"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -2361,7 +2361,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void BuiltInDefinition_Range_IsVariadic()
         {
-            var def = BuiltIns.DefinitionOf(BuiltInType.Range);
+            var def = BuiltIns.SignitureOf(BuiltInType.Range);
             Assert.That(def.IsVariadic, Is.True);
             Assert.That(def.HasParameters, Is.True);
         }
@@ -2369,7 +2369,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void BuiltInDefinition_Clear_IsNotVariadicAndHasNoParameters()
         {
-            var def = BuiltIns.DefinitionOf(BuiltInType.Clear);
+            var def = BuiltIns.SignitureOf(BuiltInType.Clear);
             Assert.That(def.IsVariadic, Is.False);
             Assert.That(def.HasParameters, Is.False);
         }
@@ -2377,7 +2377,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void BuiltInDefinition_Len_IsNotVariadicButHasParameters()
         {
-            var def = BuiltIns.DefinitionOf(BuiltInType.Len);
+            var def = BuiltIns.SignitureOf(BuiltInType.Len);
             Assert.That(def.IsVariadic, Is.False);
             Assert.That(def.HasParameters, Is.True);
         }

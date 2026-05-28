@@ -3,7 +3,7 @@ using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Values;
 namespace Chow.Interpreter
 {
-    readonly struct BuiltInDefinition
+    readonly struct FunctionSignature
     {
         public string Name { get; }
         public Func<ChowValue[], ChowValue> Implementation { get; }
@@ -13,7 +13,7 @@ namespace Chow.Interpreter
         public bool IsVariadic => MaximumArguments != MinimumArguments;
 
 
-        public BuiltInDefinition(string name, Func<ChowValue[], ChowValue> implementation, int minimumArguments, int maximumArguments)
+        public FunctionSignature(string name, Func<ChowValue[], ChowValue> implementation, int minimumArguments, int maximumArguments)
         {
             Name = name;
             Implementation = implementation;
@@ -21,7 +21,7 @@ namespace Chow.Interpreter
             MaximumArguments = maximumArguments;
         }
 
-        public BuiltInDefinition(string name, Func<ChowValue[], ChowValue> implementation, int reqArgCount)
+        public FunctionSignature(string name, Func<ChowValue[], ChowValue> implementation, int reqArgCount)
         {
             Name = name;
             Implementation = implementation;

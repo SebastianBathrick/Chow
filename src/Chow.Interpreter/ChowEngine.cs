@@ -41,7 +41,7 @@ namespace Chow.Interpreter
             return vm.EvaluateChunk();
         }
 
-        internal static ChowValue CallModuleFunction(Scope moduleGlobalScope, string functionName, ChowValue[] args)
+        internal static ChowValue InvokeChowFunction(Scope moduleGlobalScope, string functionName, ChowValue[] args)
         {
             var vm = new VirtualMachine(moduleGlobalScope);
             return vm.CallGlobalFunction(functionName, args);

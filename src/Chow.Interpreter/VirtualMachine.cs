@@ -537,7 +537,7 @@ namespace Chow.Interpreter
 
         void CallInteropFunction(int argCount, ChowValue calleeValue, ChowValue[] args)
         {
-            _valStack.Push(calleeValue.CallInterop(args));
+            _valStack.Push(calleeValue.InvokeHostDelegate(args));
         }
 
         void PushClosureStackFrame(int argCount, Closure closure, ChowValue[] args)

@@ -8,30 +8,30 @@ namespace Chow.Interpreter
 
     static class BuiltIns
     {
-        static readonly Dictionary<BuiltInType, BuiltInDefinition> Definitions =
-            new Dictionary<BuiltInType, BuiltInDefinition>
+        static readonly Dictionary<BuiltInType, FunctionSignature> Definitions =
+            new Dictionary<BuiltInType, FunctionSignature>
             {
-                { BuiltInType.Print, new BuiltInDefinition("print", Print, 1) },
-                { BuiltInType.Input, new BuiltInDefinition("input", Input, 0, 1) },
-                { BuiltInType.Clear, new BuiltInDefinition("clear", Clear, 0) },
-                { BuiltInType.Float, new BuiltInDefinition("float", Float, 1) },
-                { BuiltInType.Str, new BuiltInDefinition("str", Str, 1) },
-                { BuiltInType.Int, new BuiltInDefinition("int", Int, 1) },
-                { BuiltInType.Bool, new BuiltInDefinition("bool", Bool, 1) },
-                { BuiltInType.List, new BuiltInDefinition("list", List, 0, 1) },
-                { BuiltInType.Dict, new BuiltInDefinition("dict", Dict, 0, 1) },
-                { BuiltInType.Len, new BuiltInDefinition("len", Len, 1) },
-                { BuiltInType.Type, new BuiltInDefinition("type", Type, 1) },
-                { BuiltInType.Abs, new BuiltInDefinition("abs", Abs, 1) },
-                { BuiltInType.Round, new BuiltInDefinition("round", Round, 1) },
-                { BuiltInType.Min, new BuiltInDefinition("min", Min, 2) },
-                { BuiltInType.Max, new BuiltInDefinition("max", Max, 2) },
-                { BuiltInType.Range, new BuiltInDefinition("range", Range, 1, 3) }
+                { BuiltInType.Print, new FunctionSignature("print", Print, 1) },
+                { BuiltInType.Input, new FunctionSignature("input", Input, 0, 1) },
+                { BuiltInType.Clear, new FunctionSignature("clear", Clear, 0) },
+                { BuiltInType.Float, new FunctionSignature("float", Float, 1) },
+                { BuiltInType.Str, new FunctionSignature("str", Str, 1) },
+                { BuiltInType.Int, new FunctionSignature("int", Int, 1) },
+                { BuiltInType.Bool, new FunctionSignature("bool", Bool, 1) },
+                { BuiltInType.List, new FunctionSignature("list", List, 0, 1) },
+                { BuiltInType.Dict, new FunctionSignature("dict", Dict, 0, 1) },
+                { BuiltInType.Len, new FunctionSignature("len", Len, 1) },
+                { BuiltInType.Type, new FunctionSignature("type", Type, 1) },
+                { BuiltInType.Abs, new FunctionSignature("abs", Abs, 1) },
+                { BuiltInType.Round, new FunctionSignature("round", Round, 1) },
+                { BuiltInType.Min, new FunctionSignature("min", Min, 2) },
+                { BuiltInType.Max, new FunctionSignature("max", Max, 2) },
+                { BuiltInType.Range, new FunctionSignature("range", Range, 1, 3) }
             };
 
         public static IEnumerable<BuiltInType> AllTypes => Definitions.Keys;
 
-        public static BuiltInDefinition DefinitionOf(BuiltInType type)
+        public static FunctionSignature SignitureOf(BuiltInType type)
         {
             return Definitions[type];
         }

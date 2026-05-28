@@ -91,7 +91,7 @@ namespace Chow.Interpreter.State
         /// <summary>True if <paramref name="name"/> is bound in the module scope.</summary>
         public bool IsGlobalDefined(string name)
         {
-            return ModuleScope.IsVariableDefined(name);
+            return ModuleScope.ContainsVariable(name);
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace Chow.Interpreter.State
         {
             for (var s = CurrFrame.Scope.ParentOrNull; s != null && !ReferenceEquals(s, _moduleLvl.Scope); s = s.ParentOrNull)
             {
-                if (s.IsVariableDefined(name))
+                if (s.ContainsVariable(name))
                 {
                     return s;
                 }
@@ -141,7 +141,7 @@ namespace Chow.Interpreter.State
         {
             for (var s = CurrFrame.Scope; s != null; s = s.ParentOrNull)
             {
-                if (s.IsVariableDefined(name))
+                if (s.ContainsVariable(name))
                 {
                     return true;
                 }
@@ -160,7 +160,7 @@ namespace Chow.Interpreter.State
         {
             for (var s = CurrFrame.Scope; s != null; s = s.ParentOrNull)
             {
-                if (s.IsVariableDefined(name))
+                if (s.ContainsVariable(name))
                 {
                     return s.GetVariableValue(name);
                 }

@@ -119,8 +119,8 @@ namespace Chow.Interpreter.Tests
 
             Assert.Multiple(() =>
             {
-                Assert.That(stack.CurrentScope.IsVariableDefined("x"), Is.True);
-                Assert.That(module.IsVariableDefined("x"), Is.False);
+                Assert.That(stack.CurrentScope.ContainsVariable("x"), Is.True);
+                Assert.That(module.ContainsVariable("x"), Is.False);
             });
         }
 

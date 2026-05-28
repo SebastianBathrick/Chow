@@ -83,7 +83,7 @@ namespace Chow.Interpreter.Tests
 
             Assert.Multiple(() =>
             {
-                Assert.That(closure.Enclosing.IsVariableDefined("x"), Is.True);
+                Assert.That(closure.Enclosing.ContainsVariable("x"), Is.True);
                 Assert.That(closure.Enclosing.GetVariableValue("x"), Is.EqualTo(Int(42)));
             });
         }

@@ -673,7 +673,7 @@ namespace Chow.Interpreter.Values
 
         #region Interop
 
-        internal ChowValue CallInterop(ChowValue[] args)
+        internal ChowValue InvokeHostDelegate(ChowValue[] args)
         {
             if (DataType != DataType.Object)
             {

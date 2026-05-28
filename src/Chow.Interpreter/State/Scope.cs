@@ -22,7 +22,7 @@ namespace Chow.Interpreter.State
         }
 
         /// <summary>True if <paramref name="name"/> is bound in this scope. Does not consult <see cref="ParentOrNull"/>.</summary>
-        public bool IsVariableDefined(string name)
+        public bool ContainsVariable(string name)
         {
             return _varMap.ContainsKey(name);
         }
@@ -46,7 +46,7 @@ namespace Chow.Interpreter.State
         /// Removes the binding for <paramref name="name"/> from this scope. Returns <c>true</c> if a binding
         /// was removed, <c>false</c> if no such binding existed. Does not consult <see cref="ParentOrNull"/>.
         /// </summary>
-        public bool RemoveVariable(string name)
+        public bool TryRemoveVariable(string name)
         {
             return _varMap.Remove(name);
         }
