@@ -3,7 +3,7 @@ namespace Chow.Interpreter.Tests
     [TestFixture]
     public class ChowEngineTests
     {
-        #region Execute_ExpressionStatement_ReturnsCorrectValue Logic & Declarations
+        #region Execute - Arithmetic
         
         //=========================================================================================
         // Constants
@@ -573,6 +573,50 @@ namespace Chow.Interpreter.Tests
                 
         #endregion
         
+        #region Execute - Input Handling
         
+        //=========================================================================================
+        // Constants
+        //=========================================================================================
+        
+        // --- Source code without logic ---
+        const string CHOW_SOURCE_CODE_NULL = null!;
+        const string CHOW_SOURCE_CODE_EMPTY = "";
+        const string CHOW_SOURCE_CODE_SPACES = "   ";
+        const string CHOW_SOURCE_CODE_DOUBLE_NEWLINE = "\n\n";
+        const string CHOW_SOURCE_CODE_TAB = "\t";
+        const string CHOW_SOURCE_CODE_LONE_COMMENT = "# Lone comment";
+        const string CHOW_SOURCE_CODE_CRLF = "\r\n";
+        const string CHOW_SOURCE_CODE_NEWLINE = "\n";
+        const string CHOW_SOURCE_CODE_CR = "\r";
+        const string CHOW_SOURCE_CODE_COMMENT_LEADING_SPACES = 
+            "         # Comment with leading spaces";
+        const string CHOW_SOURCE_CODE_COMMENT_BETWEEN_BLANK_LINES =
+            "\n# Comment between two blank lines\n";
+        const string CHOW_SOURCE_CODE_QUAD_NEWLINE = "\n\n\n\n";
+
+        //=========================================================================================
+        // Methods
+        //=========================================================================================
+
+        [TestCase(CHOW_SOURCE_CODE_NULL)]
+        [TestCase(CHOW_SOURCE_CODE_EMPTY)]
+        [TestCase(CHOW_SOURCE_CODE_SPACES)]
+        [TestCase(CHOW_SOURCE_CODE_DOUBLE_NEWLINE)]
+        [TestCase(CHOW_SOURCE_CODE_TAB)]
+        [TestCase(CHOW_SOURCE_CODE_LONE_COMMENT)]
+        [TestCase(CHOW_SOURCE_CODE_CRLF)]
+        [TestCase(CHOW_SOURCE_CODE_NEWLINE)]
+        [TestCase(CHOW_SOURCE_CODE_CR)]
+        [TestCase(CHOW_SOURCE_CODE_COMMENT_LEADING_SPACES)]
+        [TestCase(CHOW_SOURCE_CODE_COMMENT_BETWEEN_BLANK_LINES)]
+        [TestCase(CHOW_SOURCE_CODE_QUAD_NEWLINE)]
+        public void Execute_SourceCodeWithoutLogic_ThrowsNothing(string? sourceCode)
+        {
+            ChowEngine.Reset();
+            Assert.That(() => ChowEngine.Execute(sourceCode), Throws.Nothing);
+        }
+
+        #endregion
     }
 }
