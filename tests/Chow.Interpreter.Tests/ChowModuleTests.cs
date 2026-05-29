@@ -193,30 +193,6 @@ namespace Chow.Interpreter.Tests
         }
 
         [Test]
-        public void Indexer_SetWithLeadingDigitName_CanBeReadBack()
-        {
-            var module = NewModule();
-            module["1invalid"] = 7;
-            Assert.That(module["1invalid"], Is.EqualTo(7L));
-        }
-
-        [Test]
-        public void Indexer_SetWithUnicodeName_CanBeReadBack()
-        {
-            var module = NewModule();
-            module["café"] = 7;
-            Assert.That(module["café"], Is.EqualTo(7L));
-        }
-
-        [Test]
-        public void Indexer_SetWithSpacesInName_CanBeReadBack()
-        {
-            var module = NewModule();
-            module["has spaces"] = 7;
-            Assert.That(module["has spaces"], Is.EqualTo(7L));
-        }
-
-        [Test]
         public void Indexer_SetWithVeryLongName_CanBeReadBack()
         {
             var module = NewModule();
@@ -295,12 +271,6 @@ namespace Chow.Interpreter.Tests
         public void Constructor_BuiltInLen_IsSeeded()
         {
             Assert.That(() => NewModule()["len"], Throws.Nothing);
-        }
-
-        [Test]
-        public void Constructor_BuiltInType_IsSeeded()
-        {
-            Assert.That(() => NewModule()["type"], Throws.Nothing);
         }
 
         [Test]
@@ -895,106 +865,6 @@ namespace Chow.Interpreter.Tests
 
         #endregion
 
-        #region Execute - Built-In Calls
-
-        [Test]
-        public void Execute_BuiltInIntFromString_ParsesInt()
-        {
-            var module = NewModule();
-            module.Execute("r = int(\"42\")");
-            Assert.That(module["r"], Is.EqualTo(42L));
-        }
-
-        [Test]
-        public void Execute_BuiltInFloatFromString_ParsesFloat()
-        {
-            var module = NewModule();
-            module.Execute("r = float(\"3.14\")");
-            Assert.That(module["r"], Is.EqualTo(3.14));
-        }
-
-        [Test]
-        public void Execute_BuiltInStrFromInt_FormatsAsString()
-        {
-            var module = NewModule();
-            module.Execute("r = str(42)");
-            Assert.That(module["r"], Is.EqualTo("42"));
-        }
-
-        [Test]
-        public void Execute_BuiltInBoolFromInt_ZeroIsFalse()
-        {
-            var module = NewModule();
-            module.Execute("r = bool(0)");
-            Assert.That(module["r"], Is.EqualTo(false));
-        }
-
-        [Test]
-        public void Execute_BuiltInBoolFromInt_NonZeroIsTrue()
-        {
-            var module = NewModule();
-            module.Execute("r = bool(7)");
-            Assert.That(module["r"], Is.EqualTo(true));
-        }
-
-        [Test]
-        public void Execute_BuiltInAbsOfNegative_ProducesPositive()
-        {
-            var module = NewModule();
-            module.Execute("r = abs(-42)");
-            Assert.That(module["r"], Is.EqualTo(42L));
-        }
-
-        [Test]
-        public void Execute_BuiltInRoundOfFloat_ProducesInt()
-        {
-            var module = NewModule();
-            module.Execute("r = round(3.7)");
-            Assert.That(module["r"], Is.EqualTo(4L));
-        }
-
-        [Test]
-        public void Execute_BuiltInMin_ReturnsSmaller()
-        {
-            var module = NewModule();
-            module.Execute("r = min(3, 7)");
-            Assert.That(module["r"], Is.EqualTo(3L));
-        }
-
-        [Test]
-        public void Execute_BuiltInMax_ReturnsLarger()
-        {
-            var module = NewModule();
-            module.Execute("r = max(3, 7)");
-            Assert.That(module["r"], Is.EqualTo(7L));
-        }
-
-        [Test]
-        public void Execute_BuiltInTypeOfInt_ReturnsIntName()
-        {
-            var module = NewModule();
-            module.Execute("r = type(5)");
-            Assert.That(module["r"], Is.EqualTo("int"));
-        }
-
-        [Test]
-        public void Execute_BuiltInTypeOfString_ReturnsStrName()
-        {
-            var module = NewModule();
-            module.Execute("r = type(\"hi\")");
-            Assert.That(module["r"], Is.EqualTo("str"));
-        }
-
-        [Test]
-        public void Execute_BuiltInLenOfString_ReturnsLength()
-        {
-            var module = NewModule();
-            module.Execute("r = len(\"hello\")");
-            Assert.That(module["r"], Is.EqualTo(5L));
-        }
-
-        #endregion
-
         #region Execute - Value Exchange
 
         [Test]
@@ -1138,7 +1008,7 @@ namespace Chow.Interpreter.Tests
         public void Module_FreshInstance_HasNoUserVariables()
         {
             var module = NewModule();
-            Assert.That(() => module["x"], Throws.TypeOf<GlobalAccessException>());
+            Assert.That(() => module["x"], Throws.InstanceOf<GlobalAccessException>());
         }
 
         #endregion

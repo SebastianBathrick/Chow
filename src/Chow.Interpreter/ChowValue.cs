@@ -678,7 +678,7 @@ namespace Chow.Interpreter
         {
             if (DataType != DataType.Object)
             {
-                throw new InvalidOperationException($"'{DataType}' object is not callable");
+                throw new TypeException($"'{DataType}' object is not callable");
             }
 
             if (_objectValue is Func<ChowValue[], ChowValue> methodDelegate)

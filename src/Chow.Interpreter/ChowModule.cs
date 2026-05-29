@@ -30,15 +30,13 @@ namespace Chow.Interpreter
         /// <see langword="string"/> name.
         /// </para>
         /// <para>
-        /// When getting a variable value, if it is undefined, then <see langword="null"/> will be
-        /// returned.
-        /// </para>
-        /// <para>
         /// When setting a variable value, if the variable is undefined, a new variable is declared
         /// and initialized to the provided value.
         /// </para>
         /// </summary>
         /// <param name="name">Name of the variable or function to set/get.</param>
+        /// <exception cref="GlobalAccessException">Thrown when <paramref name="name"/> is
+        /// not defined in this module's global scope.</exception>
         public object this[string name]
         {
             get
@@ -54,7 +52,7 @@ namespace Chow.Interpreter
                     return _globalScope.GetVariableValue(name).AsType<object>();
                 }
 
-                return null;
+                throw new GlobalAccessException(name, $"name '{name}' is not defined");
             }
             set
             {
