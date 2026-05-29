@@ -267,11 +267,11 @@ namespace Chow.Interpreter
             {
                 case ConversionCase.PromoteToInt:
                 {
-                    return new ChowValue(PromoteToLong() + rightOperand.PromoteToLong());
+                    return new ChowValue(PromoteToInt64() + rightOperand.PromoteToInt64());
                 }
                 case ConversionCase.PromoteToFloat:
                 {
-                    return new ChowValue(PromoteToDouble() + rightOperand.PromoteToDouble());
+                    return new ChowValue(PromoteToFloat64() + rightOperand.PromoteToFloat64());
                 }
                 case ConversionCase.NoConversion:
                 {
@@ -298,11 +298,11 @@ namespace Chow.Interpreter
             {
                 case ConversionCase.PromoteToInt:
                 {
-                    return new ChowValue(PromoteToLong() - rightOperand.PromoteToLong());
+                    return new ChowValue(PromoteToInt64() - rightOperand.PromoteToInt64());
                 }
                 case ConversionCase.PromoteToFloat:
                 {
-                    return new ChowValue(PromoteToDouble() - rightOperand.PromoteToDouble());
+                    return new ChowValue(PromoteToFloat64() - rightOperand.PromoteToFloat64());
                 }
             }
 
@@ -315,11 +315,11 @@ namespace Chow.Interpreter
             {
                 case ConversionCase.PromoteToInt:
                 {
-                    return new ChowValue(PromoteToLong() * rightOperand.PromoteToLong());
+                    return new ChowValue(PromoteToInt64() * rightOperand.PromoteToInt64());
                 }
                 case ConversionCase.PromoteToFloat:
                 {
-                    return new ChowValue(PromoteToDouble() * rightOperand.PromoteToDouble());
+                    return new ChowValue(PromoteToFloat64() * rightOperand.PromoteToFloat64());
                 }
                 case ConversionCase.NoConversion:
                 {
@@ -358,14 +358,14 @@ namespace Chow.Interpreter
             {
                 case ConversionCase.PromoteToFloat:
                 {
-                    var divisor = rightOperand.PromoteToDouble();
+                    var divisor = rightOperand.PromoteToFloat64();
 
                     if (divisor == 0.0)
                     {
                         throw new ZeroDivisionException();
                     }
 
-                    return new ChowValue(PromoteToDouble() / divisor);
+                    return new ChowValue(PromoteToFloat64() / divisor);
                 }
             }
 
@@ -379,8 +379,8 @@ namespace Chow.Interpreter
             {
                 case ConversionCase.PromoteToInt:
                 {
-                    var a = PromoteToLong();
-                    var b = rightOperand.PromoteToLong();
+                    var a = PromoteToInt64();
+                    var b = rightOperand.PromoteToInt64();
 
                     if (b == 0L)
                     {
@@ -391,8 +391,8 @@ namespace Chow.Interpreter
                 }
                 case ConversionCase.PromoteToFloat:
                 {
-                    var l = PromoteToDouble();
-                    var r = rightOperand.PromoteToDouble();
+                    var l = PromoteToFloat64();
+                    var r = rightOperand.PromoteToFloat64();
 
                     if (r == 0.0)
                     {
@@ -414,8 +414,8 @@ namespace Chow.Interpreter
             {
                 case ConversionCase.PromoteToInt:
                 {
-                    var a = PromoteToLong();
-                    var b = rightOperand.PromoteToLong();
+                    var a = PromoteToInt64();
+                    var b = rightOperand.PromoteToInt64();
 
                     if (b == 0L)
                     {
@@ -433,14 +433,14 @@ namespace Chow.Interpreter
                 }
                 case ConversionCase.PromoteToFloat:
                 {
-                    var divisor = rightOperand.PromoteToDouble();
+                    var divisor = rightOperand.PromoteToFloat64();
 
                     if (divisor == 0.0)
                     {
                         throw new ZeroDivisionException();
                     }
 
-                    return new ChowValue(Math.Floor(PromoteToDouble() / divisor));
+                    return new ChowValue(Math.Floor(PromoteToFloat64() / divisor));
                 }
             }
 
@@ -455,7 +455,7 @@ namespace Chow.Interpreter
             // type-keyed map. Every other dispatch path defers to DataTypeConversionMap.
             var conv = LookupBinary(ExpressionOperator.Exponentiate, rightOperand);
 
-            if (conv == ConversionCase.PromoteToInt && rightOperand.PromoteToLong() < 0)
+            if (conv == ConversionCase.PromoteToInt && rightOperand.PromoteToInt64() < 0)
             {
                 conv = ConversionCase.PromoteToFloat;
             }
@@ -467,11 +467,11 @@ namespace Chow.Interpreter
                     // Exponent is non-negative here (negative-exp routed to float above). Exact integer
                     // exponentiation avoids the 2^53 precision ceiling of (long)Math.Pow. Overflow wraps
                     // silently — matches prior behavior; arbitrary-precision int is a separate concern.
-                    return new ChowValue(IntPow(PromoteToLong(), rightOperand.PromoteToLong()));
+                    return new ChowValue(IntPow(PromoteToInt64(), rightOperand.PromoteToInt64()));
                 }
                 case ConversionCase.PromoteToFloat:
                 {
-                    return new ChowValue(Math.Pow(PromoteToDouble(), rightOperand.PromoteToDouble()));
+                    return new ChowValue(Math.Pow(PromoteToFloat64(), rightOperand.PromoteToFloat64()));
                 }
             }
 
@@ -495,11 +495,11 @@ namespace Chow.Interpreter
             {
                 case ConversionCase.PromoteToInt:
                 {
-                    return new ChowValue(-PromoteToLong());
+                    return new ChowValue(-PromoteToInt64());
                 }
                 case ConversionCase.PromoteToFloat:
                 {
-                    return new ChowValue(-PromoteToDouble());
+                    return new ChowValue(-PromoteToFloat64());
                 }
             }
 
@@ -530,11 +530,11 @@ namespace Chow.Interpreter
             {
                 case ConversionCase.PromoteToInt:
                 {
-                    return PromoteToLong() == other.PromoteToLong();
+                    return PromoteToInt64() == other.PromoteToInt64();
                 }
                 case ConversionCase.PromoteToFloat:
                 {
-                    return PromoteToDouble() == other.PromoteToDouble();
+                    return PromoteToFloat64() == other.PromoteToFloat64();
                 }
                 case ConversionCase.NoConversion:
                 {
@@ -551,11 +551,11 @@ namespace Chow.Interpreter
             {
                 case ConversionCase.PromoteToInt:
                 {
-                    return PromoteToLong() != other.PromoteToLong();
+                    return PromoteToInt64() != other.PromoteToInt64();
                 }
                 case ConversionCase.PromoteToFloat:
                 {
-                    return PromoteToDouble() != other.PromoteToDouble();
+                    return PromoteToFloat64() != other.PromoteToFloat64();
                 }
                 case ConversionCase.NoConversion:
                 {
@@ -572,11 +572,11 @@ namespace Chow.Interpreter
             {
                 case ConversionCase.PromoteToInt:
                 {
-                    return PromoteToLong() < other.PromoteToLong();
+                    return PromoteToInt64() < other.PromoteToInt64();
                 }
                 case ConversionCase.PromoteToFloat:
                 {
-                    return PromoteToDouble() < other.PromoteToDouble();
+                    return PromoteToFloat64() < other.PromoteToFloat64();
                 }
                 case ConversionCase.NoConversion:
                 {
@@ -598,11 +598,11 @@ namespace Chow.Interpreter
             {
                 case ConversionCase.PromoteToInt:
                 {
-                    return PromoteToLong() > other.PromoteToLong();
+                    return PromoteToInt64() > other.PromoteToInt64();
                 }
                 case ConversionCase.PromoteToFloat:
                 {
-                    return PromoteToDouble() > other.PromoteToDouble();
+                    return PromoteToFloat64() > other.PromoteToFloat64();
                 }
                 case ConversionCase.NoConversion:
                 {
@@ -624,11 +624,11 @@ namespace Chow.Interpreter
             {
                 case ConversionCase.PromoteToInt:
                 {
-                    return PromoteToLong() <= other.PromoteToLong();
+                    return PromoteToInt64() <= other.PromoteToInt64();
                 }
                 case ConversionCase.PromoteToFloat:
                 {
-                    return PromoteToDouble() <= other.PromoteToDouble();
+                    return PromoteToFloat64() <= other.PromoteToFloat64();
                 }
                 case ConversionCase.NoConversion:
                 {
@@ -650,11 +650,11 @@ namespace Chow.Interpreter
             {
                 case ConversionCase.PromoteToInt:
                 {
-                    return PromoteToLong() >= other.PromoteToLong();
+                    return PromoteToInt64() >= other.PromoteToInt64();
                 }
                 case ConversionCase.PromoteToFloat:
                 {
-                    return PromoteToDouble() >= other.PromoteToDouble();
+                    return PromoteToFloat64() >= other.PromoteToFloat64();
                 }
                 case ConversionCase.NoConversion:
                 {
@@ -1108,7 +1108,8 @@ namespace Chow.Interpreter
             return new TypeException($"bad operand type for unary {op}: '{DataType}'");
         }
 
-        long PromoteToLong()
+        // TODO: These are redundant, the ToX methods should be used instead.
+        long PromoteToInt64()
         {
             switch (DataType)
             {
@@ -1127,7 +1128,7 @@ namespace Chow.Interpreter
             }
         }
 
-        double PromoteToDouble()
+        double PromoteToFloat64()
         {
             switch (DataType)
             {
