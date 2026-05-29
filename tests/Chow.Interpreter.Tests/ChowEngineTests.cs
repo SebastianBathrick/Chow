@@ -1,7 +1,7 @@
 namespace Chow.Interpreter.Tests
 {
     [TestFixture]
-    public class ChowEngineImplTests
+    public class ChowEngineTests
     {
         #region Helpers
 
