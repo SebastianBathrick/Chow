@@ -35,7 +35,8 @@ namespace Chow.Interpreter
         // Chunk is null when the client is exclusively calling a closure
         public VirtualMachine(Scope globalScope = null, Chunk chunk = null)
         {
-            // TODO: Update tests so that this does not throw. VirtualMachine no longer instantiates its own global scope; the caller is responsible for that
+            // TODO: Update tests so that this does not throw. VirtualMachine no longer
+            // instantiates its own global scope; the caller is responsible for that
             _globalScope = globalScope;
             _callStack = new CallStack(chunk ?? new Chunk(), _globalScope);
             _valStack = new Stack<ChowValue>();
@@ -352,13 +353,14 @@ namespace Chow.Interpreter
             return _globalScope;
         }
 
-        /// <summary>
-        ///     Calls a function stored in a global variable with the name provided.
-        /// </summary>
-        /// <param name="callVarName">The name of a variable declared in the global scope. Caller is responsible for verifying the name is defined.</param>
-        /// <param name="args">The arguments to pass to the function. If there are not any, this parameter can be null.</param>
+        /// <summary>Calls a function stored in a global variable with the name provided.</summary>
+        /// <param name="callVarName">The name of a variable declared in the global scope. Caller
+        /// is responsible for verifying the name is defined.</param>
+        /// <param name="args">The arguments to pass to the function. If there are not any, this
+        /// parameter can be null.</param>
         /// <returns>The result of the function call.</returns>
-        /// <remarks>Assumes that there is a global scope already set up that was provided to the constructor.</remarks>
+        /// <remarks>Assumes that there is a global scope already set up that was provided to the
+        /// constructor.</remarks>
         public ChowValue CallGlobalFunction(string callVarName, ChowValue[] args)
         {
             _valStack.Push(_callStack.GetVariableValue(callVarName));
@@ -518,7 +520,8 @@ namespace Chow.Interpreter
             // If the ChowValue is storing a closure inside (i.e. a function made up of bytecode)
             if (isClosure)
             {
-                // Switches to the closure's frame, so EvaluateChunk will next execute the first instruction of the closure's chunk.
+                // Switches to the closure's frame, so EvaluateChunk will next execute the first
+                // instruction of the closure's chunk.
                 PushClosureStackFrame(argCount, (Closure)calleeValue.ToObject(), args);
             }
             else
@@ -737,7 +740,8 @@ namespace Chow.Interpreter
             }
             else
             {
-                throw new TypeException($"'{ParseDataTypeName(target.DataType)}' object is not subscriptable");
+                throw new TypeException(
+                    $"'{ParseDataTypeName(target.DataType)}' object is not subscriptable");
             }
         }
 
@@ -778,7 +782,8 @@ namespace Chow.Interpreter
             }
             else
             {
-                throw new TypeException($"'{ParseDataTypeName(target.DataType)}' object does not support item assignment");
+                throw new TypeException(
+                    $"'{ParseDataTypeName(target.DataType)}' object does not support item assignment");
             }
         }
 
