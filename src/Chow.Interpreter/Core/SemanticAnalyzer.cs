@@ -8,7 +8,7 @@ using Chow.Interpreter.SyntaxTrees.Literals;
 using Chow.Interpreter.SyntaxTrees.Scope;
 using Chow.Interpreter.SyntaxTrees.Statements;
 using Chow.Interpreter.SyntaxTrees.Subscripts;
-namespace Chow.Interpreter
+namespace Chow.Interpreter.Core
 {
     /// <summary>
     /// Performs name-resolution between parsing and compilation. Walks the AST and stamps every

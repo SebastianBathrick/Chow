@@ -4,7 +4,7 @@ using Chow.Interpreter.Bytecode;
 using Chow.Interpreter.DataTypes;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State;
-namespace Chow.Interpreter
+namespace Chow.Interpreter.Core
 {
     sealed class VirtualMachine
     {

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Chow.Interpreter.Core;
 namespace Chow.Interpreter.Bytecode
 {
     class Chunk
@@ -33,7 +34,7 @@ namespace Chow.Interpreter.Bytecode
         #region Instruction Methods
 
         /// <summary>Creates and adds a new <see cref="Instruction"/> with the provided operation code, operand, and line number </summary>
-        /// <param name="code">Operation code associated with the instruction's logic in the <see cref="Interpreter.VirtualMachine"/></param>
+        /// <param name="code">Operation code associated with the instruction's logic in the <see cref="VirtualMachine"/></param>
         /// <param name="line">The line number in the source code associated with this instruction.</param>
         /// <param name="operand">Optional operand for the instruction, default is -1.</param>
         public void AddInstruction(OperationCode code, int line, int operand = NO_OPERAND)

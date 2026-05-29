@@ -1,8 +1,9 @@
+using Chow.Interpreter.Core;
 namespace Chow.Interpreter.SyntaxTrees.Scope
 {
     /// <summary>
     /// How a name binding or reference resolves at runtime. Stamped onto name-bearing AST nodes by
-    /// <see cref="SemanticAnalyzer"/> so the <see cref="Chow.Interpreter.Compiler"/>
+    /// <see cref="SemanticAnalyzer"/> so the <see cref="Compiler"/>
     /// can emit the correct opcode without performing scope analysis itself.
     /// </summary>
     enum ScopeType

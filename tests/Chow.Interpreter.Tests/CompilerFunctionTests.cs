@@ -1,4 +1,5 @@
 using Chow.Interpreter.Bytecode;
+using Chow.Interpreter.Core;
 using Chow.Interpreter.DataTypes;
 namespace Chow.Interpreter.Tests
 {

@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Chow.Interpreter
+namespace Chow.Interpreter.StandardLibrary
 {
     readonly struct BuiltInDefinition
     {

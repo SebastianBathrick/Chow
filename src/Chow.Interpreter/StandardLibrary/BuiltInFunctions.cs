@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Chow.Interpreter.DataTypes;
 using Chow.Interpreter.Exceptions;
-namespace Chow.Interpreter
+namespace Chow.Interpreter.StandardLibrary
 {
     static class BuiltInFunctions
     {

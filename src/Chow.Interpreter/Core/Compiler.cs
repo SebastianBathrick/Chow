@@ -10,7 +10,7 @@ using Chow.Interpreter.SyntaxTrees.Literals;
 using Chow.Interpreter.SyntaxTrees.Scope;
 using Chow.Interpreter.SyntaxTrees.Statements;
 using Chow.Interpreter.SyntaxTrees.Subscripts;
-namespace Chow.Interpreter
+namespace Chow.Interpreter.Core
 {
     sealed class Compiler
     {

@@ -5,7 +5,7 @@ using System.Text;
 using Chow.Interpreter.DataTypes;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Tokens;
-namespace Chow.Interpreter
+namespace Chow.Interpreter.Core
 {
     /// <summary>
     /// <para>
