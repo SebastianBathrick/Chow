@@ -87,7 +87,7 @@ namespace Chow.Interpreter.Tests
 
             stack.EnterFunctionCall(closure);
 
-            Assert.That(stack.CurrentScope.ParentOrNull, Is.SameAs(closure.Enclosing));
+            Assert.That(stack.CurrentScope.Parent, Is.SameAs(closure.Enclosing));
         }
 
         [Test]
@@ -102,7 +102,7 @@ namespace Chow.Interpreter.Tests
             // Inner closure was defined inside the outer call, so it captures outerLocal.
             stack.EnterFunctionCall(NewClosure(outerLocal));
 
-            Assert.That(stack.CurrentScope.ParentOrNull, Is.SameAs(outerLocal));
+            Assert.That(stack.CurrentScope.Parent, Is.SameAs(outerLocal));
         }
 
         // ============================================================================================================

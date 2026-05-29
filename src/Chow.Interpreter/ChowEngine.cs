@@ -5,6 +5,8 @@ namespace Chow.Interpreter
 {
     public static class ChowEngine
     {
+        static ChowModule BuiltInsModule = null;
+        
         public static ChowValue ExecuteCode(string sourceCode)
         {
             var scanner = new Scanner(sourceCode);
@@ -45,6 +47,11 @@ namespace Chow.Interpreter
         {
             var vm = new VirtualMachine(moduleGlobalScope);
             return vm.CallGlobalFunction(functionName, args);
+        }
+
+        public static ChowModule GetBuiltIns()
+        {
+            
         }
     }
 }

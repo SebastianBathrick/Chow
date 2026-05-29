@@ -7,7 +7,7 @@ namespace Chow.Interpreter.State
     /// <summary>
     /// Owns the module frame plus a stack of function-call frames, and exposes scope-aware
     /// variable operations that route through the active frame. Implements the LEGB lookup
-    /// chain (L → E* → G) via <see cref="Scope.ParentOrNull"/> walking; assignments always
+    /// chain (L → E* → G) via <see cref="Scope.Parent"/> walking; assignments always
     /// land in the current frame's scope (Python local-by-default).
     /// </summary>
     class CallStack
@@ -122,7 +122,7 @@ namespace Chow.Interpreter.State
         // defines `name`. Throws KeyNotFoundException if none does.
         Scope FindNonlocalScope(string name)
         {
-            for (var s = CurrFrame.Scope.ParentOrNull; s != null && !ReferenceEquals(s, _moduleLvl.Scope); s = s.ParentOrNull)
+            for (var s = CurrFrame.Scope.Parent; s != null && !ReferenceEquals(s, _moduleLvl.Scope); s = s.Parent)
             {
                 if (s.ContainsVariable(name))
                 {
@@ -139,7 +139,7 @@ namespace Chow.Interpreter.State
         /// </summary>
         public bool IsVariableDefined(string name)
         {
-            for (var s = CurrFrame.Scope; s != null; s = s.ParentOrNull)
+            for (var s = CurrFrame.Scope; s != null; s = s.Parent)
             {
                 if (s.ContainsVariable(name))
                 {
@@ -158,7 +158,7 @@ namespace Chow.Interpreter.State
         /// </summary>
         public ChowValue GetVariableValue(string name)
         {
-            for (var s = CurrFrame.Scope; s != null; s = s.ParentOrNull)
+            for (var s = CurrFrame.Scope; s != null; s = s.Parent)
             {
                 if (s.ContainsVariable(name))
                 {

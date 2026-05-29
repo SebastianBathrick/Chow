@@ -14,7 +14,7 @@ namespace Chow.Interpreter.Tests
             return new ChowModule();
         }
 
-        static IEnumerable<string> AllBuiltInNames => BuiltIns.AllTypes.Select(BuiltIns.NameOf);
+        static IEnumerable<string> AllBuiltInNames => BuiltInModule.AllTypes.Select(BuiltInModule.NameOf);
 
         #endregion
 
@@ -2361,7 +2361,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void BuiltInDefinition_Range_IsVariadic()
         {
-            var def = BuiltIns.SignitureOf(BuiltInType.Range);
+            var def = BuiltInModule.SignitureOf(BuiltInType.Range);
             Assert.That(def.IsVariadic, Is.True);
             Assert.That(def.HasParameters, Is.True);
         }
@@ -2369,7 +2369,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void BuiltInDefinition_Clear_IsNotVariadicAndHasNoParameters()
         {
-            var def = BuiltIns.SignitureOf(BuiltInType.Clear);
+            var def = BuiltInModule.SignitureOf(BuiltInType.Clear);
             Assert.That(def.IsVariadic, Is.False);
             Assert.That(def.HasParameters, Is.False);
         }
@@ -2377,7 +2377,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void BuiltInDefinition_Len_IsNotVariadicButHasParameters()
         {
-            var def = BuiltIns.SignitureOf(BuiltInType.Len);
+            var def = BuiltInModule.SignitureOf(BuiltInType.Len);
             Assert.That(def.IsVariadic, Is.False);
             Assert.That(def.HasParameters, Is.True);
         }

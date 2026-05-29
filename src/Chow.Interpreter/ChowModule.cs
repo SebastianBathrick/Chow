@@ -12,29 +12,22 @@ namespace Chow.Interpreter
     /// </summary>
     public sealed class ChowModule
     {
-        readonly Scope _globalScope;
-        readonly Dictionary<BuiltInType, Func<ChowValue[], ChowValue>> _builtInOverrides
-            = new Dictionary<BuiltInType, Func<ChowValue[], ChowValue>>();
+        Scope _globalScope;
+        readonly List<string> _prevSourceCode;
 
         #region Properties
         /// <summary>
         /// <para>
-        /// Returns the value of, or assigns a value to, a variable bound to a string name.
+        /// Returns the value of, or assigns a value to, a variable bound to a
+        /// <see langword="string"/> name.
         /// </para>
         /// <para>
-        /// When getting a variable value, if it is undefined, then <b>null</b> will be returned.
+        /// When getting a variable value, if it is undefined, then <see langword="null"/> will be
+        /// returned.
         /// </para>
         /// <para>
         /// When setting a variable value, if the variable is undefined, a new variable is declared
         /// and initialized to the provided value.
-        /// </para>
-        /// <para>
-        /// <b>Note:</b> Variables can store functions that are first-class objects. When the
-        /// interpreter encounters a function definition, a new variable is instantiated and bound
-        /// to the name specified in the signature. During runtime, an invocation operator directly
-        /// following a function name signals to the interpreter that the variable contains a function;
-        /// if so, the variable will interpret that function using any argument(s) provided nested in the
-        /// invocation operator. If the variable is NOT a function, then an exception will be thrown.
         /// </para>
         /// </summary>
         /// <param name="name">Name of the variable or function to set/get.</param>
@@ -66,21 +59,77 @@ namespace Chow.Interpreter
 
         #endregion
 
-        /// <summary>Initializes a ChowModule with all built-in functions enabled.</summary>
-        public ChowModule(bool isBuiltInsEnabled = true)
+        /// <summary>Initializes a ChowModule with no global variables or function definitions.</summary>
+        public ChowModule()
         {
             _globalScope = new Scope();
-            ToggleBuiltIns(isBuiltInsEnabled);
+            _prevSourceCode = new List<string>();
         }
 
 
-        /// <summary>  Compiles and interprets a string containing Chow source code. </summary>
+        /// <summary>  Compiles and interprets Chow source code contained in a <see langword="string"/>. </summary>
         /// <param name="sourceCode">String containing Chow source code, whitespace, or null.</param>
         /// <returns><see cref="ChowValue.None"/>, or the result of the last expression statement
         /// interpreted, if there was one defined in <paramref name="sourceCode"/>, and it is not null.</returns>
         public ChowValue Execute(string sourceCode)
         {
-            return ChowEngine.ExecuteModuleCode(sourceCode, _globalScope);
+            var returnVal = ChowEngine.ExecuteModuleCode(sourceCode, _globalScope);
+            
+            // Only add the source code AFTER it has successfully executed. This avoids executing
+            // source code that throws exceptions when using the public Import(ChowModule).
+            _prevSourceCode.Add(sourceCode);
+            return returnVal;
+        }
+
+        /// <summary>
+        /// <para>
+        /// Imports another <see cref="ChowModule"/>'s globals into this module by merging its
+        /// global scope into this one.
+        /// </para>
+        /// <para>
+        /// When <paramref name="executeTopLevel"/> is <see langword="true"/>, each source code
+        /// string previously executed on <paramref name="moduleToImport"/> is re-executed against
+        /// this module first, so any top-level statements (beyond variable declarations and
+        /// function definitions) run in this module's context.
+        /// </para>
+        /// <para>
+        /// After execution, the imported module's current global scope is applied on top, so any
+        /// changes made to it via its indexer (after its last <see cref="Execute(string)"/> call)
+        /// are also reflected.
+        /// </para>
+        /// </summary>
+        /// <param name="moduleToImport">The module whose source-code history and global scope are
+        /// imported into this module.</param>
+        /// <param name="executeTopLevel">When <see langword="false"/> (default), only the imported
+        /// module's current global scope state is applied, without re-running its source. When
+        /// <see langword="true"/>, re-executes every source code string previously executed on
+        /// <paramref name="moduleToImport"/> in this module first.</param>
+        /// <returns><see cref="ChowValue.None"/>, or the result of the final expression statement
+        /// produced by re-executing the imported module's source code when
+        /// <paramref name="executeTopLevel"/> is <see langword="true"/>.</returns>
+        public ChowValue Import(ChowModule moduleToImport, bool executeTopLevel = false)
+        {
+            ChowValue returnValue = ChowValue.None;
+
+            // If the client does not only want to import the module's current state
+            if (executeTopLevel)
+            {
+                // Execute each previously executed Chow source code, in case there were top-level
+                // statements other than variable declarations and function definitions.
+                foreach (var sourceCode in moduleToImport._prevSourceCode)
+                {
+                    returnValue = Execute(sourceCode);
+                }
+            }
+
+            // NOTE: If a variable value was declared/reassigned using the indexer before the
+            // last ChowModule.Execute(string) call, those intermediate changes to the scope
+            // will not apply. Thus, source code execution might behave different under such
+            // conditions.
+            
+            // Apply any changes made to the variables using the imported module's indexer.
+            _globalScope += moduleToImport._globalScope;
+            return returnValue;
         }
 
         #region Global Scope API Methods
@@ -90,7 +139,7 @@ namespace Chow.Interpreter
         /// </summary>
         /// <param name="functionName">The name of the variable the target function was assigned to.</param>
         /// <param name="args">Boxed host language values to pass to the function as arguments.</param>
-        /// <returns>If the target was non-void function then this method will return target function's
+        /// <returns>If the target was non-void function, then this method will return target function's
         /// returned <see cref="ChowValue"/>. </returns>
         /// <exception cref="GlobalAccessException"></exception>
         public ChowValue InvokeGlobal(string functionName, params object[] args)
@@ -176,119 +225,5 @@ namespace Chow.Interpreter
         }
 
         #endregion
-
-        #region Built-Ins API Methods
-
-        public void ToggleBuiltIns(bool isEnabling, params BuiltInType[] types)
-        {
-            if (types == null || types.Length == 0)
-            {
-                types = (BuiltInType[])Enum.GetValues(typeof(BuiltInType));
-            }
-            
-            foreach (var type in types)
-            {
-                ToggleOneBuiltIn(isEnabling, type);
-            }
-        }
-        
-        void ToggleOneBuiltIn(bool isEnabling, BuiltInType type)
-        {
-
-            var signature = BuiltIns.SignitureOf(type);
-            var builtInName = signature.Name;
-
-            if (isEnabling)
-            {
-                var implVarValue = new ChowValue(signature.Implementation);
-                
-                // If the variable does not exist, a new variable will be declared & initialized.
-                _globalScope.AssignVariableValue(builtInName, implVarValue);
-            }
-            else
-            {
-                // If the variable does not exist, the variable is already disabled so ignore it.
-                _globalScope.TryRemoveVariable(builtInName);
-            }
-        }
-
-        /// <summary>
-        /// Overrides the implementation of a built-in function.
-        /// 
-        /// <para>Supported delegate types:</para>
-        /// <list type="bullet">
-        /// 
-        /// <item><see cref="Func{TResult}"/> where TResult is <see cref="ChowValue"/> —
-        /// zero-argument function</item>
-        /// 
-        /// <item><see cref="Func{T, TResult}"/> where T and TResult are <see cref="ChowValue"/> —
-        /// single-argument function</item>
-        /// 
-        ///<item><see cref="Func{T, TResult}"/> where T is <see cref="ChowValue"/>[] and TResult
-        /// is <see cref="ChowValue"/> — variadic function</item>
-        /// 
-        /// <item><see cref="Action"/> — zero-argument action</item>
-        /// 
-        /// <item><see cref="Action{T}"/> where T is <see cref="ChowValue"/> — single-argument action</item>
-        /// 
-        /// <item><see cref="Action{T}"/> where T is <see cref="ChowValue"/>[] — variadic action</item>
-        /// 
-        /// </list>
-        /// </summary>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="builtIn"/> is null.</exception>
-        /// <exception cref="ArgumentException">Thrown when <paramref name="builtIn"/> is not one of the supported delegate types.</exception>
-        public void SetBuiltIn(BuiltInType type, Delegate builtIn)
-        {
-            if (builtIn == null)
-            {
-                throw new ArgumentNullException(nameof(builtIn));
-            }
-
-            Func<ChowValue[], ChowValue> impl;
-
-            switch (builtIn)
-            {
-                case Func<ChowValue[], ChowValue> variadicFunc:
-                    impl = variadicFunc;
-                    break;
-
-                case Func<ChowValue, ChowValue> unaryFunc:
-                    BuiltIns.SignitureOf(type).RequireFixedArity(1, "Func<ChowValue, ChowValue>");
-                    impl = args => unaryFunc(args[0]);
-                    break;
-
-                case Func<ChowValue> nullaryFunc:
-                    BuiltIns.SignitureOf(type).RequireFixedArity(0, "Func<ChowValue>");
-                    impl = _ => nullaryFunc();
-                    break;
-
-                case Action<ChowValue[]> variadicAction:
-                    impl = args => { variadicAction(args); return ChowValue.None; };
-                    break;
-
-                case Action<ChowValue> unaryAction:
-                    BuiltIns.SignitureOf(type).RequireFixedArity(1, "Action<ChowValue>");
-                    impl = args => { unaryAction(args[0]); return ChowValue.None; };
-                    break;
-
-                case Action nullaryAction:
-                    BuiltIns.SignitureOf(type).RequireFixedArity(0, "Action");
-                    impl = _ => { nullaryAction(); return ChowValue.None; };
-                    break;
-
-                default:
-                    throw new ArgumentException(
-                        $"Unsupported delegate type '{builtIn.GetType()}'. " +
-                        $"Expected one of: {nameof(Func<ChowValue[], ChowValue>)}, {nameof(Func<ChowValue, ChowValue>)}, " +
-                        $"{nameof(Func<ChowValue>)}, {nameof(Action<ChowValue[]>)}, {nameof(Action<ChowValue>)}, or {nameof(Action)}.",
-                        nameof(builtIn));
-            }
-
-            _builtInOverrides[type] = impl;
-            ToggleOneBuiltIn(isEnabling: true, type);
-        }
-
-        #endregion
-
     }
 }
