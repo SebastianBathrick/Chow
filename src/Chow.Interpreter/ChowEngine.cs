@@ -1,5 +1,4 @@
 using Chow.Interpreter.State;
-using System;
 namespace Chow.Interpreter
 {
     public sealed class ChowEngine
@@ -10,7 +9,6 @@ namespace Chow.Interpreter
 
         ChowEngine()
         {
-            _instance = new ChowEngine();
         }
 
         internal static void Reset()
@@ -22,7 +20,7 @@ namespace Chow.Interpreter
         /// <param name="sourceCode">String containing Chow source code, whitespace, or null.</param>
         /// <returns><see cref="ChowValue.None"/>, or the result of the last expression statement
         /// interpreted, if there was one defined in <paramref name="sourceCode"/>, and it is not null.</returns>
-        public static ChowValue ExecuteCode(string sourceCode)
+        public static ChowValue Execute(string sourceCode)
         {
             var scanner = new Scanner(sourceCode);
             var tokens = scanner.ScanTokens();
