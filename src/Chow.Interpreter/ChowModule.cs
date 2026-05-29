@@ -1,7 +1,6 @@
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State;
 using System;
-using System.Collections.Generic;
 namespace Chow.Interpreter
 {
     /// <summary>
@@ -14,11 +13,8 @@ namespace Chow.Interpreter
         // The name is for later features, such as import statements, but their implementation has
         // not been planned in detail.
         readonly string _name;
-        readonly List<string> _prevSourceCode;
+        readonly Scope _globalScope;
 
-        // This initialized in the constructor but can be reassigned if there is a module import
-        Scope _globalScope;
-        
         // If true, built-ins are required for this module but have not been imported. If false,
         // built-ins are not required for this module or have already been imported at least once.
         bool _needsBuiltInsImport;
@@ -88,8 +84,7 @@ namespace Chow.Interpreter
         {
             _name = name;
             _globalScope = new Scope();
-            _prevSourceCode = new List<string>();
-            
+
             // Use a flag to avoid importing built-ins during initialization, because what
             // BuiltInFunctions executes should be considered unknown to ChowModule
             _needsBuiltInsImport = useBuiltInFunctions;
@@ -107,18 +102,13 @@ namespace Chow.Interpreter
                 ImportBuiltIns();
             }
             
-            var returnVal = ChowEngine.ExecuteModuleCode(sourceCode, _globalScope);
-            
-            // Only add the source code AFTER it has successfully executed. This avoids executing
-            // source code that throws exceptions when using the public Import(ChowModule).
-            _prevSourceCode.Add(sourceCode);
-            return returnVal;
+            return ChowEngine.ExecuteModuleCode(sourceCode, _globalScope);
         }
         
         /// <summary>
         /// Declares the standard built-in functions (e.g. <c>print</c>, <c>len</c>, <c>range</c>)
         /// in this module's global scope so they can be called from source code or by calling
-        /// this instance's <see cref="ChowModule.InvokeGlobal"/>.
+        /// this instance's <see cref="InvokeGlobal(string, object[])"/>.
         /// </summary>
         public void ImportBuiltIns()
         {
@@ -148,7 +138,8 @@ namespace Chow.Interpreter
         /// <param name="args">Boxed host language values to pass to the function as arguments.</param>
         /// <returns>If the target was non-void function, then this method will return target function's
         /// returned <see cref="ChowValue"/>. </returns>
-        /// <exception cref="GlobalAccessException"></exception>
+        /// <exception cref="GlobalAccessException">Thrown when <paramref name="functionName"/> is
+        /// not defined in this module's global scope.</exception>
         public ChowValue InvokeGlobal(string functionName, params object[] args)
         {
             // IsGlobal imports built-ins if needed
@@ -163,15 +154,9 @@ namespace Chow.Interpreter
         }
 
         /// <summary>
-        /// <para>
-        /// Returns <see langword="true"/> if <paramref name="name"/> is defined in the module's
+        /// Returns <see langword="true"/> if <paramref name="name"/> is defined in this module's
         /// global scope.
-        /// </para>
-        /// <para>
-        /// If the name does not follow the rules for variable names in Chow. As 
-        /// </para>
         /// </summary>
-        /// <exception cref="GlobalAccessException">Thrown when <paramref name="name"/> is null.</exception>
         public bool IsGlobal(string name)
         {
             if (_needsBuiltInsImport)
@@ -207,6 +192,11 @@ namespace Chow.Interpreter
         // Returns true if the name follows Python variable name rules.
         static bool IsValidChowName(string name)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                return false;
+            }
+
             var first = name[0];
             if (!IsLetterChar(first) && first != '_')
             {
