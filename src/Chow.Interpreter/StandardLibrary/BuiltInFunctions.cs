@@ -9,24 +9,52 @@ namespace Chow.Interpreter.StandardLibrary
         // Leaving callables as objects because ChowValue will box it into one anyway, and to make
         // it easy to change built-in function object types later. The way built-in functions are
         // currently handled is likely a temporary solution and is subject to change.
-        static List<(string name, object callableObject)> _builtInFunctions = null;
+        static List<(string name, object callableObject)> _namedInvocableObjects = null;
 
+        #region Properties
 
         /// <summary>List of built-in function names paired with their first-class function objects.</summary>
         public static List<(string name, object callableObject)> NamedInvocableObjects
         {
             get
             {
-                if (_builtInFunctions != null)
+                if (_namedInvocableObjects != null)
                 {
-                    return _builtInFunctions;
+                    return _namedInvocableObjects;
                 }
                 
                 // Lazily initialize in case the library client never imports built-ins
-                _builtInFunctions = CreateBuiltInsMap();
-                return _builtInFunctions;
+                _namedInvocableObjects = CreateBuiltInsMap();
+                
+                // Return a copy to avoid accidentally mutating the built-in functions field
+                return new List<(string name, object callableObject)>(_namedInvocableObjects);
             }
         }
+
+        // This property is used for unit tests
+        public static string[] InvocableObjectNames
+        {
+            get
+            {
+                if (_namedInvocableObjects == null)
+                {
+                    _namedInvocableObjects = CreateBuiltInsMap();
+                }
+                
+                var names = new string[_namedInvocableObjects.Count];
+
+                for (var i = 0; i < _namedInvocableObjects.Count; i++)
+                {
+                    names[i] = _namedInvocableObjects[i].name;
+                }
+
+                return names;
+            }
+        }
+
+        #endregion
+
+        #region Invocable Object Creation Methods
 
         static List<(string, object)> CreateBuiltInsMap()
         {
@@ -114,7 +142,9 @@ namespace Chow.Interpreter.StandardLibrary
                 $"{builtInDef.Name}() takes {builtInDef.MinimumArguments} to {builtInDef.MaximumArguments} arguments");
         }
 
-        #region Methods for Delegates
+        #endregion
+
+        #region Invocable Object Methods
 
         // NOTE: When converting ChowValues to other types, use the internal conversion methods
         // like ChowValue.ToBool(), ChowValue.ToStr(), ChowValue.ToInt64(), etc...

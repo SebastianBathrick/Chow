@@ -81,7 +81,15 @@ namespace Chow.Interpreter
         /// <summary>Initializes a ChowModule with no global variables or function definitions.</summary>
         public ChowModule(string name = nameof(ChowModule), bool useBuiltInFunctions = true)
         {
-            _name = name;
+            if (name != null)
+            {
+                _name = name;
+            }
+            else
+            {
+                _name = nameof(ChowModule);
+            }
+
             _globalScope = new Scope();
 
             // Use a flag to avoid importing built-ins during initialization, because what

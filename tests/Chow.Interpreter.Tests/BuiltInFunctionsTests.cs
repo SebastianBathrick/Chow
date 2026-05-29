@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Chow.Interpreter.DataTypes;
 using Chow.Interpreter.Exceptions;
+using Chow.Interpreter.StandardLibrary;
 namespace Chow.Interpreter.Tests
 {
     [TestFixture]
@@ -9,18 +10,14 @@ namespace Chow.Interpreter.Tests
     {
         #region Helpers
 
-        static readonly string[] AllBuiltInNames =
-        {
-            "print", "input", "clear", "float", "str", "int", "bool",
-            "list", "dict", "len", "abs", "round", "min", "max", "range",
-        };
+        static readonly string[] AllBuiltInNames = BuiltInFunctions.InvocableObjectNames;
 
         TextWriter _originalOut;
         TextReader _originalIn;
         StringWriter _capturedOut;
 
         [SetUp]
-        public void SetUp()
+        public void SetupTestConsole()
         {
             _originalOut = Console.Out;
             _originalIn = Console.In;
@@ -29,19 +26,19 @@ namespace Chow.Interpreter.Tests
         }
 
         [TearDown]
-        public void TearDown()
+        public void TearDownTestConsole()
         {
             Console.SetOut(_originalOut);
             Console.SetIn(_originalIn);
             _capturedOut.Dispose();
         }
 
-        static ChowModule NewModule()
+        static ChowModule CreateModule()
         {
             return new ChowModule();
         }
 
-        static ChowModule NewBareModule()
+        static ChowModule CreateModuleWithoutBuiltIns()
         {
             return new ChowModule(useBuiltInFunctions: false);
         }
@@ -53,7 +50,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Registration_FreshModule_AllBuiltInsAreGlobal()
         {
-            var module = NewModule();
+            var module = CreateModule();
 
             Assert.Multiple(() =>
             {
@@ -67,7 +64,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Registration_BareModule_NoBuiltInsAreGlobal()
         {
-            var module = NewBareModule();
+            var module = CreateModuleWithoutBuiltIns();
 
             Assert.Multiple(() =>
             {
@@ -81,7 +78,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Registration_BareModule_CallingBuiltInFromSourceThrowsUndefinedName()
         {
-            var module = NewBareModule();
+            var module = CreateModuleWithoutBuiltIns();
             Assert.That(() => module.Execute("print(1)"), Throws.TypeOf<UndefinedNameException>());
         }
 
@@ -92,7 +89,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Print_NoArgs_WritesBlankLine()
         {
-            var module = NewModule();
+            var module = CreateModule();
             module.Execute("print()");
             Assert.That(_capturedOut.ToString(), Is.EqualTo(Environment.NewLine));
         }
@@ -100,7 +97,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Print_SingleString_WritesValueThenNewline()
         {
-            var module = NewModule();
+            var module = CreateModule();
             module.Execute("print(\"hello\")");
             Assert.That(_capturedOut.ToString(), Is.EqualTo("hello" + Environment.NewLine));
         }
@@ -108,7 +105,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Print_VariadicMixedTypes_SpaceSeparatedSingleLine()
         {
-            var module = NewModule();
+            var module = CreateModule();
             module.Execute("print(1, 2.5, True, None)");
             Assert.That(_capturedOut.ToString(), Is.EqualTo("1 2.5 True None" + Environment.NewLine));
         }
@@ -121,7 +118,7 @@ namespace Chow.Interpreter.Tests
         public void Input_NoPrompt_ReturnsReadLine()
         {
             Console.SetIn(new StringReader("typed line\n"));
-            var module = NewModule();
+            var module = CreateModule();
             var result = module.Execute("x = input()");
             Assert.That(module["x"], Is.EqualTo("typed line"));
         }
@@ -130,7 +127,7 @@ namespace Chow.Interpreter.Tests
         public void Input_WithPrompt_WritesPromptWithoutNewlineAndReturnsReadLine()
         {
             Console.SetIn(new StringReader("answer\n"));
-            var module = NewModule();
+            var module = CreateModule();
             module.Execute("x = input(\"q? \")");
 
             Assert.Multiple(() =>
@@ -147,7 +144,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Float_NoArgs_ReturnsZero()
         {
-            var module = NewModule();
+            var module = CreateModule();
             var result = module.Execute("float()");
             Assert.That(result.AsType<double>(), Is.EqualTo(0.0));
         }
@@ -155,7 +152,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Float_FromString_ParsesValue()
         {
-            var module = NewModule();
+            var module = CreateModule();
             var result = module.Execute("float(\"1.5\")");
             Assert.That(result.AsType<double>(), Is.EqualTo(1.5));
         }
@@ -163,7 +160,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Float_FromInt_Promotes()
         {
-            var module = NewModule();
+            var module = CreateModule();
             var result = module.Execute("float(2)");
             Assert.That(result.AsType<double>(), Is.EqualTo(2.0));
         }
@@ -171,7 +168,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Int_NoArgs_ReturnsZero()
         {
-            var module = NewModule();
+            var module = CreateModule();
             var result = module.Execute("int()");
             Assert.That(result.AsType<long>(), Is.EqualTo(0L));
         }
@@ -179,7 +176,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Int_FromString_ParsesValue()
         {
-            var module = NewModule();
+            var module = CreateModule();
             var result = module.Execute("int(\"3\")");
             Assert.That(result.AsType<long>(), Is.EqualTo(3L));
         }
@@ -187,7 +184,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Int_FromFloat_Truncates()
         {
-            var module = NewModule();
+            var module = CreateModule();
             var result = module.Execute("int(2.7)");
             Assert.That(result.AsType<long>(), Is.EqualTo(2L));
         }
@@ -195,7 +192,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Int_FromBool_ReturnsOneOrZero()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("int(True)").AsType<long>(), Is.EqualTo(1L));
             Assert.That(module.Execute("int(False)").AsType<long>(), Is.EqualTo(0L));
         }
@@ -203,7 +200,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Str_NoArgs_ReturnsEmpty()
         {
-            var module = NewModule();
+            var module = CreateModule();
             var result = module.Execute("str()");
             Assert.That(result.AsType<string>(), Is.EqualTo(string.Empty));
         }
@@ -211,7 +208,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Str_FromValues_UsesChowRepresentation()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("str(1)").AsType<string>(), Is.EqualTo("1"));
             Assert.That(module.Execute("str(1.0)").AsType<string>(), Is.EqualTo("1.0"));
             Assert.That(module.Execute("str(True)").AsType<string>(), Is.EqualTo("True"));
@@ -221,7 +218,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Bool_NoArgs_ReturnsFalse()
         {
-            var module = NewModule();
+            var module = CreateModule();
             var result = module.Execute("bool()");
             Assert.That(result.AsType<bool>(), Is.False);
         }
@@ -229,7 +226,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Bool_FromValues_FollowsTruthiness()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("bool(0)").AsType<bool>(), Is.False);
             Assert.That(module.Execute("bool(1)").AsType<bool>(), Is.True);
             Assert.That(module.Execute("bool(\"\")").AsType<bool>(), Is.False);
@@ -243,7 +240,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void List_NoArgs_ReturnsEmptyList()
         {
-            var module = NewModule();
+            var module = CreateModule();
             var result = module.Execute("list()");
             Assert.That(result.AsType<InternalList>().Count, Is.EqualTo(0));
         }
@@ -251,7 +248,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void List_FromRange_MaterializesElements()
         {
-            var module = NewModule();
+            var module = CreateModule();
             var result = module.Execute("list(range(3))").AsType<InternalList>();
 
             Assert.Multiple(() =>
@@ -266,7 +263,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Dict_NoArgs_ReturnsEmptyDict()
         {
-            var module = NewModule();
+            var module = CreateModule();
             var result = module.Execute("dict()");
             Assert.That(result.AsType<InternalDict>().Count, Is.EqualTo(0));
         }
@@ -274,7 +271,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Dict_FromDictLiteral_CopiesEntries()
         {
-            var module = NewModule();
+            var module = CreateModule();
             module.Execute("d = dict({\"a\": 1, \"b\": 2})\nx = d[\"a\"]\ny = d[\"b\"]");
 
             Assert.Multiple(() =>
@@ -287,7 +284,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Dict_FromNonMapping_ThrowsTypeException()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(() => module.Execute("dict([1, 2])"), Throws.TypeOf<TypeException>());
         }
 
@@ -298,35 +295,35 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Len_OnString_ReturnsCharacterCount()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("len(\"hello\")").AsType<long>(), Is.EqualTo(5L));
         }
 
         [Test]
         public void Len_OnList_ReturnsElementCount()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("len([1, 2, 3])").AsType<long>(), Is.EqualTo(3L));
         }
 
         [Test]
         public void Len_OnDict_ReturnsEntryCount()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("len({\"a\": 1, \"b\": 2})").AsType<long>(), Is.EqualTo(2L));
         }
 
         [Test]
         public void Len_OnRange_ReturnsStepCount()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("len(range(5))").AsType<long>(), Is.EqualTo(5L));
         }
 
         [Test]
         public void Len_OnUnsupportedType_ThrowsTypeException()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(() => module.Execute("len(1)"), Throws.TypeOf<TypeException>());
         }
 
@@ -337,21 +334,21 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Abs_OnNegativeInt_ReturnsPositive()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("abs(-5)").AsType<long>(), Is.EqualTo(5L));
         }
 
         [Test]
         public void Abs_OnNegativeFloat_ReturnsPositive()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("abs(-2.5)").AsType<double>(), Is.EqualTo(2.5));
         }
 
         [Test]
         public void Abs_OnBool_ReturnsOneOrZero()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("abs(True)").AsType<long>(), Is.EqualTo(1L));
             Assert.That(module.Execute("abs(False)").AsType<long>(), Is.EqualTo(0L));
         }
@@ -359,7 +356,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Abs_OnString_ThrowsTypeException()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(() => module.Execute("abs(\"x\")"), Throws.TypeOf<TypeException>());
         }
 
@@ -370,14 +367,14 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Round_HalfToEven_RoundsDownAtTwoPointFive()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("round(2.5)").AsType<long>(), Is.EqualTo(2L));
         }
 
         [Test]
         public void Round_HalfToEven_RoundsUpAtThreePointFive()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("round(3.5)").AsType<long>(), Is.EqualTo(4L));
         }
 
@@ -386,14 +383,14 @@ namespace Chow.Interpreter.Tests
         {
             // Use a cleanly representable input: 2.345 cannot be exactly represented as a double,
             // so round(2.345, 2) returns 2.35 (matches CPython). 3.14159 → 3.14 is a clean check.
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("round(3.14159, 2)").AsType<double>(), Is.EqualTo(3.14).Within(1e-9));
         }
 
         [Test]
         public void Round_OneArgForm_ReturnsInt()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("round(1)").AsType<long>(), Is.EqualTo(1L));
         }
 
@@ -404,42 +401,42 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Min_VariadicInts_ReturnsSmallest()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("min(3, 1, 2)").AsType<long>(), Is.EqualTo(1L));
         }
 
         [Test]
         public void Min_FromList_ReturnsSmallestElement()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("min([3, 1, 2])").AsType<long>(), Is.EqualTo(1L));
         }
 
         [Test]
         public void Min_EmptyList_Throws()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(() => module.Execute("min([])"), Throws.TypeOf<InvalidOperationException>());
         }
 
         [Test]
         public void Max_VariadicInts_ReturnsLargest()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("max(3, 1, 2)").AsType<long>(), Is.EqualTo(3L));
         }
 
         [Test]
         public void Max_FromList_ReturnsLargestElement()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("max([3, 1, 2])").AsType<long>(), Is.EqualTo(3L));
         }
 
         [Test]
         public void Max_OnStrings_UsesLexicographicOrder()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(module.Execute("max(\"a\", \"b\", \"ab\")").AsType<string>(), Is.EqualTo("b"));
         }
 
@@ -450,7 +447,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Range_OneArg_ProducesZeroToStopExclusive()
         {
-            var module = NewModule();
+            var module = CreateModule();
             var range = module.Execute("range(3)").AsType<InternalRange>();
             Assert.That(range.Count, Is.EqualTo(3));
         }
@@ -458,7 +455,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Range_TwoArgs_HonorsStart()
         {
-            var module = NewModule();
+            var module = CreateModule();
             var list = module.Execute("list(range(2, 5))").AsType<InternalList>();
 
             Assert.Multiple(() =>
@@ -472,7 +469,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Range_ThreeArgs_HonorsStep()
         {
-            var module = NewModule();
+            var module = CreateModule();
             var list = module.Execute("list(range(0, 10, 3))").AsType<InternalList>();
 
             Assert.Multiple(() =>
@@ -486,7 +483,7 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Range_NegativeStep_CountsDown()
         {
-            var module = NewModule();
+            var module = CreateModule();
             var list = module.Execute("list(range(5, 0, -1))").AsType<InternalList>();
 
             Assert.Multiple(() =>
@@ -500,14 +497,14 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void Range_NonIntegerArg_ThrowsTypeException()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(() => module.Execute("range(1.5)"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
         public void Range_ZeroStep_Throws()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(() => module.Execute("range(0, 5, 0)"), Throws.TypeOf<InvalidOperationException>());
         }
 
@@ -518,35 +515,35 @@ namespace Chow.Interpreter.Tests
         [Test]
         public void ArgCount_LenWithZeroArgs_Throws()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(() => module.Execute("len()"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
         public void ArgCount_LenWithTwoArgs_Throws()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(() => module.Execute("len(1, 2)"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
         public void ArgCount_AbsWithZeroArgs_Throws()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(() => module.Execute("abs()"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
         public void ArgCount_RangeWithZeroArgs_Throws()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(() => module.Execute("range()"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
         public void ArgCount_RoundWithThreeArgs_Throws()
         {
-            var module = NewModule();
+            var module = CreateModule();
             Assert.That(() => module.Execute("round(1, 2, 3)"), Throws.TypeOf<TypeException>());
         }
 
