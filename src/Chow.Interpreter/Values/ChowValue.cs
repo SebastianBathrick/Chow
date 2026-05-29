@@ -158,7 +158,7 @@ namespace Chow.Interpreter.Values
 
         #endregion
 
-        #region Type Inspection
+        #region Type API
 
         /// <summary>Casts Chow value to specified host type, boxes, and returns it.</summary>
         /// <typeparam name="TDataType">The type the value will be casted to.</typeparam>
@@ -245,7 +245,7 @@ namespace Chow.Interpreter.Values
             return DataType == chowDataType;
         }
 
-        internal bool IsTruthy()
+        public bool IsTruthy()
         {
             return ToBool();
         }
@@ -763,7 +763,8 @@ namespace Chow.Interpreter.Values
 
         #region Conversion Methods
 
-        // These methods can be indirectly accessed via the AsType<T>() method. Even the VirtualMachine does not need direct access to these.
+        // NOTE: These methods are for internal use only and are more performant than AsType<T>()
+        // that is intended for the library's client
 
         internal bool ToBool()
         {

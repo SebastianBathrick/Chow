@@ -70,6 +70,55 @@ namespace Chow.Interpreter
         }
 
         /// <summary>
+        /// Defines a built-in function that accepts arguments and returns a <see cref="ChowValue"/>.
+        /// </summary>
+        /// <param name="name">The source-language name the built-in is bound to in the module scope.</param>
+        /// <param name="valueReturnDelegateWithParams">The delegate invoked with the call's arguments;
+        /// its return value is pushed onto the VM stack as the call result.</param>
+        /// <param name="minimumArguments">The smallest number of arguments accepted at call time.</param>
+        /// <param name="maximumArguments">The largest number of arguments accepted at call time.</param>
+        public BuiltInDefinition(
+            string name,
+            Func<ChowValue[], ChowValue> valueReturnDelegateWithParams,
+            int minimumArguments,
+            int maximumArguments)
+        {
+            Name = name;
+            MinimumArguments = minimumArguments;
+            MaximumArguments = maximumArguments;
+            IsVoid = false;
+            ValueReturnDelegateWithParams = valueReturnDelegateWithParams;
+            ValueReturnDelegate = null;
+            VoidDelegate = null;
+            VoidDelegateWithParams = null;
+        }
+
+        /// <summary>
+        /// Defines a built-in function that accepts arguments and produces no return value;
+        /// the call result is implicitly <see cref="ChowValue.None"/>.
+        /// </summary>
+        /// <param name="name">The source-language name the built-in is bound to in the module scope.</param>
+        /// <param name="voidDelegateWithParams">The delegate invoked with the call's arguments for
+        /// its side effects.</param>
+        /// <param name="minimumArguments">The smallest number of arguments accepted at call time.</param>
+        /// <param name="maximumArguments">The largest number of arguments accepted at call time.</param>
+        public BuiltInDefinition(
+            string name,
+            Action<ChowValue[]> voidDelegateWithParams,
+            int minimumArguments,
+            int maximumArguments)
+        {
+            Name = name;
+            MinimumArguments = minimumArguments;
+            MaximumArguments = maximumArguments;
+            IsVoid = true;
+            ValueReturnDelegateWithParams = null;
+            ValueReturnDelegate = null;
+            VoidDelegate = null;
+            VoidDelegateWithParams = voidDelegateWithParams;
+        }
+
+        /// <summary>
         /// Defines a built-in function that takes no arguments and returns a <see cref="ChowValue"/>.
         /// </summary>
         /// <param name="name">The source-language name the built-in is bound to in the module scope.</param>

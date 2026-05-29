@@ -5,7 +5,9 @@ namespace Chow.Interpreter.Values.DataTypes
 {
     static class DataTypeConversionMap
     {
-
+        // TODO: Add left/right specific conversion cases to avoid trying to convert both operands
+        // Note: Check compiled code to see if this would actually make a difference
+        
         #region Fields
 
         static readonly Dictionary<(ExpressionOperator op, DataType left, DataType right), ConversionCase> BinaryTypeMap =

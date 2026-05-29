@@ -255,7 +255,6 @@ namespace Chow.Interpreter
 
         #region Lexeme-Dependent Token Scan Methods
 
-        // TODO: Refactor all project switches to use curly braces
         bool TryScanSymbolToken()
         {
             TokenType tokenType;

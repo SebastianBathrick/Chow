@@ -5,8 +5,10 @@ namespace Chow.Interpreter
 {
     public static class ChowEngine
     {
-        static ChowModule BuiltInsModule = null;
-        
+        /// <summary>  Compiles and interprets Chow source code contained in a <see langword="string"/>. </summary>
+        /// <param name="sourceCode">String containing Chow source code, whitespace, or null.</param>
+        /// <returns><see cref="ChowValue.None"/>, or the result of the last expression statement
+        /// interpreted, if there was one defined in <paramref name="sourceCode"/>, and it is not null.</returns>
         public static ChowValue ExecuteCode(string sourceCode)
         {
             var scanner = new Scanner(sourceCode);
@@ -47,11 +49,6 @@ namespace Chow.Interpreter
         {
             var vm = new VirtualMachine(moduleGlobalScope);
             return vm.CallGlobalFunction(functionName, args);
-        }
-
-        public static ChowModule GetBuiltIns()
-        {
-            
         }
     }
 }

@@ -12,10 +12,17 @@ namespace Chow.Interpreter
     /// </summary>
     public sealed class ChowModule
     {
+        // The module name is for later features, such as import statements, but the statement's
+        // implementation has not been entirely planned out
+        readonly string _name;
         Scope _globalScope;
         readonly List<string> _prevSourceCode;
 
         #region Properties
+
+        /// <summary>Read-only name provided to this instance was initialized with</summary>
+        public string Name => _name;
+
         /// <summary>
         /// <para>
         /// Returns the value of, or assigns a value to, a variable bound to a
@@ -60,8 +67,9 @@ namespace Chow.Interpreter
         #endregion
 
         /// <summary>Initializes a ChowModule with no global variables or function definitions.</summary>
-        public ChowModule()
+        public ChowModule(string name = nameof(ChowModule))
         {
+            _name = name;
             _globalScope = new Scope();
             _prevSourceCode = new List<string>();
         }
