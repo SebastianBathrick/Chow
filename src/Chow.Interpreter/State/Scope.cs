@@ -60,32 +60,5 @@ namespace Chow.Interpreter.State
         {
             return _varMap.Remove(name);
         }
-
-        /// <summary>
-        /// Creates a new Scope where <paramref name="right"/> variables are combined with
-        /// <paramref name="left"/> variables, and any variables in the left scope that share a
-        /// name with one in the right will use the right's value. The left operand's parent will
-        /// always be the new scope's parent (assuming the left has a parent).
-        /// </summary>
-        /// <param name="left">The scope that will have its variables added to the new scope first.</param>
-        /// <param name="right">The scope that will have its variables added to the new scope second.</param>
-        /// <returns>Scope containing variables found both in <paramref name="left"/> and
-        /// <paramref name="right"/>.</returns>
-        public static Scope operator +(in Scope left, in Scope right)
-        {
-            var newScope = new Scope(left.Parent);
-
-            foreach (var nameValPair in left._varMap)
-            {
-                newScope.AssignVariableValue(nameValPair.Key, nameValPair.Value);
-            }
-
-            foreach (var nameValPair in right._varMap)
-            {
-                newScope.AssignVariableValue(nameValPair.Key, nameValPair.Value);
-            }
-
-            return newScope;
-        }
     }
 }

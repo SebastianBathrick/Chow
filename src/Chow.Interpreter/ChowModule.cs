@@ -14,8 +14,10 @@ namespace Chow.Interpreter
         // The name is for later features, such as import statements, but their implementation has
         // not been planned in detail.
         readonly string _name;
-        Scope _globalScope;
         readonly List<string> _prevSourceCode;
+
+        // This initialized in the constructor but can be reassigned if there is a module import
+        Scope _globalScope;
         
         // If true, built-ins are required for this module but have not been imported. If false,
         // built-ins are not required for this module or have already been imported at least once.
@@ -23,7 +25,7 @@ namespace Chow.Interpreter
         
         #region Properties
 
-        /// <summary>Read-only name provided to this instance was initialized with</summary>
+        /// <summary>Read-only name this instance was initialized with.</summary>
         public string Name => _name;
 
         /// <summary>
@@ -94,7 +96,7 @@ namespace Chow.Interpreter
         }
 
 
-        /// <summary>  Compiles and interprets Chow source code contained in a <see langword="string"/>. </summary>
+        /// <summary>Compiles and interprets Chow source code contained in a <see langword="string"/>.</summary>
         /// <param name="sourceCode">String containing Chow source code, whitespace, or null.</param>
         /// <returns><see cref="ChowValue.None"/>, or the result of the last expression statement
         /// interpreted, if there was one defined in <paramref name="sourceCode"/>, and it is not null.</returns>
@@ -112,58 +114,7 @@ namespace Chow.Interpreter
             _prevSourceCode.Add(sourceCode);
             return returnVal;
         }
-
-        /// <summary>
-        /// <para>
-        /// Imports another <see cref="ChowModule"/>'s globals into this module by merging its
-        /// global scope into this one.
-        /// </para>
-        /// <para>
-        /// When <paramref name="executeTopLevel"/> is <see langword="true"/>, each source code
-        /// string previously executed on <paramref name="moduleToImport"/> is re-executed against
-        /// this module first, so any top-level statements (beyond variable declarations and
-        /// function definitions) run in this module's context.
-        /// </para>
-        /// <para>
-        /// After execution, the imported module's current global scope is applied on top, so any
-        /// changes made to it via its indexer (after its last <see cref="Execute(string)"/> call)
-        /// are also reflected.
-        /// </para>
-        /// </summary>
-        /// <param name="moduleToImport">The module whose source-code history and global scope are
-        /// imported into this module.</param>
-        /// <param name="executeTopLevel">When <see langword="false"/> (default), only the imported
-        /// module's current global scope state is applied, without re-running its source. When
-        /// <see langword="true"/>, re-executes every source code string previously executed on
-        /// <paramref name="moduleToImport"/> in this module first.</param>
-        /// <returns><see cref="ChowValue.None"/>, or the result of the final expression statement
-        /// produced by re-executing the imported module's source code when
-        /// <paramref name="executeTopLevel"/> is <see langword="true"/>.</returns>
-        public ChowValue Import(ChowModule moduleToImport, bool executeTopLevel = false)
-        {
-            ChowValue returnValue = ChowValue.None;
-
-            // If the client does not only want to import the module's current state
-            if (executeTopLevel)
-            {
-                // Execute each previously executed Chow source code, in case there were top-level
-                // statements other than variable declarations and function definitions.
-                foreach (var sourceCode in moduleToImport._prevSourceCode)
-                {
-                    returnValue = Execute(sourceCode);
-                }
-            }
-
-            // NOTE: If a variable value was declared/reassigned using the indexer before the
-            // last ChowModule.Execute(string) call, those intermediate changes to the scope
-            // will not apply. Thus, source code execution might behave different under such
-            // conditions.
-            
-            // Apply any changes made to the variables using the imported module's indexer.
-            _globalScope += moduleToImport._globalScope;
-            return returnValue;
-        }
-
+        
         /// <summary>
         /// Declares the standard built-in functions (e.g. <c>print</c>, <c>len</c>, <c>range</c>)
         /// in this module's global scope so they can be called from source code or by calling
@@ -186,16 +137,13 @@ namespace Chow.Interpreter
                 _globalScope.AssignVariableValue(namedInvocable.name, chowValue);
             }
             
-            // If the constructor flagged built-ins set to false because built-ins have been
-            // imported at least once.
+            // Clear the flag — built-ins have now been imported at least once.
             _needsBuiltInsImport = false;
         }
         
         #region Global Scope API Methods
 
-        /// <summary>
-        /// Invokes Chow function or an interop function with the provided arguments.
-        /// </summary>
+        /// <summary>Invokes Chow function or an interop function with the provided arguments.</summary>
         /// <param name="functionName">The name of the variable the target function was assigned to.</param>
         /// <param name="args">Boxed host language values to pass to the function as arguments.</param>
         /// <returns>If the target was non-void function, then this method will return target function's
@@ -203,13 +151,15 @@ namespace Chow.Interpreter
         /// <exception cref="GlobalAccessException"></exception>
         public ChowValue InvokeGlobal(string functionName, params object[] args)
         {
-            if (IsGlobal(functionName))
+            // IsGlobal imports built-ins if needed
+            if (!IsGlobal(functionName))
             {
-                var convertedArgs = ConvertToChowValues(args);
-                return ChowEngine.InvokeChowFunction(_globalScope, functionName, convertedArgs);
+                throw new GlobalAccessException(
+                    functionName, $"'{functionName}' is not defined in the global scope");
             }
 
-            throw new GlobalAccessException(functionName, $"'{functionName}' is not defined in the global scope");
+            var convertedArgs = ConvertToChowValues(args);
+            return ChowEngine.InvokeChowFunction(_globalScope, functionName, convertedArgs);
         }
 
         /// <summary>
@@ -224,6 +174,11 @@ namespace Chow.Interpreter
         /// <exception cref="GlobalAccessException">Thrown when <paramref name="name"/> is null.</exception>
         public bool IsGlobal(string name)
         {
+            if (_needsBuiltInsImport)
+            {
+                ImportBuiltIns();
+            }
+            
             return _globalScope.ContainsVariable(name);
         }
 
