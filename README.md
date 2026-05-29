@@ -144,12 +144,6 @@ As of writing, the latest [Chow NuGet package](https://www.nuget.org/packages/Ch
         - [NUnit.Analyzers](https://www.nuget.org/packages/NUnit.Analyzers) v4.7.0
         - [NUnit3TestAdapter](https://www.nuget.org/packages/NUnit3TestAdapter) v5.0.0
 
-- ### CodeEditor
-
-    - Target framework: `net10.0-windows`
-    - Project reference: `Chow.Interpreter`
-    - Framework/UI: `Windows Forms`
-
 </details>
 
 ## Quickstart
