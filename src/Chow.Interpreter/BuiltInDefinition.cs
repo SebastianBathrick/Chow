@@ -136,5 +136,25 @@ namespace Chow.Interpreter
             VoidDelegate = null;
             VoidDelegateWithParams = null;
         }
+
+        /// <summary>
+        /// Defines a built-in function that takes no arguments and produces no return value;
+        /// the call result is implicitly <see cref="ChowValue.None"/>.
+        /// </summary>
+        /// <param name="name">The source-language name the built-in is bound to in the module scope.</param>
+        /// <param name="voidDelegate">The delegate invoked with no arguments for its side effects.</param>
+        public BuiltInDefinition(
+            string name,
+            Action voidDelegate)
+        {
+            Name = name;
+            MinimumArguments = ARGUMENT_COUNT_UNDEFINED;
+            MaximumArguments = ARGUMENT_COUNT_UNDEFINED;
+            IsVoid = true;
+            ValueReturnDelegateWithParams = null;
+            ValueReturnDelegate = null;
+            VoidDelegate = voidDelegate;
+            VoidDelegateWithParams = null;
+        }
     }
 }

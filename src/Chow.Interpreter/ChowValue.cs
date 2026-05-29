@@ -141,7 +141,7 @@ namespace Chow.Interpreter
                 }
                 case ChowValue chowValue:
                 {
-                    // **IMPORTANT**: CHOW VALUES ARE NEVER DIRECTLY WRAPPED BY CHOW VALUES
+                    // **IMPORTANT**: CHOW VALUES ARE NEVER DIRECTLY WRAPPED IN OTHER CHOW VALUE INSTANCES
                     this = chowValue;
                     return;
                 }

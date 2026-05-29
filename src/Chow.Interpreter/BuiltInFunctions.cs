@@ -22,8 +22,8 @@ namespace Chow.Interpreter
                     return _builtInFunctions;
                 }
                 
-                // Lazily initialize in case the library client nothing ever imports built-ins
-                _builtInFunctions = new List<(string name, object callableObject)>();
+                // Lazily initialize in case the library client never imports built-ins
+                _builtInFunctions = CreateBuiltInsMap();
                 return _builtInFunctions;
             }
         }
@@ -32,7 +32,7 @@ namespace Chow.Interpreter
         {
             var printDef = new BuiltInDefinition(BUILT_IN_NAME_PRINT, Print, 0, short.MaxValue);
             var inputDef = new BuiltInDefinition(BUILT_IN_NAME_INPUT, Input, 0, 1);
-            var clearDef = new BuiltInDefinition(BUILT_IN_NAME_CLEAR, Clear, 0, 0);
+            var clearDef = new BuiltInDefinition(BUILT_IN_NAME_CLEAR, Clear);
             var floatDef = new BuiltInDefinition(BUILT_IN_NAME_FLOAT, Float, 0, 1);
             var strDef = new BuiltInDefinition(BUILT_IN_NAME_STR, Str, 0, 1);
             var intDef = new BuiltInDefinition(BUILT_IN_NAME_INT, Int, 0, 1);
@@ -109,8 +109,9 @@ namespace Chow.Interpreter
                 return;
             }
 
-            throw new ArgumentException(
-                $"{builtInDef.Name} must be called with {builtInDef.MinimumArguments} to {builtInDef.MaximumArguments}.");
+            // Python raises TypeError for wrong arg count to built-ins.
+            throw new TypeException(
+                $"{builtInDef.Name}() takes {builtInDef.MinimumArguments} to {builtInDef.MaximumArguments} arguments");
         }
 
         #region Methods for Delegates
@@ -120,17 +121,25 @@ namespace Chow.Interpreter
 
         static void Print(ChowValue[] args)
         {
-            // Print a blank line if there are no arguments
+            // Match Python: arguments are space-separated and the line is terminated with a single
+            // newline. Zero-arg call still emits a blank line.
             if (HasZeroArguments(args))
             {
                 Console.WriteLine();
                 return;
             }
 
-            foreach (var arg in args)
+            for (var i = 0; i < args.Length; i++)
             {
-                Console.WriteLine(arg.ToStr());
+                if (i > 0)
+                {
+                    Console.Write(' ');
+                }
+
+                Console.Write(args[i].ToStr());
             }
+
+            Console.WriteLine();
         }
 
 
@@ -148,7 +157,7 @@ namespace Chow.Interpreter
             return new ChowValue(input);
         }
 
-        static void Clear(ChowValue[] args)
+        static void Clear()
         {
             Console.Clear();
         }
