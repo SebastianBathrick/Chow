@@ -1,4 +1,4 @@
-namespace Chow.Interpreter.Values.DataTypes
+namespace Chow.Interpreter.DataTypes
 {
     enum DataType : byte
     {

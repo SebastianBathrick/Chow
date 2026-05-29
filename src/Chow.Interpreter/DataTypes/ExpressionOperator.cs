@@ -1,4 +1,4 @@
-namespace Chow.Interpreter.Values
+namespace Chow.Interpreter.DataTypes
 {
     enum ExpressionOperator
     {

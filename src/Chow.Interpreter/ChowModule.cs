@@ -1,6 +1,5 @@
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.State;
-using Chow.Interpreter.Values;
 using System;
 using System.Collections.Generic;
 namespace Chow.Interpreter

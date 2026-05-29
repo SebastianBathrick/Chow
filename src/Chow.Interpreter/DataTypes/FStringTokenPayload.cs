@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-namespace Chow.Interpreter.Values.DataTypes
+namespace Chow.Interpreter.DataTypes
 {
     sealed class FStringTokenPayload
     {

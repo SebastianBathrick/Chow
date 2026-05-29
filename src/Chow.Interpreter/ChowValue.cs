@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using Chow.Interpreter.DataTypes;
 using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Values.DataTypes;
-namespace Chow.Interpreter.Values
+namespace Chow.Interpreter
 {
     /// <summary>
     /// Represents an immutable Chow value of varying Chow data types, with the main types being:
@@ -34,7 +34,8 @@ namespace Chow.Interpreter.Values
         readonly bool _boolValue;
         readonly object _objectValue;
 
-        // In Chow integers are 64 bits instead of 32 bits like C# (hence why we're calling a long its formal name)
+        // In Chow integers are 64 bits instead of 32 bits like C# (hence why we're calling the
+        // long type its formal name)
         readonly long _int64Value;
 
         // Naming convention is for a similar reason to _int64Value
@@ -140,7 +141,7 @@ namespace Chow.Interpreter.Values
                 }
                 case ChowValue chowValue:
                 {
-                    // Don't wrap a ChowValue inside another ChowValue
+                    // **IMPORTANT**: CHOW VALUES ARE NEVER DIRECTLY WRAPPED BY CHOW VALUES
                     this = chowValue;
                     return;
                 }

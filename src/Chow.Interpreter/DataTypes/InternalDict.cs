@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using Chow.Interpreter.Exceptions;
-namespace Chow.Interpreter.Values.DataTypes
+namespace Chow.Interpreter.DataTypes
 {
     class InternalDict
     {

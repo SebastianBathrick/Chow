@@ -1,5 +1,5 @@
 using Chow.Interpreter.Exceptions;
-namespace Chow.Interpreter.Values.DataTypes
+namespace Chow.Interpreter.DataTypes
 {
     static class IteratorFactory
     {

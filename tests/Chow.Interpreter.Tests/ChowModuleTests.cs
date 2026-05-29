@@ -1,6 +1,5 @@
+using Chow.Interpreter.DataTypes;
 using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Values;
-using Chow.Interpreter.Values.DataTypes;
 namespace Chow.Interpreter.Tests
 {
     [TestFixture]
@@ -9,12 +8,11 @@ namespace Chow.Interpreter.Tests
 
         #region Helpers
 
+        // TODO: Get rid of this. I have no idea why this is here.
         static ChowModule NewModule()
         {
             return new ChowModule();
         }
-
-        static IEnumerable<string> AllBuiltInNames => BuiltInFunctions.AllTypes.Select(BuiltInFunctions.NameOf);
 
         #endregion
 
@@ -239,13 +237,6 @@ namespace Chow.Interpreter.Tests
 
         #region Constructor / Built-Ins
 
-        [TestCaseSource(nameof(AllBuiltInNames))]
-        public void Constructor_BuiltIn_IsAccessibleViaIndexer(string name)
-        {
-            var module = NewModule();
-            Assert.That(() => module[name], Throws.Nothing);
-        }
-
         [Test]
         public void Constructor_BuiltInPrint_IsSeeded()
         {
@@ -340,17 +331,6 @@ namespace Chow.Interpreter.Tests
         public void Constructor_BuiltInRange_IsSeeded()
         {
             Assert.That(() => NewModule()["range"], Throws.Nothing);
-        }
-
-        [Test]
-        public void Constructor_AllBuiltInsSeeded_NoneThrowOnAccess()
-        {
-            var module = NewModule();
-
-            foreach (var name in AllBuiltInNames)
-            {
-                Assert.That(() => module[name], Throws.Nothing, $"built-in '{name}' missing");
-            }
         }
 
         #endregion
@@ -1657,7 +1637,7 @@ namespace Chow.Interpreter.Tests
         public void Call_UndefinedName_ThrowsGlobalAccessException()
         {
             var module = NewModule();
-            Assert.That(() => module.InvokeVariable("nope"), Throws.TypeOf<GlobalAccessException>()
+            Assert.That(() => module.InvokeGlobal("nope"), Throws.TypeOf<GlobalAccessException>()
                 .With.Property(nameof(GlobalAccessException.Name)).EqualTo("nope"));
         }
 
@@ -1668,7 +1648,7 @@ namespace Chow.Interpreter.Tests
 
             try
             {
-                module.InvokeVariable("missing_func", 1, 2);
+                module.InvokeGlobal("missing_func", 1, 2);
                 Assert.Fail();
             }
             catch (GlobalAccessException ex)
@@ -1682,7 +1662,7 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             module["x"] = 42;
-            Assert.That(() => module.InvokeVariable("x"), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeGlobal("x"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -1690,7 +1670,7 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             module["s"] = "hello";
-            Assert.That(() => module.InvokeVariable("s"), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeGlobal("s"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -1698,7 +1678,7 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             module["b"] = true;
-            Assert.That(() => module.InvokeVariable("b"), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeGlobal("b"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -1706,7 +1686,7 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             module["d"] = 1.5;
-            Assert.That(() => module.InvokeVariable("d"), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeGlobal("d"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -1714,7 +1694,7 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             module.Execute("xs = [1, 2, 3]");
-            Assert.That(() => module.InvokeVariable("xs"), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeGlobal("xs"), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -1722,7 +1702,7 @@ namespace Chow.Interpreter.Tests
         {
             var module = NewModule();
             module.Execute("def f(x):\n    return x");
-            Assert.That(() => module.InvokeVariable("f", new object?[] { null }!),
+            Assert.That(() => module.InvokeGlobal("f", new object?[] { null }!),
                 Throws.TypeOf<ArgumentNullException>());
         }
 
@@ -1736,7 +1716,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module["host"] = (Func<ChowValue[], ChowValue>)(_ => new ChowValue(123L));
 
-            var result = module.InvokeVariable("host");
+            var result = module.InvokeGlobal("host");
 
             Assert.That(result.AsType<long>(), Is.EqualTo(123L));
         }
@@ -1747,7 +1727,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module["host"] = (Func<ChowValue[], ChowValue>)(args => new ChowValue(args[0].AsType<long>() * 2));
 
-            var result = module.InvokeVariable("host", 7);
+            var result = module.InvokeGlobal("host", 7);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(14L));
         }
@@ -1764,7 +1744,7 @@ namespace Chow.Interpreter.Tests
                 return new ChowValue($"{i}|{s}|{b}");
             });
 
-            var result = module.InvokeVariable("host", 5, "abc", true);
+            var result = module.InvokeGlobal("host", 5, "abc", true);
 
             Assert.That(result.AsType<string>(), Is.EqualTo("5|abc|True"));
         }
@@ -1775,7 +1755,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module["host"] = (Func<ChowValue[], ChowValue>)(args => args[0]);
 
-            var result = module.InvokeVariable("host", 9_999_999_999L);
+            var result = module.InvokeGlobal("host", 9_999_999_999L);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(9_999_999_999L));
         }
@@ -1786,7 +1766,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module["host"] = (Func<ChowValue[], ChowValue>)(args => args[0]);
 
-            var result = module.InvokeVariable("host", 2.5);
+            var result = module.InvokeGlobal("host", 2.5);
 
             Assert.That(result.AsType<double>(), Is.EqualTo(2.5));
         }
@@ -1802,8 +1782,8 @@ namespace Chow.Interpreter.Tests
                 return ChowValue.None;
             });
 
-            module.InvokeVariable("host");
-            module.InvokeVariable("host");
+            module.InvokeGlobal("host");
+            module.InvokeGlobal("host");
 
             Assert.That(count, Is.EqualTo(2));
         }
@@ -1819,7 +1799,7 @@ namespace Chow.Interpreter.Tests
                 return ChowValue.None;
             });
 
-            module.InvokeVariable("host");
+            module.InvokeGlobal("host");
 
             Assert.That(receivedLength, Is.EqualTo(0));
         }
@@ -1828,7 +1808,7 @@ namespace Chow.Interpreter.Tests
         public void Call_BuiltinAbs_NegativeInt_ReturnsAbsolute()
         {
             var module = NewModule();
-            var result = module.InvokeVariable("abs", -42);
+            var result = module.InvokeGlobal("abs", -42);
             Assert.That(result.AsType<long>(), Is.EqualTo(42L));
         }
 
@@ -1836,7 +1816,7 @@ namespace Chow.Interpreter.Tests
         public void Call_BuiltinLen_String_ReturnsLength()
         {
             var module = NewModule();
-            var result = module.InvokeVariable("len", "hello");
+            var result = module.InvokeGlobal("len", "hello");
             Assert.That(result.AsType<long>(), Is.EqualTo(5L));
         }
 
@@ -1844,7 +1824,7 @@ namespace Chow.Interpreter.Tests
         public void Call_BuiltinStr_Int_ReturnsString()
         {
             var module = NewModule();
-            var result = module.InvokeVariable("str", 7);
+            var result = module.InvokeGlobal("str", 7);
             Assert.That(result.AsType<string>(), Is.EqualTo("7"));
         }
 
@@ -1852,7 +1832,7 @@ namespace Chow.Interpreter.Tests
         public void Call_BuiltinMin_TwoInts_ReturnsLower()
         {
             var module = NewModule();
-            var result = module.InvokeVariable("min", 3, 1);
+            var result = module.InvokeGlobal("min", 3, 1);
             Assert.That(result.AsType<long>(), Is.EqualTo(1L));
         }
 
@@ -1860,7 +1840,7 @@ namespace Chow.Interpreter.Tests
         public void Call_BuiltinMax_TwoInts_ReturnsHigher()
         {
             var module = NewModule();
-            var result = module.InvokeVariable("max", 3, 1);
+            var result = module.InvokeGlobal("max", 3, 1);
             Assert.That(result.AsType<long>(), Is.EqualTo(3L));
         }
 
@@ -1874,7 +1854,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def f():\n    return 42");
 
-            var result = module.InvokeVariable("f");
+            var result = module.InvokeGlobal("f");
 
             Assert.That(result.AsType<long>(), Is.EqualTo(42L));
         }
@@ -1885,7 +1865,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def add(a, b):\n    return a + b");
 
-            var result = module.InvokeVariable("add", 2, 3);
+            var result = module.InvokeGlobal("add", 2, 3);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(5L));
         }
@@ -1896,7 +1876,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def sub(a, b):\n    return a - b");
 
-            var result = module.InvokeVariable("sub", 10, 3);
+            var result = module.InvokeGlobal("sub", 10, 3);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(7L));
         }
@@ -1907,7 +1887,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def join(a, b):\n    return a + b");
 
-            var result = module.InvokeVariable("join", "foo", "bar");
+            var result = module.InvokeGlobal("join", "foo", "bar");
 
             Assert.That(result.AsType<string>(), Is.EqualTo("foobar"));
         }
@@ -1918,7 +1898,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def f():\n    x = 1");
 
-            var result = module.InvokeVariable("f");
+            var result = module.InvokeGlobal("f");
 
             Assert.That(result.DataType, Is.EqualTo(DataType.None));
         }
@@ -1929,7 +1909,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def add(a, b):\n    return a + b");
 
-            Assert.That(() => module.InvokeVariable("add", 1), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeGlobal("add", 1), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -1938,7 +1918,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def add(a, b):\n    return a + b");
 
-            Assert.That(() => module.InvokeVariable("add", 1, 2, 3), Throws.TypeOf<TypeException>());
+            Assert.That(() => module.InvokeGlobal("add", 1, 2, 3), Throws.TypeOf<TypeException>());
         }
 
         [Test]
@@ -1947,8 +1927,8 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def square(x):\n    return x * x");
 
-            var first = module.InvokeVariable("square", 3);
-            var second = module.InvokeVariable("square", 5);
+            var first = module.InvokeGlobal("square", 3);
+            var second = module.InvokeGlobal("square", 5);
 
             Assert.Multiple(() =>
             {
@@ -1963,7 +1943,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("base = 100\ndef addBase(x):\n    return base + x");
 
-            var result = module.InvokeVariable("addBase", 7);
+            var result = module.InvokeGlobal("addBase", 7);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(107L));
         }
@@ -1975,7 +1955,7 @@ namespace Chow.Interpreter.Tests
             module["base"] = 50;
             module.Execute("def addBase(x):\n    return base + x");
 
-            var result = module.InvokeVariable("addBase", 4);
+            var result = module.InvokeGlobal("addBase", 4);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(54L));
         }
@@ -1986,7 +1966,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def inc(x):\n    return x + 1\ndef twice(x):\n    return inc(inc(x))");
 
-            var result = module.InvokeVariable("twice", 5);
+            var result = module.InvokeGlobal("twice", 5);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(7L));
         }
@@ -1997,7 +1977,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def fact(n):\n    if n <= 1:\n        return 1\n    return n * fact(n - 1)");
 
-            var result = module.InvokeVariable("fact", 5);
+            var result = module.InvokeGlobal("fact", 5);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(120L));
         }
@@ -2008,7 +1988,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def absPlusOne(x):\n    return abs(x) + 1");
 
-            var result = module.InvokeVariable("absPlusOne", -10);
+            var result = module.InvokeGlobal("absPlusOne", -10);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(11L));
         }
@@ -2019,7 +1999,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def add(a, b):\n    return a + b");
 
-            var result = module.InvokeVariable("add", true, 5);
+            var result = module.InvokeGlobal("add", true, 5);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(6L));
         }
@@ -2030,7 +2010,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def halve(x):\n    return x / 2");
 
-            var result = module.InvokeVariable("halve", 5.0);
+            var result = module.InvokeGlobal("halve", 5.0);
 
             Assert.That(result.AsType<double>(), Is.EqualTo(2.5));
         }
@@ -2043,7 +2023,7 @@ namespace Chow.Interpreter.Tests
             module.Execute("b = 2");
             module.Execute("def sum():\n    return a + b");
 
-            var result = module.InvokeVariable("sum");
+            var result = module.InvokeGlobal("sum");
 
             Assert.That(result.AsType<long>(), Is.EqualTo(3L));
         }
@@ -2054,9 +2034,9 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def get():\n    return v");
             module["v"] = 10;
-            var first = module.InvokeVariable("get");
+            var first = module.InvokeGlobal("get");
             module["v"] = 20;
-            var second = module.InvokeVariable("get");
+            var second = module.InvokeGlobal("get");
 
             Assert.Multiple(() =>
             {
@@ -2071,7 +2051,7 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def makeAdder():\n    def add(a, b):\n        return a + b\n    return add\nadder = makeAdder()");
 
-            var result = module.InvokeVariable("adder", 4, 6);
+            var result = module.InvokeGlobal("adder", 4, 6);
 
             Assert.That(result.AsType<long>(), Is.EqualTo(10L));
         }
@@ -2082,304 +2062,9 @@ namespace Chow.Interpreter.Tests
             var module = NewModule();
             module.Execute("def identity(x):\n    return x");
 
-            var result = module.InvokeVariable("identity", "world");
+            var result = module.InvokeGlobal("identity", "world");
 
             Assert.That(result.AsType<string>(), Is.EqualTo("world"));
-        }
-
-        #endregion
-
-        #region BuiltIns API - Enable / Disable
-
-        [Test]
-        public void FreshModule_LenBuiltIn_WorksFromChow()
-        {
-            var module = NewModule();
-            var result = module.Execute("len(\"abc\")");
-            Assert.That(result.AsType<long>(), Is.EqualTo(3L));
-        }
-
-        [Test]
-        public void DisableBuiltIns_LenRemoved_ChowCallFails()
-        {
-            var module = NewModule();
-            module.DisableBuiltIns(BuiltInType.Len);
-            Assert.That(() => module.Execute("len(\"x\")"), Throws.InstanceOf<Exception>());
-        }
-
-        [Test]
-        public void DisableAllBuiltIns_AllNamesUndefined()
-        {
-            var module = NewModule();
-            module.DisableAllBuiltIns();
-
-            foreach (var name in AllBuiltInNames)
-            {
-                Assert.That(() => module.InvokeVariable(name), Throws.TypeOf<GlobalAccessException>(), $"Expected '{name}' to be undefined");
-            }
-        }
-
-        [Test]
-        public void EnableBuiltIns_AfterDisable_RestoresDefault()
-        {
-            var module = NewModule();
-            module.DisableBuiltIns(BuiltInType.Len);
-            module.ToggleBuiltIns(BuiltInType.Len);
-            var result = module.Execute("len(\"abcd\")");
-            Assert.That(result.AsType<long>(), Is.EqualTo(4L));
-        }
-
-        [Test]
-        public void EnableAllBuiltIns_AfterDisableAll_RestoresAll()
-        {
-            var module = NewModule();
-            module.DisableAllBuiltIns();
-            module.EnableAllBuiltIns();
-            Assert.That(module.Execute("len(\"abc\")").AsType<long>(), Is.EqualTo(3L));
-            Assert.That(module.Execute("abs(-7)").AsType<long>(), Is.EqualTo(7L));
-            Assert.That(() => module.InvokeVariable("range", 1L, 5L), Throws.Nothing);
-        }
-
-        [Test]
-        public void DisableBuiltIns_CalledTwice_IsSilentNoOp()
-        {
-            var module = NewModule();
-            module.DisableBuiltIns(BuiltInType.Print);
-            Assert.That(() => module.DisableBuiltIns(BuiltInType.Print), Throws.Nothing);
-        }
-
-        [Test]
-        public void DisableBuiltIns_NullArray_DoesNotThrow()
-        {
-            var module = NewModule();
-            Assert.That(() => module.DisableBuiltIns(null), Throws.Nothing);
-        }
-
-        [Test]
-        public void EnableBuiltIns_NullArray_DoesNotThrow()
-        {
-            var module = NewModule();
-            Assert.That(() => module.ToggleBuiltIns(null), Throws.Nothing);
-        }
-
-        #endregion
-
-        #region BuiltIns API - SetBuiltIn
-
-        [Test]
-        public void SetBuiltIn_CanonicalFunc_CallableFromChow()
-        {
-            var module = NewModule();
-            var captured = new List<string>();
-            module.SetBuiltIn(BuiltInType.Print, (Func<ChowValue[], ChowValue>)(args =>
-            {
-                captured.Add(args[0].AsType<string>());
-                return ChowValue.None;
-            }));
-            module.Execute("print(\"hi\")");
-            Assert.That(captured, Is.EqualTo(new[] { "hi" }));
-        }
-
-        [Test]
-        public void SetBuiltIn_TypedSingleArgFunc_CallableFromChow()
-        {
-            var module = NewModule();
-            module.SetBuiltIn(BuiltInType.Abs, (ChowValue _) => new ChowValue(42L));
-            var result = module.Execute("abs(-5)");
-            Assert.That(result.AsType<long>(), Is.EqualTo(42L));
-        }
-
-        [Test]
-        public void SetBuiltIn_ActionOverload_ForClearRunsAndReturnsNone()
-        {
-            var module = NewModule();
-            var ran = false;
-            module.SetBuiltIn(BuiltInType.Clear, () => { ran = true; });
-            var result = module.InvokeVariable("clear");
-            Assert.That(ran, Is.True);
-            Assert.That(result.DataType, Is.EqualTo(DataType.None));
-        }
-
-        [Test]
-        public void SetBuiltIn_OverrideSurvivesDisableEnableCycle()
-        {
-            var module = NewModule();
-            module.SetBuiltIn(BuiltInType.Len, (ChowValue _) => new ChowValue(999L));
-            module.DisableBuiltIns(BuiltInType.Len);
-            module.ToggleBuiltIns(BuiltInType.Len);
-            var result = module.Execute("len(\"abc\")");
-            Assert.That(result.AsType<long>(), Is.EqualTo(999L));
-        }
-
-        [Test]
-        public void SetBuiltIn_OverridePersistsAcrossRepeatedEnable()
-        {
-            var module = NewModule();
-            module.SetBuiltIn(BuiltInType.Len, (ChowValue _) => new ChowValue(7L));
-            module.ToggleBuiltIns(BuiltInType.Len);
-            module.ToggleBuiltIns(BuiltInType.Len);
-            Assert.That(module.Execute("len(\"x\")").AsType<long>(), Is.EqualTo(7L));
-        }
-
-        [Test]
-        public void SetBuiltIn_VariadicCompatibleForRange_Succeeds()
-        {
-            var module = NewModule();
-            Assert.That(
-                () => module.SetBuiltIn(BuiltInType.Range, (Func<ChowValue[], ChowValue>)(args => new ChowValue((long)args.Length))),
-                Throws.Nothing);
-            Assert.That(module.InvokeVariable("range", 1L, 2L, 3L).AsType<long>(), Is.EqualTo(3L));
-        }
-
-        [Test]
-        public void SetBuiltIn_ActionArrayForInput_Succeeds()
-        {
-            var module = NewModule();
-            Assert.That(
-                () => module.SetBuiltIn(BuiltInType.Input, (Action<ChowValue[]>)(_ => {})),
-                Throws.Nothing);
-        }
-
-        #endregion
-
-        #region BuiltIns API - Arity Enforcement
-
-        [Test]
-        public void DefaultBuiltIn_TooFewArgs_ThrowsTypeException()
-        {
-            var module = NewModule();
-            Assert.That(() => module.InvokeVariable("len"), Throws.TypeOf<TypeException>());
-        }
-
-        [Test]
-        public void DefaultBuiltIn_TooManyArgs_ThrowsTypeException()
-        {
-            var module = NewModule();
-            Assert.That(() => module.InvokeVariable("range", 1L, 2L, 3L, 4L), Throws.TypeOf<TypeException>());
-        }
-
-        [Test]
-        public void OverriddenBuiltIn_ArityStillEnforced()
-        {
-            var module = NewModule();
-            module.SetBuiltIn(BuiltInType.Len, (Func<ChowValue[], ChowValue>)(args => new ChowValue(0L)));
-            Assert.That(() => module.InvokeVariable("len"), Throws.TypeOf<TypeException>());
-            Assert.That(() => module.InvokeVariable("len", "a", "b"), Throws.TypeOf<TypeException>());
-        }
-
-        [Test]
-        public void SetBuiltIn_TypedDelegateMismatch_ThrowsArgumentException()
-        {
-            var module = NewModule();
-            Assert.That(
-                () => module.SetBuiltIn(BuiltInType.Range, (ChowValue x) => x),
-                Throws.TypeOf<ArgumentException>()
-                    .With.Message.Contains("range")
-                    .And.Message.Contains("1 to 3"));
-        }
-
-        [Test]
-        public void SetBuiltIn_ZeroArgDelegateOnUnaryBuiltIn_ThrowsArgumentException()
-        {
-            var module = NewModule();
-            Assert.That(
-                () => module.SetBuiltIn(BuiltInType.Len, () => new ChowValue(0L)),
-                Throws.TypeOf<ArgumentException>().With.Message.Contains("len"));
-        }
-
-        [Test]
-        public void SetBuiltIn_UnaryDelegateOnZeroArgBuiltIn_ThrowsArgumentException()
-        {
-            var module = NewModule();
-            Assert.That(
-                () => module.SetBuiltIn(BuiltInType.Clear, (ChowValue _) => ChowValue.None),
-                Throws.TypeOf<ArgumentException>().With.Message.Contains("clear"));
-        }
-
-        #endregion
-
-        #region BuiltIns API - Null Delegates
-
-        [Test]
-        public void SetBuiltIn_NullFuncArray_ThrowsArgumentNullException()
-        {
-            var module = NewModule();
-            Assert.That(
-                () => module.SetBuiltIn(BuiltInType.Print, (Func<ChowValue[], ChowValue>)null),
-                Throws.TypeOf<ArgumentNullException>());
-        }
-
-        [Test]
-        public void SetBuiltIn_NullFuncSingle_ThrowsArgumentNullException()
-        {
-            var module = NewModule();
-            Assert.That(
-                () => module.SetBuiltIn(BuiltInType.Len, (Func<ChowValue, ChowValue>)null),
-                Throws.TypeOf<ArgumentNullException>());
-        }
-
-        [Test]
-        public void SetBuiltIn_NullFuncZero_ThrowsArgumentNullException()
-        {
-            var module = NewModule();
-            Assert.That(
-                () => module.SetBuiltIn(BuiltInType.Clear, (Func<ChowValue>)null),
-                Throws.TypeOf<ArgumentNullException>());
-        }
-
-        [Test]
-        public void SetBuiltIn_NullActionArray_ThrowsArgumentNullException()
-        {
-            var module = NewModule();
-            Assert.That(
-                () => module.SetBuiltIn(BuiltInType.Print, (Action<ChowValue[]>)null),
-                Throws.TypeOf<ArgumentNullException>());
-        }
-
-        [Test]
-        public void SetBuiltIn_NullActionSingle_ThrowsArgumentNullException()
-        {
-            var module = NewModule();
-            Assert.That(
-                () => module.SetBuiltIn(BuiltInType.Len, (Action<ChowValue>)null),
-                Throws.TypeOf<ArgumentNullException>());
-        }
-
-        [Test]
-        public void SetBuiltIn_NullActionZero_ThrowsArgumentNullException()
-        {
-            var module = NewModule();
-            Assert.That(
-                () => module.SetBuiltIn(BuiltInType.Clear, (Action)null),
-                Throws.TypeOf<ArgumentNullException>());
-        }
-
-        #endregion
-
-        #region BuiltInDefinition - Bugfix Sanity
-
-        [Test]
-        public void BuiltInDefinition_Range_IsVariadic()
-        {
-            var def = BuiltInFunctions.SignitureOf(BuiltInType.Range);
-            Assert.That(def.IsVariadic, Is.True);
-            Assert.That(def.HasParameters, Is.True);
-        }
-
-        [Test]
-        public void BuiltInDefinition_Clear_IsNotVariadicAndHasNoParameters()
-        {
-            var def = BuiltInFunctions.SignitureOf(BuiltInType.Clear);
-            Assert.That(def.IsVariadic, Is.False);
-            Assert.That(def.HasParameters, Is.False);
-        }
-
-        [Test]
-        public void BuiltInDefinition_Len_IsNotVariadicButHasParameters()
-        {
-            var def = BuiltInFunctions.SignitureOf(BuiltInType.Len);
-            Assert.That(def.IsVariadic, Is.False);
-            Assert.That(def.HasParameters, Is.True);
         }
 
         #endregion

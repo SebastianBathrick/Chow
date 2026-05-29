@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Chow.Interpreter.Values;
 namespace Chow.Interpreter.State
 {
     /// <summary>

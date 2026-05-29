@@ -1,3 +1,4 @@
+using Chow.Interpreter.DataTypes;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.SyntaxTrees;
 using Chow.Interpreter.SyntaxTrees.Attributes;
@@ -7,7 +8,6 @@ using Chow.Interpreter.SyntaxTrees.Scope;
 using Chow.Interpreter.SyntaxTrees.Statements;
 using Chow.Interpreter.SyntaxTrees.Subscripts;
 using Chow.Interpreter.Tokens;
-using Chow.Interpreter.Values;
 namespace Chow.Interpreter.Tests
 {
     [TestFixture]

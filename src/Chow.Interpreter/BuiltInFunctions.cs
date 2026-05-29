@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Chow.Interpreter.DataTypes;
 using Chow.Interpreter.Exceptions;
-using Chow.Interpreter.Values;
-using Chow.Interpreter.Values.DataTypes;
 namespace Chow.Interpreter
 {
     public static class BuiltInFunctions
@@ -77,6 +76,7 @@ namespace Chow.Interpreter
             };
         }
         
+        /*
         public static ChowModule BuildModule()
         {
             if (_builtInFunctions == null)
@@ -97,6 +97,7 @@ namespace Chow.Interpreter
 
             return builtInsModule;
         }
+        */
 
         static void ValidateArgumentCount(BuiltInDefinition builtInDef, ChowValue[] args)
         {
