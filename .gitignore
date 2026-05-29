@@ -437,6 +437,7 @@ FodyWeavers.xsd
 .agents/
 
 # Keep repository-owned guidance and automation files tracked
+.vscode/
 !AGENTS.md
 !CLAUDE.md
 !.github/
@@ -464,3 +465,6 @@ skills-lock.json
 .aiignore
 .aiignore
 .cursorignore
+.aiignore
+.vscode/launch.json
+.vscode/tasks.json
