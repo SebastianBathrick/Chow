@@ -1,5 +1,4 @@
 ﻿using System;
-using Chow.Interpreter.Values;
 namespace Chow.Interpreter
 {
     readonly struct BuiltInDefinition

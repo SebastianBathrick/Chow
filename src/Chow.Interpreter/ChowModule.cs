@@ -11,12 +11,16 @@ namespace Chow.Interpreter
     /// </summary>
     public sealed class ChowModule
     {
-        // The module name is for later features, such as import statements, but the statement's
-        // implementation has not been entirely planned out
+        // The name is for later features, such as import statements, but their implementation has
+        // not been planned in detail.
         readonly string _name;
         Scope _globalScope;
         readonly List<string> _prevSourceCode;
-
+        
+        // If true, built-ins are required for this module but have not been imported. If false,
+        // built-ins are not required for this module or have already been imported at least once.
+        bool _needsBuiltInsImport;
+        
         #region Properties
 
         /// <summary>Read-only name provided to this instance was initialized with</summary>
@@ -41,6 +45,12 @@ namespace Chow.Interpreter
         {
             get
             {
+                if (_needsBuiltInsImport)
+                {
+                    // The global variable being retrieved might be a built-in function not yet imported
+                    ImportBuiltIns();
+                }
+                
                 if (_globalScope.ContainsVariable(name))
                 {
                     return _globalScope.GetVariableValue(name).AsType<object>();
@@ -50,6 +60,12 @@ namespace Chow.Interpreter
             }
             set
             {
+                if (_needsBuiltInsImport)
+                {
+                    // The client could be trying to override a built-in function
+                    ImportBuiltIns();
+                }
+                
                 var chowValue = new ChowValue(value);
 
                 if (IsValidChowName(name))
@@ -66,11 +82,15 @@ namespace Chow.Interpreter
         #endregion
 
         /// <summary>Initializes a ChowModule with no global variables or function definitions.</summary>
-        public ChowModule(string name = nameof(ChowModule))
+        public ChowModule(string name = nameof(ChowModule), bool useBuiltInFunctions = true)
         {
             _name = name;
             _globalScope = new Scope();
             _prevSourceCode = new List<string>();
+            
+            // Use a flag to avoid importing built-ins during initialization, because what
+            // BuiltInFunctions executes should be considered unknown to ChowModule
+            _needsBuiltInsImport = useBuiltInFunctions;
         }
 
 
@@ -80,6 +100,11 @@ namespace Chow.Interpreter
         /// interpreted, if there was one defined in <paramref name="sourceCode"/>, and it is not null.</returns>
         public ChowValue Execute(string sourceCode)
         {
+            if (_needsBuiltInsImport)
+            {
+                ImportBuiltIns();
+            }
+            
             var returnVal = ChowEngine.ExecuteModuleCode(sourceCode, _globalScope);
             
             // Only add the source code AFTER it has successfully executed. This avoids executing
@@ -139,6 +164,33 @@ namespace Chow.Interpreter
             return returnValue;
         }
 
+        /// <summary>
+        /// Declares the standard built-in functions (e.g. <c>print</c>, <c>len</c>, <c>range</c>)
+        /// in this module's global scope so they can be called from source code or by calling
+        /// this instance's <see cref="ChowModule.InvokeGlobal"/>.
+        /// </summary>
+        public void ImportBuiltIns()
+        {
+            // BuiltInFunctions does not create its own Module like you may expect. Instead,
+            // ChowModule wraps invocable C# objects into ChowValues, and binds them to a name
+            // manually to avoid a circular dependency.
+            var namedInvocableObjects = BuiltInFunctions.NamedInvocableObjects;
+
+            foreach (var namedInvocable in namedInvocableObjects)
+            {
+                var chowValue = new ChowValue(namedInvocable.callableObject);
+                
+                // It's assumed that the name and value are valid because they're defined inside
+                // the BuiltInFunctions static class. Thus, this does not require the same level
+                // of variable validation as something like the indexer.
+                _globalScope.AssignVariableValue(namedInvocable.name, chowValue);
+            }
+            
+            // If the constructor flagged built-ins set to false because built-ins have been
+            // imported at least once.
+            _needsBuiltInsImport = false;
+        }
+        
         #region Global Scope API Methods
 
         /// <summary>
@@ -197,7 +249,7 @@ namespace Chow.Interpreter
             return result;
         }
 
-        // Returns true if essentially the name abides by the same name rules as Python.
+        // Returns true if the name follows Python variable name rules.
         static bool IsValidChowName(string name)
         {
             var first = name[0];

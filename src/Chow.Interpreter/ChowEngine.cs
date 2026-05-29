@@ -1,4 +1,3 @@
-using Chow.Interpreter.Values;
 using Chow.Interpreter.State;
 using System;
 namespace Chow.Interpreter

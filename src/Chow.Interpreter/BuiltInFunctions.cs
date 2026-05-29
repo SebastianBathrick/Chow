@@ -4,11 +4,68 @@ using Chow.Interpreter.DataTypes;
 using Chow.Interpreter.Exceptions;
 namespace Chow.Interpreter
 {
-    public static class BuiltInFunctions
+    static class BuiltInFunctions
     {
-        // Will leave null in case built-in functions are never used
-        static List<(string name, Func<ChowValue[], ChowValue> interopFunc)> _builtInFunctions = null;
+        // Leaving callables as objects because ChowValue will box it into one anyway, and to make
+        // it easy to change built-in function object types later. The way built-in functions are
+        // currently handled is likely a temporary solution and is subject to change.
+        static List<(string name, object callableObject)> _builtInFunctions = null;
 
+
+        /// <summary>List of built-in function names paired with their first-class function objects.</summary>
+        public static List<(string name, object callableObject)> NamedInvocableObjects
+        {
+            get
+            {
+                if (_builtInFunctions != null)
+                {
+                    return _builtInFunctions;
+                }
+                
+                // Lazily initialize in case the library client nothing ever imports built-ins
+                _builtInFunctions = new List<(string name, object callableObject)>();
+                return _builtInFunctions;
+            }
+        }
+
+        static List<(string, object)> CreateBuiltInsMap()
+        {
+            var printDef = new BuiltInDefinition(BUILT_IN_NAME_PRINT, Print, 0, short.MaxValue);
+            var inputDef = new BuiltInDefinition(BUILT_IN_NAME_INPUT, Input, 0, 1);
+            var clearDef = new BuiltInDefinition(BUILT_IN_NAME_CLEAR, Clear, 0, 0);
+            var floatDef = new BuiltInDefinition(BUILT_IN_NAME_FLOAT, Float, 0, 1);
+            var strDef = new BuiltInDefinition(BUILT_IN_NAME_STR, Str, 0, 1);
+            var intDef = new BuiltInDefinition(BUILT_IN_NAME_INT, Int, 0, 1);
+            var boolDef = new BuiltInDefinition(BUILT_IN_NAME_BOOL, Bool, 0, 1);
+            var listDef = new BuiltInDefinition(BUILT_IN_NAME_LIST, List, 0, 1);
+            var dictDef = new BuiltInDefinition(BUILT_IN_NAME_DICT, Dict, 0, 1);
+            var lenDef = new BuiltInDefinition(BUILT_IN_NAME_LEN, Len, 1, 1);
+            var absDef = new BuiltInDefinition(BUILT_IN_NAME_ABS, Abs, 1, 1);
+            var roundDef = new BuiltInDefinition(BUILT_IN_NAME_ROUND, Round, 1, 2);
+            var minDef = new BuiltInDefinition(BUILT_IN_NAME_MIN, Min, 1, short.MaxValue);
+            var maxDef = new BuiltInDefinition(BUILT_IN_NAME_MAX, Max, 1, short.MaxValue);
+            var rangeDef = new BuiltInDefinition(BUILT_IN_NAME_RANGE, Range, 1, 3);
+
+            return new List<(string, object)>
+            {
+                (printDef.Name, BuildGuardedBuiltIn(printDef)),
+                (inputDef.Name, BuildGuardedBuiltIn(inputDef)),
+                (clearDef.Name, BuildGuardedBuiltIn(clearDef)),
+                (floatDef.Name, BuildGuardedBuiltIn(floatDef)),
+                (strDef.Name, BuildGuardedBuiltIn(strDef)),
+                (intDef.Name, BuildGuardedBuiltIn(intDef)),
+                (boolDef.Name, BuildGuardedBuiltIn(boolDef)),
+                (listDef.Name, BuildGuardedBuiltIn(listDef)),
+                (dictDef.Name, BuildGuardedBuiltIn(dictDef)),
+                (lenDef.Name, BuildGuardedBuiltIn(lenDef)),
+                (absDef.Name, BuildGuardedBuiltIn(absDef)),
+                (roundDef.Name, BuildGuardedBuiltIn(roundDef)),
+                (minDef.Name, BuildGuardedBuiltIn(minDef)),
+                (maxDef.Name, BuildGuardedBuiltIn(maxDef)),
+                (rangeDef.Name, BuildGuardedBuiltIn(rangeDef)),
+            };
+        }
+        
         static Func<ChowValue[], ChowValue> BuildGuardedBuiltIn(BuiltInDefinition builtInDef)
         {
             ChowValue GuardedDelegateInvocation(ChowValue[] args)
@@ -37,68 +94,7 @@ namespace Chow.Interpreter
 
             return GuardedDelegateInvocation;
         }
-
-        static List<(string, Func<ChowValue[], ChowValue>)> CreateBuiltInsMap()
-        {
-            var printDef = new BuiltInDefinition(BUILT_IN_NAME_PRINT, Print, 0, short.MaxValue);
-            var inputDef = new BuiltInDefinition(BUILT_IN_NAME_INPUT, Input, 0, 1);
-            var clearDef = new BuiltInDefinition(BUILT_IN_NAME_CLEAR, Clear, 0, 0);
-            var floatDef = new BuiltInDefinition(BUILT_IN_NAME_FLOAT, Float, 0, 1);
-            var strDef = new BuiltInDefinition(BUILT_IN_NAME_STR, Str, 0, 1);
-            var intDef = new BuiltInDefinition(BUILT_IN_NAME_INT, Int, 0, 1);
-            var boolDef = new BuiltInDefinition(BUILT_IN_NAME_BOOL, Bool, 0, 1);
-            var listDef = new BuiltInDefinition(BUILT_IN_NAME_LIST, List, 0, 1);
-            var dictDef = new BuiltInDefinition(BUILT_IN_NAME_DICT, Dict, 0, 1);
-            var lenDef = new BuiltInDefinition(BUILT_IN_NAME_LEN, Len, 1, 1);
-            var absDef = new BuiltInDefinition(BUILT_IN_NAME_ABS, Abs, 1, 1);
-            var roundDef = new BuiltInDefinition(BUILT_IN_NAME_ROUND, Round, 1, 2);
-            var minDef = new BuiltInDefinition(BUILT_IN_NAME_MIN, Min, 1, short.MaxValue);
-            var maxDef = new BuiltInDefinition(BUILT_IN_NAME_MAX, Max, 1, short.MaxValue);
-            var rangeDef = new BuiltInDefinition(BUILT_IN_NAME_RANGE, Range, 1, 3);
-
-            return new List<(string, Func<ChowValue[], ChowValue>)>
-            {
-                (printDef.Name, BuildGuardedBuiltIn(printDef)),
-                (inputDef.Name, BuildGuardedBuiltIn(inputDef)),
-                (clearDef.Name, BuildGuardedBuiltIn(clearDef)),
-                (floatDef.Name, BuildGuardedBuiltIn(floatDef)),
-                (strDef.Name, BuildGuardedBuiltIn(strDef)),
-                (intDef.Name, BuildGuardedBuiltIn(intDef)),
-                (boolDef.Name, BuildGuardedBuiltIn(boolDef)),
-                (listDef.Name, BuildGuardedBuiltIn(listDef)),
-                (dictDef.Name, BuildGuardedBuiltIn(dictDef)),
-                (lenDef.Name, BuildGuardedBuiltIn(lenDef)),
-                (absDef.Name, BuildGuardedBuiltIn(absDef)),
-                (roundDef.Name, BuildGuardedBuiltIn(roundDef)),
-                (minDef.Name, BuildGuardedBuiltIn(minDef)),
-                (maxDef.Name, BuildGuardedBuiltIn(maxDef)),
-                (rangeDef.Name, BuildGuardedBuiltIn(rangeDef)),
-            };
-        }
         
-        /*
-        public static ChowModule BuildModule()
-        {
-            if (_builtInFunctions == null)
-            {
-                _builtInFunctions = CreateBuiltInsMap();
-            }
-            
-            // Always make a new instance because the client can reassign a module's global values
-            // (i.e., reassign the variables that store the built-in function object(s)). Creating
-            // a new module each call means the client never loses the default behaviors of the
-            // built-in functions
-            var builtInsModule = new ChowModule(BUILT_INS_MODULE_NAME);
-
-            foreach (var builtIn in _builtInFunctions)
-            {
-                builtInsModule[builtIn.name] = builtIn.interopFunc;
-            }
-
-            return builtInsModule;
-        }
-        */
-
         static void ValidateArgumentCount(BuiltInDefinition builtInDef, ChowValue[] args)
         {
             if (args != null)
@@ -399,8 +395,7 @@ namespace Chow.Interpreter
         #endregion
 
         #region Constants
-
-        const string BUILT_INS_MODULE_NAME = "builtins";
+        
         const string BUILT_IN_NAME_PRINT = "print";
         const string BUILT_IN_NAME_INPUT = "input";
         const string BUILT_IN_NAME_CLEAR = "clear";

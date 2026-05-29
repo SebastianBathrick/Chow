@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using Chow.Interpreter.DataTypes;
 using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.Tokens;
-using Chow.Interpreter.Values.DataTypes;
 namespace Chow.Interpreter
 {
     /// <summary>
