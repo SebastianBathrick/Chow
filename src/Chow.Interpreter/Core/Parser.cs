@@ -856,6 +856,7 @@ namespace Chow.Interpreter.Core
                 case TokenType.KeywordNot:
                 case TokenType.SymbolLeftParen:
                 case TokenType.SymbolLeftBracket:
+                case TokenType.SymbolMinus:
                 case TokenType.SymbolLeftCurly:
                 {
                     return true;
