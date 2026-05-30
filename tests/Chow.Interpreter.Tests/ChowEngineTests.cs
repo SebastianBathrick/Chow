@@ -18,80 +18,78 @@ public class ChowEngineTests
         // instance with DataType.Float. Always double-check the literal passed to the constructor.
 
         #region Positive Integer Operands
-        
+
         new(
-            "1 + 2",
+            "1" + BINARY_OP_PLUS + "2",
             new(3)
         ),
 
         new(
-            "6 - 3",
+            "6" + BINARY_OP_MINUS + "3",
             new(3)
         ),
 
         new(
-            "7 * 8",
+            "7" + BINARY_OP_TIMES + "8",
             new(56)
         ),
 
         new(
-            "9 / 3",
+            "9" + BINARY_OP_DIVIDE + "3",
             new(3.0) // Division always converts operands to be Chow floats
         ),
 
         new(
-            "17 // 4",
+            "17" + BINARY_OP_FLOOR + "4",
             new(4)
         ),
-        
-        
+
         new(
-            "3 % 2",
+            "3" + BINARY_OP_MOD + "2",
             new(1)
         ),
-        
+
         new(
-            "11 ** 3",
+            "11" + BINARY_OP_POW + "3",
             new(1331)
         ),
 
         #endregion
-        
+
         #region Negative Integer Operands
-        
+
         new(
-            "-1 + -2",
+            "-1" + BINARY_OP_PLUS + "-2",
             new(-3)
         ),
 
         new(
-            "-6 - -3",
+            "-6" + BINARY_OP_MINUS + "-3",
             new(-3)
         ),
 
         new(
-            "-7 * -8",
+            "-7" + BINARY_OP_TIMES + "-8",
             new(56)
         ),
 
         new(
-            "-9 / -3",
+            "-9" + BINARY_OP_DIVIDE + "-3",
             new(3.0) // Division always converts operands to be Chow floats
         ),
 
         new(
-            "-17 // -4",
+            "-17" + BINARY_OP_FLOOR + "-4",
             new(4)
         ),
-        
-        
+
         new(
-            "-3 % -2",
+            "-3" + BINARY_OP_MOD + "-2",
             new(-1)
         ),
-        
+
         new(
-            "-11 ** -3",
+            "-11" + BINARY_OP_POW + "-3",
             new(-0.0007513148009015778)
         ),
 
@@ -100,39 +98,39 @@ public class ChowEngineTests
         #region Positive Float Operands
 
         new(
-            "1.2 + 2.3",
+            "1.2" + BINARY_OP_PLUS + "2.3",
             new(3.5)
         ),
 
         new(
-            "6.2 - 3.0",
+            "6.2" + BINARY_OP_MINUS + "3.0",
             new(3.2)
         ),
 
         new(
-            "7.35 * 8.002",
+            "7.35" + BINARY_OP_TIMES + "8.002",
             new(58.8147)
         ),
 
         new(
-            "9.245 / 0.5",
+            "9.245" + BINARY_OP_DIVIDE + "0.5",
             new(18.49)
         ),
 
         new(
-            "17.8 // 4.2",
+            "17.8" + BINARY_OP_FLOOR + "4.2",
             new(4.0)
         ),
-        
+
         // Expected: 0.94
         // But was: 0.9399999999999997
         new(
-            "3.34 % 1.2",
+            "3.34" + BINARY_OP_MOD + "1.2",
             new(0.94)
         ),
-        
+
         new(
-            "11.5 ** 2.3",
+            "11.5" + BINARY_OP_POW + "2.3",
             new(275.1725020936858)
         ),
 
@@ -141,39 +139,39 @@ public class ChowEngineTests
         #region Negative Float Operands
 
         new(
-            "-1.2 + -2.3",
+            "-1.2" + BINARY_OP_PLUS + "-2.3",
             new(-3.5)
         ),
 
         new(
-            "-6.2 - -3.0",
+            "-6.2" + BINARY_OP_MINUS + "-3.0",
             new(-3.2)
         ),
 
         new(
-            "-7.35 * -8.002",
+            "-7.35" + BINARY_OP_TIMES + "-8.002",
             new(58.8147)
         ),
 
         new(
-            "-9.245 / -0.5",
+            "-9.245" + BINARY_OP_DIVIDE + "-0.5",
             new(18.49)
         ),
 
         new(
-            "-17.8 // -4.2",
+            "-17.8" + BINARY_OP_FLOOR + "-4.2",
             new(4.0)
         ),
-        
+
         // Expected: 0.94
         // But was: 0.9399999999999997
         new(
-            "-3.34 % -1.2",
+            "-3.34" + BINARY_OP_MOD + "-1.2",
             new(-0.94)
         ),
-        
+
         new(
-            "-11.5 ** -2.3",
+            "-11.5" + BINARY_OP_POW + "-2.3",
             new(-0.0036340840468846625)
         ),
 
@@ -182,107 +180,303 @@ public class ChowEngineTests
         #region Positive Boolean Operands
 
         new(
-            "True + True",
+            LITERAL_BOOL_TRUE + BINARY_OP_PLUS + LITERAL_BOOL_TRUE,
             new(2)
-            ),
-        
+        ),
+
         new(
-            "True + False",
+            LITERAL_BOOL_TRUE + BINARY_OP_PLUS + LITERAL_BOOL_FALSE,
             new(1)
         ),
 
         new(
-            "False + False",
+            LITERAL_BOOL_FALSE + BINARY_OP_PLUS + LITERAL_BOOL_FALSE,
             new(0)
         ),
-        
+
         new(
-            "True - True",
+            LITERAL_BOOL_TRUE + BINARY_OP_MINUS + LITERAL_BOOL_TRUE,
             new(0)
         ),
-        
+
         new(
-            "True - False",
+            LITERAL_BOOL_TRUE + BINARY_OP_MINUS + LITERAL_BOOL_FALSE,
             new(1)
         ),
 
         new(
-            "False - False",
+            LITERAL_BOOL_FALSE + BINARY_OP_MINUS + LITERAL_BOOL_FALSE,
             new(0)
         ),
-        
+
         new(
-            "True * True",
+            LITERAL_BOOL_TRUE + BINARY_OP_TIMES + LITERAL_BOOL_TRUE,
             new(1)
-            ),
-        
+        ),
+
         new(
-            "True * False",
+            LITERAL_BOOL_TRUE + BINARY_OP_TIMES + LITERAL_BOOL_FALSE,
             new(0)
         ),
-        
+
         new(
-            "False * False",
+            LITERAL_BOOL_FALSE + BINARY_OP_TIMES + LITERAL_BOOL_FALSE,
             new(0)
         ),
-        
+
         // Note: Exclude False as right operand for division, floor, & modulus tests because False
         // as a Chow float is 0.0, and it would result in a zero-division exception.
-        
+
         new(
-            "True / True",
+            LITERAL_BOOL_TRUE + BINARY_OP_DIVIDE + LITERAL_BOOL_TRUE,
             new(1.0)
         ),
-        
+
         new(
-            "False / True",
+            LITERAL_BOOL_FALSE + BINARY_OP_DIVIDE + LITERAL_BOOL_TRUE,
             new(0.0)
         ),
-        
-        new(
-            "True // True",
-            new(1)
-        ),
-        
-        new(
-            "False // True",
-            new(0)
-        ),
-        
-        new(
-            "True % True",
-            new(0)
-        ),
-        
-        new(
-            "False % True",
-            new(0)
-        ),
 
         new(
-            "True ** True",
+            LITERAL_BOOL_TRUE + BINARY_OP_FLOOR + LITERAL_BOOL_TRUE,
             new(1)
         ),
 
         new(
-            "True ** False",
-            new(1)
-        ),
-        
-        new(
-            "False ** True",
+            LITERAL_BOOL_FALSE + BINARY_OP_FLOOR + LITERAL_BOOL_TRUE,
             new(0)
         ),
-        
+
         new(
-            "False ** False",
+            LITERAL_BOOL_TRUE + BINARY_OP_MOD + LITERAL_BOOL_TRUE,
+            new(0)
+        ),
+
+        new(
+            LITERAL_BOOL_FALSE + BINARY_OP_MOD + LITERAL_BOOL_TRUE,
+            new(0)
+        ),
+
+        new(
+            LITERAL_BOOL_TRUE + BINARY_OP_POW + LITERAL_BOOL_TRUE,
             new(1)
         ),
-        
+
+        new(
+            LITERAL_BOOL_TRUE + BINARY_OP_POW + LITERAL_BOOL_FALSE,
+            new(1)
+        ),
+
+        new(
+            LITERAL_BOOL_FALSE + BINARY_OP_POW + LITERAL_BOOL_TRUE,
+            new(0)
+        ),
+
+        new(
+            LITERAL_BOOL_FALSE + BINARY_OP_POW + LITERAL_BOOL_FALSE,
+            new(1)
+        ),
+
+        #endregion
+
+        #region Precedence And Associativity
+
+        // Multiplication binds tighter than addition
+        new(
+            "1" + BINARY_OP_PLUS + "2" + BINARY_OP_TIMES + "3",
+            new(7)
+        ),
+
+        // Parentheses override precedence
+        new(
+            "(1" + BINARY_OP_PLUS + "2)" + BINARY_OP_TIMES + "3",
+            new(9)
+        ),
+
+        // Subtraction is left-associative
+        new(
+            "10" + BINARY_OP_MINUS + "3" + BINARY_OP_MINUS + "2",
+            new(5)
+        ),
+
+        // Division is left-associative (and always yields a Chow float)
+        new(
+            "100" + BINARY_OP_DIVIDE + "10" + BINARY_OP_DIVIDE + "2",
+            new(5.0)
+        ),
+
+        // Exponentiation is right-associative: 2 ** (3 ** 2) = 2 ** 9
+        new(
+            "2" + BINARY_OP_POW + "3" + BINARY_OP_POW + "2",
+            new(512)
+        ),
+
+        // Parentheses force left-associative exponentiation: (2 ** 3) ** 2
+        new(
+            "(2" + BINARY_OP_POW + "3)" + BINARY_OP_POW + "2",
+            new(64)
+        ),
+
+        // Exponentiation binds tighter than multiplication: 2 * (3 ** 2)
+        new(
+            "2" + BINARY_OP_TIMES + "3" + BINARY_OP_POW + "2",
+            new(18)
+        ),
+
+        // Parentheses override precedence: (2 * 3) ** 2
+        new(
+            "(2" + BINARY_OP_TIMES + "3)" + BINARY_OP_POW + "2",
+            new(36)
+        ),
+
         #endregion
     ];
 
+    static readonly IReadOnlyList<TestCaseExecute> ExecuteUnaryCases =
+    [
+        // Note: Passing the ChowValue constructor a long or an int will result in a ChowValue
+        // instance with DataType.Int. However, passing a float or a double will result in an
+        // instance with DataType.Float. Always double-check the literal passed to the constructor.
 
+        #region Integer Negation
+
+        new(
+            "-3",
+            new(-3)
+        ),
+
+        new(
+            "-(3)",
+            new(-3)
+        ),
+
+        new(
+            "-(-3)",
+            new(3)
+        ),
+
+        new(
+            "(-3)",
+            new(-3)
+        ),
+
+        #endregion
+
+        #region Repeated Negation
+
+        new(
+            "--3",
+            new(3)
+        ),
+
+        new(
+            "---3",
+            new(3)
+        ),
+
+        #endregion
+
+        #region Float Negation
+
+        new(
+            "-3.25",
+            new(-3.25)
+        ),
+
+        new(
+            "-(3.25)",
+            new(-3.25)
+        ),
+
+        #endregion
+
+        #region Boolean Negation
+
+        new(
+            "-True",
+            new(-1)
+        ),
+
+        new(
+            "-False",
+            new(0)
+        ),
+
+        new(
+            "-(True)",
+            new(-1)
+        ),
+
+        new(
+            "-(False)",
+            new(0)
+        ),
+
+        #endregion
+
+        #region Negation With Exponentiation
+
+        new(
+            "-2" + BINARY_OP_POW + "2",
+            new(-4)
+        ),
+
+        new(
+            "-(2)" + BINARY_OP_POW + "2",
+            new(-4)
+        ),
+
+        new(
+            "2" + BINARY_OP_POW + "-2",
+            new(0.25)
+        ),
+
+        new(
+            "-2" + BINARY_OP_POW + "-2",
+            new(-0.25)
+        ),
+
+        #endregion
+
+        #region Negative Zero
+
+        new(
+            "-0",
+            new(0)
+        ),
+
+        new(
+            "-0.0",
+            new(-0.0)
+        ),
+
+        #endregion
+
+        #region Negation With Floor Division And Modulus
+
+        new(
+            "-3" + BINARY_OP_FLOOR + "2",
+            new(-2)
+        ),
+
+        new(
+            "3" + BINARY_OP_FLOOR + "-2",
+            new(-2)
+        ),
+
+        new(
+            "-3" + BINARY_OP_MOD + "2",
+            new(1)
+        ),
+
+        new(
+            "3" + BINARY_OP_MOD + "-2",
+            new(-1)
+        ),
+
+        #endregion
+    ];
+    
     static readonly IReadOnlyList<TestCaseExecute> ExecuteEmptyWhitespaceOrNullCases =
     [
         new(
@@ -490,6 +684,8 @@ public class ChowEngineTests
         #endregion
     ];
     
+    [TestCaseSource(nameof(ExecuteUnaryCases))]
+    [TestCaseSource(nameof(ExecuteEmptyWhitespaceOrNullCases))]
     [TestCaseSource(nameof(ExecuteBinaryArithmeticCases))]
     public void Execute_ValidSourceCode_ReturnExpectedResult(TestCaseExecute testCaseExecute)
     {
@@ -500,10 +696,10 @@ public class ChowEngineTests
 
     #region Constants
 
-    const string BOOL_LITERAL_TRUE = "True";
-    const string BOOL_LITERAL_FALSE = "False";
+    const string LITERAL_BOOL_TRUE = "True";
+    const string LITERAL_BOOL_FALSE = "False";
 
-    // Operator constants make it easier to scan and see where and what operator is being used.
+    // Binary operator constants make it easier to scan and see where and what operator is being used.
     const string BINARY_OP_PLUS = " + ";
     const string BINARY_OP_MINUS = " - ";
     const string BINARY_OP_TIMES = " * ";
