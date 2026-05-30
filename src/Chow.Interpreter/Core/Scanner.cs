@@ -23,7 +23,7 @@ namespace Chow.Interpreter.Core
 
         #region Fields & Consts
 
-        const int TAB_SIZE = 4;
+        const int SINGLE_INDENT_SIZE = 4;
 
         readonly List<Token> _tokenList;
         readonly Stack<int> _indentLevels;
@@ -200,8 +200,8 @@ namespace Chow.Interpreter.Core
             {
                 if (CurrentChar == '\t')
                 {
-                    // Tab rounds column up to the next multiple of TAB_SIZE (Python rule)
-                    indentColumn = (indentColumn / TAB_SIZE + 1) * TAB_SIZE;
+                    // Tab rounds column up to the next multiple of 4 (Python rule)
+                    indentColumn = (indentColumn / SINGLE_INDENT_SIZE + 1) * SINGLE_INDENT_SIZE;
                 }
                 else
                 {
