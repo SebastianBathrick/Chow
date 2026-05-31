@@ -11,7 +11,7 @@ public class ChowEngineTests
     
     public record TestCaseExecute(string SourceCode, ChowValue ExpectedResult);
 
-    static readonly IReadOnlyList<TestCaseExecute> ExecuteBinaryArithmeticCases =
+    static readonly IReadOnlyList<TestCaseExecute> ExecuteArithmeticOperatorCases =
     [
         // Note: Passing the ChowValue constructor a long or an int will result in a ChowValue
         // instance with DataType.Int. However, passing a float or a double will result in an
@@ -333,47 +333,47 @@ public class ChowEngineTests
         #region Positive Boolean Operands
 
         new(
-            LITERAL_BOOL_TRUE + PLUS + LITERAL_BOOL_TRUE,
+            TRUE_STR + PLUS + TRUE_STR,
             new(2)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + PLUS + LITERAL_BOOL_FALSE,
+            TRUE_STR + PLUS + FALSE_STR,
             new(1)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + PLUS + LITERAL_BOOL_FALSE,
+            FALSE_STR + PLUS + FALSE_STR,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + MINUS + LITERAL_BOOL_TRUE,
+            TRUE_STR + MINUS + TRUE_STR,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + MINUS + LITERAL_BOOL_FALSE,
+            TRUE_STR + MINUS + FALSE_STR,
             new(1)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + MINUS + LITERAL_BOOL_FALSE,
+            FALSE_STR + MINUS + FALSE_STR,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + TIMES + LITERAL_BOOL_TRUE,
+            TRUE_STR + TIMES + TRUE_STR,
             new(1)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + TIMES + LITERAL_BOOL_FALSE,
+            TRUE_STR + TIMES + FALSE_STR,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + TIMES + LITERAL_BOOL_FALSE,
+            FALSE_STR + TIMES + FALSE_STR,
             new(0)
         ),
 
@@ -381,52 +381,52 @@ public class ChowEngineTests
         // as a Chow float is 0.0, and it would result in a zero-division exception.
 
         new(
-            LITERAL_BOOL_TRUE + DIV + LITERAL_BOOL_TRUE,
+            TRUE_STR + DIV + TRUE_STR,
             new(1.0)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + DIV + LITERAL_BOOL_TRUE,
+            FALSE_STR + DIV + TRUE_STR,
             new(0.0)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + FLOOR + LITERAL_BOOL_TRUE,
+            TRUE_STR + FLOOR + TRUE_STR,
             new(1)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + FLOOR + LITERAL_BOOL_TRUE,
+            FALSE_STR + FLOOR + TRUE_STR,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + MOD + LITERAL_BOOL_TRUE,
+            TRUE_STR + MOD + TRUE_STR,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + MOD + LITERAL_BOOL_TRUE,
+            FALSE_STR + MOD + TRUE_STR,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + POW + LITERAL_BOOL_TRUE,
+            TRUE_STR + POW + TRUE_STR,
             new(1)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + POW + LITERAL_BOOL_FALSE,
+            TRUE_STR + POW + FALSE_STR,
             new(1)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + POW + LITERAL_BOOL_TRUE,
+            FALSE_STR + POW + TRUE_STR,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + POW + LITERAL_BOOL_FALSE,
+            FALSE_STR + POW + FALSE_STR,
             new(1)
         ),
 
@@ -541,22 +541,22 @@ public class ChowEngineTests
         #region Boolean Negation
 
         new(
-            "-True",
+            "-" + TRUE_STR,
             new(-1)
         ),
 
         new(
-            "-False",
+            "-" + FALSE_STR,
             new(0)
         ),
 
         new(
-            "-(True)",
+            "-(" + TRUE_STR + ")",
             new(-1)
         ),
 
         new(
-            "-(False)",
+            "-(" + FALSE_STR + ")",
             new(0)
         ),
 
@@ -835,7 +835,7 @@ public class ChowEngineTests
     ];
     
     [TestCaseSource(nameof(ExecuteEmptyWhitespaceOrNullCases))]
-    [TestCaseSource(nameof(ExecuteBinaryArithmeticCases))]
+    [TestCaseSource(nameof(ExecuteArithmeticOperatorCases))]
     public void Execute_ValidSourceCode_ReturnExpectedResult(TestCaseExecute testCaseExecute)
     {
         var returnValue = ChowEngine.Execute(testCaseExecute.SourceCode);
@@ -845,8 +845,8 @@ public class ChowEngineTests
 
     #region Constants
 
-    const string LITERAL_BOOL_TRUE = "True";
-    const string LITERAL_BOOL_FALSE = "False";
+    const string TRUE_STR = "True";
+    const string FALSE_STR = "False";
 
     // Binary operator constants make it easier to scan and see where and what operator is being used.
     const string PLUS = " + ";
