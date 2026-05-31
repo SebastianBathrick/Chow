@@ -20,37 +20,37 @@ public class ChowEngineTests
         #region Positive Integer Operands
 
         new(
-            "1" + BINARY_OP_PLUS + "2",
+            "1" + PLUS + "2",
             new(3)
         ),
 
         new(
-            "6" + BINARY_OP_MINUS + "3",
+            "6" + MINUS + "3",
             new(3)
         ),
 
         new(
-            "7" + BINARY_OP_TIMES + "8",
+            "7" + TIMES + "8",
             new(56)
         ),
 
         new(
-            "9" + BINARY_OP_DIVIDE + "3",
+            "9" + DIV + "3",
             new(3.0) // Division always converts operands to be Chow floats
         ),
 
         new(
-            "17" + BINARY_OP_FLOOR + "4",
+            "17" + FLOOR + "4",
             new(4)
         ),
 
         new(
-            "3" + BINARY_OP_MOD + "2",
+            "3" + MOD + "2",
             new(1)
         ),
 
         new(
-            "11" + BINARY_OP_POW + "3",
+            "11" + POW + "3",
             new(1331)
         ),
 
@@ -59,38 +59,114 @@ public class ChowEngineTests
         #region Negative Integer Operands
 
         new(
-            "-1" + BINARY_OP_PLUS + "-2",
+            "-1" + PLUS + "-2",
             new(-3)
         ),
 
         new(
-            "-6" + BINARY_OP_MINUS + "-3",
+            "-6" + MINUS + "-3",
             new(-3)
         ),
 
         new(
-            "-7" + BINARY_OP_TIMES + "-8",
+            "-7" + TIMES + "-8",
             new(56)
         ),
 
         new(
-            "-9" + BINARY_OP_DIVIDE + "-3",
+            "-9" + DIV + "-3",
             new(3.0) // Division always converts operands to be Chow floats
         ),
 
         new(
-            "-17" + BINARY_OP_FLOOR + "-4",
+            "-17" + FLOOR + "-4",
             new(4)
         ),
 
         new(
-            "-3" + BINARY_OP_MOD + "-2",
+            "-3" + MOD + "-2",
             new(-1)
         ),
 
         new(
-            "-11" + BINARY_OP_POW + "-3",
+            "-11" + POW + "-3",
             new(-0.0007513148009015778)
+        ),
+
+        #endregion
+
+        #region Positive and Negative Integer Operands
+
+        new(
+            "1" + PLUS + "-2",
+            new(-1)
+        ),
+
+        new(
+            "-1" + PLUS + "2",
+            new(1)
+        ),
+
+        new(
+            "6" + MINUS + "-3",
+            new(9)
+        ),
+
+        new(
+            "-6" + MINUS + "3",
+            new(-9)
+        ),
+
+        new(
+            "7" + TIMES + "-8",
+            new(-56)
+        ),
+
+        new(
+            "-7" + TIMES + "8",
+            new(-56)
+        ),
+
+        new(
+            "9" + DIV + "-3",
+            new(-3.0)
+        ),
+
+        new(
+            "-9" + DIV + "3",
+            new(-3.0) 
+        ),
+
+        new(
+            "17" + FLOOR + "-4",
+            new(-5)
+        ),
+
+        new(
+            "-17" + FLOOR + "4",
+            new(-5)
+        ),
+
+        // Modulus result takes the sign of the right operand (Python rule)
+        new(
+            "3" + MOD + "-2",
+            new(-1)
+        ),
+
+        new(
+            "-3" + MOD + "2",
+            new(1)
+        ),
+
+        new(
+            "11" + POW + "-3",
+            new(0.0007513148009015778)
+        ),
+
+        // Parses as -(11 ** 3) because exponentiation binds tighter than unary minus
+        new(
+            "-11" + POW + "3",
+            new(-1331)
         ),
 
         #endregion
@@ -98,39 +174,39 @@ public class ChowEngineTests
         #region Positive Float Operands
 
         new(
-            "1.2" + BINARY_OP_PLUS + "2.3",
+            "1.2" + PLUS + "2.3",
             new(3.5)
         ),
 
         new(
-            "6.2" + BINARY_OP_MINUS + "3.0",
+            "6.2" + MINUS + "3.0",
             new(3.2)
         ),
 
         new(
-            "7.35" + BINARY_OP_TIMES + "8.002",
+            "7.35" + TIMES + "8.002",
             new(58.8147)
         ),
 
         new(
-            "9.245" + BINARY_OP_DIVIDE + "0.5",
+            "9.245" + DIV + "0.5",
             new(18.49)
         ),
 
         new(
-            "17.8" + BINARY_OP_FLOOR + "4.2",
+            "17.8" + FLOOR + "4.2",
             new(4.0)
         ),
 
         // Expected: 0.94
         // But was: 0.9399999999999997
         new(
-            "3.34" + BINARY_OP_MOD + "1.2",
+            "3.34" + MOD + "1.2",
             new(0.94)
         ),
 
         new(
-            "11.5" + BINARY_OP_POW + "2.3",
+            "11.5" + POW + "2.3",
             new(275.1725020936858)
         ),
 
@@ -139,40 +215,117 @@ public class ChowEngineTests
         #region Negative Float Operands
 
         new(
-            "-1.2" + BINARY_OP_PLUS + "-2.3",
+            "-1.2" + PLUS + "-2.3",
             new(-3.5)
         ),
 
         new(
-            "-6.2" + BINARY_OP_MINUS + "-3.0",
+            "-6.2" + MINUS + "-3.0",
             new(-3.2)
         ),
 
         new(
-            "-7.35" + BINARY_OP_TIMES + "-8.002",
+            "-7.35" + TIMES + "-8.002",
             new(58.8147)
         ),
 
         new(
-            "-9.245" + BINARY_OP_DIVIDE + "-0.5",
+            "-9.245" + DIV + "-0.5",
             new(18.49)
         ),
 
         new(
-            "-17.8" + BINARY_OP_FLOOR + "-4.2",
+            "-17.8" + FLOOR + "-4.2",
             new(4.0)
         ),
 
         // Expected: 0.94
         // But was: 0.9399999999999997
         new(
-            "-3.34" + BINARY_OP_MOD + "-1.2",
+            "-3.34" + MOD + "-1.2",
             new(-0.94)
         ),
 
         new(
-            "-11.5" + BINARY_OP_POW + "-2.3",
+            "-11.5" + POW + "-2.3",
             new(-0.0036340840468846625)
+        ),
+
+        #endregion
+
+        #region Positive and Negative Float Operands
+
+        new(
+            "1.2" + PLUS + "-2.3",
+            new(-1.0999999999999999)
+        ),
+
+        new(
+            "-1.2" + PLUS + "2.3",
+            new(1.0999999999999999)
+        ),
+
+        new(
+            "6.2" + MINUS + "-3.0",
+            new(9.2)
+        ),
+
+        new(
+            "-6.2" + MINUS + "3.0",
+            new(-9.2)
+        ),
+
+        new(
+            "7.35" + TIMES + "-8.002",
+            new(-58.8147)
+        ),
+
+        new(
+            "-7.35" + TIMES + "8.002",
+            new(-58.8147)
+        ),
+
+        new(
+            "9.245" + DIV + "-0.5",
+            new(-18.49)
+        ),
+
+        new(
+            "-9.245" + DIV + "0.5",
+            new(-18.49)
+        ),
+
+        // Floor division rounds toward negative infinity (Python rule), not toward zero
+        new(
+            "17.8" + FLOOR + "-4.2",
+            new(-5.0)
+        ),
+
+        new(
+            "-17.8" + FLOOR + "4.2",
+            new(-5.0)
+        ),
+
+        // Modulus result takes the sign of the right operand (Python rule)
+        new(
+            "3.34" + MOD + "-1.2",
+            new(-0.26)
+        ),
+
+        new(
+            "-3.34" + MOD + "1.2",
+            new(0.26)
+        ),
+
+        new(
+            "11.5" + POW + "-2.3",
+            new(0.0036340840468846625)
+        ),
+
+        // Parses as -(11.5 ** 2.3) because exponentiation binds tighter than unary minus
+        new(
+            "-11.5" + POW + "2.3",
+            new(-275.1725020936858)
         ),
 
         #endregion
@@ -180,47 +333,47 @@ public class ChowEngineTests
         #region Positive Boolean Operands
 
         new(
-            LITERAL_BOOL_TRUE + BINARY_OP_PLUS + LITERAL_BOOL_TRUE,
+            LITERAL_BOOL_TRUE + PLUS + LITERAL_BOOL_TRUE,
             new(2)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + BINARY_OP_PLUS + LITERAL_BOOL_FALSE,
+            LITERAL_BOOL_TRUE + PLUS + LITERAL_BOOL_FALSE,
             new(1)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + BINARY_OP_PLUS + LITERAL_BOOL_FALSE,
+            LITERAL_BOOL_FALSE + PLUS + LITERAL_BOOL_FALSE,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + BINARY_OP_MINUS + LITERAL_BOOL_TRUE,
+            LITERAL_BOOL_TRUE + MINUS + LITERAL_BOOL_TRUE,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + BINARY_OP_MINUS + LITERAL_BOOL_FALSE,
+            LITERAL_BOOL_TRUE + MINUS + LITERAL_BOOL_FALSE,
             new(1)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + BINARY_OP_MINUS + LITERAL_BOOL_FALSE,
+            LITERAL_BOOL_FALSE + MINUS + LITERAL_BOOL_FALSE,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + BINARY_OP_TIMES + LITERAL_BOOL_TRUE,
+            LITERAL_BOOL_TRUE + TIMES + LITERAL_BOOL_TRUE,
             new(1)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + BINARY_OP_TIMES + LITERAL_BOOL_FALSE,
+            LITERAL_BOOL_TRUE + TIMES + LITERAL_BOOL_FALSE,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + BINARY_OP_TIMES + LITERAL_BOOL_FALSE,
+            LITERAL_BOOL_FALSE + TIMES + LITERAL_BOOL_FALSE,
             new(0)
         ),
 
@@ -228,52 +381,52 @@ public class ChowEngineTests
         // as a Chow float is 0.0, and it would result in a zero-division exception.
 
         new(
-            LITERAL_BOOL_TRUE + BINARY_OP_DIVIDE + LITERAL_BOOL_TRUE,
+            LITERAL_BOOL_TRUE + DIV + LITERAL_BOOL_TRUE,
             new(1.0)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + BINARY_OP_DIVIDE + LITERAL_BOOL_TRUE,
+            LITERAL_BOOL_FALSE + DIV + LITERAL_BOOL_TRUE,
             new(0.0)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + BINARY_OP_FLOOR + LITERAL_BOOL_TRUE,
+            LITERAL_BOOL_TRUE + FLOOR + LITERAL_BOOL_TRUE,
             new(1)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + BINARY_OP_FLOOR + LITERAL_BOOL_TRUE,
+            LITERAL_BOOL_FALSE + FLOOR + LITERAL_BOOL_TRUE,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + BINARY_OP_MOD + LITERAL_BOOL_TRUE,
+            LITERAL_BOOL_TRUE + MOD + LITERAL_BOOL_TRUE,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + BINARY_OP_MOD + LITERAL_BOOL_TRUE,
+            LITERAL_BOOL_FALSE + MOD + LITERAL_BOOL_TRUE,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + BINARY_OP_POW + LITERAL_BOOL_TRUE,
+            LITERAL_BOOL_TRUE + POW + LITERAL_BOOL_TRUE,
             new(1)
         ),
 
         new(
-            LITERAL_BOOL_TRUE + BINARY_OP_POW + LITERAL_BOOL_FALSE,
+            LITERAL_BOOL_TRUE + POW + LITERAL_BOOL_FALSE,
             new(1)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + BINARY_OP_POW + LITERAL_BOOL_TRUE,
+            LITERAL_BOOL_FALSE + POW + LITERAL_BOOL_TRUE,
             new(0)
         ),
 
         new(
-            LITERAL_BOOL_FALSE + BINARY_OP_POW + LITERAL_BOOL_FALSE,
+            LITERAL_BOOL_FALSE + POW + LITERAL_BOOL_FALSE,
             new(1)
         ),
 
@@ -283,49 +436,49 @@ public class ChowEngineTests
 
         // Multiplication binds tighter than addition
         new(
-            "1" + BINARY_OP_PLUS + "2" + BINARY_OP_TIMES + "3",
+            "1" + PLUS + "2" + TIMES + "3",
             new(7)
         ),
 
         // Parentheses override precedence
         new(
-            "(1" + BINARY_OP_PLUS + "2)" + BINARY_OP_TIMES + "3",
+            "(1" + PLUS + "2)" + TIMES + "3",
             new(9)
         ),
 
         // Subtraction is left-associative
         new(
-            "10" + BINARY_OP_MINUS + "3" + BINARY_OP_MINUS + "2",
+            "10" + MINUS + "3" + MINUS + "2",
             new(5)
         ),
 
         // Division is left-associative (and always yields a Chow float)
         new(
-            "100" + BINARY_OP_DIVIDE + "10" + BINARY_OP_DIVIDE + "2",
+            "100" + DIV + "10" + DIV + "2",
             new(5.0)
         ),
 
         // Exponentiation is right-associative: 2 ** (3 ** 2) = 2 ** 9
         new(
-            "2" + BINARY_OP_POW + "3" + BINARY_OP_POW + "2",
+            "2" + POW + "3" + POW + "2",
             new(512)
         ),
 
         // Parentheses force left-associative exponentiation: (2 ** 3) ** 2
         new(
-            "(2" + BINARY_OP_POW + "3)" + BINARY_OP_POW + "2",
+            "(2" + POW + "3)" + POW + "2",
             new(64)
         ),
 
         // Exponentiation binds tighter than multiplication: 2 * (3 ** 2)
         new(
-            "2" + BINARY_OP_TIMES + "3" + BINARY_OP_POW + "2",
+            "2" + TIMES + "3" + POW + "2",
             new(18)
         ),
 
         // Parentheses override precedence: (2 * 3) ** 2
         new(
-            "(2" + BINARY_OP_TIMES + "3)" + BINARY_OP_POW + "2",
+            "(2" + TIMES + "3)" + POW + "2",
             new(36)
         ),
 
@@ -417,22 +570,22 @@ public class ChowEngineTests
         #region Negation With Exponentiation
 
         new(
-            "-2" + BINARY_OP_POW + "2",
+            "-2" + POW + "2",
             new(-4)
         ),
 
         new(
-            "-(2)" + BINARY_OP_POW + "2",
+            "-(2)" + POW + "2",
             new(-4)
         ),
 
         new(
-            "2" + BINARY_OP_POW + "-2",
+            "2" + POW + "-2",
             new(0.25)
         ),
 
         new(
-            "-2" + BINARY_OP_POW + "-2",
+            "-2" + POW + "-2",
             new(-0.25)
         ),
 
@@ -455,22 +608,22 @@ public class ChowEngineTests
         #region Negation With Floor Division And Modulus
 
         new(
-            "-3" + BINARY_OP_FLOOR + "2",
+            "-3" + FLOOR + "2",
             new(-2)
         ),
 
         new(
-            "3" + BINARY_OP_FLOOR + "-2",
+            "3" + FLOOR + "-2",
             new(-2)
         ),
 
         new(
-            "-3" + BINARY_OP_MOD + "2",
+            "-3" + MOD + "2",
             new(1)
         ),
 
         new(
-            "3" + BINARY_OP_MOD + "-2",
+            "3" + MOD + "-2",
             new(-1)
         ),
 
@@ -700,13 +853,13 @@ public class ChowEngineTests
     const string LITERAL_BOOL_FALSE = "False";
 
     // Binary operator constants make it easier to scan and see where and what operator is being used.
-    const string BINARY_OP_PLUS = " + ";
-    const string BINARY_OP_MINUS = " - ";
-    const string BINARY_OP_TIMES = " * ";
-    const string BINARY_OP_DIVIDE = " / ";
-    const string BINARY_OP_MOD = " % ";
-    const string BINARY_OP_FLOOR = " // ";
-    const string BINARY_OP_POW = " ** ";
+    const string PLUS = " + ";
+    const string MINUS = " - ";
+    const string TIMES = " * ";
+    const string DIV = " / ";
+    const string MOD = " % ";
+    const string FLOOR = " // ";
+    const string POW = " ** ";
     
 
     const string NEWLINE_LINUX_MAC = "\n";
