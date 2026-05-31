@@ -17,6 +17,8 @@ public class ChowEngineTests
         // instance with DataType.Int. However, passing a float or a double will result in an
         // instance with DataType.Float. Always double-check the literal passed to the constructor.
 
+        //--- Operand Data Type Behavior ---
+        
         #region Positive Integer Operands
 
         new(
@@ -330,7 +332,7 @@ public class ChowEngineTests
 
         #endregion
 
-        #region Positive Boolean Operands
+        #region Boolean Operands
 
         new(
             TRUE_STR + PLUS + TRUE_STR,
@@ -432,7 +434,9 @@ public class ChowEngineTests
 
         #endregion
 
-        #region Float/Integer Mixed Operands
+        //--- Data Type Coercion ---
+        
+        #region Integer/Float Mixed Operands
 
         new(
             "2.5" + PLUS + "7",
@@ -473,6 +477,204 @@ public class ChowEngineTests
             "2.5" + POW + "-2",
             new(0.16)
             ),
+        #endregion
+
+        #region Integer/Boolean Mixed Operands
+
+        // Booleans behave as integers in arithmetic (True is 1, False is 0)
+
+        new(
+            "5" + PLUS + TRUE_STR,
+            new(6)
+        ),
+
+        new(
+            "5" + PLUS + FALSE_STR,
+            new(5)
+        ),
+
+        new(
+            TRUE_STR + PLUS + "5",
+            new(6)
+        ),
+
+        new(
+            "5" + MINUS + TRUE_STR,
+            new(4)
+        ),
+
+        new(
+            "5" + MINUS + FALSE_STR,
+            new(5)
+        ),
+
+        new(
+            TRUE_STR + MINUS + "5",
+            new(-4)
+        ),
+
+        new(
+            "5" + TIMES + TRUE_STR,
+            new(5)
+        ),
+
+        new(
+            "5" + TIMES + FALSE_STR,
+            new(0)
+        ),
+
+        // Note: Exclude False as right operand for division, floor, & modulus tests because False
+        // as a Chow float is 0.0, and it would result in a zero-division exception.
+
+        new(
+            "5" + DIV + TRUE_STR,
+            new(5.0) // Division always converts operands to be Chow floats
+        ),
+
+        new(
+            FALSE_STR + DIV + "5",
+            new(0.0)
+        ),
+
+        new(
+            "5" + FLOOR + TRUE_STR,
+            new(5)
+        ),
+
+        new(
+            TRUE_STR + FLOOR + "5",
+            new(0)
+        ),
+
+        new(
+            "5" + MOD + TRUE_STR,
+            new(0)
+        ),
+
+        new(
+            TRUE_STR + MOD + "5",
+            new(1)
+        ),
+
+        new(
+            "5" + POW + TRUE_STR,
+            new(5)
+        ),
+
+        new(
+            "5" + POW + FALSE_STR,
+            new(1)
+        ),
+
+        new(
+            TRUE_STR + POW + "5",
+            new(1)
+        ),
+
+        new(
+            FALSE_STR + POW + "5",
+            new(0)
+        ),
+
+        #endregion
+
+        #region Float/Boolean Mixed Operands
+
+        // A boolean operand mixed with a float yields a Chow float result
+
+        new(
+            "2.5" + PLUS + TRUE_STR,
+            new(3.5)
+        ),
+
+        new(
+            "2.5" + PLUS + FALSE_STR,
+            new(2.5)
+        ),
+
+        new(
+            TRUE_STR + PLUS + "2.5",
+            new(3.5)
+        ),
+
+        new(
+            "2.5" + MINUS + TRUE_STR,
+            new(1.5)
+        ),
+
+        new(
+            "2.5" + MINUS + FALSE_STR,
+            new(2.5)
+        ),
+
+        new(
+            TRUE_STR + MINUS + "2.5",
+            new(-1.5)
+        ),
+
+        new(
+            "2.5" + TIMES + TRUE_STR,
+            new(2.5)
+        ),
+
+        new(
+            "2.5" + TIMES + FALSE_STR,
+            new(0.0)
+        ),
+
+        // Note: Exclude False as right operand for division, floor, & modulus tests because False
+        // as a Chow float is 0.0, and it would result in a zero-division exception.
+
+        new(
+            "2.5" + DIV + TRUE_STR,
+            new(2.5)
+        ),
+
+        new(
+            FALSE_STR + DIV + "2.5",
+            new(0.0)
+        ),
+
+        new(
+            "2.5" + FLOOR + TRUE_STR,
+            new(2.0)
+        ),
+
+        new(
+            TRUE_STR + FLOOR + "2.5",
+            new(0.0)
+        ),
+
+        new(
+            "2.5" + MOD + TRUE_STR,
+            new(0.5)
+        ),
+
+        new(
+            TRUE_STR + MOD + "2.5",
+            new(1.0)
+        ),
+
+        new(
+            "2.5" + POW + TRUE_STR,
+            new(2.5)
+        ),
+
+        new(
+            "2.5" + POW + FALSE_STR,
+            new(1.0)
+        ),
+
+        new(
+            TRUE_STR + POW + "2.5",
+            new(1.0)
+        ),
+
+        new(
+            FALSE_STR + POW + "2.5",
+            new(0.0)
+        ),
+
         #endregion
         
         #region Precedence And Associativity
