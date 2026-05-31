@@ -483,14 +483,9 @@ public class ChowEngineTests
         ),
 
         #endregion
-    ];
-
-    static readonly IReadOnlyList<TestCaseExecute> ExecuteUnaryCases =
-    [
-        // Note: Passing the ChowValue constructor a long or an int will result in a ChowValue
-        // instance with DataType.Int. However, passing a float or a double will result in an
-        // instance with DataType.Float. Always double-check the literal passed to the constructor.
-
+    
+        //--- Unary Minus ---
+        
         #region Integer Negation
 
         new(
@@ -628,7 +623,9 @@ public class ChowEngineTests
         ),
 
         #endregion
+    
     ];
+
     
     static readonly IReadOnlyList<TestCaseExecute> ExecuteEmptyWhitespaceOrNullCases =
     [
@@ -837,7 +834,6 @@ public class ChowEngineTests
         #endregion
     ];
     
-    [TestCaseSource(nameof(ExecuteUnaryCases))]
     [TestCaseSource(nameof(ExecuteEmptyWhitespaceOrNullCases))]
     [TestCaseSource(nameof(ExecuteBinaryArithmeticCases))]
     public void Execute_ValidSourceCode_ReturnExpectedResult(TestCaseExecute testCaseExecute)
