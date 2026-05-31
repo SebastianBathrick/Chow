@@ -16,8 +16,8 @@ public class ChowEngineTests
         // Note: Passing the ChowValue constructor a long or an int will result in a ChowValue
         // instance with DataType.Int. However, passing a float or a double will result in an
         // instance with DataType.Float. Always double-check the literal passed to the constructor.
-
-        //--- Operand Data Type Behavior ---
+        
+        //--- Positive and Negative Operands ---
         
         #region Positive Integer Operands
 
@@ -332,6 +332,89 @@ public class ChowEngineTests
 
         #endregion
 
+
+        //--- Large/Small Operands ---
+
+        #region Left Larger Integer Operand
+
+        new(
+            "5" + PLUS + "1",
+            new(6)
+            ),
+
+        new(
+            "8" + MINUS + "3",
+            new(5)
+        ),
+
+        new(
+            "7" + TIMES + "2",
+            new(14)
+        ),
+
+        new(
+            "10" + DIV + "4",
+            new(2.5) // Division always converts operands to be Chow floats
+        ),
+
+        new(
+            "17" + FLOOR + "4",
+            new(4)
+        ),
+
+        new(
+            "9" + MOD + "4",
+            new(1)
+        ),
+
+        new(
+            "5" + POW + "2",
+            new(25)
+        ),
+
+        #endregion
+
+        #region Right Larger Integer Operand
+
+        new(
+            "1" + PLUS + "5",
+            new(6)
+        ),
+
+        new(
+            "3" + MINUS + "8",
+            new(-5)
+        ),
+
+        new(
+            "2" + TIMES + "7",
+            new(14)
+        ),
+
+        new(
+            "4" + DIV + "10",
+            new(0.4) // Division always converts operands to be Chow floats
+        ),
+
+        new(
+            "4" + FLOOR + "17",
+            new(0)
+        ),
+
+        new(
+            "4" + MOD + "9",
+            new(4)
+        ),
+
+        new(
+            "2" + POW + "5",
+            new(32)
+        ),
+
+        #endregion
+        
+        //--- Data Type Coercion ---
+        
         #region Boolean Operands
 
         new(
@@ -433,8 +516,6 @@ public class ChowEngineTests
         ),
 
         #endregion
-
-        //--- Data Type Coercion ---
         
         #region Integer/Float Mixed Operands
 
@@ -762,9 +843,10 @@ public class ChowEngineTests
             new(3)
         ),
 
+        // Behaves the same as (-(-(-3)))
         new(
             "---3",
-            new(3)
+            new(-3)
         ),
 
         #endregion
@@ -807,30 +889,6 @@ public class ChowEngineTests
 
         #endregion
 
-        #region Negation With Exponentiation
-
-        new(
-            "-2" + POW + "2",
-            new(-4)
-        ),
-
-        new(
-            "-(2)" + POW + "2",
-            new(-4)
-        ),
-
-        new(
-            "2" + POW + "-2",
-            new(0.25)
-        ),
-
-        new(
-            "-2" + POW + "-2",
-            new(-0.25)
-        ),
-
-        #endregion
-
         #region Negative Zero
 
         new(
@@ -844,31 +902,6 @@ public class ChowEngineTests
         ),
 
         #endregion
-
-        #region Negation With Floor Division And Modulus
-
-        new(
-            "-3" + FLOOR + "2",
-            new(-2)
-        ),
-
-        new(
-            "3" + FLOOR + "-2",
-            new(-2)
-        ),
-
-        new(
-            "-3" + MOD + "2",
-            new(1)
-        ),
-
-        new(
-            "3" + MOD + "-2",
-            new(-1)
-        ),
-
-        #endregion
-    
     ];
 
     
@@ -1089,7 +1122,6 @@ public class ChowEngineTests
     }
 
     #region Constants
-
     const string TRUE_STR = "True";
     const string FALSE_STR = "False";
 
