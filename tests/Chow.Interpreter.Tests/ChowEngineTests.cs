@@ -9,9 +9,9 @@ public class ChowEngineTests
         ChowEngine.Reset();
     }
     
-    public record TestCaseExecute(string SourceCode, ChowValue ExpectedResult);
+    public record CaseExecute(string SourceCode, ChowValue ExpectedResult);
 
-    static readonly IReadOnlyList<TestCaseExecute> ExecuteArithmeticOperatorCases =
+    static readonly IReadOnlyList<CaseExecute> ExecuteArithmeticOperatorCases =
     [
         // Note: Passing the ChowValue constructor a long or an int will result in a ChowValue
         // instance with DataType.Int. However, passing a float or a double will result in an
@@ -982,8 +982,178 @@ public class ChowEngineTests
         #endregion
     ];
 
+    static readonly IReadOnlyList<CaseExecute> ExecuteComparisonOperatorCases =
+    [
+        #region Integer Operands
+
+        new(
+            ONE_INT_STR + EQUALS + ONE_INT_STR,
+            new(true)
+            ),
+        
+        new(
+            ONE_INT_STR + EQUALS + TWO_INT_STR,
+            new(false)),
+
+        new(
+            ONE_INT_STR + NOT_EQUALS + TWO_INT_STR,
+            new(true)
+        ),
+
+        new(
+            ONE_INT_STR + NOT_EQUALS + ONE_INT_STR,
+            new(false)
+        ),
+
+        new(
+            ONE_INT_STR + LESS + TWO_INT_STR,
+            new(true)
+        ),
+
+        new(
+            TWO_INT_STR + LESS + ONE_INT_STR,
+            new(false)
+        ),
+
+        new(
+            TWO_INT_STR + GREATER + ONE_INT_STR,
+            new(true)
+        ),
+
+        new(
+            ONE_INT_STR + GREATER + TWO_INT_STR,
+            new(false)
+        ),
+
+        new(
+            ONE_INT_STR + GREATER_EQUALS + ONE_INT_STR,
+            new(true)
+        ),
+
+        new(
+            TWO_INT_STR + GREATER_EQUALS + ONE_INT_STR,
+            new(true)
+        ),
+
+        new(
+            ONE_INT_STR + GREATER_EQUALS + TWO_INT_STR,
+            new(false)
+        ),
+
+        new(
+            ONE_INT_STR + LESS_OR_EQUALS + ONE_INT_STR,
+            new(true)
+        ),
+
+        new(
+            ONE_INT_STR + LESS_OR_EQUALS + TWO_INT_STR,
+            new(true)
+        ),
+
+        new(
+            TWO_INT_STR + LESS_OR_EQUALS + ONE_INT_STR,
+            new(false)
+        ),
+
+        #endregion
+
+        #region Float Operands
+
+        new(
+            ONE_FLOAT_STR + EQUALS + ONE_FLOAT_STR,
+            new(true)
+        ),
+
+        new(
+            ONE_FLOAT_STR + EQUALS + TWO_FLOAT_STR,
+            new(false)
+        ),
+
+        // Positive and negative zero compare equal (IEEE-754 / Python rule)
+        new(
+            ZERO_FLOAT_STR + EQUALS + ZERO_FLOAT_STR,
+            new(true)
+        ),
+
+        new(
+            NEG_ZERO_FLOAT_STR + EQUALS + NEG_ZERO_FLOAT_STR,
+            new(true)
+        ),
+
+        new(
+            ZERO_FLOAT_STR + EQUALS + NEG_ZERO_FLOAT_STR,
+            new(true)
+        ),
+
+        new(
+            NEG_ZERO_FLOAT_STR + EQUALS + ZERO_FLOAT_STR,
+            new(true)
+        ),
+
+        new(
+            ONE_FLOAT_STR + NOT_EQUALS + TWO_FLOAT_STR,
+            new(true)
+        ),
+
+        new(
+            ONE_FLOAT_STR + NOT_EQUALS + ONE_FLOAT_STR,
+            new(false)
+        ),
+
+        new(
+            ONE_FLOAT_STR + LESS + TWO_FLOAT_STR,
+            new(true)
+        ),
+
+        new(
+            TWO_FLOAT_STR + LESS + ONE_FLOAT_STR,
+            new(false)
+        ),
+
+        new(
+            TWO_FLOAT_STR + GREATER + ONE_FLOAT_STR,
+            new(true)
+        ),
+
+        new(
+            ONE_FLOAT_STR + GREATER + TWO_FLOAT_STR,
+            new(false)
+        ),
+
+        new(
+            ONE_FLOAT_STR + GREATER_EQUALS + ONE_FLOAT_STR,
+            new(true)
+        ),
+
+        new(
+            TWO_FLOAT_STR + GREATER_EQUALS + ONE_FLOAT_STR,
+            new(true)
+        ),
+
+        new(
+            ONE_FLOAT_STR + GREATER_EQUALS + TWO_FLOAT_STR,
+            new(false)
+        ),
+
+        new(
+            ONE_FLOAT_STR + LESS_OR_EQUALS + ONE_FLOAT_STR,
+            new(true)
+        ),
+
+        new(
+            ONE_FLOAT_STR + LESS_OR_EQUALS + TWO_FLOAT_STR,
+            new(true)
+        ),
+
+        new(
+            TWO_FLOAT_STR + LESS_OR_EQUALS + ONE_FLOAT_STR,
+            new(false)
+        ),
+
+        #endregion
+    ];
     
-    static readonly IReadOnlyList<TestCaseExecute> ExecuteEmptyWhitespaceOrNullCases =
+    static readonly IReadOnlyList<CaseExecute> ExecuteEmptyWhitespaceOrNullCases =
     [
         new(
             string.Empty,
@@ -1190,13 +1360,14 @@ public class ChowEngineTests
         #endregion
     ];
     
+    [TestCaseSource(nameof(ExecuteComparisonOperatorCases))]
     [TestCaseSource(nameof(ExecuteEmptyWhitespaceOrNullCases))]
     [TestCaseSource(nameof(ExecuteArithmeticOperatorCases))]
-    public void Execute_ValidSourceCode_ReturnExpectedResult(TestCaseExecute testCaseExecute)
+    public void Execute_ValidSourceCode_ReturnExpectedResult(CaseExecute caseExecute)
     {
-        var returnValue = ChowEngine.Execute(testCaseExecute.SourceCode);
+        var returnValue = ChowEngine.Execute(caseExecute.SourceCode);
         
-        Assert.That(returnValue, Is.EqualTo(testCaseExecute.ExpectedResult));
+        Assert.That(returnValue, Is.EqualTo(caseExecute.ExpectedResult));
     }
 
     #region Constants
@@ -1212,6 +1383,21 @@ public class ChowEngineTests
     const string FLOOR = " // ";
     const string POW = " ** ";
     
+    const string EQUALS = " == ";
+    const string NOT_EQUALS = " != ";
+    const string LESS = " < ";
+    const string GREATER = " > ";
+    const string GREATER_EQUALS = " >= ";
+    const string LESS_OR_EQUALS = " <= ";
+    
+    // These numeric strings are specifically for comparison testing
+    const string NEG_ZERO_FLOAT_STR = "-0.0";
+    const string ZERO_FLOAT_STR = "0.0";
+    const string ONE_FLOAT_STR = "1.0";
+    const string TWO_FLOAT_STR = "2.0";
+    
+    const string ONE_INT_STR = "1";
+    const string TWO_INT_STR = "2";
 
     const string NEWLINE_LINUX_MAC = "\n";
     const string NEWLINE_WINDOWS = "\r\n";
