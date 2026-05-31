@@ -21,8 +21,6 @@ namespace Chow.Interpreter.Core
 
         Instruction CurrentOperation => _callStack.CurrentInstr;
 
-        public ChowValue ValStackTop => _valStack.Count != 0 ? _valStack.Peek() : ChowValue.None;
-
         #endregion
 
         #region Constructors
@@ -564,6 +562,7 @@ namespace Chow.Interpreter.Core
 
         #region Expression Evaluation Methods
 
+        // TODO: Split each op into separate methods to avoid evaluating the operation code twice
         void EvaluateBinaryOperation(OperationCode opCode)
         {
             // Float/bool promotion happens inside ChowValue's instance operator methods (CreateSum etc.)

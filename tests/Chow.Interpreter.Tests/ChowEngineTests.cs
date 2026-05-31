@@ -200,11 +200,9 @@ public class ChowEngineTests
             new(4.0)
         ),
 
-        // Expected: 0.94
-        // But was: 0.9399999999999997
         new(
             "3.34" + MOD + "1.2",
-            new(0.94)
+            new(0.9399999999999997)
         ),
 
         new(
@@ -240,12 +238,10 @@ public class ChowEngineTests
             "-17.8" + FLOOR + "-4.2",
             new(4.0)
         ),
-
-        // Expected: 0.94
-        // But was: 0.9399999999999997
+        
         new(
             "-3.34" + MOD + "-1.2",
-            new(-0.94)
+            new(-0.9399999999999997)
         ),
 
         new(
@@ -984,74 +980,76 @@ public class ChowEngineTests
 
     static readonly IReadOnlyList<CaseExecute> ExecuteComparisonOperatorCases =
     [
+        // -- Numeric Operands --
+        
         #region Integer Operands
 
         new(
-            ONE_INT_STR + EQUALS + ONE_INT_STR,
+            "1" + EQUALS + "1",
             new(true)
             ),
-        
+
         new(
-            ONE_INT_STR + EQUALS + TWO_INT_STR,
+            "1" + EQUALS + "2",
             new(false)),
 
         new(
-            ONE_INT_STR + NOT_EQUALS + TWO_INT_STR,
+            "1" + NOT_EQUALS + "2",
             new(true)
         ),
 
         new(
-            ONE_INT_STR + NOT_EQUALS + ONE_INT_STR,
+            "1" + NOT_EQUALS + "1",
             new(false)
         ),
 
         new(
-            ONE_INT_STR + LESS + TWO_INT_STR,
+            "1" + LESS + "2",
             new(true)
         ),
 
         new(
-            TWO_INT_STR + LESS + ONE_INT_STR,
+            "2" + LESS + "1",
             new(false)
         ),
 
         new(
-            TWO_INT_STR + GREATER + ONE_INT_STR,
+            "2" + GREATER + "1",
             new(true)
         ),
 
         new(
-            ONE_INT_STR + GREATER + TWO_INT_STR,
+            "1" + GREATER + "2",
             new(false)
         ),
 
         new(
-            ONE_INT_STR + GREATER_EQUALS + ONE_INT_STR,
+            "1" + GREATER_EQUALS + "1",
             new(true)
         ),
 
         new(
-            TWO_INT_STR + GREATER_EQUALS + ONE_INT_STR,
+            "2" + GREATER_EQUALS + "1",
             new(true)
         ),
 
         new(
-            ONE_INT_STR + GREATER_EQUALS + TWO_INT_STR,
+            "1" + GREATER_EQUALS + "2",
             new(false)
         ),
 
         new(
-            ONE_INT_STR + LESS_OR_EQUALS + ONE_INT_STR,
+            "1" + LESS_OR_EQUALS + "1",
             new(true)
         ),
 
         new(
-            ONE_INT_STR + LESS_OR_EQUALS + TWO_INT_STR,
+            "1" + LESS_OR_EQUALS + "2",
             new(true)
         ),
 
         new(
-            TWO_INT_STR + LESS_OR_EQUALS + ONE_INT_STR,
+            "2" + LESS_OR_EQUALS + "1",
             new(false)
         ),
 
@@ -1060,93 +1058,267 @@ public class ChowEngineTests
         #region Float Operands
 
         new(
-            ONE_FLOAT_STR + EQUALS + ONE_FLOAT_STR,
+            "1.0" + EQUALS + "1.0",
             new(true)
         ),
 
         new(
-            ONE_FLOAT_STR + EQUALS + TWO_FLOAT_STR,
+            "1.0" + EQUALS + "2.0",
             new(false)
         ),
 
         // Positive and negative zero compare equal (IEEE-754 / Python rule)
         new(
-            ZERO_FLOAT_STR + EQUALS + ZERO_FLOAT_STR,
+            "0.0" + EQUALS + "0.0",
             new(true)
         ),
 
         new(
-            NEG_ZERO_FLOAT_STR + EQUALS + NEG_ZERO_FLOAT_STR,
+            "-0.0" + EQUALS + "-0.0",
             new(true)
         ),
 
         new(
-            ZERO_FLOAT_STR + EQUALS + NEG_ZERO_FLOAT_STR,
+            "0.0" + EQUALS + "-0.0",
             new(true)
         ),
 
         new(
-            NEG_ZERO_FLOAT_STR + EQUALS + ZERO_FLOAT_STR,
+            "-0.0" + EQUALS + "0.0",
             new(true)
         ),
 
         new(
-            ONE_FLOAT_STR + NOT_EQUALS + TWO_FLOAT_STR,
+            "1.0" + NOT_EQUALS + "2.0",
             new(true)
         ),
 
         new(
-            ONE_FLOAT_STR + NOT_EQUALS + ONE_FLOAT_STR,
+            "1.0" + NOT_EQUALS + "1.0",
             new(false)
         ),
 
         new(
-            ONE_FLOAT_STR + LESS + TWO_FLOAT_STR,
+            "1.0" + LESS + "2.0",
             new(true)
         ),
 
         new(
-            TWO_FLOAT_STR + LESS + ONE_FLOAT_STR,
+            "2.0" + LESS + "1.0",
             new(false)
         ),
 
         new(
-            TWO_FLOAT_STR + GREATER + ONE_FLOAT_STR,
+            "2.0" + GREATER + "1.0",
             new(true)
         ),
 
         new(
-            ONE_FLOAT_STR + GREATER + TWO_FLOAT_STR,
+            "1.0" + GREATER + "2.0",
             new(false)
         ),
 
         new(
-            ONE_FLOAT_STR + GREATER_EQUALS + ONE_FLOAT_STR,
+            "1.0" + GREATER_EQUALS + "1.0",
             new(true)
         ),
 
         new(
-            TWO_FLOAT_STR + GREATER_EQUALS + ONE_FLOAT_STR,
+            "2.0" + GREATER_EQUALS + "1.0",
             new(true)
         ),
 
         new(
-            ONE_FLOAT_STR + GREATER_EQUALS + TWO_FLOAT_STR,
+            "1.0" + GREATER_EQUALS + "2.0",
             new(false)
         ),
 
         new(
-            ONE_FLOAT_STR + LESS_OR_EQUALS + ONE_FLOAT_STR,
+            "1.0" + LESS_OR_EQUALS + "1.0",
             new(true)
         ),
 
         new(
-            ONE_FLOAT_STR + LESS_OR_EQUALS + TWO_FLOAT_STR,
+            "1.0" + LESS_OR_EQUALS + "2.0",
             new(true)
         ),
 
         new(
-            TWO_FLOAT_STR + LESS_OR_EQUALS + ONE_FLOAT_STR,
+            "2.0" + LESS_OR_EQUALS + "1.0",
+            new(false)
+        ),
+
+        #endregion
+
+        // -- Mixed-Type Operands --
+        
+        #region Left Integer Right Float Mixed Operands
+
+        // An integer and a float compare equal when they share the same numeric value
+        new(
+            "1" + EQUALS + "1.0",
+            new(true)
+        ),
+
+        new(
+            "1" + EQUALS + "2.0",
+            new(false)
+        ),
+
+        // An integer zero compares equal to both positive and negative float zero
+        new(
+            "0" + EQUALS + "0.0",
+            new(true)
+        ),
+
+        new(
+            "0" + EQUALS + "-0.0",
+            new(true)
+        ),
+
+        new(
+            "1" + NOT_EQUALS + "2.0",
+            new(true)
+        ),
+
+        new(
+            "1" + NOT_EQUALS + "1.0",
+            new(false)
+        ),
+
+        new(
+            "1" + LESS + "2.0",
+            new(true)
+        ),
+
+        new(
+            "2" + LESS + "1.0",
+            new(false)
+        ),
+
+        new(
+            "2" + GREATER + "1.0",
+            new(true)
+        ),
+
+        new(
+            "1" + GREATER + "2.0",
+            new(false)
+        ),
+
+        new(
+            "1" + GREATER_EQUALS + "1.0",
+            new(true)
+        ),
+
+        new(
+            "2" + GREATER_EQUALS + "1.0",
+            new(true)
+        ),
+
+        new(
+            "1" + GREATER_EQUALS + "2.0",
+            new(false)
+        ),
+
+        new(
+            "1" + LESS_OR_EQUALS + "1.0",
+            new(true)
+        ),
+
+        new(
+            "1" + LESS_OR_EQUALS + "2.0",
+            new(true)
+        ),
+
+        new(
+            "2" + LESS_OR_EQUALS + "1.0",
+            new(false)
+        ),
+
+        #endregion
+
+        #region Right Integer Left Float Mixed Operands
+
+        // A float and an integer compare equal when they share the same numeric value
+        new(
+            "1.0" + EQUALS + "1",
+            new(true)
+        ),
+
+        new(
+            "1.0" + EQUALS + "2",
+            new(false)
+        ),
+
+        // A float zero (positive or negative) compares equal to integer zero
+        new(
+            "0.0" + EQUALS + "0",
+            new(true)
+        ),
+
+        new(
+            "-0.0" + EQUALS + "0",
+            new(true)
+        ),
+
+        new(
+            "1.0" + NOT_EQUALS + "2",
+            new(true)
+        ),
+
+        new(
+            "1.0" + NOT_EQUALS + "1",
+            new(false)
+        ),
+
+        new(
+            "1.0" + LESS + "2",
+            new(true)
+        ),
+
+        new(
+            "2.0" + LESS + "1",
+            new(false)
+        ),
+
+        new(
+            "2.0" + GREATER + "1",
+            new(true)
+        ),
+
+        new(
+            "1.0" + GREATER + "2",
+            new(false)
+        ),
+
+        new(
+            "1.0" + GREATER_EQUALS + "1",
+            new(true)
+        ),
+
+        new(
+            "2.0" + GREATER_EQUALS + "1",
+            new(true)
+        ),
+
+        new(
+            "1.0" + GREATER_EQUALS + "2",
+            new(false)
+        ),
+
+        new(
+            "1.0" + LESS_OR_EQUALS + "1",
+            new(true)
+        ),
+
+        new(
+            "1.0" + LESS_OR_EQUALS + "2",
+            new(true)
+        ),
+
+        new(
+            "2.0" + LESS_OR_EQUALS + "1",
             new(false)
         ),
 
@@ -1389,15 +1561,6 @@ public class ChowEngineTests
     const string GREATER = " > ";
     const string GREATER_EQUALS = " >= ";
     const string LESS_OR_EQUALS = " <= ";
-    
-    // These numeric strings are specifically for comparison testing
-    const string NEG_ZERO_FLOAT_STR = "-0.0";
-    const string ZERO_FLOAT_STR = "0.0";
-    const string ONE_FLOAT_STR = "1.0";
-    const string TWO_FLOAT_STR = "2.0";
-    
-    const string ONE_INT_STR = "1";
-    const string TWO_INT_STR = "2";
 
     const string NEWLINE_LINUX_MAC = "\n";
     const string NEWLINE_WINDOWS = "\r\n";

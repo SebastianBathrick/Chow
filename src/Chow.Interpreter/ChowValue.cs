@@ -55,7 +55,7 @@ namespace Chow.Interpreter
 
         #region Constructors
 
-        internal ChowValue(
+        ChowValue(
             DataType dataType = DataType.None,
             bool boolValue = DEFAULT_BOOL_VALUE,
             object objectValue = DEFAULT_OBJECT_VALUE,
