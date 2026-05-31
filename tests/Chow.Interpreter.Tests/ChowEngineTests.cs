@@ -11,6 +11,9 @@ public class ChowEngineTests
     
     public record CaseExecute(string SourceCode, ChowValue ExpectedResult);
 
+    static readonly ChowValue TrueChow = new ChowValue(true);
+    static readonly ChowValue FalseChow = new ChowValue(false);
+
     static readonly IReadOnlyList<CaseExecute> ExecuteArithmeticOperatorCases =
     [
         // Note: Passing the ChowValue constructor a long or an int will result in a ChowValue
@@ -986,71 +989,71 @@ public class ChowEngineTests
 
         new(
             "1" + EQUALS + "1",
-            new(true)
+            TrueChow
             ),
 
         new(
             "1" + EQUALS + "2",
-            new(false)),
+            FalseChow),
 
         new(
             "1" + NOT_EQUALS + "2",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1" + NOT_EQUALS + "1",
-            new(false)
+            FalseChow
         ),
 
         new(
             "1" + LESS + "2",
-            new(true)
+            TrueChow
         ),
 
         new(
             "2" + LESS + "1",
-            new(false)
+            FalseChow
         ),
 
         new(
             "2" + GREATER + "1",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1" + GREATER + "2",
-            new(false)
+            FalseChow
         ),
 
         new(
             "1" + GREATER_EQUALS + "1",
-            new(true)
+            TrueChow
         ),
 
         new(
             "2" + GREATER_EQUALS + "1",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1" + GREATER_EQUALS + "2",
-            new(false)
+            FalseChow
         ),
 
         new(
             "1" + LESS_OR_EQUALS + "1",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1" + LESS_OR_EQUALS + "2",
-            new(true)
+            TrueChow
         ),
 
         new(
             "2" + LESS_OR_EQUALS + "1",
-            new(false)
+            FalseChow
         ),
 
         #endregion
@@ -1059,93 +1062,93 @@ public class ChowEngineTests
 
         new(
             "1.0" + EQUALS + "1.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1.0" + EQUALS + "2.0",
-            new(false)
+            FalseChow
         ),
 
         // Positive and negative zero compare equal (IEEE-754 / Python rule)
         new(
             "0.0" + EQUALS + "0.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "-0.0" + EQUALS + "-0.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "0.0" + EQUALS + "-0.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "-0.0" + EQUALS + "0.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1.0" + NOT_EQUALS + "2.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1.0" + NOT_EQUALS + "1.0",
-            new(false)
+            FalseChow
         ),
 
         new(
             "1.0" + LESS + "2.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "2.0" + LESS + "1.0",
-            new(false)
+            FalseChow
         ),
 
         new(
             "2.0" + GREATER + "1.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1.0" + GREATER + "2.0",
-            new(false)
+            FalseChow
         ),
 
         new(
             "1.0" + GREATER_EQUALS + "1.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "2.0" + GREATER_EQUALS + "1.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1.0" + GREATER_EQUALS + "2.0",
-            new(false)
+            FalseChow
         ),
 
         new(
             "1.0" + LESS_OR_EQUALS + "1.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1.0" + LESS_OR_EQUALS + "2.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "2.0" + LESS_OR_EQUALS + "1.0",
-            new(false)
+            FalseChow
         ),
 
         #endregion
@@ -1157,83 +1160,83 @@ public class ChowEngineTests
         // An integer and a float compare equal when they share the same numeric value
         new(
             "1" + EQUALS + "1.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1" + EQUALS + "2.0",
-            new(false)
+            FalseChow
         ),
 
         // An integer zero compares equal to both positive and negative float zero
         new(
             "0" + EQUALS + "0.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "0" + EQUALS + "-0.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1" + NOT_EQUALS + "2.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1" + NOT_EQUALS + "1.0",
-            new(false)
+            FalseChow
         ),
 
         new(
             "1" + LESS + "2.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "2" + LESS + "1.0",
-            new(false)
+            FalseChow
         ),
 
         new(
             "2" + GREATER + "1.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1" + GREATER + "2.0",
-            new(false)
+            FalseChow
         ),
 
         new(
             "1" + GREATER_EQUALS + "1.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "2" + GREATER_EQUALS + "1.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1" + GREATER_EQUALS + "2.0",
-            new(false)
+            FalseChow
         ),
 
         new(
             "1" + LESS_OR_EQUALS + "1.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1" + LESS_OR_EQUALS + "2.0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "2" + LESS_OR_EQUALS + "1.0",
-            new(false)
+            FalseChow
         ),
 
         #endregion
@@ -1243,83 +1246,134 @@ public class ChowEngineTests
         // A float and an integer compare equal when they share the same numeric value
         new(
             "1.0" + EQUALS + "1",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1.0" + EQUALS + "2",
-            new(false)
+            FalseChow
         ),
 
         // A float zero (positive or negative) compares equal to integer zero
         new(
             "0.0" + EQUALS + "0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "-0.0" + EQUALS + "0",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1.0" + NOT_EQUALS + "2",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1.0" + NOT_EQUALS + "1",
-            new(false)
+            FalseChow
         ),
 
         new(
             "1.0" + LESS + "2",
-            new(true)
+            TrueChow
         ),
 
         new(
             "2.0" + LESS + "1",
-            new(false)
+            FalseChow
         ),
 
         new(
             "2.0" + GREATER + "1",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1.0" + GREATER + "2",
-            new(false)
+            FalseChow
         ),
 
         new(
             "1.0" + GREATER_EQUALS + "1",
-            new(true)
+            TrueChow
         ),
 
         new(
             "2.0" + GREATER_EQUALS + "1",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1.0" + GREATER_EQUALS + "2",
-            new(false)
+            FalseChow
         ),
 
         new(
             "1.0" + LESS_OR_EQUALS + "1",
-            new(true)
+            TrueChow
         ),
 
         new(
             "1.0" + LESS_OR_EQUALS + "2",
-            new(true)
+            TrueChow
         ),
 
         new(
             "2.0" + LESS_OR_EQUALS + "1",
-            new(false)
+            FalseChow
+        ),
+
+        #endregion
+    ];
+
+    static readonly IReadOnlyList<CaseExecute> ExecuteLogicOperatorCases =
+    [
+        #region And Operator
+
+        new(
+            TRUE_STR + AND + TRUE_STR,
+            TrueChow
+        ),
+
+        new(
+            TRUE_STR + AND + FALSE_STR,
+            FalseChow
+        ),
+
+        new(
+            FALSE_STR + AND + TRUE_STR,
+            FalseChow
+        ),
+
+        new(
+            FALSE_STR + AND + FALSE_STR,
+            FalseChow
+        ),
+
+        #endregion
+
+        #region Or Operator
+
+        new(
+            TRUE_STR + OR + TRUE_STR,
+            TrueChow
+        ),
+
+        new(
+            TRUE_STR + OR + FALSE_STR,
+            TrueChow
+        ),
+
+        new(
+            FALSE_STR + OR + TRUE_STR,
+            TrueChow
+        ),
+
+        new(
+            FALSE_STR + OR + FALSE_STR,
+            FalseChow
         ),
 
         #endregion
@@ -1531,7 +1585,8 @@ public class ChowEngineTests
 
         #endregion
     ];
-    
+
+    [TestCaseSource(nameof(ExecuteLogicOperatorCases))]
     [TestCaseSource(nameof(ExecuteComparisonOperatorCases))]
     [TestCaseSource(nameof(ExecuteEmptyWhitespaceOrNullCases))]
     [TestCaseSource(nameof(ExecuteArithmeticOperatorCases))]
@@ -1543,6 +1598,7 @@ public class ChowEngineTests
     }
 
     #region Constants
+    
     const string TRUE_STR = "True";
     const string FALSE_STR = "False";
 
@@ -1561,6 +1617,10 @@ public class ChowEngineTests
     const string GREATER = " > ";
     const string GREATER_EQUALS = " >= ";
     const string LESS_OR_EQUALS = " <= ";
+
+    const string AND = " and ";
+    const string OR = " or ";
+    const string NOT = "not ";
 
     const string NEWLINE_LINUX_MAC = "\n";
     const string NEWLINE_WINDOWS = "\r\n";
