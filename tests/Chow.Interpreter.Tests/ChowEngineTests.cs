@@ -412,6 +412,84 @@ public class ChowEngineTests
         ),
 
         #endregion
+
+        #region Left Larger Float Operand
+
+        new(
+            "8.75" + PLUS + "2.5",
+            new(11.25)
+        ),
+
+        new(
+            "9.5" + MINUS + "3.25",
+            new(6.25)
+        ),
+
+        new(
+            "6.5" + TIMES + "2.5",
+            new(16.25)
+        ),
+
+        new(
+            "9.75" + DIV + "2.5",
+            new(3.9)
+        ),
+
+        new(
+            "17.8" + FLOOR + "4.2",
+            new(4.0)
+        ),
+
+        new(
+            "9.75" + MOD + "2.5",
+            new(2.25)
+        ),
+
+        new(
+            "6.25" + POW + "2.5",
+            new(97.65625)
+        ),
+
+        #endregion
+        
+        #region Right Larger Float Operand
+
+        new(
+            "2.25" + PLUS + "8.5",
+            new(10.75)
+        ),
+
+        new(
+            "3.25" + MINUS + "9.5",
+            new(-6.25)
+        ),
+
+        new(
+            "2.5" + TIMES + "6.5",
+            new(16.25)
+        ),
+
+        new(
+            "4.2" + DIV + "16.8",
+            new(0.25)
+        ),
+
+        new(
+            "4.2" + FLOOR + "17.8",
+            new(0.0)
+        ),
+
+        new(
+            "2.5" + MOD + "9.75",
+            new(2.5)
+        ),
+
+        new(
+            "2.5" + POW + "6.25",
+            new(306.9905834186854)
+        ),
+
+        #endregion
         
         //--- Data Type Coercion ---
         
