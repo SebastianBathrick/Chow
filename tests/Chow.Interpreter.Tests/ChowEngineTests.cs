@@ -432,6 +432,49 @@ public class ChowEngineTests
 
         #endregion
 
+        #region Float/Integer Mixed Operands
+
+        new(
+            "2.5" + PLUS + "7",
+            new(9.5)
+            ),
+        
+        new(
+            "2.5" + MINUS + "7",
+            new(-4.5)
+            ),
+        
+        new(
+            "2.5" + TIMES + "7",
+            new(17.5)
+            ),
+        
+        new(
+            "2.5" + DIV + "7",
+            new(0.35714285714285715)
+            ),
+        
+        new(
+            "14.5" + FLOOR + "7",
+            new(2.0)
+        ),
+        
+        new(
+            "14" + FLOOR + "6.5",
+            new(2.0)
+        ),
+        
+        new(
+            "8.5" + MOD + "7",
+            new(1.5)
+        ),
+
+        new(
+            "2.5" + POW + "-2",
+            new(0.16)
+            ),
+        #endregion
+        
         #region Precedence And Associativity
 
         // Multiplication binds tighter than addition
