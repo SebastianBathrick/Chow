@@ -12,6 +12,7 @@ public class ChowEngineTests
         ChowEngine.Reset();
     }
     
+    [TestCaseSource(nameof(ControlFlowCases))]
     [TestCaseSource(nameof(LiteralValueCases))]
     [TestCaseSource(nameof(ExecuteLogicOperatorCases))]
     [TestCaseSource(nameof(ExecuteComparisonOperatorCases))]
@@ -30,7 +31,11 @@ public class ChowEngineTests
     
     static readonly ChowValue TrueChow = new(true);
     static readonly ChowValue FalseChow = new(false);
+    
+    #endregion
 
+    #region Execute: Expression Statements
+    
     static readonly IReadOnlyList<CaseExecute> LiteralValueCases =
     [
         #region Integer Literals
@@ -1549,6 +1554,8 @@ public class ChowEngineTests
 
     static readonly IReadOnlyList<CaseExecute> ExecuteLogicOperatorCases =
     [
+        //--- Binary Operators ---
+
         #region And Operator
 
         new(
@@ -1596,6 +1603,10 @@ public class ChowEngineTests
         ),
 
         #endregion
+
+        //--- Short-Circuiting ---
+
+        // TODO: Add test cases for short-circuiting logic operators
 
         //--- Unary Not ---
 
@@ -1960,6 +1971,315 @@ public class ChowEngineTests
 
     #endregion
 
+    #region Execute: Control Flow Statements
+
+    static readonly IReadOnlyList<CaseExecute> ControlFlowCases =
+    [
+        #region If/Else-If/Else Statements
+
+        new(
+            """
+            if True:
+               True
+            """,
+            new ChowValue(true)
+        ),
+        
+        new(
+            """
+            if False:
+                False
+            """,
+            new ChowValue(ChowValue.None)
+        ),
+        
+        new(
+            """
+            if True:
+                True
+            else:
+                False
+            """,
+            new ChowValue(true)
+        ),
+        
+        new(
+            """
+            if False:
+                False
+            else:
+                True
+            """,
+            new ChowValue(true)
+        ),
+        
+        new(
+            """
+            if True:
+                True
+            elif False:
+                False
+            else:
+                False
+            """,
+            new ChowValue(true)
+        ),
+        
+        new(
+            """
+            if False:
+                False
+            elif True:
+                True
+            else:
+                False
+            """,
+            new ChowValue(true)
+        ),
+        
+        new(
+            """
+            if False:
+                False
+            elif False:
+                False
+            else:
+                True
+            """,
+            new ChowValue(true)
+        ),
+
+        // Test case where a block has more than one statement
+        new(
+            """
+            if True:
+               False
+               True
+            """,
+            new ChowValue(true)
+        ),
+        
+        #endregion
+
+        #region While Loops
+
+        // Condition false from the start, so the body never executes and there is
+        // no expression statement result to return
+        new(
+            """
+            while False:
+                True
+            """,
+            new ChowValue(ChowValue.None)
+        ),
+
+        // A counter drives the loop; after it exits, the trailing expression statement
+        // reports the final value of the counter
+        new(
+            """
+            i = 0
+            while i < 3:
+                i = i + 1
+            i
+            """,
+            new ChowValue(3)
+        ),
+
+        // A loop that runs exactly once
+        new(
+            """
+            i = 0
+            while i < 1:
+                i = i + 1
+            i
+            """,
+            new ChowValue(1)
+        ),
+
+        // A decrementing counter loops down to zero
+        new(
+            """
+            i = 5
+            while i > 0:
+                i = i - 1
+            i
+            """,
+            new ChowValue(0)
+        ),
+
+        // A boolean flag is cleared inside the body to exit after a single pass
+        new(
+            """
+            run = True
+            while run:
+                run = False
+            run
+            """,
+            new ChowValue(false)
+        ),
+
+        // The expression statement inside the body returns the last value evaluated
+        // before the condition became false
+        new(
+            """
+            i = 0
+            while i < 3:
+                i = i + 1
+                i
+            """,
+            new ChowValue(3)
+        ),
+
+        // A multi-statement body accumulates a running total across iterations
+        new(
+            """
+            total = 0
+            i = 1
+            while i <= 3:
+                total = total + i
+                i = i + 1
+            total
+            """,
+            new ChowValue(6)
+        ),
+
+        #endregion
+
+        #region Break Statements
+
+        // break exits the loop immediately, freezing the counter at its current value
+        new(
+            """
+            i = 0
+            while True:
+                i = i + 1
+                if i == 3:
+                    break
+            i
+            """,
+            new ChowValue(3)
+        ),
+
+        // Statements after break in the same body are skipped on the breaking iteration
+        new(
+            """
+            reached = False
+            while True:
+                break
+                reached = True
+            reached
+            """,
+            new ChowValue(false)
+        ),
+
+        // A break under an always-true condition exits after a single pass
+        new(
+            """
+            ran = False
+            while True:
+                ran = True
+                break
+            ran
+            """,
+            new ChowValue(true)
+        ),
+
+        //--- Nested Loops ---
+
+        // break only exits the innermost loop, so the outer loop runs to completion
+        new(
+            """
+            i = 0
+            total = 0
+            while i < 3:
+                i = i + 1
+                j = 0
+                while j < 3:
+                    j = j + 1
+                    if j == 2:
+                        break
+                    total = total + 1
+            total
+            """,
+            new ChowValue(3)
+        ),
+
+        // A break in the outer loop ends both loops once its condition is met
+        new(
+            """
+            i = 0
+            total = 0
+            while i < 5:
+                i = i + 1
+                j = 0
+                while j < 5:
+                    j = j + 1
+                    total = total + 1
+                if i == 2:
+                    break
+            total
+            """,
+            new ChowValue(10)
+        ),
+
+        #endregion
+
+        #region Continue Statements
+
+        // continue skips the rest of the body and re-tests the condition
+        new(
+            """
+            reached = False
+            done = False
+            while not done:
+                done = True
+                continue
+                reached = True
+            reached
+            """,
+            new ChowValue(false)
+        ),
+
+        // continue can skip multiple iterations while the loop still runs to completion
+        new(
+            """
+            i = 0
+            count = 0
+            while i < 6:
+                i = i + 1
+                if i <= 3:
+                    continue
+                count = count + 1
+            count
+            """,
+            new ChowValue(3)
+        ),
+
+        //--- Nested Loops ---
+
+        // continue affects only the innermost loop
+        new(
+            """
+            i = 0
+            total = 0
+            while i < 2:
+                i = i + 1
+                j = 0
+                while j < 3:
+                    j = j + 1
+                    if j == 2:
+                        continue
+                    total = total + j
+            total
+            """,
+            new ChowValue(8)
+        ),
+
+        #endregion
+    ];
+
+    #endregion
+    
     #region Source Code Constants
     
     #region Data Type Literals
