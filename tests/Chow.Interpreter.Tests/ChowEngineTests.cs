@@ -12,6 +12,7 @@ public class ChowEngineTests
         ChowEngine.Reset();
     }
     
+    [TestCaseSource(nameof(LiteralValueCases))]
     [TestCaseSource(nameof(ExecuteLogicOperatorCases))]
     [TestCaseSource(nameof(ExecuteComparisonOperatorCases))]
     [TestCaseSource(nameof(ExecuteEmptyWhitespaceOrNullCases))]
@@ -30,6 +31,98 @@ public class ChowEngineTests
     static readonly ChowValue TrueChow = new(true);
     static readonly ChowValue FalseChow = new(false);
 
+    static readonly IReadOnlyList<CaseExecute> LiteralValueCases =
+    [
+        #region Integer Literals
+
+        // Single-digit
+        new(
+            "1",
+            new(1)
+        ),
+        
+        // Multi-digit
+        new(
+            "123",
+            new(123)
+        ),
+
+        // Negative Single-digit
+        new(
+            "-1",
+            new(-1)
+        ),
+        
+        // Negative Multi-digit
+        new(
+            "-123",
+            new(-123)
+        ),
+
+        #endregion
+
+        #region Float Literals
+
+        // Single leading / Single trailing
+        new(
+            "1.2",
+            new(1.2)
+        ),
+
+        // Multi leading / Single trailing
+        new(
+            "12.3",
+            new(12.3)
+        ),
+
+        // Single leading / Multi trailing
+        new(
+            "1.23",
+            new(1.23)
+        ),
+
+        // Multi leading / Multi trailing
+        new(
+            "12.34",
+            new(12.34)
+        ),
+
+        // Negative Single leading / Single trailing
+        new(
+            "-1.2",
+            new(-1.2)
+        ),
+
+        // Negative Multi leading / Single trailing
+        new(
+            "-12.3",
+            new(-12.3)
+        ),
+
+        // Negative Single leading / Multi trailing
+        new(
+            "-1.23",
+            new(-1.23)
+        ),
+
+        // Negative Multi leading / Multi trailing
+        new(
+            "-12.34",
+            new(-12.34)
+        ),
+
+        new(
+            ".1",
+            new(0.1)
+        ),
+
+        new(
+            "1.",
+            new(1.0)
+        ),
+
+        #endregion
+    ];
 
     static readonly IReadOnlyList<CaseExecute> ExecuteArithmeticOperatorCases =
     [
