@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import ast
+import os
 import re
 import shutil
 import subprocess
@@ -13,9 +14,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+# Subprocess prints this prefix so we can parse the result line from stdout
 RESULT_SENTINEL = "__CHOW_PY_RESULT__:"
 DEFAULT_CS_PATH = Path(__file__).resolve().parent.parent / "ChowEngineTests.cs"
 
+# Parsed from ChowEngineTests.cs at runtime — no hard-coded const values
 RE_CONST_STRING = re.compile(
     r"^\s*const\s+string\s+(\w+)\s*=\s*(.+?);\s*(?://.*)?$"
 )
@@ -32,6 +35,7 @@ RE_CASE_LIST = re.compile(
     r"static\s+readonly\s+IReadOnlyList<CaseExecute>\s+(\w+)\s*="
 )
 
+# Long-lived Python worker: fresh namespace per case, last-expression semantics like ChowEngine.Execute
 PYTHON_DRIVER = f'''
 import ast
 import sys
@@ -81,22 +85,30 @@ class CaseExecuteEntry:
     list_name: str
     index: int
     region: str | None
-    raw_source_expr: str
-    raw_expected_expr: str
+    raw_source_expr: str  # C# first arg to CaseExecute, e.g. '"1" + PLUS + "2"' or '"""..."""'
+    raw_expected_expr: str  # C# second arg, e.g. 'new(3)' or 'TrueChow'
     resolved_source: str | None = None
     resolved_expected: Any = None
     resolve_errors: list[str] = field(default_factory=list)
 
 
 def find_python_executable() -> str:
-    for name in ("python3", "python"):
-        path = shutil.which(name)
-        if path:
+    # PYTHON env var overrides PATH lookup (full path or command name)
+    if env_python := os.environ.get("PYTHON"):
+        path = shutil.which(env_python) if os.path.sep not in env_python and "/" not in env_python else env_python
+        if path and Path(path).exists():
             return path
-    raise RuntimeError("Could not find python3 or python on PATH")
+        raise RuntimeError(f"PYTHON is set but not found: {env_python!r}")
+
+    names = ("python", "python3") if sys.platform == "win32" else ("python3", "python")
+    for name in names:
+        if path := shutil.which(name):
+            return path
+    raise RuntimeError(f"Could not find {' or '.join(names)} on PATH")
 
 
 def normalize_csharp_raw_string(content: str) -> str:
+    # C# """ literals in ChowEngineTests.cs include file formatting indent; strip like textwrap.dedent
     if content.startswith("\r\n"):
         content = content[2:]
     elif content.startswith("\n"):
@@ -152,7 +164,7 @@ def parse_const_and_field_tables(cs_text: str) -> SymbolTables:
     for line in cs_text.splitlines():
         stripped = line.strip()
         if stripped.startswith("//"):
-            continue
+            continue  # skip commented-out consts (e.g. TRUTHY_RANGE)
 
         match = RE_CONST_STRING.match(line)
         if match:
@@ -173,7 +185,7 @@ def parse_const_and_field_tables(cs_text: str) -> SymbolTables:
 
         match = RE_STATIC_CHOW.match(line)
         if match:
-            tables.symbols[match.group(1)] = match.group(2) == "true"
+            tables.symbols[match.group(1)] = match.group(2) == "true"  # TrueChow / FalseChow
 
     return tables
 
@@ -217,6 +229,7 @@ def _read_identifier_token(text: str, pos: int) -> tuple[str, int]:
 
 
 def read_expression_until(text: str, pos: int, stop_at_comma_depth: int) -> tuple[str, int]:
+    # Scan first/second CaseExecute ctor args; respects strings and nested parens
     pos = _skip_whitespace(text, pos)
     start = pos
     depth = 0
@@ -263,18 +276,19 @@ def read_expression_until(text: str, pos: int, stop_at_comma_depth: int) -> tupl
             continue
         if ch == ")":
             if depth == 0:
-                break
+                break  # end of second arg (e.g. after new(3))
             depth -= 1
             pos += 1
             continue
         if ch == "," and depth == stop_at_comma_depth:
-            break
+            break  # comma between source and expected args
         pos += 1
 
     return text[start:pos].strip(), pos
 
 
 def split_plus_expression(expr: str) -> list[str]:
+    # Split C# string concatenation at top-level '+' (e.g. "1" + PLUS + "2")
     parts: list[str] = []
     pos = 0
     depth = 0
@@ -359,7 +373,7 @@ def resolve_source_segment(segment: str, tables: SymbolTables) -> str:
     if segment == "string.Empty":
         return ""
     if segment == "null!":
-        return ""
+        return ""  # Chow treats null source as empty
     if segment.startswith('"') or segment.startswith('"""'):
         return decode_csharp_string_literal(segment)
     if segment not in tables.symbols:
@@ -367,7 +381,7 @@ def resolve_source_segment(segment: str, tables: SymbolTables) -> str:
     value = tables.symbols[segment]
     if isinstance(value, bool):
         return "True" if value else "False"
-    return str(value)
+    return str(value)  # e.g. NOT + TRUTHY_INT64 -> "not 1"
 
 
 def resolve_source_expr(expr: str, tables: SymbolTables) -> tuple[str | None, list[str]]:
@@ -412,7 +426,7 @@ def resolve_expected_expr(expr: str, tables: SymbolTables) -> tuple[Any | None, 
     expr = expr.strip().rstrip(",")
     try:
         if expr in tables.symbols:
-            return tables.symbols[expr], errors
+            return tables.symbols[expr], errors  # TrueChow / FalseChow
         if expr == "ChowValue.None":
             return None, errors
         return parse_new_constructor_arg(expr), errors
@@ -425,7 +439,7 @@ def parse_case_execute_entries(cs_text: str) -> list[CaseExecuteEntry]:
     entries: list[CaseExecuteEntry] = []
     list_name = ""
     in_case_list = False
-    bracket_depth = 0
+    bracket_depth = 0  # track [ ... ] of each IReadOnlyList<CaseExecute>
     current_region: str | None = None
     case_index = 0
     i = 0
@@ -520,6 +534,7 @@ class PythonReplRunner:
         if self._proc.stdin is None or self._proc.stdout is None:
             raise RuntimeError("Python subprocess is not running")
 
+        # Encode newlines so entire source fits on one stdin line
         payload = source.replace("\n", "\\n")
         self._proc.stdin.write(f"__CHOW_PY_RUN__{payload}\n")
         self._proc.stdin.flush()
@@ -564,6 +579,7 @@ def values_equivalent(expected: Any, python_repr: str) -> bool:
     return False
 
 
+# ANSI colors — only applied when stdout is a TTY (see colorize)
 GREEN = "\033[32m"
 RED = "\033[31m"
 YELLOW = "\033[33m"
@@ -577,6 +593,7 @@ RESET = "\033[0m"
 
 
 def enable_terminal_colors() -> None:
+    # Enable VT100 escape sequences on Windows consoles
     if sys.platform == "win32":
         try:
             import ctypes
@@ -724,7 +741,7 @@ def main(argv: list[str] | None = None) -> int:
         for case in entries:
             python_result: str | None
             if case.resolved_source is None:
-                python_result = None
+                python_result = None  # skip Python when C# source could not be resolved
             else:
                 python_result = runner.run_source(case.resolved_source)
             print(format_case_report(case, python_result))
@@ -735,7 +752,7 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         runner.close()
 
-    return 0
+    return 0  # informational only — mismatches do not fail the script
 
 
 if __name__ == "__main__":
