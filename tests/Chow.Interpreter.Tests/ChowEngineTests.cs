@@ -3,16 +3,33 @@
 [TestFixture]
 public class ChowEngineTests
 {
+
+    #region Methods
+
     [SetUp]
     public void Setup()
     {
         ChowEngine.Reset();
     }
     
-    public record CaseExecute(string SourceCode, ChowValue ExpectedResult);
+    [TestCaseSource(nameof(ExecuteLogicOperatorCases))]
+    [TestCaseSource(nameof(ExecuteComparisonOperatorCases))]
+    [TestCaseSource(nameof(ExecuteEmptyWhitespaceOrNullCases))]
+    [TestCaseSource(nameof(ExecuteArithmeticOperatorCases))]
+    public void Execute_ValidSourceCode_ReturnExpectedResult(CaseExecute caseExecute)
+    {
+        var returnValue = ChowEngine.Execute(caseExecute.SourceCode);
+        
+        Assert.That(returnValue, Is.EqualTo(caseExecute.ExpectedResult));
+    }
 
-    static readonly ChowValue TrueChow = new ChowValue(true);
-    static readonly ChowValue FalseChow = new ChowValue(false);
+    #endregion
+
+    #region Static Readonly Fields
+    
+    static readonly ChowValue TrueChow = new(true);
+    static readonly ChowValue FalseChow = new(false);
+
 
     static readonly IReadOnlyList<CaseExecute> ExecuteArithmeticOperatorCases =
     [
@@ -22,7 +39,7 @@ public class ChowEngineTests
         
         //--- Positive and Negative Operands ---
         
-        #region Positive Integer Operands
+        #region Integer Positive Operands
 
         new(
             "1" + PLUS + "2",
@@ -61,7 +78,7 @@ public class ChowEngineTests
 
         #endregion
 
-        #region Negative Integer Operands
+        #region Integer Negative Operands
 
         new(
             "-1" + PLUS + "-2",
@@ -100,7 +117,7 @@ public class ChowEngineTests
 
         #endregion
 
-        #region Positive and Negative Integer Operands
+        #region Integer Positive and Negative Operands
 
         new(
             "1" + PLUS + "-2",
@@ -176,7 +193,7 @@ public class ChowEngineTests
 
         #endregion
 
-        #region Positive Float Operands
+        #region Float Positive Operands
 
         new(
             "1.2" + PLUS + "2.3",
@@ -215,7 +232,7 @@ public class ChowEngineTests
 
         #endregion
 
-        #region Negative Float Operands
+        #region Float Negative Operands
 
         new(
             "-1.2" + PLUS + "-2.3",
@@ -254,7 +271,7 @@ public class ChowEngineTests
 
         #endregion
 
-        #region Positive and Negative Float Operands
+        #region Float Positive and Negative Operands
 
         new(
             "1.2" + PLUS + "-2.3",
@@ -889,7 +906,7 @@ public class ChowEngineTests
     
         //--- Unary Minus ---
         
-        #region Integer Negation
+        #region Integer Unary Minus
 
         new(
             "-3",
@@ -913,7 +930,7 @@ public class ChowEngineTests
 
         #endregion
 
-        #region Repeated Negation
+        #region Repeated Unary Minus
 
         new(
             "--3",
@@ -928,7 +945,7 @@ public class ChowEngineTests
 
         #endregion
 
-        #region Float Negation
+        #region Float Unary Minus
 
         new(
             "-3.25",
@@ -942,7 +959,7 @@ public class ChowEngineTests
 
         #endregion
 
-        #region Boolean Negation
+        #region Boolean Unary Minus
 
         new(
             "-" + TRUE_STR,
@@ -966,7 +983,7 @@ public class ChowEngineTests
 
         #endregion
 
-        #region Negative Zero
+        #region Negative Zero Unary Minus
 
         new(
             "-0",
@@ -983,7 +1000,7 @@ public class ChowEngineTests
 
     static readonly IReadOnlyList<CaseExecute> ExecuteComparisonOperatorCases =
     [
-        // -- Numeric Operands --
+        //--- Numeric Operands ---
         
         #region Integer Operands
 
@@ -1153,7 +1170,7 @@ public class ChowEngineTests
 
         #endregion
 
-        // -- Mixed-Type Operands --
+        //--- Mixed-Type Operands ---
         
         #region Left Integer Right Float Mixed Operands
 
@@ -1326,6 +1343,77 @@ public class ChowEngineTests
         ),
 
         #endregion
+
+        #region Chained Operands
+
+        // A chained comparison a OP b OP c is equivalent to (a OP b) and (b OP c)
+
+        new(
+            "1" + LESS + "2" + LESS + "3",
+            TrueChow
+        ),
+
+        // The middle comparison fails, so the whole chain is false
+        new(
+            "1" + LESS + "3" + LESS + "2",
+            FalseChow
+        ),
+
+        new(
+            "3" + GREATER + "2" + GREATER + "1",
+            TrueChow
+        ),
+
+        new(
+            "3" + GREATER + "1" + GREATER + "2",
+            FalseChow
+        ),
+
+        // Mixed operators within a single chain
+        new(
+            "1" + LESS + "2" + GREATER + "1",
+            TrueChow
+        ),
+
+        new(
+            "1" + LESS + "2" + LESS_OR_EQUALS + "2",
+            TrueChow
+        ),
+
+        new(
+            "1" + LESS_OR_EQUALS + "1" + LESS + "2",
+            TrueChow
+        ),
+
+        new(
+            "1" + LESS + "2" + EQUALS + "2",
+            TrueChow
+        ),
+
+        // Equality chains
+        new(
+            "1" + EQUALS + "1" + EQUALS + "1",
+            TrueChow
+        ),
+
+        new(
+            "1" + NOT_EQUALS + "2" + NOT_EQUALS + "3",
+            TrueChow
+        ),
+
+        // Three-operator chain
+        new(
+            "1" + LESS + "2" + LESS + "3" + LESS + "4",
+            TrueChow
+        ),
+
+        // Mixed integer and float operands in a chain
+        new(
+            "1" + LESS + "2.0" + LESS_OR_EQUALS + "2",
+            TrueChow
+        ),
+
+        #endregion
     ];
 
     static readonly IReadOnlyList<CaseExecute> ExecuteLogicOperatorCases =
@@ -1377,7 +1465,160 @@ public class ChowEngineTests
         ),
 
         #endregion
-    ];
+
+        //--- Unary Not ---
+
+        #region Boolean Unary Not
+
+        new(
+            NOT + TRUE_STR,
+            FalseChow
+            ),
+        
+        new(
+            NOT + FALSE_STR,
+            TrueChow
+        ),
+
+        // Behaves like not (not (not True))
+        new(
+            NOT + NOT + NOT + TRUE_STR,
+            FalseChow
+        ),
+
+        new(
+            NOT + NOT + NOT + FALSE_STR,
+            TrueChow
+        ),
+
+        new(
+            NOT + "(" + TRUE_STR + ")",
+            FalseChow
+        ),
+
+        new(
+            NOT + "(" + FALSE_STR + ")",
+            TrueChow
+        ),
+
+        #endregion
+ 
+        #region Integer Unary Not
+
+        new(
+            NOT + "0",
+            TrueChow
+        ),
+
+        new(
+            NOT + "3",
+            FalseChow
+        ),
+
+        new(
+            NOT + "-5",
+            FalseChow
+        ),
+
+        #endregion
+
+        #region Float Unary Not
+
+        new(
+            NOT + "0.0",
+            TrueChow
+        ),
+
+        new(
+            NOT + "3.5",
+            FalseChow
+        ),
+
+        new(
+            NOT + "-10.5",
+            FalseChow
+        ),
+
+        #endregion
+
+        #region Other Unary Not Operand Types
+        
+        // None
+        new(
+            NOT + NONE_STR,
+            TrueChow
+            ),
+
+        // Strings
+        new(
+            NOT + TRUTHY_STR,
+            FalseChow
+        ),
+
+        new(
+            NOT + FALSEY_STR,
+           TrueChow
+        ),
+
+        // Integers
+        new(
+            NOT + TRUTHY_INT64,
+            FalseChow
+        ),
+
+        new(
+            NOT + FALSEY_INT64,
+            TrueChow
+        ),
+
+        // Floats
+        new(
+            NOT + TRUTHY_FLOAT64,
+            FalseChow
+        ),
+
+        new(
+            NOT + FALSEY_FLOAT64,
+            TrueChow
+        ),
+
+        // Lists
+        new(
+            NOT + TRUTHY_LIST,
+            FalseChow
+        ),
+
+        new(
+            NOT + FALSEY_LIST,
+            TrueChow
+        ),
+        
+        // Dictionaries
+        new(
+            NOT + TRUTHY_DICT,
+            FalseChow
+        ),
+
+        new(
+            NOT + FALSEY_DICT,
+            TrueChow
+        ),
+        
+        // Range
+        // TODO: Uncomment after making range something other than a built-in function
+        /*
+        new(
+            NOT + TRUTHY_RANGE,
+            FalseChow
+        ),
+
+        new(
+            NOT + FALSEY_RANGE,
+            TrueChow
+        ),
+        */
+        #endregion
+   ];
     
     static readonly IReadOnlyList<CaseExecute> ExecuteEmptyWhitespaceOrNullCases =
     [
@@ -1586,23 +1827,23 @@ public class ChowEngineTests
         #endregion
     ];
 
-    [TestCaseSource(nameof(ExecuteLogicOperatorCases))]
-    [TestCaseSource(nameof(ExecuteComparisonOperatorCases))]
-    [TestCaseSource(nameof(ExecuteEmptyWhitespaceOrNullCases))]
-    [TestCaseSource(nameof(ExecuteArithmeticOperatorCases))]
-    public void Execute_ValidSourceCode_ReturnExpectedResult(CaseExecute caseExecute)
-    {
-        var returnValue = ChowEngine.Execute(caseExecute.SourceCode);
-        
-        Assert.That(returnValue, Is.EqualTo(caseExecute.ExpectedResult));
-    }
+    #endregion
 
-    #region Constants
+    #region Source Code Constants
     
+    #region Data Type Literals
+
     const string TRUE_STR = "True";
     const string FALSE_STR = "False";
+    const string NONE_STR = "None";
 
+    #endregion
+    
+    #region Operators
+    
     // Binary operator constants make it easier to scan and see where and what operator is being used.
+
+    //--- Arithmetic Operators ---
     const string PLUS = " + ";
     const string MINUS = " - ";
     const string TIMES = " * ";
@@ -1611,6 +1852,7 @@ public class ChowEngineTests
     const string FLOOR = " // ";
     const string POW = " ** ";
     
+    //--- Comparison Operators ---
     const string EQUALS = " == ";
     const string NOT_EQUALS = " != ";
     const string LESS = " < ";
@@ -1618,18 +1860,52 @@ public class ChowEngineTests
     const string GREATER_EQUALS = " >= ";
     const string LESS_OR_EQUALS = " <= ";
 
+    //--- Logic Operators ---
     const string AND = " and ";
     const string OR = " or ";
     const string NOT = "not ";
 
+    #endregion
+
+    #region Newlines, Whitespace, and Comments
+
+    //--- Newlines ---
     const string NEWLINE_LINUX_MAC = "\n";
     const string NEWLINE_WINDOWS = "\r\n";
     const string NEWLINE_OLD_MAC = "\r";
 
+    //--- Whitespace ---
     const string SINGLE_INDENT_SPACES = "    "; // Indents used for blocks are 4 spaces
     const string SINGLE_INDENT_TAB = "\t";
-
     const string CODE_COMMENT = "# This is a comment";
-    
+
+    #endregion
+
+    #region Truthy and Falsey Values
+
+    //--- Truthy Values ---
+    const string TRUTHY_STR = "\"Truthy string\""; // Anything with more than one character
+    const int TRUTHY_INT64 = 1; // Non-zero integer
+    const double TRUTHY_FLOAT64 = 1.0; // Non-zero Chow float
+    const string TRUTHY_LIST = "[1, 2, 3]"; // Non-empty list
+    const string TRUTHY_DICT = "{'a': 1, 'b': 2, 'c': 3}"; // Non-empty dictionary
+    // const string TRUTHY_RANGE = "range(1, 10)"; // Non-empty range
+
+    //--- Falsey Values ---
+    const string FALSEY_STR = "\"\""; // Empty string
+    const string FALSEY_INT64 = "0"; // Zero integer
+    const string FALSEY_FLOAT64 = "0.0"; // Zero Chow float
+    const string FALSEY_LIST = "[]"; // Empty list
+    const string FALSEY_DICT = "{}"; // Empty dictionary
+    // const string FALSEY_RANGE = "range(0)"; // Empty range
+
+    #endregion
+
+    #endregion
+
+    #region Helper Types
+
+    public record CaseExecute(string SourceCode, ChowValue ExpectedResult);
+
     #endregion
 }

@@ -35,7 +35,7 @@ namespace Chow.Interpreter.Core
         Token CurrentToken => _tokens[_tokenIdx];
         Token PreviousToken => _tokens[_tokenIdx - 1];
 
-        #region Primary Methods
+        #region Main Methods
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="Parser" /> class with the tokens to analyze.
