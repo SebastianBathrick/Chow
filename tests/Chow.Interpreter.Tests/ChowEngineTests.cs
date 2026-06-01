@@ -111,14 +111,52 @@ public class ChowEngineTests
             new(-12.34)
         ),
 
+        // Leading decimal / Single trailing
         new(
             ".1",
             new(0.1)
         ),
 
+        // Leading decimal / Multi trailing
+        new(
+            ".12",
+            new(0.12)
+        ),
+
+        // Single leading / Trailing decimal
         new(
             "1.",
             new(1.0)
+        ),
+
+        // Multi leading / Trailing decimal
+        new(
+            "12.",
+            new(12.0)
+        ),
+
+        // Negative leading decimal / Single trailing
+        new(
+            "-.1",
+            new(-0.1)
+        ),
+
+        // Negative leading decimal / Multi trailing
+        new(
+            "-.12",
+            new(-0.12)
+        ),
+
+        // Negative single leading / Trailing decimal
+        new(
+            "-1.",
+            new(-1.0)
+        ),
+
+        // Negative multi leading / Trailing decimal
+        new(
+            "-12.",
+            new(-12.0)
         ),
 
         #endregion
