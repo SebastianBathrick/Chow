@@ -13,6 +13,11 @@ public class ChowEngineTests
     }
     
     [TestCaseSource(nameof(ControlFlowCases))]
+    [TestCaseSource(nameof(ExecuteStringConcatenationAndFStringCases))]
+    [TestCaseSource(nameof(ExecuteBuiltInFunctionCases))]
+    [TestCaseSource(nameof(ExecuteIterationCases))]
+    [TestCaseSource(nameof(ExecuteCollectionSubscriptAndAssignmentCases))]
+    [TestCaseSource(nameof(ExecuteFunctionScopeAndClosureCases))]
     [TestCaseSource(nameof(LiteralValueCases))]
     [TestCaseSource(nameof(ExecuteLogicOperatorCases))]
     [TestCaseSource(nameof(ExecuteComparisonOperatorCases))]
@@ -163,6 +168,43 @@ public class ChowEngineTests
             "-12.",
             new(-12.0)
         ),
+
+        #endregion
+
+        #region String, List, and Dict Literals
+
+        new(
+            "\"Hello, Chow\"",
+            new("Hello, Chow")
+        ),
+
+        new(
+            "'Single quoted'",
+            new("Single quoted")
+        ),
+
+        new(
+            "[] == []",
+            TrueChow
+        ),
+
+        new(
+            "[1, 2, 3] == [1, 2, 3]",
+            TrueChow
+        ),
+
+        new(
+            "{} == {}",
+            TrueChow
+        ),
+
+        new(
+            "{'a': 1, 'b': 2} == {'a': 1, 'b': 2}",
+            TrueChow
+        ),
+
+        // NOTE: Deferred niche literal syntax not yet confirmed in Chow:
+        // bytes literals, set literals/comprehensions, and raw/triple-prefixed combinations.
 
         #endregion
     ];
@@ -1761,6 +1803,284 @@ public class ChowEngineTests
         */
         #endregion
    ];
+
+    static readonly IReadOnlyList<CaseExecute> ExecuteFunctionScopeAndClosureCases =
+    [
+        //--- Function Calls and Scope ---
+
+        new(
+            """
+            def add(a, b):
+                return a + b
+            add(2, 3)
+            """,
+            new ChowValue(5)
+        ),
+
+        new(
+            """
+            x = 10
+            def read_local():
+                x = 99
+                return x
+            read_local() + x
+            """,
+            new ChowValue(109)
+        ),
+
+        new(
+            """
+            x = 2
+            def set_global():
+                global x
+                x = 9
+            set_global()
+            x
+            """,
+            new ChowValue(9)
+        ),
+
+        //--- Closures ---
+
+        new(
+            """
+            def make_result():
+                x = 3
+                def inner():
+                    return x + 2
+                return inner()
+            make_result()
+            """,
+            new ChowValue(5)
+        ),
+
+        new(
+            """
+            def outer():
+                x = 1
+                def inner():
+                    nonlocal x
+                    x = x + 4
+                    return x
+                inner()
+                return x
+            outer()
+            """,
+            new ChowValue(5)
+        ),
+
+        // NOTE: Deferred niche function syntax not yet confirmed in Chow:
+        // lambda, decorators, variadic/keyword-only parameters, and advanced nonlocal edge patterns.
+    ];
+
+    static readonly IReadOnlyList<CaseExecute> ExecuteCollectionSubscriptAndAssignmentCases =
+    [
+        //--- List Index and Assignment ---
+
+        new(
+            "[10, 20, 30][1]",
+            new ChowValue(20)
+        ),
+
+        new(
+            """
+            values = [1, 2, 3]
+            values[1] = 7
+            values[1]
+            """,
+            new ChowValue(7)
+        ),
+
+        //--- List Slices ---
+
+        new(
+            """
+            values = [1, 2, 3, 4]
+            values[1:3] == [2, 3]
+            """,
+            TrueChow
+        ),
+
+        new(
+            """
+            values = [1, 2, 3, 4, 5]
+            values[::2] == [1, 3, 5]
+            """,
+            TrueChow
+        ),
+
+        //--- Dict Index and Assignment ---
+
+        new(
+            "{'a': 1, 'b': 2}['b']",
+            new ChowValue(2)
+        ),
+
+        new(
+            """
+            values = {'a': 1}
+            values['b'] = 9
+            values['b']
+            """,
+            new ChowValue(9)
+        ),
+
+        // NOTE: Deferred niche collection syntax not yet confirmed in Chow:
+        // string indexing/slicing, extended slicing edge cases, and complex destructuring assignment targets.
+    ];
+
+    static readonly IReadOnlyList<CaseExecute> ExecuteIterationCases =
+    [
+        //--- For Loops Over Built-in Iterables ---
+
+        new(
+            """
+            total = 0
+            for x in [1, 2, 3]:
+                total = total + x
+            total
+            """,
+            new ChowValue(6)
+        ),
+
+        new(
+            """
+            result = ""
+            for char in "abc":
+                result = result + char
+            result
+            """,
+            new ChowValue("abc")
+        ),
+
+        new(
+            """
+            total = 0
+            for i in [1, 2]:
+                for j in [10, 20]:
+                    total = total + i + j
+            total
+            """,
+            new ChowValue(66)
+        ),
+
+        //--- Iterable Semantics ---
+
+        new(
+            "2 in [1, 2, 3]",
+            TrueChow
+        ),
+
+        new(
+            "'b' in {'a': 1, 'b': 2}",
+            TrueChow
+        ),
+
+        // NOTE: Deferred niche iteration syntax not yet confirmed in Chow:
+        // for-else, generator expressions, and comprehension variants.
+    ];
+
+    static readonly IReadOnlyList<CaseExecute> ExecuteBuiltInFunctionCases =
+    [
+        //--- Core Built-ins ---
+
+        new(
+            "abs(-5)",
+            new ChowValue(5)
+        ),
+
+        new(
+            "len([1, 2, 3])",
+            new ChowValue(3)
+        ),
+
+        new(
+            "round(2.5)",
+            new ChowValue(2)
+        ),
+
+        new(
+            "min(4, -1, 8)",
+            new ChowValue(-1)
+        ),
+
+        new(
+            "max([4, -1, 8])",
+            new ChowValue(8)
+        ),
+
+        new(
+            "int(\"12\")",
+            new ChowValue(12)
+        ),
+
+        new(
+            "float(\"2.5\")",
+            new ChowValue(2.5)
+        ),
+
+        new(
+            "str(123)",
+            new ChowValue("123")
+        ),
+
+        new(
+            "bool(0)",
+            FalseChow
+        ),
+
+        new(
+            "list(\"ab\") == ['a', 'b']",
+            TrueChow
+        ),
+
+        // NOTE: Deferred niche built-in syntax/behavior not yet confirmed in Chow:
+        // clear, print/input output assertions, dict kwargs/mapping-protocol variants, and ValueError-specific parity checks.
+    ];
+
+    static readonly IReadOnlyList<CaseExecute> ExecuteStringConcatenationAndFStringCases =
+    [
+        //--- String Concatenation ---
+
+        new(
+            "\"hello\" + \" \" + \"world\"",
+            new ChowValue("hello world")
+        ),
+
+        new(
+            """
+            prefix = "Chow"
+            prefix + " V2"
+            """,
+            new ChowValue("Chow V2")
+        ),
+
+        //--- f-Strings ---
+
+        new(
+            """
+            name = "Chow"
+            f"Hello, {name}!"
+            """,
+            new ChowValue("Hello, Chow!")
+        ),
+
+        new(
+            "f\"{1 + 2}\"",
+            new ChowValue("3")
+        ),
+
+        new(
+            """
+            n = 2
+            f"Value: {n * 5}"
+            """,
+            new ChowValue("Value: 10")
+        ),
+
+        // NOTE: Deferred niche f-string syntax not yet confirmed in Chow:
+        // conversion flags (!r, !s, !a), format spec mini-language, and deeply nested expression forms.
+    ];
     
     static readonly IReadOnlyList<CaseExecute> ExecuteEmptyWhitespaceOrNullCases =
     [

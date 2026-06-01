@@ -1,5 +1,6 @@
 using Chow.Interpreter.Core;
 using Chow.Interpreter.State;
+using Chow.Interpreter.StandardLibrary;
 namespace Chow.Interpreter
 {
     public sealed class ChowEngine
@@ -21,20 +22,14 @@ namespace Chow.Interpreter
         /// <param name="sourceCode">String containing Chow source code, whitespace, or null.</param>
         /// <returns><see cref="ChowValue.None"/>, or the result of the last expression statement
         /// interpreted, if there was one defined in <paramref name="sourceCode"/>, and it is not null.</returns>
-        // KNOWN PYTHON-PARITY GAPS (surfaced by failing ChowEngineTests expression-statement cases):
-        //
-        //   LOGIC ERROR (the op is implemented, but a code path wrongly rejects it):
-        //     - A statement that STARTS with unary '-' (e.g. "-(4 + 1)", or nested "-(-(5))") throws
-        //       ParserEx "Expected statement" — the leading '-', not the nesting depth, is what is
-        //       rejected. Negation itself works (Parser.ParseFactor); the bug is that
-        //       Parser.IsPrimaryToken() omits SymbolMinus, so '-' is not accepted as a statement start.
-        //
-        //   FEATURE NOT IMPLEMENTED (the VM has no branch for the str type):
-        //     - String subscript ("abc"[0]), string slice ("abc"[1:3]), and string membership
-        //       ("a" in "abc") throw TypeException. VirtualMachine.EvaluateSubscript /
-        //       EvaluateSubscriptSlice / EvaluateIn only handle List and Dict.
-        public static ChowValue Execute(string sourceCode)
+        public static ChowValue Execute(string sourceCode, bool useBuiltInFunctions = true)
         {
+            var globalScope = new Scope();
+            if (useBuiltInFunctions)
+            {
+                ImportBuiltIns(globalScope);
+            }
+
             var scanner = new Scanner(sourceCode);
             var tokens = scanner.ScanTokens();
 
@@ -49,6 +44,16 @@ namespace Chow.Interpreter
 
             var vm = new VirtualMachine(new Scope(), chunk);
             return vm.EvaluateChunk();
+        }
+
+        static void ImportBuiltIns(Scope globalScope)
+        {
+            var namedInvocableObjects = BuiltInFunctions.NamedInvocableObjects;
+            foreach (var namedInvocable in namedInvocableObjects)
+            {
+                var chowValue = new ChowValue(namedInvocable.callableObject);
+                globalScope.AssignVariableValue(namedInvocable.name, chowValue);
+            }
         }
 
         internal static ChowValue ExecuteModuleCode(string sourceCode, Scope moduleGlobalScope)
