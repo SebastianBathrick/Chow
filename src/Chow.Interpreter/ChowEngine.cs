@@ -25,6 +25,7 @@ namespace Chow.Interpreter
         public static ChowValue Execute(string sourceCode, bool useBuiltInFunctions = true)
         {
             var globalScope = new Scope();
+            
             if (useBuiltInFunctions)
             {
                 ImportBuiltIns(globalScope);
@@ -42,7 +43,7 @@ namespace Chow.Interpreter
             var compiler = new Compiler(syntaxTreeRoot);
             var chunk = compiler.CompileRoot();
 
-            var vm = new VirtualMachine(new Scope(), chunk);
+            var vm = new VirtualMachine(globalScope, chunk);
             return vm.EvaluateChunk();
         }
 
