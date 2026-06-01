@@ -172,7 +172,7 @@ public class ChowEngineTests
         #endregion
 
         #region String, List, and Dict Literals
-
+        
         new(
             "\"Hello, Chow\"",
             new("Hello, Chow")
@@ -183,6 +183,8 @@ public class ChowEngineTests
             new("Single quoted")
         ),
 
+        // TODO: Write tests when host language data type conversion is added for dicts and lists
+        
         new(
             "[] == []",
             TrueChow
@@ -1844,12 +1846,14 @@ public class ChowEngineTests
 
         new(
             """
-            def make_result():
-                x = 3
-                def inner():
-                    return x + 2
-                return inner()
-            make_result()
+            def make_closure():
+                x = 5
+                def closure():
+                    return x
+                return closure
+                
+            test_closure = make_closure()
+            test_closure()
             """,
             new ChowValue(5)
         ),
@@ -1857,16 +1861,17 @@ public class ChowEngineTests
         new(
             """
             def outer():
-                x = 1
+                x = 1000
                 def inner():
                     nonlocal x
-                    x = x + 4
+                    x = 100
                     return x
-                inner()
-                return x
-            outer()
+                return inner
+            
+            test_closure =  outer()
+            test_closure()
             """,
-            new ChowValue(5)
+            new ChowValue(100)
         ),
 
         // NOTE: Deferred niche function syntax not yet confirmed in Chow:
