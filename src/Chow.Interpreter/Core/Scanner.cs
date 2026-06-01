@@ -117,7 +117,7 @@ namespace Chow.Interpreter.Core
             {
                 ScanNewlineToken();
             }
-            else if (IsDigitChar())
+            else if (IsDigitChar() || CurrentChar == '.' && IsDigitChar(PeekNextChar()))
             {
                 ScanNumericToken();
             }
@@ -435,16 +435,20 @@ namespace Chow.Interpreter.Core
         {
             var startIdx = _charIdx;
 
-            // Move past digits before any decimal point (if any)
-            MoveToNextChar();
+            var isFloat = CurrentChar == '.';
 
-            while (IsCharToScan && IsDigitChar())
+            if (!isFloat)
             {
-                MoveToNextChar();
+                // Move past digits before any decimal point (if any)
+                do
+                {
+                    MoveToNextChar();
+                }
+                while (IsCharToScan && IsDigitChar());
             }
 
             // If there is a decimal point, move past it and any following digits
-            var isFloat = IsCharToScan && CurrentChar == '.';
+            isFloat = isFloat || IsCharToScan && CurrentChar == '.';
 
             if (isFloat)
             {
@@ -780,6 +784,11 @@ namespace Chow.Interpreter.Core
         bool IsDigitChar()
         {
             return CurrentChar >= '0' && CurrentChar <= '9';
+        }
+        
+        bool IsDigitChar(char checkChar)
+        {
+            return checkChar >= '0' && checkChar <= '9';
         }
 
         bool IsAlphaChar()
