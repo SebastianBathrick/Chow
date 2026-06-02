@@ -735,40 +735,32 @@ namespace Chow.Core
 
         static OperationCode GetScopeAssignOpCode(ScopeType resolution)
         {
-            switch (resolution)
+            if (resolution == ScopeType.Global)
             {
-                case ScopeType.Global:
-                {
-                    return OperationCode.PopAndAssignToGlobal;
-                }
-                case ScopeType.Nonlocal:
-                {
-                    return OperationCode.PopAndAssignToNonlocal;
-                }
-                default:
-                {
-                    return OperationCode.PopAndAssignToVariable;
-                }
+                return OperationCode.PopAndAssignToGlobal;
             }
+
+            if (resolution == ScopeType.Nonlocal)
+            {
+                return OperationCode.PopAndAssignToNonlocal;
+            }
+
+            return OperationCode.PopAndAssignToVariable;
         }
 
         static OperationCode GetScopeReadOpCode(ScopeType resolution)
         {
-            switch (resolution)
+            if (resolution == ScopeType.Global)
             {
-                case ScopeType.Global:
-                {
-                    return OperationCode.PushGlobalValue;
-                }
-                case ScopeType.Nonlocal:
-                {
-                    return OperationCode.PushNonlocalValue;
-                }
-                default:
-                {
-                    return OperationCode.PushVariableValue;
-                }
+                return OperationCode.PushGlobalValue;
             }
+
+            if (resolution == ScopeType.Nonlocal)
+            {
+                return OperationCode.PushNonlocalValue;
+            }
+
+            return OperationCode.PushVariableValue;
         }
 
         static OperationCode GetExpressionOpCode(ExpressionNode expressionNode)
@@ -865,6 +857,9 @@ namespace Chow.Core
                     return OperationCode.NotIn;
                 }
 
+                case ExpressionOp.And:
+                case ExpressionOp.Or:
+                case ExpressionOp.ToStr:
                 default:
                 {
                     throw new NotImplementedException(nameof(expressionNode.Op));

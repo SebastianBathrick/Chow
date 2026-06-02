@@ -525,7 +525,7 @@ namespace Chow.Core
             else
             {
                 // Will push its return value onto the stack.
-                CallInteropFunction(argCount, calleeValue, args);
+                CallInteropFunction(calleeValue, args);
             }
         }
 
@@ -535,7 +535,7 @@ namespace Chow.Core
             return calleeValue.DataType == DataType.Object && calleeValue.ToObject() is Closure;
         }
 
-        void CallInteropFunction(int argCount, ChowValue calleeValue, ChowValue[] args)
+        void CallInteropFunction(ChowValue calleeValue, ChowValue[] args)
         {
             _valStack.Push(calleeValue.InvokeHostDelegate(args));
         }

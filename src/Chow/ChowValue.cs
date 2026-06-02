@@ -297,11 +297,13 @@ namespace Chow
             {
                 return new ChowValue(PromoteToInt64() - rightOperand.PromoteToInt64());
             }
-            else if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.ToFloat)
+
+            if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.ToFloat)
             {
                 return new ChowValue(PromoteToFloat64() - rightOperand.PromoteToFloat64());
             }
-            else if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.Nothing)
+
+            if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.Nothing)
             {
             }
             else

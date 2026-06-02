@@ -107,7 +107,8 @@ namespace Chow.Core
             ConsumeToken(TokenType.SymbolColon, "Expected ':' after block header.");
             ConsumeToken(TokenType.Newline, "Expected newline after ':'.");
 
-            var indentToken = ConsumeToken(TokenType.Indent, "Expected indented block body.");
+            var indentToken = ConsumeToken(
+                TokenType.Indent, "Expected indented block body.");
             var statements = new List<Node>
             {
                 ParseStatement()
@@ -187,8 +188,9 @@ namespace Chow.Core
                 throw new ParserEx("Expected statement.", CurrentToken.LineNum);
             }
 
-            // Parse expression first; if an '=' follows, convert the LHS into the appropriate assignment node.
-            // Otherwise, this is a standalone expression statement (result discarded or routed to hook).
+            // Parse expression first; if an '=' follows, convert the LHS into the appropriate
+            // assignment node. Otherwise, this is a standalone expression statement (result
+            // discarded or routed to hook).
             var startLine = CurrentToken.LineNum;
             var lhs = ParseExpression();
 
@@ -206,22 +208,29 @@ namespace Chow.Core
         {
             var line = CurrentToken.LineNum;
 
-            ConsumeToken(TokenType.KeywordDef, "Expected 'def' keyword.");
+            ConsumeToken(
+                TokenType.KeywordDef, "Expected 'def' keyword.");
 
-            var nameToken = ConsumeToken(TokenType.Identifier, "Expected function name.");
+            var nameToken = ConsumeToken(
+                TokenType.Identifier, "Expected function name.");
 
-            ConsumeToken(TokenType.SymbolLeftParen, "Expected '(' after function name.");
+            ConsumeToken(
+                TokenType.SymbolLeftParen, "Expected '(' after function name.");
 
             var paramList = new List<Node>();
 
             if (!IsCurrentTokenType(TokenType.SymbolRightParen))
             {
-                var paramToken = ConsumeToken(TokenType.Identifier, "Expected parameter name.");
+                var paramToken = ConsumeToken(
+                    TokenType.Identifier, "Expected parameter name.");
+                
                 paramList.Add(new NameNode(paramToken.Lexeme, paramToken.LineNum));
 
                 while (TryConsumeCurrentTokenType(TokenType.SymbolComma))
                 {
-                    paramToken = ConsumeToken(TokenType.Identifier, "Expected parameter name after ','.");
+                    paramToken = ConsumeToken(
+                        TokenType.Identifier, "Expected parameter name after ','.");
+                    
                     paramList.Add(new NameNode(paramToken.Lexeme, paramToken.LineNum));
                 }
             }
@@ -258,7 +267,11 @@ namespace Chow.Core
                 return new BranchStatementNode(expr, block, branch, line);
             }
 
-            if (IsCurrentTokenType(TokenType.KeywordElse))
+            if (!IsCurrentTokenType(TokenType.KeywordElse))
+            {
+                return null;
+            }
+
             {
                 var line = CurrentToken.LineNum;
                 ConsumeToken();
@@ -267,7 +280,6 @@ namespace Chow.Core
                 return new BranchStatementNode(null, block, null, line);
             }
 
-            return null;
         }
 
         Node ParseWhileStatement()
@@ -286,7 +298,9 @@ namespace Chow.Core
             var line = CurrentToken.LineNum;
             ConsumeToken(TokenType.KeywordFor, "Expected 'for' keyword.");
 
-            var targetToken = ConsumeToken(TokenType.Identifier, "Expected loop variable name after 'for'.");
+            var targetToken = ConsumeToken(
+                TokenType.Identifier, "Expected loop variable name after 'for'.");
+            
             var target = new NameNode(targetToken.Lexeme, targetToken.LineNum);
 
             ConsumeToken(TokenType.KeywordIn, "Expected 'in' after loop variable.");
@@ -296,13 +310,15 @@ namespace Chow.Core
 
             BranchStatementNode elseBranch = null;
 
-            if (IsCurrentTokenType(TokenType.KeywordElse))
+            if (!IsCurrentTokenType(TokenType.KeywordElse))
             {
-                var elseLine = CurrentToken.LineNum;
-                ConsumeToken();
-                var elseBlock = ParseBlock();
-                elseBranch = new BranchStatementNode(null, elseBlock, null, elseLine);
+                return new ForStatementNode(target, iterable, block, null, line);
             }
+
+            var elseLine = CurrentToken.LineNum;
+            ConsumeToken();
+            var elseBlock = ParseBlock();
+            elseBranch = new BranchStatementNode(null, elseBlock, null, elseLine);
 
             return new ForStatementNode(target, iterable, block, elseBranch, line);
         }
@@ -326,7 +342,8 @@ namespace Chow.Core
             var line = CurrentToken.LineNum;
             ConsumeToken(TokenType.KeywordReturn, "Expected 'return' keyword.");
 
-            // Void functions always return None, and their calls inside expressions will not cause an error
+            // Void functions always return None, and their calls inside expressions will not cause
+            // an error
             var expr = IsPrimaryToken() ? ParseExpression() : null;
 
             return new ReturnStatementNode(expr, line);
@@ -351,12 +368,17 @@ namespace Chow.Core
         List<string> ParseDeclarationNameList(string keyword)
         {
             var names = new List<string>();
-            var firstToken = ConsumeToken(TokenType.Identifier, $"Expected identifier after '{keyword}'.");
+            var firstToken = ConsumeToken(
+                TokenType.Identifier, $"Expected identifier after '{keyword}'.");
+            
             names.Add(firstToken.Lexeme);
 
             while (TryConsumeCurrentTokenType(TokenType.SymbolComma))
             {
-                var nameToken = ConsumeToken(TokenType.Identifier, $"Expected identifier after ',' in '{keyword}' declaration.");
+                var nameToken = ConsumeToken(
+                    TokenType.Identifier, 
+                    $"Expected identifier after ',' in '{keyword}' declaration.");
+                
                 names.Add(nameToken.Lexeme);
             }
 
@@ -402,13 +424,14 @@ namespace Chow.Core
 
         Node ParseNot()
         {
-            if (TryConsumeCurrentTokenType(TokenType.KeywordNot))
+            if (!TryConsumeCurrentTokenType(TokenType.KeywordNot))
             {
-                var opToken = PreviousToken;
-                return new ExpressionNode(ExpressionOp.Not, ParseNot(), opToken.LineNum);
+                return ParseComparison();
             }
 
-            return ParseComparison();
+            var opToken = PreviousToken;
+            return new ExpressionNode(ExpressionOp.Not, ParseNot(), opToken.LineNum);
+
         }
 
         Node ParseComparison()

@@ -9,7 +9,7 @@ namespace Chow.StandardLibrary
         // Leaving callables as objects because ChowValue will box it into one anyway, and to make
         // it easy to change built-in function object types later. The way built-in functions are
         // currently handled is likely a temporary solution and is subject to change.
-        static List<(string name, object callableObject)> _namedInvocableObjects = null;
+        static List<(string name, object callableObject)> _namedInvocableObjects;
 
         #region Properties
 
@@ -390,20 +390,20 @@ namespace Chow.StandardLibrary
             if (args.Length == 1)
             {
                 start = 0;
-                stop = RequireRangeInt(args[0], 0);
+                stop = RequireRangeInt(args[0]);
                 step = 1;
             }
             else if (args.Length == 2)
             {
-                start = RequireRangeInt(args[0], 0);
-                stop = RequireRangeInt(args[1], 1);
+                start = RequireRangeInt(args[0]);
+                stop = RequireRangeInt(args[1]);
                 step = 1;
             }
             else
             {
-                start = RequireRangeInt(args[0], 0);
-                stop = RequireRangeInt(args[1], 1);
-                step = RequireRangeInt(args[2], 2);
+                start = RequireRangeInt(args[0]);
+                stop = RequireRangeInt(args[1]);
+                step = RequireRangeInt(args[2]);
 
                 if (step == 0)
                 {
@@ -415,7 +415,7 @@ namespace Chow.StandardLibrary
             return new ChowValue(new InternalRange(start, stop, step));
         }
 
-        static long RequireRangeInt(ChowValue arg, int position)
+        static long RequireRangeInt(ChowValue arg)
         {
             if (arg.DataType != DataType.Int)
             {

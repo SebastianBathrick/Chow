@@ -69,7 +69,6 @@ namespace Chow
                 }
 
                 _globalScope.AssignVariableValue(name, chowValue);
-                return;
 
             }
         }

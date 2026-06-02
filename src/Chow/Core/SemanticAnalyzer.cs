@@ -337,7 +337,6 @@ namespace Chow.Core
                         node = ifNode.Branch;
                         continue;
 
-                        break;
                     }
 
                     case BranchStatementNode branchNode:
@@ -347,7 +346,6 @@ namespace Chow.Core
                         node = branchNode.Branch;
                         continue;
 
-                        break;
                     }
 
                     case WhileStatementNode whileNode:
@@ -356,7 +354,6 @@ namespace Chow.Core
                         node = whileNode.Block;
                         continue;
 
-                        break;
                     }
 
                     case ForStatementNode forNode:
