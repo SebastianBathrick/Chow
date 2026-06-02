@@ -39,7 +39,7 @@ namespace Chow.State
 
         /// <summary>Creates a call stack rooted at a single module frame.</summary>
         /// <param name="moduleChunk">The compiled bytecode for the module being executed.</param>
-        /// <param name="moduleScope">The module scope to operate against; persists across <c>ChowModule.Execute</c> calls.</param>
+        /// <param name="moduleScope">The module scope to operate against; persists across <c>ChowState.Execute</c> calls.</param>
         public CallStack(Chunk moduleChunk, Scope moduleScope)
         {
             _moduleLvl = new StackFrame(moduleChunk, moduleScope);

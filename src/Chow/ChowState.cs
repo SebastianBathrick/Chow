@@ -5,45 +5,35 @@ using Chow.State;
 namespace Chow
 {
     /// <summary>
-    /// Represents a managed global scope where global variables are declared via an instance’s
-    /// indexer or using source code variable declarations (or function definitions) executed using
-    /// the instance’s public methods. 
+    /// Represents a managed global scope that maintains the state of global variables and functions.
     /// </summary>
-    public sealed class ChowModule
+    public sealed class ChowState
     {
-        // The name is for later features, such as import statements, but their implementation has
-        // not been planned in detail.
+        // The name is for later features, such as import statements
         readonly Scope _globalScope;
-
-        // If true, built-ins are required for this module but have not been imported. If false,
-        // built-ins are not required for this module or have already been imported at least once.
         bool _needsBuiltInsImport;
         
         #region Properties
 
-        /// <summary>Read-only name this instance was initialized with.</summary>
+        /// <summary>This module's name.</summary>
         public string Name { get; }
 
         /// <summary>
-        /// <para>
-        /// Returns the value of, or assigns a value to, a variable bound to a
-        /// <see langword="string"/> name.
-        /// </para>
-        /// <para>
-        /// When setting a variable value, if the variable is undefined, a new variable is declared
-        /// and initialized to the provided value.
-        /// </para>
+        /// Gets or sets the value of a global variable or function with the specified name.
         /// </summary>
-        /// <param name="name">Name of the variable or function to set/get.</param>
-        /// <exception cref="GlobalAccessException">Thrown when <paramref name="name"/> is
-        /// not defined in this module's global scope.</exception>
+        /// <param name="name">Name of the variable/function to set/get.</param>
+        /// <exception cref="GlobalAccessException">Thrown by get when <paramref name="name"/> is
+        /// not bound to an existing variable.</exception>
+        /// <remarks>If on set, <paramref name="name"/> is not bound to an existing variable, a new
+        /// variable will be declared, bound to <paramref name="name"/>, and initialized to the
+        /// specified value.</remarks>
         public object this[string name]
         {
             get
             {
                 if (_needsBuiltInsImport)
                 {
-                    // The global variable being retrieved might be a built-in function not yet imported
+                    // Variable being retrieved could be or rely on a built-in function
                     ImportBuiltIns();
                 }
                 
@@ -75,23 +65,28 @@ namespace Chow
 
         #endregion
 
-        /// <summary>Initializes a ChowModule with no global variables or function definitions.</summary>
-        public ChowModule(string name = nameof(ChowModule), bool useBuiltInFunctions = true)
+        /// <summary>Initializes a ChowState with optional built-in functions.</summary>
+        /// <param name="name">This module's name.</param>
+        /// <param name="useBuiltIns">Whether built-in functions will be automatically added
+        /// to the global scope.</param>
+        public ChowState(string name = nameof(ChowState), bool useBuiltIns = true)
         {
-            Name = name ?? nameof(ChowModule);
+            Name = name ?? nameof(ChowState);
 
             _globalScope = new Scope();
 
             // Use a flag to avoid importing built-ins during initialization, because what
-            // BuiltInFunctions executes should be considered unknown to ChowModule
-            _needsBuiltInsImport = useBuiltInFunctions;
+            // BuiltInFunctions executes should be considered unknown to ChowState
+            _needsBuiltInsImport = useBuiltIns;
         }
 
 
-        /// <summary>Compiles and interprets Chow source code contained in a <see langword="string"/>.</summary>
+        /// <summary>
+        /// Compiles and interprets Chow source code in a <see langword="string"/>.
+        /// </summary>
         /// <param name="sourceCode">String containing Chow source code, whitespace, or null.</param>
         /// <returns><see cref="ChowValue.None"/>, or the result of the last expression statement
-        /// interpreted, if there was one defined in <paramref name="sourceCode"/>, and it is not null.</returns>
+        /// interpreted (if one did).</returns>
         public ChowValue Execute(string sourceCode)
         {
             if (_needsBuiltInsImport)
@@ -104,13 +99,12 @@ namespace Chow
         
         /// <summary>
         /// Declares the standard built-in functions (e.g. <c>print</c>, <c>len</c>, <c>range</c>)
-        /// in this module's global scope so they can be called from source code or by calling
-        /// this instance's <see cref="InvokeGlobal(string, object[])"/>.
+        /// in this module's global scope.
         /// </summary>
         public void ImportBuiltIns()
         {
             // BuiltInFunctions does not create its own Module like you may expect. Instead,
-            // ChowModule wraps invocable C# objects into ChowValues, and binds them to a name
+            // ChowState wraps invocable C# objects into ChowValues, and binds them to a name
             // manually to avoid a circular dependency.
             var namedInvocableObjects = BuiltInFunctions.NamedInvocableObjects;
 

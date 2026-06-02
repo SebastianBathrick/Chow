@@ -344,7 +344,7 @@ namespace Chow.Core
         }
 
         // No longer used in codebase, only here for old tests that used it
-        // The ChowModule already has a reference to the global scope, not the potential value that remains on the stack.
+        // The ChowState already has a reference to the global scope, not the potential value that remains on the stack.
         public Scope EvaluateChunkNoValue()
         {
             EvaluateChunk();

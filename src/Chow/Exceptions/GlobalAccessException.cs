@@ -2,7 +2,7 @@ using System;
 namespace Chow.Exceptions
 {
     /// <summary>
-    /// Thrown by the <see cref="ChowModule"/> host API when a global variable access is invalid.
+    /// Thrown by the <see cref="ChowState"/> host API when a global variable access is invalid.
     /// </summary>
     public class GlobalAccessException : Exception
     {
