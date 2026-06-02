@@ -1,34 +1,42 @@
-﻿namespace Chow.Core.Utilities
+﻿namespace Chow.Utilities
 {
+    // TODO: Implement during Scanner refactor
+    
     /// <summary>Represents a sequence of characters that are iteratively evaluated.</summary> 
+    /// <remarks>Instances skip blank lines and track the selected char's current line number.</remarks>
     public class CharStream
     {
-        const char END_MARKER_CHAR = '\0';
-        const int WINDOWS_NEWLINE_LEN = 2;
-        const int UNIX_MAC_NEWLINE_LEN = 1;
-        const int END_OF_STREAM_LINE = -1;
-        
         readonly string _text;
-        int _selectionIndex;
-        int _selectedLine;
-        bool _isStartOfLine; 
+        int _selectedIndex;
+        int _line;
+        bool _isFirstInLine; 
         
-        /// <summary>There is no selected char because the stream ended.</summary>
-        public bool IsEndOfStream => _selectionIndex != _text.Length;
+        /// <summary>Whether the selected char is the first of its line.</summary>
+        public bool IsFirstInLine => _isFirstInLine;
         
+        /// <summary>Whether the selected char is a '\n' or '\r'.</summary>
+        public bool HasLineEnded => Is('\n') || Is('\r');
+        
+        /// <summary>Whether there is no selected char because the stream ended.</summary>
+        public bool IsEndOfStream => _selectedIndex == _text.Length;
+
         /// <summary>The selected char's line number.</summary>
         /// <remarks>If <see cref="IsEndOfStream"/> is true then -1 will be returned.</remarks>
-        public int SelectedLineNumber => _selectedLine;
+        public int LineNumber => !IsEndOfStream ? _line : END_OF_STREAM_LINE;
         
-        char SelectedChar => IsEndOfStream ? _text[_selectionIndex] : END_MARKER_CHAR;
+        char SelectedChar => !IsEndOfStream ? _text[_selectedIndex] : END_MARKER_CHAR;
         
         /// <summary>Initializes a new stream populated with chars.</summary>
-        /// <param name="text">string containing chars the stream will contain.</param>
+        /// <param name="text">string containing chars the stream will contain or null.</param>
         public CharStream(string text)
         {
-            _text = text;
-            _selectionIndex = 0;
-            _selectedLine = 1;
+            _text = text ?? string.Empty;
+            _selectedIndex = 0;
+            
+            // Not needed for LineNumber to return the correct value,
+            // but assign END_OF_STREAM_LINE for clearer debugging
+            _line = _text.Length > 0 ? FIRST_LINE : END_OF_STREAM_LINE;
+            _isFirstInLine = true;
         }
 
         /// <summary>Selects the next char or reaches the end of the stream.</summary>
@@ -39,15 +47,18 @@
                 return;
             }
             
-            if (!IsNewline())
+            if (!HasLineEnded)
             {
-                _selectionIndex++;
-                _isStartOfLine = false;
+                _selectedIndex++;
+                _isFirstInLine = false;
+                return;
             }
-            else
+
+            do
             {
                 NextLine();
             }
+            while (HasLineEnded);
         }
 
         /// <summary>Selects the next non-whitespace char or reaches end-of the stream.</summary>
@@ -67,11 +78,11 @@
             // - \r (Older Macs)
             // - \r\n (Windows/MS-DOS)
 
-            _selectionIndex += Is('\r') && IsNext('\n') 
+            _selectedIndex += Is('\r') && IsNext('\n') 
                 ? WINDOWS_NEWLINE_LEN : UNIX_MAC_NEWLINE_LEN;
 
-            _selectedLine++;
-            _isStartOfLine = IsEndOfStream;
+            _line++;
+            _isFirstInLine = !IsEndOfStream;
         }
 
         /// <summary>Whether the selected char is the value provided.</summary>
@@ -85,7 +96,8 @@
         /// <param name="checkChar">char to compare the next char to.</param>
         public bool IsNext(char checkChar)
         {
-            return SelectedChar == checkChar;
+            var nextIndex = _selectedIndex + 1;
+            return nextIndex != _text.Length &&  _text[nextIndex] == checkChar;
         }
         
         /// <summary>Whether the selected char is a digit.</summary>
@@ -112,17 +124,17 @@
         {
             return Is(' ') || Is('\t');
         }
-
-        /// <summary>Whether the selected char is a '\n' or '\r'.</summary>
-        public bool IsNewline()
-        {
-            return Is('\n') || Is('\r');
-        }
-
+        
         /// <summary>Whether the selected char is a double quote.</summary>
         public bool IsFormFeed()
         {
             return Is('\f');
         }
+        
+        const char END_MARKER_CHAR = '\0';
+        const int WINDOWS_NEWLINE_LEN = 2;
+        const int UNIX_MAC_NEWLINE_LEN = 1;
+        const int END_OF_STREAM_LINE = -1;
+        const int FIRST_LINE = 1;
     }
 }
