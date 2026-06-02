@@ -153,6 +153,14 @@ def decode_csharp_string_literal(literal: str) -> str:
             result.append('"')
         elif esc == "0":
             result.append("\0")
+        elif esc == "f":
+            result.append("\f")
+        elif esc == "a":
+            result.append("\a")
+        elif esc == "b":
+            result.append("\b")
+        elif esc == "v":
+            result.append("\v")
         else:
             result.append(esc)
         i += 1
@@ -647,8 +655,6 @@ def is_case_matching(case: CaseExecuteEntry, python_result_repr: str | None) -> 
     if python_result_repr is None or python_result_repr.startswith("<Python Error:"):
         return False
     if case.resolve_errors:
-        return False
-    if case.resolved_expected is None and case.raw_expected_expr.strip() != "ChowValue.None":
         return False
     return values_equivalent(case.resolved_expected, python_result_repr)
 
