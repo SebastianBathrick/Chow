@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\Chow.Interpreter\Chow.Interpreter.csproj"/>
+        <ProjectReference Include="..\..\src\Chow\Chow.csproj" />
     </ItemGroup>
 
     <ItemGroup>
