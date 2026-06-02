@@ -1,4 +1,4 @@
-using Chow.Interpreter.Values;
+using Chow.Interpreter.DataTypes;
 namespace Chow.Interpreter.SyntaxTrees.Expressions
 {
     sealed class ExpressionNode : Node

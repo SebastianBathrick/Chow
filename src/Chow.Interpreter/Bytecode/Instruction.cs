@@ -1,3 +1,4 @@
+using Chow.Interpreter.Core;
 namespace Chow.Interpreter.Bytecode
 {
     /// <summary>Represents a single bytecode instruction, consisting of an operation code and an optional operand.</summary>
@@ -5,7 +6,7 @@ namespace Chow.Interpreter.Bytecode
     {
         const int NO_OPERAND = -1;
 
-        /// <summary>The code mapped to the logic of this instruction found inside the <see cref="Interpreter.VirtualMachine"/>.</summary>
+        /// <summary>The code mapped to the logic of this instruction found inside the <see cref="VirtualMachine"/>.</summary>
         public OperationCode Code { get; }
 
         /// <summary>Additional information that may be required for specific instructions, such as the index of a constant or

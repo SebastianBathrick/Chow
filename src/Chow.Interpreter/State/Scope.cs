@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Chow.Interpreter.Values;
 namespace Chow.Interpreter.State
 {
     /// <summary>
@@ -11,42 +10,53 @@ namespace Chow.Interpreter.State
     {
         readonly Dictionary<string, ChowValue> _varMap;
 
-        /// <summary>The enclosing scope used for LEGB chain walking, or <c>null</c> at the top of the chain.</summary>
-        public Scope ParentOrNull { get; }
+        /// <summary>
+        /// The enclosing scope used for LEGB chain walking, or <c>null</c> at the top of the chain.
+        /// If there is no parent then the property will be <see langword="null"/>.
+        /// </summary>
+        public Scope Parent { get; }
 
-        /// <summary>Creates a scope with the given parent (pass <c>null</c> for the module-level scope).</summary>
-        public Scope(Scope parentOrNull = null)
+        /// <summary>
+        /// Creates a scope with the given parent (pass <c>null</c> for the module-level scope).
+        /// </summary>
+        public Scope(Scope parent = null)
         {
-            ParentOrNull = parentOrNull;
+            Parent = parent;
             _varMap = new Dictionary<string, ChowValue>();
         }
 
-        /// <summary>True if <paramref name="name"/> is bound in this scope. Does not consult <see cref="ParentOrNull"/>.</summary>
-        public bool IsVariableDefined(string name)
+        /// <summary>
+        /// True if <paramref name="name"/> is bound in this scope. Does not consult
+        /// <see cref="Parent"/>.
+        /// </summary>
+        public bool ContainsVariable(string name)
         {
             return _varMap.ContainsKey(name);
         }
 
         /// <summary>
-        /// Binds <paramref name="name"/> to <paramref name="value"/> in this scope. Creates the binding
-        /// if it does not exist; otherwise overwrites it in place.
+        /// Binds <paramref name="name"/> to <paramref name="value"/> in this scope. Creates the
+        /// binding if it does not exist; otherwise overwrites it in place.
         /// </summary>
         public void AssignVariableValue(string name, ChowValue value)
         {
             _varMap[name] = value;
         }
 
-        /// <summary>Returns the value bound to <paramref name="name"/> in this scope. Throws if undefined.</summary>
+        /// <summary>
+        /// Returns the value bound to <paramref name="name"/> in this scope. Throws if undefined.
+        /// </summary>
         public ChowValue GetVariableValue(string name)
         {
             return _varMap[name];
         }
 
         /// <summary>
-        /// Removes the binding for <paramref name="name"/> from this scope. Returns <c>true</c> if a binding
-        /// was removed, <c>false</c> if no such binding existed. Does not consult <see cref="ParentOrNull"/>.
+        /// Removes the binding for <paramref name="name"/> from this scope. Returns <c>true</c> if
+        /// a binding was removed, <c>false</c> if no such binding existed. Does not consult
+        /// <see cref="Parent"/>.
         /// </summary>
-        public bool RemoveVariable(string name)
+        public bool TryRemoveVariable(string name)
         {
             return _varMap.Remove(name);
         }

@@ -1,3 +1,4 @@
+using Chow.Interpreter.Core;
 using Chow.Interpreter.SyntaxTrees.Scope;
 namespace Chow.Interpreter.SyntaxTrees
 {

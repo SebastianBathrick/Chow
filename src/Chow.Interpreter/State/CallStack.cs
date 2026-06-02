@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 using Chow.Interpreter.Bytecode;
-using Chow.Interpreter.Values;
-using Chow.Interpreter.Values.DataTypes;
+using Chow.Interpreter.DataTypes;
 namespace Chow.Interpreter.State
 {
     /// <summary>
     /// Owns the module frame plus a stack of function-call frames, and exposes scope-aware
     /// variable operations that route through the active frame. Implements the LEGB lookup
-    /// chain (L → E* → G) via <see cref="Scope.ParentOrNull"/> walking; assignments always
+    /// chain (L → E* → G) via <see cref="Scope.Parent"/> walking; assignments always
     /// land in the current frame's scope (Python local-by-default).
     /// </summary>
     class CallStack
@@ -91,7 +90,7 @@ namespace Chow.Interpreter.State
         /// <summary>True if <paramref name="name"/> is bound in the module scope.</summary>
         public bool IsGlobalDefined(string name)
         {
-            return ModuleScope.IsVariableDefined(name);
+            return ModuleScope.ContainsVariable(name);
         }
 
         /// <summary>
@@ -122,9 +121,9 @@ namespace Chow.Interpreter.State
         // defines `name`. Throws KeyNotFoundException if none does.
         Scope FindNonlocalScope(string name)
         {
-            for (var s = CurrFrame.Scope.ParentOrNull; s != null && !ReferenceEquals(s, _moduleLvl.Scope); s = s.ParentOrNull)
+            for (var s = CurrFrame.Scope.Parent; s != null && !ReferenceEquals(s, _moduleLvl.Scope); s = s.Parent)
             {
-                if (s.IsVariableDefined(name))
+                if (s.ContainsVariable(name))
                 {
                     return s;
                 }
@@ -139,9 +138,9 @@ namespace Chow.Interpreter.State
         /// </summary>
         public bool IsVariableDefined(string name)
         {
-            for (var s = CurrFrame.Scope; s != null; s = s.ParentOrNull)
+            for (var s = CurrFrame.Scope; s != null; s = s.Parent)
             {
-                if (s.IsVariableDefined(name))
+                if (s.ContainsVariable(name))
                 {
                     return true;
                 }
@@ -158,9 +157,9 @@ namespace Chow.Interpreter.State
         /// </summary>
         public ChowValue GetVariableValue(string name)
         {
-            for (var s = CurrFrame.Scope; s != null; s = s.ParentOrNull)
+            for (var s = CurrFrame.Scope; s != null; s = s.Parent)
             {
-                if (s.IsVariableDefined(name))
+                if (s.ContainsVariable(name))
                 {
                     return s.GetVariableValue(name);
                 }

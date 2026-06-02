@@ -1,4 +1,5 @@
 using System;
+using Chow.Interpreter.Core;
 namespace Chow.Interpreter.Exceptions
 {
     /// <summary>
