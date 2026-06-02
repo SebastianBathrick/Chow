@@ -1,4 +1,4 @@
 <Solution>
     <Project Path="src/Chow/Chow.csproj" />
-    <Project Path="tests/Chow.Interpreter.Tests/Chow.Interpreter.Tests.csproj" />
+    <Project Path="tests/Chow.Tests.SourceCode/Chow.Tests.SourceCode.csproj" />
 </Solution>

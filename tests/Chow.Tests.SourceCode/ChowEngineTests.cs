@@ -1,9 +1,9 @@
-﻿namespace Chow.Interpreter.Tests;
+﻿using Chow;
+namespace Chow.Tests.SourceCode;
 
 [TestFixture]
 public class ChowEngineTests
 {
-
     #region Methods
     
     [TestCaseSource(nameof(ControlFlowCases))]
