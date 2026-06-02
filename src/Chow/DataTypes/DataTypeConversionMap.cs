@@ -10,11 +10,11 @@ namespace Chow.DataTypes
         
         #region Fields
 
-        static readonly Dictionary<(ExpressionOperator op, DataType left, DataType right), ConversionCase> BinaryTypeMap =
-            new Dictionary<(ExpressionOperator, DataType, DataType), ConversionCase>();
+        static readonly Dictionary<(ExpressionOp op, DataType left, DataType right), ConversionCase> BinaryTypeMap =
+            new Dictionary<(ExpressionOp, DataType, DataType), ConversionCase>();
 
-        static readonly Dictionary<(ExpressionOperator op, DataType operand), ConversionCase> UnaryTypeMap =
-            new Dictionary<(ExpressionOperator, DataType), ConversionCase>();
+        static readonly Dictionary<(ExpressionOp op, DataType operand), ConversionCase> UnaryTypeMap =
+            new Dictionary<(ExpressionOp, DataType), ConversionCase>();
 
         static readonly DataType[] NumericTags = { DataType.Bool, DataType.Int, DataType.Float };
 
@@ -24,27 +24,24 @@ namespace Chow.DataTypes
 
         #region Public API
 
-        public static ConversionCase GetLeftRightConversionCase(ExpressionOperator op, DataType left, DataType right)
+        public static ConversionCase GetLeftRightConversionCase(ExpressionOp op, DataType left, DataType right)
         {
             // Note: ExpressionOperator.And/Or are not registered here. The Compiler short-circuits them
             // into jump opcodes (see CompileShortCircuit), so this lookup is never invoked for those ops.
             // If a defensive caller ever queries them, the TypeException below is the correct response.
-            if (BinaryTypeMap.TryGetValue((op, left, right), out var conversion))
-            {
-                return conversion;
-            }
+            return BinaryTypeMap.TryGetValue((op, left, right), out var conversion) 
+                ? conversion 
+                : throw new TypeException(
+                    $"unsupported operand type(s) for {op}: '{left}' and '{right}'");
 
-            throw new TypeException($"unsupported operand type(s) for {op}: '{left}' and '{right}'");
         }
 
-        public static ConversionCase GetOperandConversionCase(ExpressionOperator op, DataType operand)
+        public static ConversionCase GetOperandConversionCase(ExpressionOp op, DataType operand)
         {
-            if (UnaryTypeMap.TryGetValue((op, operand), out var conversion))
-            {
-                return conversion;
-            }
+            return UnaryTypeMap.TryGetValue((op, operand), out var conversion) 
+                ? conversion 
+                : throw new TypeException($"bad operand type for unary {op}: '{operand}'");
 
-            throw new TypeException($"bad operand type for unary {op}: '{operand}'");
         }
 
         #endregion
@@ -53,42 +50,42 @@ namespace Chow.DataTypes
 
         static DataTypeConversionMap()
         {
-            AddArithmeticPromotionRules(ExpressionOperator.Add);
-            AddArithmeticPromotionRules(ExpressionOperator.Subtract);
-            AddArithmeticPromotionRules(ExpressionOperator.Multiply);
-            AddArithmeticPromotionRules(ExpressionOperator.Modulus);
-            AddArithmeticPromotionRules(ExpressionOperator.FloorDivide);
-            AddArithmeticPromotionRules(ExpressionOperator.Exponentiate);
+            AddArithmeticPromotionRules(ExpressionOp.Add);
+            AddArithmeticPromotionRules(ExpressionOp.Subtract);
+            AddArithmeticPromotionRules(ExpressionOp.Multiply);
+            AddArithmeticPromotionRules(ExpressionOp.Modulus);
+            AddArithmeticPromotionRules(ExpressionOp.FloorDivide);
+            AddArithmeticPromotionRules(ExpressionOp.Exponentiate);
 
-            AddAlwaysFloatPromotionRules(ExpressionOperator.Divide);
+            AddAlwaysFloatPromotionRules(ExpressionOp.Divide);
 
-            AddComparisonPromotionRules(ExpressionOperator.Less);
-            AddComparisonPromotionRules(ExpressionOperator.Greater);
-            AddComparisonPromotionRules(ExpressionOperator.LessEqual);
-            AddComparisonPromotionRules(ExpressionOperator.GreaterEqual);
+            AddComparisonPromotionRules(ExpressionOp.Less);
+            AddComparisonPromotionRules(ExpressionOp.Greater);
+            AddComparisonPromotionRules(ExpressionOp.LessEqual);
+            AddComparisonPromotionRules(ExpressionOp.GreaterEqual);
 
-            AddEqualityRules(ExpressionOperator.Equal);
-            AddEqualityRules(ExpressionOperator.NotEqual);
+            AddEqualityRules(ExpressionOp.Equal);
+            AddEqualityRules(ExpressionOp.NotEqual);
 
             AddContainerCarveOuts();
 
-            AddMembershipRules(ExpressionOperator.In);
-            AddMembershipRules(ExpressionOperator.NotIn);
+            AddMembershipRules(ExpressionOp.In);
+            AddMembershipRules(ExpressionOp.NotIn);
 
             AddUnaryRules();
         }
 
-        static void AddArithmeticPromotionRules(ExpressionOperator op)
+        static void AddArithmeticPromotionRules(ExpressionOp op)
         {
             foreach (var left in NumericTags)
             {
                 foreach (var right in NumericTags)
                 {
-                    var conversionCase = ConversionCase.PromoteToInt;
+                    var conversionCase = ConversionCase.ToInt;
 
                     if (EitherIsFloat(left, right))
                     {
-                        conversionCase = ConversionCase.PromoteToFloat;
+                        conversionCase = ConversionCase.ToFloat;
                     }
 
                     BinaryTypeMap[(op, left, right)] = conversionCase;
@@ -96,24 +93,24 @@ namespace Chow.DataTypes
             }
         }
 
-        static void AddAlwaysFloatPromotionRules(ExpressionOperator op)
+        static void AddAlwaysFloatPromotionRules(ExpressionOp op)
         {
             foreach (var left in NumericTags)
             {
                 foreach (var right in NumericTags)
                 {
-                    BinaryTypeMap[(op, left, right)] = ConversionCase.PromoteToFloat;
+                    BinaryTypeMap[(op, left, right)] = ConversionCase.ToFloat;
                 }
             }
         }
 
-        static void AddComparisonPromotionRules(ExpressionOperator op)
+        static void AddComparisonPromotionRules(ExpressionOp op)
         {
             AddArithmeticPromotionRules(op);
-            BinaryTypeMap[(op, DataType.Str, DataType.Str)] = ConversionCase.NoConversion;
+            BinaryTypeMap[(op, DataType.Str, DataType.Str)] = ConversionCase.Nothing;
         }
 
-        static void AddEqualityRules(ExpressionOperator op)
+        static void AddEqualityRules(ExpressionOp op)
         {
             AddArithmeticPromotionRules(op);
 
@@ -123,7 +120,7 @@ namespace Chow.DataTypes
                 {
                     if (!BinaryTypeMap.ContainsKey((op, left, right)))
                     {
-                        BinaryTypeMap[(op, left, right)] = ConversionCase.NoConversion;
+                        BinaryTypeMap[(op, left, right)] = ConversionCase.Nothing;
                     }
                 }
             }
@@ -131,42 +128,42 @@ namespace Chow.DataTypes
 
         static void AddContainerCarveOuts()
         {
-            BinaryTypeMap[(ExpressionOperator.Add, DataType.Str, DataType.Str)] = ConversionCase.NoConversion;
-            BinaryTypeMap[(ExpressionOperator.Add, DataType.List, DataType.List)] = ConversionCase.NoConversion;
-            BinaryTypeMap[(ExpressionOperator.Multiply, DataType.List, DataType.Int)] = ConversionCase.NoConversion;
-            BinaryTypeMap[(ExpressionOperator.Multiply, DataType.Int, DataType.List)] = ConversionCase.NoConversion;
-            BinaryTypeMap[(ExpressionOperator.Multiply, DataType.Str, DataType.Int)] = ConversionCase.NoConversion;
-            BinaryTypeMap[(ExpressionOperator.Multiply, DataType.Int, DataType.Str)] = ConversionCase.NoConversion;
+            BinaryTypeMap[(ExpressionOp.Add, DataType.Str, DataType.Str)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Add, DataType.List, DataType.List)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Multiply, DataType.List, DataType.Int)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Multiply, DataType.Int, DataType.List)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Multiply, DataType.Str, DataType.Int)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Multiply, DataType.Int, DataType.Str)] = ConversionCase.Nothing;
             // Python treats bool as a subtype of int, so `True * "ab"` and `[1] * True` are valid.
-            BinaryTypeMap[(ExpressionOperator.Multiply, DataType.List, DataType.Bool)] = ConversionCase.NoConversion;
-            BinaryTypeMap[(ExpressionOperator.Multiply, DataType.Bool, DataType.List)] = ConversionCase.NoConversion;
-            BinaryTypeMap[(ExpressionOperator.Multiply, DataType.Str, DataType.Bool)] = ConversionCase.NoConversion;
-            BinaryTypeMap[(ExpressionOperator.Multiply, DataType.Bool, DataType.Str)] = ConversionCase.NoConversion;
-            BinaryTypeMap[(ExpressionOperator.BinaryOr, DataType.Dict, DataType.Dict)] = ConversionCase.NoConversion;
+            BinaryTypeMap[(ExpressionOp.Multiply, DataType.List, DataType.Bool)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Multiply, DataType.Bool, DataType.List)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Multiply, DataType.Str, DataType.Bool)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Multiply, DataType.Bool, DataType.Str)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.BinaryOr, DataType.Dict, DataType.Dict)] = ConversionCase.Nothing;
         }
 
-        static void AddMembershipRules(ExpressionOperator op)
+        static void AddMembershipRules(ExpressionOp op)
         {
             foreach (var leftTag in AllTags)
             {
-                BinaryTypeMap[(op, leftTag, DataType.List)] = ConversionCase.NoConversion;
-                BinaryTypeMap[(op, leftTag, DataType.Dict)] = ConversionCase.NoConversion;
-                BinaryTypeMap[(op, leftTag, DataType.Range)] = ConversionCase.NoConversion;
+                BinaryTypeMap[(op, leftTag, DataType.List)] = ConversionCase.Nothing;
+                BinaryTypeMap[(op, leftTag, DataType.Dict)] = ConversionCase.Nothing;
+                BinaryTypeMap[(op, leftTag, DataType.Range)] = ConversionCase.Nothing;
             }
 
-            BinaryTypeMap[(op, DataType.Str, DataType.Str)] = ConversionCase.NoConversion;
+            BinaryTypeMap[(op, DataType.Str, DataType.Str)] = ConversionCase.Nothing;
         }
 
         static void AddUnaryRules()
         {
-            UnaryTypeMap[(ExpressionOperator.Negate, DataType.Bool)] = ConversionCase.PromoteToInt;
-            UnaryTypeMap[(ExpressionOperator.Negate, DataType.Int)] = ConversionCase.PromoteToInt;
-            UnaryTypeMap[(ExpressionOperator.Negate, DataType.Float)] = ConversionCase.PromoteToFloat;
+            UnaryTypeMap[(ExpressionOp.Negate, DataType.Bool)] = ConversionCase.ToInt;
+            UnaryTypeMap[(ExpressionOp.Negate, DataType.Int)] = ConversionCase.ToInt;
+            UnaryTypeMap[(ExpressionOp.Negate, DataType.Float)] = ConversionCase.ToFloat;
 
             foreach (var tag in AllTags)
             {
-                UnaryTypeMap[(ExpressionOperator.Not, tag)] = ConversionCase.NoConversion;
-                UnaryTypeMap[(ExpressionOperator.ToStr, tag)] = ConversionCase.NoConversion;
+                UnaryTypeMap[(ExpressionOp.Not, tag)] = ConversionCase.Nothing;
+                UnaryTypeMap[(ExpressionOp.ToStr, tag)] = ConversionCase.Nothing;
             }
         }
 

@@ -14,8 +14,8 @@ namespace Chow.DataTypes
         const string METHOD_SET_DEFAULT_NAME = "setdefault";
 
 
-        readonly Dictionary<ChowValue, ChowValue> _entries;
-        readonly List<ChowValue> _keys;
+        readonly Dictionary<ChowValue, ChowValue> _entries = new Dictionary<ChowValue, ChowValue>();
+        readonly List<ChowValue> _keys = new List<ChowValue>();
 
         public int Count => _keys.Count;
 
@@ -25,12 +25,9 @@ namespace Chow.DataTypes
             {
                 ValidateHashable(key);
 
-                if (!_entries.TryGetValue(key, out var value))
-                {
-                    throw new DictKeyException(KeyRepr(key));
-                }
+                return !_entries.TryGetValue(key, out var value) 
+                    ? throw new DictKeyException(KeyRepr(key)) : value;
 
-                return value;
             }
             set => Add(key, value);
         }
@@ -38,12 +35,6 @@ namespace Chow.DataTypes
         public ChowValue this[string name] =>
             // Will throw if method name is invalid, which is the expected behavior
             new ChowValue(GetMethod(name));
-
-        public InternalDict()
-        {
-            _entries = new Dictionary<ChowValue, ChowValue>();
-            _keys = new List<ChowValue>();
-        }
 
         public void Add(ChowValue key, ChowValue value)
         {
@@ -243,6 +234,10 @@ namespace Chow.DataTypes
                 case DataType.Float:
                 case DataType.Str:
                     return;
+                case DataType.Object:
+                case DataType.List:
+                case DataType.Dict:
+                case DataType.Range:
                 default:
                     throw new TypeException($"unhashable type: '{TypeName(key.DataType)}'");
             }
@@ -314,6 +309,8 @@ namespace Chow.DataTypes
                     sb.Append(value.AsType<InternalDict>());
                     return;
 
+                case DataType.Object:
+                case DataType.Range:
                 default:
                     sb.Append(value.ToString());
                     return;
@@ -335,6 +332,13 @@ namespace Chow.DataTypes
                     return "list";
                 case DataType.Dict:
                     return "dict";
+                case DataType.None:
+                case DataType.Bool:
+                case DataType.Object:
+                case DataType.Int:
+                case DataType.Float:
+                case DataType.Str:
+                case DataType.Range:
                 default:
                     return dataType.ToString().ToLowerInvariant();
             }

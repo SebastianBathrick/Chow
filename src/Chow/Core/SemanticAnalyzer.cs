@@ -285,175 +285,204 @@ namespace Chow.Core
         // node. Recurses into nested function bodies (each gets its own analyze cycle).
         void Annotate(Node node)
         {
-            if (node == null)
+            while (true)
             {
-                return;
-            }
-
-            switch (node)
-            {
-                case BlockNode blockNode:
+                if (node == null)
                 {
-                    foreach (var stmt in blockNode.Statements)
+                    return;
+                }
+
+                switch (node)
+                {
+                    case BlockNode blockNode:
                     {
-                        Annotate(stmt);
+                        foreach (var stmt in blockNode.Statements)
+                        {
+                            Annotate(stmt);
+                        }
+
+                        break;
                     }
 
-                    break;
-                }
-
-                case VariableAssignStatementNode varAssignNode:
-                {
-                    Annotate(varAssignNode.Expression);
-                    varAssignNode.Resolution = ResolveName(varAssignNode.Name);
-                    break;
-                }
-
-                case FunctionNode funcNode:
-                {
-                    funcNode.Resolution = ResolveName(funcNode.Name);
-                    AnalyzeFunction(funcNode);
-                    break;
-                }
-
-                case NameNode nameNode:
-                {
-                    nameNode.Resolution = ResolveName(nameNode.Name);
-                    break;
-                }
-
-                case GlobalDeclarationNode _:
-                case NonlocalDeclarationNode _:
-                {
-                    break;
-                }
-
-                case IfStatementNode ifNode:
-                {
-                    Annotate(ifNode.Expression);
-                    Annotate(ifNode.Block);
-                    Annotate(ifNode.Branch);
-                    break;
-                }
-
-                case BranchStatementNode branchNode:
-                {
-                    Annotate(branchNode.Expression);
-                    Annotate(branchNode.Block);
-                    Annotate(branchNode.Branch);
-                    break;
-                }
-
-                case WhileStatementNode whileNode:
-                {
-                    Annotate(whileNode.Expression);
-                    Annotate(whileNode.Block);
-                    break;
-                }
-
-                case ForStatementNode forNode:
-                {
-                    Annotate(forNode.Iterable);
-                    forNode.Target.Resolution = ResolveName(forNode.Target.Name);
-                    Annotate(forNode.Block);
-                    Annotate(forNode.ElseBranch);
-                    break;
-                }
-
-                case ReturnStatementNode returnNode:
-                {
-                    Annotate(returnNode.Expression);
-                    break;
-                }
-
-                case ExpressionStatementNode exprStmtNode:
-                {
-                    Annotate(exprStmtNode.Expression);
-                    break;
-                }
-
-                case ExpressionNode exprNode:
-                {
-                    Annotate(exprNode.Left);
-                    Annotate(exprNode.Right);
-                    break;
-                }
-
-                case CallNode callNode:
-                {
-                    Annotate(callNode.CallName);
-
-                    foreach (var arg in callNode.Args)
+                    case VariableAssignStatementNode varAssignNode:
                     {
-                        Annotate(arg);
+                        Annotate(varAssignNode.Expression);
+                        varAssignNode.Resolution = ResolveName(varAssignNode.Name);
+                        break;
                     }
 
-                    break;
-                }
-
-                case ListLiteralNode listNode:
-                {
-                    foreach (var element in listNode.Elements)
+                    case FunctionNode funcNode:
                     {
-                        Annotate(element);
+                        funcNode.Resolution = ResolveName(funcNode.Name);
+                        AnalyzeFunction(funcNode);
+                        break;
                     }
 
-                    break;
-                }
-
-                case DictLiteralNode dictNode:
-                {
-                    for (var i = 0; i < dictNode.Keys.Count; i++)
+                    case NameNode nameNode:
                     {
-                        Annotate(dictNode.Keys[i]);
-                        Annotate(dictNode.Values[i]);
+                        nameNode.Resolution = ResolveName(nameNode.Name);
+                        break;
                     }
 
-                    break;
+                    case GlobalDeclarationNode _:
+                    case NonlocalDeclarationNode _:
+                    {
+                        break;
+                    }
+
+                    case IfStatementNode ifNode:
+                    {
+                        Annotate(ifNode.Expression);
+                        Annotate(ifNode.Block);
+                        node = ifNode.Branch;
+                        continue;
+
+                        break;
+                    }
+
+                    case BranchStatementNode branchNode:
+                    {
+                        Annotate(branchNode.Expression);
+                        Annotate(branchNode.Block);
+                        node = branchNode.Branch;
+                        continue;
+
+                        break;
+                    }
+
+                    case WhileStatementNode whileNode:
+                    {
+                        Annotate(whileNode.Expression);
+                        node = whileNode.Block;
+                        continue;
+
+                        break;
+                    }
+
+                    case ForStatementNode forNode:
+                    {
+                        Annotate(forNode.Iterable);
+                        forNode.Target.Resolution = ResolveName(forNode.Target.Name);
+                        Annotate(forNode.Block);
+                        node = forNode.ElseBranch;
+                        continue;
+
+                        break;
+                    }
+
+                    case ReturnStatementNode returnNode:
+                    {
+                        node = returnNode.Expression;
+                        continue;
+
+                        break;
+                    }
+
+                    case ExpressionStatementNode exprStmtNode:
+                    {
+                        node = exprStmtNode.Expression;
+                        continue;
+
+                        break;
+                    }
+
+                    case ExpressionNode exprNode:
+                    {
+                        Annotate(exprNode.Left);
+                        node = exprNode.Right;
+                        continue;
+
+                        break;
+                    }
+
+                    case CallNode callNode:
+                    {
+                        Annotate(callNode.CallName);
+
+                        foreach (var arg in callNode.Args)
+                        {
+                            Annotate(arg);
+                        }
+
+                        break;
+                    }
+
+                    case ListLiteralNode listNode:
+                    {
+                        foreach (var element in listNode.Elements)
+                        {
+                            Annotate(element);
+                        }
+
+                        break;
+                    }
+
+                    case DictLiteralNode dictNode:
+                    {
+                        for (var i = 0; i < dictNode.Keys.Count; i++)
+                        {
+                            Annotate(dictNode.Keys[i]);
+                            Annotate(dictNode.Values[i]);
+                        }
+
+                        break;
+                    }
+
+                    case SubscriptNode subscriptNode:
+                    {
+                        Annotate(subscriptNode.Target);
+                        node = subscriptNode.Index;
+                        continue;
+
+                        break;
+                    }
+
+                    case SubscriptSliceNode sliceNode:
+                    {
+                        Annotate(sliceNode.Start);
+                        Annotate(sliceNode.Stop);
+                        node = sliceNode.Step;
+                        continue;
+
+                        break;
+                    }
+
+                    case AttributeAccessNode attrAccessNode:
+                    {
+                        node = attrAccessNode.Target;
+                        continue;
+
+                        break;
+                    }
+
+                    case SubscriptAssignNode subscriptAssignNode:
+                    {
+                        Annotate(subscriptAssignNode.Target);
+                        Annotate(subscriptAssignNode.Index);
+                        node = subscriptAssignNode.Expression;
+                        continue;
+
+                        break;
+                    }
+
+                    case AttributeAssignNode attrAssignNode:
+                    {
+                        Annotate(attrAssignNode.Target);
+                        node = attrAssignNode.Expression;
+                        continue;
+
+                        break;
+                    }
+
+                    case LiteralNode _:
+                    case BreakStatementNode _:
+                    case ContinueStatementNode _:
+                    {
+                        break;
+                    }
                 }
 
-                case SubscriptNode subscriptNode:
-                {
-                    Annotate(subscriptNode.Target);
-                    Annotate(subscriptNode.Index);
-                    break;
-                }
-
-                case SubscriptSliceNode sliceNode:
-                {
-                    Annotate(sliceNode.Start);
-                    Annotate(sliceNode.Stop);
-                    Annotate(sliceNode.Step);
-                    break;
-                }
-
-                case AttributeAccessNode attrAccessNode:
-                {
-                    Annotate(attrAccessNode.Target);
-                    break;
-                }
-
-                case SubscriptAssignNode subscriptAssignNode:
-                {
-                    Annotate(subscriptAssignNode.Target);
-                    Annotate(subscriptAssignNode.Index);
-                    Annotate(subscriptAssignNode.Expression);
-                    break;
-                }
-
-                case AttributeAssignNode attrAssignNode:
-                {
-                    Annotate(attrAssignNode.Target);
-                    Annotate(attrAssignNode.Expression);
-                    break;
-                }
-
-                case LiteralNode _:
-                case BreakStatementNode _:
-                case ContinueStatementNode _:
-                {
-                    break;
-                }
+                break;
             }
         }
 
@@ -617,12 +646,9 @@ namespace Chow.Core
                 return ScopeType.Global;
             }
 
-            if (frame.NonlocalDeclarations.ContainsKey(name))
-            {
-                return ScopeType.Nonlocal;
-            }
+            return frame.NonlocalDeclarations.ContainsKey(name) 
+                ? ScopeType.Nonlocal : ScopeType.Local;
 
-            return ScopeType.Local;
         }
 
         #endregion

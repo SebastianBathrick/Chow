@@ -1,6 +1,6 @@
 namespace Chow.DataTypes
 {
-    enum ExpressionOperator
+    enum ExpressionOp
     {
         Add,
         Subtract,

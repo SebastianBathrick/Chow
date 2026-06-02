@@ -236,13 +236,12 @@ namespace Chow
             var checkType = typeof(TDataType);
 
             // If it is not a type defined by the DataType enum
-            if (!DataTypeMap.ContainsKey(checkType))
+            if (!DataTypeMap.TryGetValue(checkType, out var chowDataType))
             {
                 return DataType == DataType.Object && _objectValue is TDataType;
             }
 
             // The map includes values representing data types that are from the Chow namespace
-            var chowDataType = DataTypeMap[checkType];
             return DataType == chowDataType;
         }
 
@@ -259,21 +258,21 @@ namespace Chow
         // (the struct is readonly, so no risk of accidentally mutating this instance's internal state).
         // Promotion rules come from DataTypeConversionMap (the single source of truth). Carve-outs for
         // container/string ops (list+list, list*int, str+str, str*int, dict|dict) are dispatched when
-        // the map reports ConversionCase.NoConversion.
+        // the map reports ConversionCase.Nothing.
 
         internal ChowValue CreateSum(ChowValue rightOperand)
         {
-            switch (LookupBinary(ExpressionOperator.Add, rightOperand))
+            switch (LookupBinary(ExpressionOp.Add, rightOperand))
             {
-                case ConversionCase.PromoteToInt:
+                case ConversionCase.ToInt:
                 {
                     return new ChowValue(PromoteToInt64() + rightOperand.PromoteToInt64());
                 }
-                case ConversionCase.PromoteToFloat:
+                case ConversionCase.ToFloat:
                 {
                     return new ChowValue(PromoteToFloat64() + rightOperand.PromoteToFloat64());
                 }
-                case ConversionCase.NoConversion:
+                case ConversionCase.Nothing:
                 {
                     if (DataType == DataType.List && rightOperand.DataType == DataType.List)
                     {
@@ -289,39 +288,43 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOperator.Add, rightOperand);
+            throw UnsupportedBinary(ExpressionOp.Add, rightOperand);
         }
 
         internal ChowValue CreateDifference(ChowValue rightOperand)
         {
-            switch (LookupBinary(ExpressionOperator.Subtract, rightOperand))
+            if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.ToInt)
             {
-                case ConversionCase.PromoteToInt:
-                {
-                    return new ChowValue(PromoteToInt64() - rightOperand.PromoteToInt64());
-                }
-                case ConversionCase.PromoteToFloat:
-                {
-                    return new ChowValue(PromoteToFloat64() - rightOperand.PromoteToFloat64());
-                }
+                return new ChowValue(PromoteToInt64() - rightOperand.PromoteToInt64());
+            }
+            else if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.ToFloat)
+            {
+                return new ChowValue(PromoteToFloat64() - rightOperand.PromoteToFloat64());
+            }
+            else if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.Nothing)
+            {
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException();
             }
 
-            throw UnsupportedBinary(ExpressionOperator.Subtract, rightOperand);
+            throw UnsupportedBinary(ExpressionOp.Subtract, rightOperand);
         }
 
         internal ChowValue CreateProduct(ChowValue rightOperand)
         {
-            switch (LookupBinary(ExpressionOperator.Multiply, rightOperand))
+            switch (LookupBinary(ExpressionOp.Multiply, rightOperand))
             {
-                case ConversionCase.PromoteToInt:
+                case ConversionCase.ToInt:
                 {
                     return new ChowValue(PromoteToInt64() * rightOperand.PromoteToInt64());
                 }
-                case ConversionCase.PromoteToFloat:
+                case ConversionCase.ToFloat:
                 {
                     return new ChowValue(PromoteToFloat64() * rightOperand.PromoteToFloat64());
                 }
-                case ConversionCase.NoConversion:
+                case ConversionCase.Nothing:
                 {
                     // Python treats bool as a subtype of int, so [1] * True and "ab" * True are valid.
                     if (DataType == DataType.List && IsIntegerTag(rightOperand.DataType))
@@ -348,36 +351,39 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOperator.Multiply, rightOperand);
+            throw UnsupportedBinary(ExpressionOp.Multiply, rightOperand);
         }
 
         internal ChowValue CreateQuotient(ChowValue rightOperand)
         {
             // Python semantics: `/` always produces a float, even for int / int.
-            switch (LookupBinary(ExpressionOperator.Divide, rightOperand))
+            switch (LookupBinary(ExpressionOp.Divide, rightOperand))
             {
-                case ConversionCase.PromoteToFloat:
+                case ConversionCase.ToFloat:
                 {
                     var divisor = rightOperand.PromoteToFloat64();
 
-                    if (divisor == 0.0)
-                    {
-                        throw new ZeroDivisionException();
-                    }
+                    return divisor == 0.0 
+                        ? throw new ZeroDivisionException() 
+                        : new ChowValue(PromoteToFloat64() / divisor);
 
-                    return new ChowValue(PromoteToFloat64() / divisor);
                 }
+                case ConversionCase.Nothing:
+                case ConversionCase.ToInt:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
-            throw UnsupportedBinary(ExpressionOperator.Divide, rightOperand);
+            throw UnsupportedBinary(ExpressionOp.Divide, rightOperand);
         }
 
         internal ChowValue CreateModulus(ChowValue rightOperand)
         {
             // Python semantics: result has the sign of the divisor.
-            switch (LookupBinary(ExpressionOperator.Modulus, rightOperand))
+            switch (LookupBinary(ExpressionOp.Modulus, rightOperand))
             {
-                case ConversionCase.PromoteToInt:
+                case ConversionCase.ToInt:
                 {
                     var a = PromoteToInt64();
                     var b = rightOperand.PromoteToInt64();
@@ -389,7 +395,7 @@ namespace Chow
 
                     return new ChowValue((a % b + b) % b);
                 }
-                case ConversionCase.PromoteToFloat:
+                case ConversionCase.ToFloat:
                 {
                     var l = PromoteToFloat64();
                     var r = rightOperand.PromoteToFloat64();
@@ -403,16 +409,16 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOperator.Modulus, rightOperand);
+            throw UnsupportedBinary(ExpressionOp.Modulus, rightOperand);
         }
 
         internal ChowValue CreateFloorQuotient(ChowValue rightOperand)
         {
             // Python semantics: floors toward negative infinity. Integer path stays in longs (no detour
             // through double) so values past 2^53 remain exact.
-            switch (LookupBinary(ExpressionOperator.FloorDivide, rightOperand))
+            switch (LookupBinary(ExpressionOp.FloorDivide, rightOperand))
             {
-                case ConversionCase.PromoteToInt:
+                case ConversionCase.ToInt:
                 {
                     var a = PromoteToInt64();
                     var b = rightOperand.PromoteToInt64();
@@ -431,7 +437,7 @@ namespace Chow
 
                     return new ChowValue(q);
                 }
-                case ConversionCase.PromoteToFloat:
+                case ConversionCase.ToFloat:
                 {
                     var divisor = rightOperand.PromoteToFloat64();
 
@@ -444,7 +450,7 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOperator.FloorDivide, rightOperand);
+            throw UnsupportedBinary(ExpressionOp.FloorDivide, rightOperand);
         }
 
         internal ChowValue CreatePower(ChowValue rightOperand)
@@ -453,70 +459,70 @@ namespace Chow
             // This is the one documented map override: the negative-exponent rule is value-dependent
             // (depends on the runtime exponent's sign), not type-dependent, so it cannot live in the
             // type-keyed map. Every other dispatch path defers to DataTypeConversionMap.
-            var conv = LookupBinary(ExpressionOperator.Exponentiate, rightOperand);
+            var conv = LookupBinary(ExpressionOp.Exponentiate, rightOperand);
 
-            if (conv == ConversionCase.PromoteToInt && rightOperand.PromoteToInt64() < 0)
+            if (conv == ConversionCase.ToInt && rightOperand.PromoteToInt64() < 0)
             {
-                conv = ConversionCase.PromoteToFloat;
+                conv = ConversionCase.ToFloat;
             }
 
             switch (conv)
             {
-                case ConversionCase.PromoteToInt:
+                case ConversionCase.ToInt:
                 {
                     // Exponent is non-negative here (negative-exp routed to float above). Exact integer
                     // exponentiation avoids the 2^53 precision ceiling of (long)Math.Pow. Overflow wraps
                     // silently — matches prior behavior; arbitrary-precision int is a separate concern.
                     return new ChowValue(IntPow(PromoteToInt64(), rightOperand.PromoteToInt64()));
                 }
-                case ConversionCase.PromoteToFloat:
+                case ConversionCase.ToFloat:
                 {
                     return new ChowValue(Math.Pow(PromoteToFloat64(), rightOperand.PromoteToFloat64()));
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOperator.Exponentiate, rightOperand);
+            throw UnsupportedBinary(ExpressionOp.Exponentiate, rightOperand);
         }
 
         internal ChowValue CreateUnion(ChowValue rightOperand)
         {
-            if (LookupBinary(ExpressionOperator.BinaryOr, rightOperand) == ConversionCase.NoConversion
+            if (LookupBinary(ExpressionOp.BinaryOr, rightOperand) == ConversionCase.Nothing
                 && DataType == DataType.Dict && rightOperand.DataType == DataType.Dict)
             {
                 return new ChowValue(InternalDict.Merge(AsType<InternalDict>(), rightOperand.AsType<InternalDict>()));
             }
 
-            throw UnsupportedBinary(ExpressionOperator.BinaryOr, rightOperand);
+            throw UnsupportedBinary(ExpressionOp.BinaryOr, rightOperand);
         }
 
         internal ChowValue CreateNegation()
         {
-            switch (LookupUnary(ExpressionOperator.Negate))
+            switch (LookupUnary(ExpressionOp.Negate))
             {
-                case ConversionCase.PromoteToInt:
+                case ConversionCase.ToInt:
                 {
                     return new ChowValue(-PromoteToInt64());
                 }
-                case ConversionCase.PromoteToFloat:
+                case ConversionCase.ToFloat:
                 {
                     return new ChowValue(-PromoteToFloat64());
                 }
             }
 
-            throw UnsupportedUnary(ExpressionOperator.Negate);
+            throw UnsupportedUnary(ExpressionOp.Negate);
         }
 
         internal ChowValue CreateLogicalNot()
         {
-            // The map records this as NoConversion for every type; consult it for consistency and so that
+            // The map records this as Nothing for every type; consult it for consistency and so that
             // a future map change (e.g. restricting unary `not` to specific types) propagates here.
-            LookupUnary(ExpressionOperator.Not);
+            LookupUnary(ExpressionOp.Not);
             return new ChowValue(!IsTruthy());
         }
 
         internal ChowValue CreateStr()
         {
-            LookupUnary(ExpressionOperator.ToStr);
+            LookupUnary(ExpressionOp.ToStr);
             return new ChowValue(ToStr());
         }
 
@@ -526,17 +532,15 @@ namespace Chow
 
         internal bool IsTypeAgnosticEqualTo(ChowValue other)
         {
-            switch (LookupBinary(ExpressionOperator.Equal, other))
+            switch (LookupBinary(ExpressionOp.Equal, other))
             {
-                case ConversionCase.PromoteToInt:
-                {
+                case ConversionCase.ToInt:
                     return PromoteToInt64() == other.PromoteToInt64();
-                }
-                case ConversionCase.PromoteToFloat:
+                case ConversionCase.ToFloat:
                 {
                     return PromoteToFloat64() == other.PromoteToFloat64();
                 }
-                case ConversionCase.NoConversion:
+                case ConversionCase.Nothing:
                 {
                     return EqualsNoConversion(other);
                 }
@@ -547,17 +551,17 @@ namespace Chow
 
         internal bool IsNotEqualTo(ChowValue other)
         {
-            switch (LookupBinary(ExpressionOperator.NotEqual, other))
+            switch (LookupBinary(ExpressionOp.NotEqual, other))
             {
-                case ConversionCase.PromoteToInt:
+                case ConversionCase.ToInt:
                 {
                     return PromoteToInt64() != other.PromoteToInt64();
                 }
-                case ConversionCase.PromoteToFloat:
+                case ConversionCase.ToFloat:
                 {
                     return PromoteToFloat64() != other.PromoteToFloat64();
                 }
-                case ConversionCase.NoConversion:
+                case ConversionCase.Nothing:
                 {
                     return !EqualsNoConversion(other);
                 }
@@ -568,17 +572,17 @@ namespace Chow
 
         internal bool IsLessThan(ChowValue other)
         {
-            switch (LookupBinary(ExpressionOperator.Less, other))
+            switch (LookupBinary(ExpressionOp.Less, other))
             {
-                case ConversionCase.PromoteToInt:
+                case ConversionCase.ToInt:
                 {
                     return PromoteToInt64() < other.PromoteToInt64();
                 }
-                case ConversionCase.PromoteToFloat:
+                case ConversionCase.ToFloat:
                 {
                     return PromoteToFloat64() < other.PromoteToFloat64();
                 }
-                case ConversionCase.NoConversion:
+                case ConversionCase.Nothing:
                 {
                     if (DataType == DataType.Str && other.DataType == DataType.Str)
                     {
@@ -589,22 +593,22 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOperator.Less, other);
+            throw UnsupportedBinary(ExpressionOp.Less, other);
         }
 
         internal bool IsGreaterThan(ChowValue other)
         {
-            switch (LookupBinary(ExpressionOperator.Greater, other))
+            switch (LookupBinary(ExpressionOp.Greater, other))
             {
-                case ConversionCase.PromoteToInt:
+                case ConversionCase.ToInt:
                 {
                     return PromoteToInt64() > other.PromoteToInt64();
                 }
-                case ConversionCase.PromoteToFloat:
+                case ConversionCase.ToFloat:
                 {
                     return PromoteToFloat64() > other.PromoteToFloat64();
                 }
-                case ConversionCase.NoConversion:
+                case ConversionCase.Nothing:
                 {
                     if (DataType == DataType.Str && other.DataType == DataType.Str)
                     {
@@ -615,22 +619,22 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOperator.Greater, other);
+            throw UnsupportedBinary(ExpressionOp.Greater, other);
         }
 
         internal bool IsLessOrEqualTo(ChowValue other)
         {
-            switch (LookupBinary(ExpressionOperator.LessEqual, other))
+            switch (LookupBinary(ExpressionOp.LessEqual, other))
             {
-                case ConversionCase.PromoteToInt:
+                case ConversionCase.ToInt:
                 {
                     return PromoteToInt64() <= other.PromoteToInt64();
                 }
-                case ConversionCase.PromoteToFloat:
+                case ConversionCase.ToFloat:
                 {
                     return PromoteToFloat64() <= other.PromoteToFloat64();
                 }
-                case ConversionCase.NoConversion:
+                case ConversionCase.Nothing:
                 {
                     if (DataType == DataType.Str && other.DataType == DataType.Str)
                     {
@@ -641,22 +645,22 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOperator.LessEqual, other);
+            throw UnsupportedBinary(ExpressionOp.LessEqual, other);
         }
 
         internal bool IsGreaterOrEqualTo(ChowValue other)
         {
-            switch (LookupBinary(ExpressionOperator.GreaterEqual, other))
+            switch (LookupBinary(ExpressionOp.GreaterEqual, other))
             {
-                case ConversionCase.PromoteToInt:
+                case ConversionCase.ToInt:
                 {
                     return PromoteToInt64() >= other.PromoteToInt64();
                 }
-                case ConversionCase.PromoteToFloat:
+                case ConversionCase.ToFloat:
                 {
                     return PromoteToFloat64() >= other.PromoteToFloat64();
                 }
-                case ConversionCase.NoConversion:
+                case ConversionCase.Nothing:
                 {
                     if (DataType == DataType.Str && other.DataType == DataType.Str)
                     {
@@ -667,7 +671,7 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOperator.GreaterEqual, other);
+            throw UnsupportedBinary(ExpressionOp.GreaterEqual, other);
         }
 
         #endregion
@@ -1086,24 +1090,24 @@ namespace Chow
 
         // Promotion-rule lookup and result-coercion helpers used by the arithmetic/comparison instance
         // methods above. Operand promotion is intentionally limited to the three numeric tags
-        // (Bool/Int/Float); the map guarantees PromoteToInt/PromoteToFloat is only reported for those.
+        // (Bool/Int/Float); the map guarantees ToInt/ToFloat is only reported for those.
 
-        ConversionCase LookupBinary(ExpressionOperator op, ChowValue right)
+        ConversionCase LookupBinary(ExpressionOp op, ChowValue right)
         {
             return DataTypeConversionMap.GetLeftRightConversionCase(op, DataType, right.DataType);
         }
 
-        ConversionCase LookupUnary(ExpressionOperator op)
+        ConversionCase LookupUnary(ExpressionOp op)
         {
             return DataTypeConversionMap.GetOperandConversionCase(op, DataType);
         }
 
-        TypeException UnsupportedBinary(ExpressionOperator op, ChowValue right)
+        TypeException UnsupportedBinary(ExpressionOp op, ChowValue right)
         {
             return new TypeException($"unsupported operand type(s) for {op}: '{DataType}' and '{right.DataType}'");
         }
 
-        TypeException UnsupportedUnary(ExpressionOperator op)
+        TypeException UnsupportedUnary(ExpressionOp op)
         {
             return new TypeException($"bad operand type for unary {op}: '{DataType}'");
         }
@@ -1151,7 +1155,7 @@ namespace Chow
             }
         }
 
-        // Equality fallback used when DataTypeConversionMap reports NoConversion for ==/!= operands.
+        // Equality fallback used when DataTypeConversionMap reports Nothing for ==/!= operands.
         // Cross-type combinations are never equal (Python: 1 == "1" → False); same-type combinations
         // delegate to the underlying value's identity/structural equality.
         bool EqualsNoConversion(ChowValue other)

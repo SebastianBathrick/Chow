@@ -30,7 +30,7 @@ namespace Chow.Tokens
         static string FormatLexeme(string lexeme)
         {
             return lexeme
-                .Replace("\\", "\\\\")
+                .Replace("\\", @"\\")
                 .Replace("\"", "\\\"")
                 .Replace("\r", "\\r")
                 .Replace("\n", "\\n")
@@ -40,17 +40,16 @@ namespace Chow.Tokens
 
         static string FormatLiteral(object literal)
         {
-            if (literal == null)
+            switch (literal)
             {
-                return "null";
+                case null:
+                    return "null";
+                case string strLiteral:
+                    return $"\"{FormatLexeme(strLiteral)}\"";
+                default:
+                    return literal.ToString();
             }
 
-            if (literal is string strLiteral)
-            {
-                return $"\"{FormatLexeme(strLiteral)}\"";
-            }
-
-            return literal.ToString();
         }
     }
 }

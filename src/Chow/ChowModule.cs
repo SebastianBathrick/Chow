@@ -13,7 +13,6 @@ namespace Chow
     {
         // The name is for later features, such as import statements, but their implementation has
         // not been planned in detail.
-        readonly string _name;
         readonly Scope _globalScope;
 
         // If true, built-ins are required for this module but have not been imported. If false,
@@ -23,7 +22,7 @@ namespace Chow
         #region Properties
 
         /// <summary>Read-only name this instance was initialized with.</summary>
-        public string Name => _name;
+        public string Name { get; }
 
         /// <summary>
         /// <para>
@@ -48,12 +47,10 @@ namespace Chow
                     ImportBuiltIns();
                 }
                 
-                if (_globalScope.ContainsVariable(name))
-                {
-                    return _globalScope.GetVariableValue(name).AsType<object>();
-                }
+                return _globalScope.ContainsVariable(name) 
+                    ? _globalScope.GetVariableValue(name).AsType<object>() 
+                    : throw new GlobalAccessException(name, $"name '{name}' is not defined");
 
-                throw new GlobalAccessException(name, $"name '{name}' is not defined");
             }
             set
             {
@@ -65,14 +62,15 @@ namespace Chow
                 
                 var chowValue = new ChowValue(value);
 
-                if (IsValidChowName(name))
+                if (!IsValidChowName(name))
                 {
-                    _globalScope.AssignVariableValue(name, chowValue);
-                    return;
+                    throw new GlobalAccessException(name,
+                        $"'{name}' does not abide by the rules for variable names");
                 }
-                
-                throw new GlobalAccessException(name, 
-                    $"'{name}' does not abide by the rules for variable names");
+
+                _globalScope.AssignVariableValue(name, chowValue);
+                return;
+
             }
         }
 
@@ -81,14 +79,7 @@ namespace Chow
         /// <summary>Initializes a ChowModule with no global variables or function definitions.</summary>
         public ChowModule(string name = nameof(ChowModule), bool useBuiltInFunctions = true)
         {
-            if (name != null)
-            {
-                _name = name;
-            }
-            else
-            {
-                _name = nameof(ChowModule);
-            }
+            Name = name ?? nameof(ChowModule);
 
             _globalScope = new Scope();
 

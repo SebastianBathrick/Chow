@@ -3,9 +3,6 @@ namespace Chow.Exceptions
 {
     /// <summary>
     /// Thrown by the <see cref="ChowModule"/> host API when a global variable access is invalid.
-    /// Possible causes: the name is <see langword="null"/>, empty, or whitespace; the name is a reserved keyword;
-    /// the name does not satisfy identifier rules; the variable does not exist; or a <see langword="null"/> value
-    /// was passed to <see cref="ChowModule.SetGlobal"/>.
     /// </summary>
     public class GlobalAccessException : Exception
     {

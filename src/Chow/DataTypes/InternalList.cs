@@ -14,7 +14,7 @@ namespace Chow.DataTypes
         const string METHOD_REVERSE_NAME = "reverse";
 
 
-        readonly List<ChowValue> _elements;
+        readonly List<ChowValue> _elements = new List<ChowValue>();
 
         public int Count => _elements.Count;
 
@@ -46,11 +46,6 @@ namespace Chow.DataTypes
 
         // Will throw if method name is invalid, which is the expected behavior
         public ChowValue this[string name] => new ChowValue(GetMethod(name));
-
-        public InternalList()
-        {
-            _elements = new List<ChowValue>();
-        }
 
         ChowValue Append(ChowValue[] args)
         {
@@ -136,11 +131,13 @@ namespace Chow.DataTypes
 
             for (var i = 0; i < _elements.Count; i++)
             {
-                if (_elements[i].IsTypeAgnosticEqualTo(args[0]))
+                if (!_elements[i].IsTypeAgnosticEqualTo(args[0]))
                 {
-                    _elements.RemoveAt(i);
-                    return ChowValue.None;
+                    continue;
                 }
+
+                _elements.RemoveAt(i);
+                return ChowValue.None;
             }
 
             throw new ArgumentException("list.remove(x): x not in list");
@@ -248,9 +245,9 @@ namespace Chow.DataTypes
             {
                 var hash = 17;
 
-                for (var i = 0; i < a._elements.Count; i++)
+                foreach (var element in a._elements)
                 {
-                    hash = hash * 31 + a._elements[i].GetHashCode();
+                    hash = hash * 31 + element.GetHashCode();
                 }
 
                 return hash;
@@ -453,6 +450,8 @@ namespace Chow.DataTypes
                 case DataType.Dict:
                     sb.Append(value.AsType<InternalDict>());
                     return;
+                case DataType.Object:
+                case DataType.Range:
                 default:
                     sb.Append(value.ToString());
                     return;
@@ -473,7 +472,7 @@ namespace Chow.DataTypes
             {
                 return;
             }
-
+            
             for (var i = 0; i < reqTypes.Length; i++)
             {
                 if (args[i].DataType == reqTypes[i])

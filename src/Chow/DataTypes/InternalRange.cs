@@ -55,12 +55,8 @@ namespace Chow.DataTypes
 
         public override string ToString()
         {
-            if (Step == 1)
-            {
-                return $"range({Start}, {Stop})";
-            }
+            return Step == 1 ? $"range({Start}, {Stop})" : $"range({Start}, {Stop}, {Step})";
 
-            return $"range({Start}, {Stop}, {Step})";
         }
     }
 }

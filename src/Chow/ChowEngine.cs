@@ -5,19 +5,6 @@ namespace Chow
 {
     public sealed class ChowEngine
     {
-        // Use the singleton pattern so that ChowEngine fields can easily be reset to their defaults
-        // This is used for testing.
-        static ChowEngine _instance;
-
-        ChowEngine()
-        {
-        }
-
-        internal static void Reset()
-        {
-            _instance = new ChowEngine();
-        }
-        
         /// <summary>Compiles and interprets Chow source code contained in a <see langword="string"/>.</summary>
         /// <param name="sourceCode">String containing Chow source code, whitespace, or null.</param>
         /// <returns><see cref="ChowValue.None"/>, or the result of the last expression statement

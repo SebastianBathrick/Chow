@@ -35,18 +35,7 @@ namespace Chow.State
         /// <summary>True when no function call is active and execution is in the module frame.</summary>
         public bool IsModuleLevel => _callFrames.Count == 0;
 
-        protected StackFrame CurrFrame
-        {
-            get
-            {
-                if (_callFrames.Count == 0)
-                {
-                    return _moduleLvl;
-                }
-
-                return _callFrames.Peek();
-            }
-        }
+        protected StackFrame CurrFrame => _callFrames.Count == 0 ? _moduleLvl : _callFrames.Peek();
 
         /// <summary>Creates a call stack rooted at a single module frame.</summary>
         /// <param name="moduleChunk">The compiled bytecode for the module being executed.</param>

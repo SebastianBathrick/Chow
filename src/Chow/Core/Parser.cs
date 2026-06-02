@@ -380,7 +380,7 @@ namespace Chow.Core
             {
                 var opToken = PreviousToken;
                 var rightNode = ParseAnd();
-                leftNode = new ExpressionNode(ExpressionOperator.Or, leftNode, rightNode, opToken.LineNum);
+                leftNode = new ExpressionNode(ExpressionOp.Or, leftNode, rightNode, opToken.LineNum);
             }
 
             return leftNode;
@@ -394,7 +394,7 @@ namespace Chow.Core
             {
                 var opToken = PreviousToken;
                 var rightNode = ParseNot();
-                leftNode = new ExpressionNode(ExpressionOperator.And, leftNode, rightNode, opToken.LineNum);
+                leftNode = new ExpressionNode(ExpressionOp.And, leftNode, rightNode, opToken.LineNum);
             }
 
             return leftNode;
@@ -405,7 +405,7 @@ namespace Chow.Core
             if (TryConsumeCurrentTokenType(TokenType.KeywordNot))
             {
                 var opToken = PreviousToken;
-                return new ExpressionNode(ExpressionOperator.Not, ParseNot(), opToken.LineNum);
+                return new ExpressionNode(ExpressionOp.Not, ParseNot(), opToken.LineNum);
             }
 
             return ParseComparison();
@@ -418,7 +418,7 @@ namespace Chow.Core
 
             while (true)
             {
-                ExpressionOperator op;
+                ExpressionOp op;
                 int opLine;
 
                 if (TryConsumeCurrentTokenType(
@@ -438,7 +438,7 @@ namespace Chow.Core
                     opLine = CurrentToken.LineNum;
                     ConsumeToken();
                     ConsumeToken();
-                    op = ExpressionOperator.NotIn;
+                    op = ExpressionOp.NotIn;
                 }
                 else
                 {
@@ -454,7 +454,7 @@ namespace Chow.Core
                 }
                 else
                 {
-                    result = new ExpressionNode(ExpressionOperator.And, result, comparison, opLine);
+                    result = new ExpressionNode(ExpressionOp.And, result, comparison, opLine);
                 }
 
                 leftNode = rightNode;
@@ -471,7 +471,7 @@ namespace Chow.Core
             {
                 var opToken = PreviousToken;
                 var rightNode = ParseAdd();
-                leftNode = new ExpressionNode(ExpressionOperator.BinaryOr, leftNode, rightNode, opToken.LineNum);
+                leftNode = new ExpressionNode(ExpressionOp.BinaryOr, leftNode, rightNode, opToken.LineNum);
             }
 
             return leftNode;
@@ -511,7 +511,7 @@ namespace Chow.Core
             if (TryConsumeCurrentTokenType(TokenType.SymbolMinus))
             {
                 var opToken = PreviousToken;
-                return new ExpressionNode(ExpressionOperator.Negate, ParseFactor(), opToken.LineNum);
+                return new ExpressionNode(ExpressionOp.Negate, ParseFactor(), opToken.LineNum);
             }
 
             return ParseExponent();
@@ -525,7 +525,7 @@ namespace Chow.Core
             {
                 var opToken = PreviousToken;
                 var rightNode = ParseFactor();
-                return new ExpressionNode(ExpressionOperator.Exponentiate, leftNode, rightNode, opToken.LineNum);
+                return new ExpressionNode(ExpressionOp.Exponentiate, leftNode, rightNode, opToken.LineNum);
             }
 
             return leftNode;
@@ -892,93 +892,93 @@ namespace Chow.Core
             throw new ParserEx("Invalid assignment target.", line);
         }
 
-        static ExpressionOperator MapTokenTypeToBinary(TokenType type)
+        static ExpressionOp MapTokenTypeToBinary(TokenType type)
         {
             switch (type)
             {
                 case TokenType.SymbolPlus:
                 {
-                    return ExpressionOperator.Add;
+                    return ExpressionOp.Add;
                 }
 
                 case TokenType.SymbolMinus:
                 {
-                    return ExpressionOperator.Subtract;
+                    return ExpressionOp.Subtract;
                 }
 
                 case TokenType.SymbolMultiply:
                 {
-                    return ExpressionOperator.Multiply;
+                    return ExpressionOp.Multiply;
                 }
 
                 case TokenType.SymbolDivide:
                 {
-                    return ExpressionOperator.Divide;
+                    return ExpressionOp.Divide;
                 }
 
                 case TokenType.SymbolPercent:
                 {
-                    return ExpressionOperator.Modulus;
+                    return ExpressionOp.Modulus;
                 }
 
                 case TokenType.SymbolExponent:
                 {
-                    return ExpressionOperator.Exponentiate;
+                    return ExpressionOp.Exponentiate;
                 }
 
                 case TokenType.SymbolFloorDivide:
                 {
-                    return ExpressionOperator.FloorDivide;
+                    return ExpressionOp.FloorDivide;
                 }
 
                 case TokenType.SymbolEqualTo:
                 {
-                    return ExpressionOperator.Equal;
+                    return ExpressionOp.Equal;
                 }
 
                 case TokenType.SymbolNotEqual:
                 {
-                    return ExpressionOperator.NotEqual;
+                    return ExpressionOp.NotEqual;
                 }
 
                 case TokenType.SymbolLess:
                 {
-                    return ExpressionOperator.Less;
+                    return ExpressionOp.Less;
                 }
 
                 case TokenType.SymbolGreater:
                 {
-                    return ExpressionOperator.Greater;
+                    return ExpressionOp.Greater;
                 }
 
                 case TokenType.SymbolLessEqual:
                 {
-                    return ExpressionOperator.LessEqual;
+                    return ExpressionOp.LessEqual;
                 }
 
                 case TokenType.SymbolGreaterEqual:
                 {
-                    return ExpressionOperator.GreaterEqual;
+                    return ExpressionOp.GreaterEqual;
                 }
 
                 case TokenType.KeywordAnd:
                 {
-                    return ExpressionOperator.And;
+                    return ExpressionOp.And;
                 }
 
                 case TokenType.KeywordOr:
                 {
-                    return ExpressionOperator.Or;
+                    return ExpressionOp.Or;
                 }
 
                 case TokenType.SymbolPipe:
                 {
-                    return ExpressionOperator.BinaryOr;
+                    return ExpressionOp.BinaryOr;
                 }
 
                 case TokenType.KeywordIn:
                 {
-                    return ExpressionOperator.In;
+                    return ExpressionOp.In;
                 }
 
                 default:

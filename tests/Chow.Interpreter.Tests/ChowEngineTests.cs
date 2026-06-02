@@ -5,12 +5,6 @@ public class ChowEngineTests
 {
 
     #region Methods
-
-    [SetUp]
-    public void Setup()
-    {
-        ChowEngine.Reset();
-    }
     
     [TestCaseSource(nameof(ControlFlowCases))]
     [TestCaseSource(nameof(ExecuteStringConcatenationAndFStringCases))]
