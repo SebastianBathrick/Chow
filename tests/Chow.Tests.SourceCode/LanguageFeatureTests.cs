@@ -2,7 +2,7 @@
 namespace Chow.Tests.SourceCode;
 
 [TestFixture]
-public class ChowEngineTests
+public class LanguageFeatureTests
 {
     #region Methods
     

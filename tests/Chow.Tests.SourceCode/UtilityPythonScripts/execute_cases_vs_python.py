@@ -16,9 +16,9 @@ from typing import Any
 
 # Subprocess prints this prefix so we can parse the result line from stdout
 RESULT_SENTINEL = "__CHOW_PY_RESULT__:"
-DEFAULT_CS_PATH = Path(__file__).resolve().parent.parent / "ChowEngineTests.cs"
+DEFAULT_CS_PATH = Path(__file__).resolve().parent.parent / "LanguageFeatureTests.cs"
 
-# Parsed from ChowEngineTests.cs at runtime — no hard-coded const values
+# Parsed from LanguageFeatureTests.cs at runtime — no hard-coded const values
 RE_CONST_STRING = re.compile(
     r"^\s*const\s+string\s+(\w+)\s*=\s*(.+?);\s*(?://.*)?$"
 )
@@ -108,7 +108,7 @@ def find_python_executable() -> str:
 
 
 def normalize_csharp_raw_string(content: str) -> str:
-    # C# """ literals in ChowEngineTests.cs include file formatting indent; strip like textwrap.dedent
+    # C# """ literals in LanguageFeatureTests.cs include file formatting indent; strip like textwrap.dedent
     if content.startswith("\r\n"):
         content = content[2:]
     elif content.startswith("\n"):
