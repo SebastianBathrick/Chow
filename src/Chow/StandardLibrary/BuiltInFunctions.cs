@@ -147,7 +147,7 @@ namespace Chow.StandardLibrary
         #region Invocable Object Methods
 
         // NOTE: When converting ChowValues to other types, use the internal conversion methods
-        // like ChowValue.ToBool(), ChowValue.ToStr(), ChowValue.ToInt64(), etc...
+        // like ChowValue.ToBool(), ChowValue.ToStr(), ChowValue.ToLong(), etc...
 
         static void Print(ChowValue[] args)
         {
@@ -199,7 +199,7 @@ namespace Chow.StandardLibrary
                 return new ChowValue(0.0);
             }
 
-            return new ChowValue(args[0].ToFloat64());
+            return new ChowValue(args[0].ToDouble());
         }
 
         static ChowValue Str(ChowValue[] args)
@@ -219,7 +219,7 @@ namespace Chow.StandardLibrary
                 return new ChowValue(0L);
             }
 
-            return new ChowValue(args[0].ToInt64());
+            return new ChowValue(args[0].ToLong());
         }
 
         static ChowValue Bool(ChowValue[] args)
@@ -321,14 +321,14 @@ namespace Chow.StandardLibrary
 
         static ChowValue Round(ChowValue[] args)
         {
-            var number = args[0].ToFloat64();
+            var number = args[0].ToDouble();
 
             if (args.Length == 1)
             {
                 return new ChowValue((long)Math.Round(number, MidpointRounding.ToEven));
             }
 
-            var ndigits = (int)args[1].ToInt64();
+            var ndigits = (int)args[1].ToLong();
             return new ChowValue(Math.Round(number, ndigits, MidpointRounding.ToEven));
         }
 

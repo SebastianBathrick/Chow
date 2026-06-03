@@ -735,7 +735,7 @@ namespace Chow.Core
                     throw new TypeException($"list indices must be integers, not {index.DataType}");
                 }
 
-                _valStack.Push(((InternalList)target.ToObject())[(int)index.ToInt64()]);
+                _valStack.Push(((InternalList)target.ToObject())[(int)index.ToLong()]);
             }
             else
             {
@@ -777,7 +777,7 @@ namespace Chow.Core
                     throw new TypeException($"list indices must be integers, not {index.DataType}");
                 }
 
-                ((InternalList)target.ToObject())[(int)index.ToInt64()] = value;
+                ((InternalList)target.ToObject())[(int)index.ToLong()] = value;
             }
             else
             {

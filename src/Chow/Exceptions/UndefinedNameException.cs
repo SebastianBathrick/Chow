@@ -1,6 +1,6 @@
 ﻿namespace Chow.Exceptions
 {
-    class UndefinedNameException : ChowRuntimeException
+    class UndefinedNameException : ChowException
     {
         const string EXCEPTION_ALIAS = "NameError";
 

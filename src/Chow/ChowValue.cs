@@ -32,18 +32,20 @@ namespace Chow
         public static readonly ChowValue None = new ChowValue(DataType.None);
 
         readonly bool _boolValue;
-        readonly object _objectValue;
+        readonly object _objVal;
 
         // In Chow integers are 64 bits instead of 32 bits like C# (hence why we're calling the
         // long type its formal name)
-        readonly long _int64Value;
+        readonly long _longVal;
 
-        // Naming convention is for a similar reason to _int64Value
-        readonly double _float64Value;
+        // Naming convention is for a similar reason to _longVal
+        readonly double _doubleVal;
 
         #endregion
 
         #region Properties
+
+        bool BoolValue => _longVal != LONG_FALSE_VAL;
 
         internal DataType DataType { get; }
 
@@ -58,35 +60,35 @@ namespace Chow
         ChowValue(
             DataType dataType = DataType.None,
             bool boolValue = DEFAULT_BOOL_VALUE,
-            object objectValue = DEFAULT_OBJECT_VALUE,
-            long int64Value = DEFAULT_INT64_VALUE,
-            double float64Value = DEFAULT_FLOAT64_VALUE)
+            object objVal = DEFAULT_OBJECT_VALUE,
+            long longVal = DEFAULT_LONG_VALUE,
+            double doubleVal = DEFAULT_DOUBLE_VALUE)
         {
             DataType = dataType;
             _boolValue = boolValue;
-            _objectValue = objectValue;
-            _int64Value = int64Value;
-            _float64Value = float64Value;
+            _objVal = objVal;
+            _longVal = longVal;
+            _doubleVal = doubleVal;
 
-            if (IsNullableType && _objectValue == null)
+            if (IsNullableType && _objVal == null)
             {
-                throw new ArgumentNullException(nameof(objectValue));
+                throw new ArgumentNullException(nameof(objVal));
             }
         }
 
-        internal ChowValue(long value) : this(DataType.Int, int64Value: value) {}
+        internal ChowValue(long value) : this(DataType.Int, longVal: value) {}
 
-        internal ChowValue(double value) : this(DataType.Float, float64Value: value) {}
+        internal ChowValue(double val) : this(DataType.Float, doubleVal: val) {}
 
         internal ChowValue(bool value) : this(DataType.Bool, value) {}
 
-        internal ChowValue(string value) : this(DataType.Str, objectValue: value) {}
+        internal ChowValue(string value) : this(DataType.Str, objVal: value) {}
 
-        internal ChowValue(InternalList list) : this(DataType.List, objectValue: list) {}
+        internal ChowValue(InternalList list) : this(DataType.List, objVal: list) {}
 
-        internal ChowValue(InternalDict dict) : this(DataType.Dict, objectValue: dict) {}
+        internal ChowValue(InternalDict dict) : this(DataType.Dict, objVal: dict) {}
 
-        internal ChowValue(InternalRange range) : this(DataType.Range, objectValue: range) {}
+        internal ChowValue(InternalRange range) : this(DataType.Range, objVal: range) {}
 
         // Re-dispatches to a typed ctor when obj happens to be a recognized interpreter value, so callers
         // holding an `object` reference don't accidentally land in Tag.Object. Unknown types (interop
@@ -149,9 +151,9 @@ namespace Chow
                 {
                     DataType = DataType.Object;
                     _boolValue = DEFAULT_BOOL_VALUE;
-                    _objectValue = obj;
-                    _int64Value = DEFAULT_INT64_VALUE;
-                    _float64Value = DEFAULT_FLOAT64_VALUE;
+                    _objVal = obj;
+                    _longVal = DEFAULT_LONG_VALUE;
+                    _doubleVal = DEFAULT_DOUBLE_VALUE;
                     return;
                 }
             }
@@ -177,7 +179,7 @@ namespace Chow
 
             if (!DataTypeMap.TryGetValue(typeOf, out var targetDataType))
             {
-                if (_objectValue is TDataType typedObject)
+                if (_objVal is TDataType typedObject)
                 {
                     return typedObject;
                 }
@@ -198,14 +200,14 @@ namespace Chow
                     if (typeOf == typeof(int))
                     {
                         // TODO: Add error checking for overflow scenarios
-                        return (TDataType)(object)(int)ToInt64();
+                        return (TDataType)(object)(int)ToLong();
                     }
 
-                    return (TDataType)(object)ToInt64();
+                    return (TDataType)(object)ToLong();
                 }
                 case DataType.Float:
                 {
-                    return (TDataType)(object)ToFloat64();
+                    return (TDataType)(object)ToDouble();
                 }
                 case DataType.Str:
                 {
@@ -215,7 +217,7 @@ namespace Chow
                 case DataType.Dict:
                 case DataType.Range:
                 {
-                    if (_objectValue is TDataType typedObject)
+                    if (_objVal is TDataType typedObject)
                     {
                         return typedObject;
                     }
@@ -238,7 +240,7 @@ namespace Chow
             // If it is not a type defined by the DataType enum
             if (!DataTypeMap.TryGetValue(checkType, out var chowDataType))
             {
-                return DataType == DataType.Object && _objectValue is TDataType;
+                return DataType == DataType.Object && _objVal is TDataType;
             }
 
             // The map includes values representing data types that are from the Chow namespace
@@ -266,11 +268,11 @@ namespace Chow
             {
                 case ConversionCase.ToInt:
                 {
-                    return new ChowValue(PromoteToInt64() + rightOperand.PromoteToInt64());
+                    return new ChowValue(PromoteToLong() + rightOperand.PromoteToLong());
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return new ChowValue(PromoteToFloat64() + rightOperand.PromoteToFloat64());
+                    return new ChowValue(PromoteToDouble() + rightOperand.PromoteToDouble());
                 }
                 case ConversionCase.Nothing:
                 {
@@ -295,12 +297,12 @@ namespace Chow
         {
             if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.ToInt)
             {
-                return new ChowValue(PromoteToInt64() - rightOperand.PromoteToInt64());
+                return new ChowValue(PromoteToLong() - rightOperand.PromoteToLong());
             }
 
             if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.ToFloat)
             {
-                return new ChowValue(PromoteToFloat64() - rightOperand.PromoteToFloat64());
+                return new ChowValue(PromoteToDouble() - rightOperand.PromoteToDouble());
             }
 
             if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.Nothing)
@@ -320,11 +322,11 @@ namespace Chow
             {
                 case ConversionCase.ToInt:
                 {
-                    return new ChowValue(PromoteToInt64() * rightOperand.PromoteToInt64());
+                    return new ChowValue(PromoteToLong() * rightOperand.PromoteToLong());
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return new ChowValue(PromoteToFloat64() * rightOperand.PromoteToFloat64());
+                    return new ChowValue(PromoteToDouble() * rightOperand.PromoteToDouble());
                 }
                 case ConversionCase.Nothing:
                 {
@@ -363,11 +365,11 @@ namespace Chow
             {
                 case ConversionCase.ToFloat:
                 {
-                    var divisor = rightOperand.PromoteToFloat64();
+                    var divisor = rightOperand.PromoteToDouble();
 
                     return divisor == 0.0 
                         ? throw new ZeroDivisionException() 
-                        : new ChowValue(PromoteToFloat64() / divisor);
+                        : new ChowValue(PromoteToDouble() / divisor);
 
                 }
                 case ConversionCase.Nothing:
@@ -387,8 +389,8 @@ namespace Chow
             {
                 case ConversionCase.ToInt:
                 {
-                    var a = PromoteToInt64();
-                    var b = rightOperand.PromoteToInt64();
+                    var a = PromoteToLong();
+                    var b = rightOperand.PromoteToLong();
 
                     if (b == 0L)
                     {
@@ -399,8 +401,8 @@ namespace Chow
                 }
                 case ConversionCase.ToFloat:
                 {
-                    var l = PromoteToFloat64();
-                    var r = rightOperand.PromoteToFloat64();
+                    var l = PromoteToDouble();
+                    var r = rightOperand.PromoteToDouble();
 
                     if (r == 0.0)
                     {
@@ -422,8 +424,8 @@ namespace Chow
             {
                 case ConversionCase.ToInt:
                 {
-                    var a = PromoteToInt64();
-                    var b = rightOperand.PromoteToInt64();
+                    var a = PromoteToLong();
+                    var b = rightOperand.PromoteToLong();
 
                     if (b == 0L)
                     {
@@ -441,14 +443,14 @@ namespace Chow
                 }
                 case ConversionCase.ToFloat:
                 {
-                    var divisor = rightOperand.PromoteToFloat64();
+                    var divisor = rightOperand.PromoteToDouble();
 
                     if (divisor == 0.0)
                     {
                         throw new ZeroDivisionException();
                     }
 
-                    return new ChowValue(Math.Floor(PromoteToFloat64() / divisor));
+                    return new ChowValue(Math.Floor(PromoteToDouble() / divisor));
                 }
             }
 
@@ -463,7 +465,7 @@ namespace Chow
             // type-keyed map. Every other dispatch path defers to DataTypeConversionMap.
             var conv = LookupBinary(ExpressionOp.Exponentiate, rightOperand);
 
-            if (conv == ConversionCase.ToInt && rightOperand.PromoteToInt64() < 0)
+            if (conv == ConversionCase.ToInt && rightOperand.PromoteToLong() < 0)
             {
                 conv = ConversionCase.ToFloat;
             }
@@ -475,11 +477,11 @@ namespace Chow
                     // Exponent is non-negative here (negative-exp routed to float above). Exact integer
                     // exponentiation avoids the 2^53 precision ceiling of (long)Math.Pow. Overflow wraps
                     // silently — matches prior behavior; arbitrary-precision int is a separate concern.
-                    return new ChowValue(IntPow(PromoteToInt64(), rightOperand.PromoteToInt64()));
+                    return new ChowValue(IntPow(PromoteToLong(), rightOperand.PromoteToLong()));
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return new ChowValue(Math.Pow(PromoteToFloat64(), rightOperand.PromoteToFloat64()));
+                    return new ChowValue(Math.Pow(PromoteToDouble(), rightOperand.PromoteToDouble()));
                 }
             }
 
@@ -503,11 +505,11 @@ namespace Chow
             {
                 case ConversionCase.ToInt:
                 {
-                    return new ChowValue(-PromoteToInt64());
+                    return new ChowValue(-PromoteToLong());
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return new ChowValue(-PromoteToFloat64());
+                    return new ChowValue(-PromoteToDouble());
                 }
             }
 
@@ -537,10 +539,10 @@ namespace Chow
             switch (LookupBinary(ExpressionOp.Equal, other))
             {
                 case ConversionCase.ToInt:
-                    return PromoteToInt64() == other.PromoteToInt64();
+                    return PromoteToLong() == other.PromoteToLong();
                 case ConversionCase.ToFloat:
                 {
-                    return PromoteToFloat64() == other.PromoteToFloat64();
+                    return PromoteToDouble() == other.PromoteToDouble();
                 }
                 case ConversionCase.Nothing:
                 {
@@ -557,11 +559,11 @@ namespace Chow
             {
                 case ConversionCase.ToInt:
                 {
-                    return PromoteToInt64() != other.PromoteToInt64();
+                    return PromoteToLong() != other.PromoteToLong();
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return PromoteToFloat64() != other.PromoteToFloat64();
+                    return PromoteToDouble() != other.PromoteToDouble();
                 }
                 case ConversionCase.Nothing:
                 {
@@ -578,11 +580,11 @@ namespace Chow
             {
                 case ConversionCase.ToInt:
                 {
-                    return PromoteToInt64() < other.PromoteToInt64();
+                    return PromoteToLong() < other.PromoteToLong();
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return PromoteToFloat64() < other.PromoteToFloat64();
+                    return PromoteToDouble() < other.PromoteToDouble();
                 }
                 case ConversionCase.Nothing:
                 {
@@ -604,11 +606,11 @@ namespace Chow
             {
                 case ConversionCase.ToInt:
                 {
-                    return PromoteToInt64() > other.PromoteToInt64();
+                    return PromoteToLong() > other.PromoteToLong();
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return PromoteToFloat64() > other.PromoteToFloat64();
+                    return PromoteToDouble() > other.PromoteToDouble();
                 }
                 case ConversionCase.Nothing:
                 {
@@ -630,11 +632,11 @@ namespace Chow
             {
                 case ConversionCase.ToInt:
                 {
-                    return PromoteToInt64() <= other.PromoteToInt64();
+                    return PromoteToLong() <= other.PromoteToLong();
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return PromoteToFloat64() <= other.PromoteToFloat64();
+                    return PromoteToDouble() <= other.PromoteToDouble();
                 }
                 case ConversionCase.Nothing:
                 {
@@ -656,11 +658,11 @@ namespace Chow
             {
                 case ConversionCase.ToInt:
                 {
-                    return PromoteToInt64() >= other.PromoteToInt64();
+                    return PromoteToLong() >= other.PromoteToLong();
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return PromoteToFloat64() >= other.PromoteToFloat64();
+                    return PromoteToDouble() >= other.PromoteToDouble();
                 }
                 case ConversionCase.Nothing:
                 {
@@ -687,12 +689,12 @@ namespace Chow
                 throw new TypeException($"'{DataType}' object is not callable");
             }
 
-            if (_objectValue is Func<ChowValue[], ChowValue> methodDelegate)
+            if (_objVal is Func<ChowValue[], ChowValue> methodDelegate)
             {
                 return methodDelegate(args ?? Array.Empty<ChowValue>());
             }
 
-            throw new InvalidOperationException($"Object of type '{_objectValue.GetType().Name}' is not callable");
+            throw new InvalidOperationException($"Object of type '{_objVal.GetType().Name}' is not callable");
         }
 
         #endregion
@@ -722,12 +724,12 @@ namespace Chow
             {
                 case DataType.Int:
                 {
-                    valueHash = _int64Value.GetHashCode();
+                    valueHash = _longVal.GetHashCode();
                     break;
                 }
                 case DataType.Float:
                 {
-                    valueHash = _float64Value.GetHashCode();
+                    valueHash = _doubleVal.GetHashCode();
                     break;
                 }
                 case DataType.Bool:
@@ -737,17 +739,17 @@ namespace Chow
                 }
                 case DataType.List:
                 {
-                    valueHash = InternalList.ElementsHashCode((InternalList)_objectValue);
+                    valueHash = InternalList.ElementsHashCode((InternalList)_objVal);
                     break;
                 }
                 case DataType.Dict:
                 {
-                    valueHash = InternalDict.ElementsHashCode((InternalDict)_objectValue);
+                    valueHash = InternalDict.ElementsHashCode((InternalDict)_objVal);
                     break;
                 }
                 default:
                 {
-                    valueHash = _objectValue?.GetHashCode() ?? 0;
+                    valueHash = _objVal?.GetHashCode() ?? 0;
                     break;
                 }
             }
@@ -791,11 +793,11 @@ namespace Chow
                 }
                 case DataType.Int:
                 {
-                    return _int64Value != INT64_REP_BOOL_FALSE;
+                    return _longVal != LONG_REP_BOOL_FALSE;
                 }
                 case DataType.Float:
                 {
-                    return _float64Value != FLOAT64_REP_BOOL_FALSE;
+                    return _doubleVal != DOUBLE_REP_BOOL_FALSE;
                 }
                 case DataType.Str:
                 {
@@ -818,90 +820,90 @@ namespace Chow
             throw new InvalidOperationException();
         }
 
-        internal long ToInt64()
+        internal long ToLong()
         {
             switch (DataType)
             {
                 case DataType.None:
                 {
-                    throw new InvalidOperationException("Cannot convert None to int64");
+                    throw new InvalidOperationException("Cannot convert None to long");
                 }
                 case DataType.Bool:
                 {
-                    return _boolValue ? BOOL_TRUE_REP_INT64 : BOOL_FALSE_REP_INT64;
+                    return _boolValue ? BOOL_TRUE_REP_LONG : BOOL_FALSE_REP_LONG;
                 }
                 case DataType.Int:
                 {
-                    return _int64Value;
+                    return _longVal;
                 }
                 case DataType.Float:
                 {
-                    return (long)_float64Value;
+                    return (long)_doubleVal;
                 }
                 case DataType.Str:
                 {
-                    return StrToInt64();
+                    return StrToLong();
                 }
                 case DataType.Object:
                 {
-                    throw new InvalidOperationException("Cannot convert Object to int64");
+                    throw new InvalidOperationException("Cannot convert Object to long");
                 }
                 case DataType.List:
                 {
-                    throw new InvalidOperationException("Cannot convert List to int64");
+                    throw new InvalidOperationException("Cannot convert List to long");
                 }
                 case DataType.Dict:
                 {
-                    throw new InvalidOperationException("Cannot convert Dict to int64");
+                    throw new InvalidOperationException("Cannot convert Dict to long");
                 }
                 case DataType.Range:
                 {
-                    throw new InvalidOperationException("Cannot convert Range to int64");
+                    throw new InvalidOperationException("Cannot convert Range to long");
                 }
             }
 
             throw new InvalidOperationException();
         }
 
-        internal double ToFloat64()
+        internal double ToDouble()
         {
             switch (DataType)
             {
                 case DataType.None:
                 {
-                    throw new InvalidOperationException("Cannot convert None to float64");
+                    throw new InvalidOperationException("Cannot convert None to double");
                 }
                 case DataType.Bool:
                 {
-                    return _boolValue ? BOOL_TRUE_REP_FLOAT64 : BOOL_FALSE_REP_FLOAT64;
+                    return _boolValue ? BOOL_TRUE_REP_DOUBLE : BOOL_FALSE_REP_DOUBLE;
                 }
                 case DataType.Int:
                 {
-                    return _int64Value;
+                    return _longVal;
                 }
                 case DataType.Float:
                 {
-                    return _float64Value;
+                    return _doubleVal;
                 }
                 case DataType.Str:
                 {
-                    return StrToFloat64();
+                    return StrToDouble();
                 }
                 case DataType.Object:
                 {
-                    throw new InvalidOperationException("Cannot convert Object to float64");
+                    throw new InvalidOperationException("Cannot convert Object to double");
                 }
                 case DataType.List:
                 {
-                    throw new InvalidOperationException("Cannot convert List to float64");
+                    throw new InvalidOperationException("Cannot convert List to double");
                 }
                 case DataType.Dict:
                 {
-                    throw new InvalidOperationException("Cannot convert Dict to float64");
+                    throw new InvalidOperationException("Cannot convert Dict to double");
                 }
                 case DataType.Range:
                 {
-                    throw new InvalidOperationException("Cannot convert Range to float64");
+                    throw new InvalidOperationException("Cannot convert Range to double");
                 }
             }
 
@@ -922,11 +924,11 @@ namespace Chow
                 }
                 case DataType.Int:
                 {
-                    return _int64Value;
+                    return _longVal;
                 }
                 case DataType.Float:
                 {
-                    return _float64Value;
+                    return _doubleVal;
                 }
                 case DataType.Str:
                 case DataType.Object:
@@ -934,7 +936,7 @@ namespace Chow
                 case DataType.Dict:
                 case DataType.Range:
                 {
-                    return _objectValue;
+                    return _objVal;
                 }
             }
 
@@ -955,7 +957,7 @@ namespace Chow
                 }
                 case DataType.Int:
                 {
-                    return _int64Value.ToString(CultureInfo.InvariantCulture);
+                    return _longVal.ToString(CultureInfo.InvariantCulture);
                 }
                 case DataType.Float:
                 {
@@ -970,13 +972,13 @@ namespace Chow
                 case DataType.Dict:
                 case DataType.Range:
                 {
-                    if (_objectValue == null)
+                    if (_objVal == null)
                     {
                         // This should never happen, but we'll check just in case
                         throw new InvalidOperationException($"{nameof(ChowValue)} object with type {DataType} null");
                     }
 
-                    return _objectValue.ToString();
+                    return _objVal.ToString();
                 }
             }
 
@@ -989,7 +991,7 @@ namespace Chow
 
         bool StrToBool()
         {
-            if (_objectValue is string strValue)
+            if (_objVal is string strValue)
             {
                 return strValue.Length != STR_LENGTH_REP_BOOL_FALSE;
             }
@@ -999,7 +1001,7 @@ namespace Chow
 
         bool ListToBool()
         {
-            if (_objectValue is InternalList listValue)
+            if (_objVal is InternalList listValue)
             {
                 return listValue.Count != LIST_COUNT_REP_BOOL_FALSE;
             }
@@ -1009,7 +1011,7 @@ namespace Chow
 
         bool DictToBool()
         {
-            if (_objectValue is InternalDict dictValue)
+            if (_objVal is InternalDict dictValue)
             {
                 return dictValue.Count != DICT_COUNT_REP_BOOL_FALSE;
             }
@@ -1019,7 +1021,7 @@ namespace Chow
 
         bool RangeToBool()
         {
-            if (_objectValue is InternalRange rangeValue)
+            if (_objVal is InternalRange rangeValue)
             {
                 return rangeValue.Count != RANGE_COUNT_REP_BOOL_FALSE;
             }
@@ -1027,43 +1029,43 @@ namespace Chow
             throw new InvalidOperationException("Expected range value for boolean comparison");
         }
 
-        long StrToInt64()
+        long StrToLong()
         {
-            if (!(_objectValue is string strValue))
+            if (!(_objVal is string strValue))
             {
-                throw new InvalidOperationException("Expected string value for int64 conversion");
+                throw new InvalidOperationException("Expected string value for long conversion");
             }
 
-            if (long.TryParse(strValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedInt64))
+            if (long.TryParse(strValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedLong))
             {
-                return parsedInt64;
+                return parsedLong;
             }
 
-            throw new InvalidOperationException($"Cannot convert string '{strValue}' to int64");
+            throw new InvalidOperationException($"Cannot convert string '{strValue}' to long");
         }
 
-        double StrToFloat64()
+        double StrToDouble()
         {
-            if (!(_objectValue is string strValue))
+            if (!(_objVal is string strValue))
             {
-                throw new InvalidOperationException("Expected string value for float64 conversion");
+                throw new InvalidOperationException("Expected string value for double conversion");
             }
 
-            if (double.TryParse(strValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedFloat64))
+            if (double.TryParse(strValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedDouble))
             {
-                return parsedFloat64;
+                return parsedDouble;
             }
 
-            throw new InvalidOperationException($"Cannot convert string '{strValue}' to float64");
+            throw new InvalidOperationException($"Cannot convert string '{strValue}' to double");
         }
 
         string FloatToStr()
         {
-            var formatted = _float64Value.ToString(CultureInfo.InvariantCulture);
+            var formatted = _doubleVal.ToString(CultureInfo.InvariantCulture);
 
             if (IsFractionalSuffix(formatted))
             {
-                formatted += FLOAT64_INTEGER_FRACTIONAL_SUFFIX;
+                formatted += DOUBLE_INTEGER_FRACTIONAL_SUFFIX;
             }
 
             return formatted;
@@ -1071,14 +1073,14 @@ namespace Chow
 
         static bool IsFractionalSuffix(string formatted)
         {
-            return formatted.IndexOf(FLOAT64_DECIMAL_POINT_CHAR) == CHAR_NOT_FOUND_INDEX
-                && formatted.IndexOf(FLOAT64_EXPONENT_LOWER_CHAR) == CHAR_NOT_FOUND_INDEX
-                && formatted.IndexOf(FLOAT64_EXPONENT_UPPER_CHAR) == CHAR_NOT_FOUND_INDEX;
+            return formatted.IndexOf(DOUBLE_DECIMAL_POINT_CHAR) == CHAR_NOT_FOUND_INDEX
+                && formatted.IndexOf(DOUBLE_EXPONENT_LOWER_CHAR) == CHAR_NOT_FOUND_INDEX
+                && formatted.IndexOf(DOUBLE_EXPONENT_UPPER_CHAR) == CHAR_NOT_FOUND_INDEX;
         }
 
         string StrToStr()
         {
-            if (_objectValue is string strValue)
+            if (_objVal is string strValue)
             {
                 return strValue;
             }
@@ -1115,7 +1117,7 @@ namespace Chow
         }
 
         // TODO: These are redundant, the ToX methods should be used instead.
-        long PromoteToInt64()
+        long PromoteToLong()
         {
             switch (DataType)
             {
@@ -1125,7 +1127,7 @@ namespace Chow
                 }
                 case DataType.Int:
                 {
-                    return _int64Value;
+                    return _longVal;
                 }
                 default:
                 {
@@ -1134,7 +1136,7 @@ namespace Chow
             }
         }
 
-        double PromoteToFloat64()
+        double PromoteToDouble()
         {
             switch (DataType)
             {
@@ -1144,11 +1146,11 @@ namespace Chow
                 }
                 case DataType.Int:
                 {
-                    return _int64Value;
+                    return _longVal;
                 }
                 case DataType.Float:
                 {
-                    return _float64Value;
+                    return _doubleVal;
                 }
                 default:
                 {
@@ -1179,28 +1181,28 @@ namespace Chow
                 }
                 case DataType.Int:
                 {
-                    return _int64Value == other._int64Value;
+                    return _longVal == other._longVal;
                 }
                 case DataType.Float:
                 {
-                    return _float64Value.Equals(other._float64Value);
+                    return _doubleVal.Equals(other._doubleVal);
                 }
                 case DataType.Str:
                 {
-                    return (string)_objectValue == (string)other._objectValue;
+                    return (string)_objVal == (string)other._objVal;
                 }
                 case DataType.List:
                 {
-                    return InternalList.ElementsEqual((InternalList)_objectValue, (InternalList)other._objectValue);
+                    return InternalList.ElementsEqual((InternalList)_objVal, (InternalList)other._objVal);
                 }
                 case DataType.Dict:
                 {
-                    return InternalDict.ElementsEqual((InternalDict)_objectValue, (InternalDict)other._objectValue);
+                    return InternalDict.ElementsEqual((InternalDict)_objVal, (InternalDict)other._objVal);
                 }
                 case DataType.Range:
                 case DataType.Object:
                 {
-                    return ReferenceEquals(_objectValue, other._objectValue);
+                    return ReferenceEquals(_objVal, other._objVal);
                 }
                 default:
                 {
@@ -1263,12 +1265,12 @@ namespace Chow
         // Constructor defaults
         const bool DEFAULT_BOOL_VALUE = false;
         const object DEFAULT_OBJECT_VALUE = null;
-        const long DEFAULT_INT64_VALUE = 0L;
-        const double DEFAULT_FLOAT64_VALUE = 0.0;
+        const long DEFAULT_LONG_VALUE = 0L;
+        const double DEFAULT_DOUBLE_VALUE = 0.0;
 
         // ToBool source representations (numeric "false" values)
-        const long INT64_REP_BOOL_FALSE = 0L;
-        const double FLOAT64_REP_BOOL_FALSE = 0.0;
+        const long LONG_REP_BOOL_FALSE = 0L;
+        const double DOUBLE_REP_BOOL_FALSE = 0.0;
 
         // ToBool source representations (container/string "false" lengths, plus None/Object fixed reps)
         const int STR_LENGTH_REP_BOOL_FALSE = 0;
@@ -1278,13 +1280,13 @@ namespace Chow
         const bool NONE_REP_BOOL_VALUE = false;
         const bool OBJECT_REP_BOOL_VALUE = true;
 
-        // ToInt64 source representations (bool -> int64)
-        const long BOOL_FALSE_REP_INT64 = 0L;
-        const long BOOL_TRUE_REP_INT64 = 1L;
+        // ToLong source representations (bool -> long)
+        const long BOOL_FALSE_REP_LONG = 0L;
+        const long BOOL_TRUE_REP_LONG = 1L;
 
-        // ToFloat64 source representations (bool -> float64)
-        const double BOOL_FALSE_REP_FLOAT64 = 0.0;
-        const double BOOL_TRUE_REP_FLOAT64 = 1.0;
+        // ToDouble source representations (bool -> double)
+        const double BOOL_FALSE_REP_DOUBLE = 0.0;
+        const double BOOL_TRUE_REP_DOUBLE = 1.0;
 
         // ToStr source representations (None/bool -> str)
         const string NONE_REP_STR_VALUE = "None";
@@ -1292,13 +1294,15 @@ namespace Chow
         const string BOOL_TRUE_REP_STR = "True";
 
         // ToStr float formatting (append ".0" when ToString output has no decimal point or exponent)
-        const string FLOAT64_INTEGER_FRACTIONAL_SUFFIX = ".0";
-        const char FLOAT64_DECIMAL_POINT_CHAR = '.';
-        const char FLOAT64_EXPONENT_LOWER_CHAR = 'e';
-        const char FLOAT64_EXPONENT_UPPER_CHAR = 'E';
+        const string DOUBLE_INTEGER_FRACTIONAL_SUFFIX = ".0";
+        const char DOUBLE_DECIMAL_POINT_CHAR = '.';
+        const char DOUBLE_EXPONENT_LOWER_CHAR = 'e';
+        const char DOUBLE_EXPONENT_UPPER_CHAR = 'E';
 
         // String.IndexOf "not found" sentinel (used by ToStr float formatting check)
         const int CHAR_NOT_FOUND_INDEX = -1;
+
+        const int LONG_FALSE_VAL = 0;
 
         #endregion
 

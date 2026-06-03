@@ -1,6 +1,6 @@
 namespace Chow.Exceptions
 {
-    class AttributeException : ChowRuntimeException
+    class AttributeException : ChowException
     {
         const string EXCEPTION_ALIAS = "AttributeError";
 

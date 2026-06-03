@@ -1,6 +1,6 @@
 namespace Chow.Exceptions
 {
-    class ZeroDivisionException : ChowRuntimeException
+    class ZeroDivisionException : ChowException
     {
         const string EXCEPTION_ALIAS = "ZeroDivisionError";
         const string DEFAULT_MESSAGE = "division by zero";

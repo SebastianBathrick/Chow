@@ -1,6 +1,6 @@
 namespace Chow.Exceptions
 {
-    class DictKeyException : ChowRuntimeException
+    class DictKeyException : ChowException
     {
         const string EXCEPTION_ALIAS = "KeyError";
 
