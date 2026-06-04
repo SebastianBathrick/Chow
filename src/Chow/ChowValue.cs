@@ -16,146 +16,135 @@ namespace Chow
 
         #region Fields
 
-        static readonly Dictionary<Type, DataType> DataTypeMap = new Dictionary<Type, DataType>
+        static readonly Dictionary<Type, Tag> DataTypeMap = new Dictionary<Type, Tag>
         {
-            { typeof(bool), DataType.Bool },
-            { typeof(long), DataType.Int },
-            { typeof(int), DataType.Int },
-            { typeof(double), DataType.Float },
-            { typeof(string), DataType.Str },
-            { typeof(InternalDict), DataType.Dict },
-            { typeof(InternalRange), DataType.Range },
-            { typeof(InternalList), DataType.List }
+            { typeof(bool), Tag.Bool },
+            { typeof(long), Tag.Long },
+            { typeof(int), Tag.Long },
+            { typeof(double), Tag.Double },
+            { typeof(string), Tag.Str },
+            { typeof(InternalDict), Tag.Dict },
+            { typeof(InternalRange), Tag.Range },
+            { typeof(InternalList), Tag.List }
         };
 
         /// <summary>Represents the ChowValue equivalent to null/nil/none values.</summary>
-        public static readonly ChowValue None = new ChowValue(DataType.None);
-
-        readonly bool _boolValue;
-        readonly object _objVal;
-
-        // In Chow integers are 64 bits instead of 32 bits like C# (hence why we're calling the
-        // long type its formal name)
-        readonly long _longVal;
-
-        // Naming convention is for a similar reason to _longVal
-        readonly double _doubleVal;
+        public static readonly ChowValue None = new ChowValue(Tag.None);
+        readonly object _obj;
+        readonly long _long;
+        readonly double _double;
 
         #endregion
 
         #region Properties
 
-        bool BoolValue => _longVal != LONG_FALSE_VAL;
+        bool BoolValue => _long == BOOL_TRUE_LONG;
 
-        internal DataType DataType { get; }
-
-        bool IsNullableType =>
-            DataType == DataType.Object || DataType == DataType.List || DataType == DataType.Dict || DataType == DataType.Range ||
-            DataType == DataType.Str;
+        internal Tag Type { get; }
 
         #endregion
 
         #region Constructors
 
         ChowValue(
-            DataType dataType = DataType.None,
+            Tag type = Tag.None,
             bool boolValue = DEFAULT_BOOL_VALUE,
             object objVal = DEFAULT_OBJECT_VALUE,
             long longVal = DEFAULT_LONG_VALUE,
             double doubleVal = DEFAULT_DOUBLE_VALUE)
         {
-            DataType = dataType;
-            _boolValue = boolValue;
-            _objVal = objVal;
-            _longVal = longVal;
-            _doubleVal = doubleVal;
+            Type = type;
+            _obj = objVal;
+            _double = doubleVal;
 
-            if (IsNullableType && _objVal == null)
+            // Run any type-specific logic
+            switch (type)
             {
-                throw new ArgumentNullException(nameof(objVal));
+                case Tag.Bool:
+                    _long = boolValue ? BOOL_TRUE_LONG : BOOL_FALSE_LONG;
+                    return;
+                case Tag.Object:
+                case Tag.List:
+                case Tag.Dict:
+                case Tag.Range:
+                case Tag.Str:
+                    if (objVal == null)
+                    {
+                        throw new ArgumentNullException(nameof(objVal));
+                    }
+                    break;
+                
+                case Tag.None:
+                case Tag.Long:
+                case Tag.Double:
+                    break;
+                
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
+            
+            _long = longVal;
         }
 
-        internal ChowValue(long value) : this(DataType.Int, longVal: value) {}
+        internal ChowValue(long value) : this(Tag.Long, longVal: value) {}
 
-        internal ChowValue(double val) : this(DataType.Float, doubleVal: val) {}
+        internal ChowValue(double val) : this(Tag.Double, doubleVal: val) {}
 
-        internal ChowValue(bool value) : this(DataType.Bool, value) {}
+        internal ChowValue(bool value) : this(Tag.Bool, value) {}
 
-        internal ChowValue(string value) : this(DataType.Str, objVal: value) {}
+        internal ChowValue(string value) : this(Tag.Str, objVal: value) {}
 
-        internal ChowValue(InternalList list) : this(DataType.List, objVal: list) {}
+        internal ChowValue(InternalList list) : this(Tag.List, objVal: list) {}
 
-        internal ChowValue(InternalDict dict) : this(DataType.Dict, objVal: dict) {}
+        internal ChowValue(InternalDict dict) : this(Tag.Dict, objVal: dict) {}
 
-        internal ChowValue(InternalRange range) : this(DataType.Range, objVal: range) {}
+        internal ChowValue(InternalRange range) : this(Tag.Range, objVal: range) {}
 
-        // Re-dispatches to a typed ctor when obj happens to be a recognized interpreter value, so callers
-        // holding an `object` reference don't accidentally land in Tag.Object. Unknown types (interop
-        // delegates, ClosureTemplate, IChowIterator, etc.) keep the Object tag as intended.
+        /// <summary>
+        /// Resolves and converts the value of <paramref name="obj"/> and initializes instance with
+        /// the converted value (if a tag is defined for that type).
+        /// </summary>
         internal ChowValue(object obj)
         {
             switch (obj)
             {
                 case null:
-                {
+                // TODO: Look into changing this to ChowValue.None.
                     throw new ArgumentNullException(nameof(obj));
-                }
                 case string strValue:
-                {
                     this = new ChowValue(strValue);
-                    return;
-                }
+                    break;
                 case long longValue:
-                {
                     this = new ChowValue(longValue);
-                    return;
-                }
+                    break;
                 case int intValue:
-                {
                     this = new ChowValue(intValue);
-                    return;
-                }
+                    break;
                 case double doubleValue:
-                {
                     this = new ChowValue(doubleValue);
-                    return;
-                }
+                    break;
                 case bool boolValue:
-                {
                     this = new ChowValue(boolValue);
-                    return;
-                }
+                    break;
                 case InternalList listValue:
-                {
                     this = new ChowValue(listValue);
-                    return;
-                }
+                    break;
                 case InternalDict dictValue:
-                {
                     this = new ChowValue(dictValue);
-                    return;
-                }
+                    break;
                 case InternalRange rangeValue:
-                {
                     this = new ChowValue(rangeValue);
-                    return;
-                }
+                    break;
                 case ChowValue chowValue:
-                {
                     // **IMPORTANT**: CHOW VALUES ARE NEVER DIRECTLY WRAPPED IN OTHER CHOW VALUE INSTANCES
                     this = chowValue;
-                    return;
-                }
+                    break;
                 default:
-                {
-                    DataType = DataType.Object;
-                    _boolValue = DEFAULT_BOOL_VALUE;
-                    _objVal = obj;
-                    _longVal = DEFAULT_LONG_VALUE;
-                    _doubleVal = DEFAULT_DOUBLE_VALUE;
-                    return;
-                }
+                    Type = Tag.Object;
+                    _obj = obj;
+                    _long = DEFAULT_LONG_VALUE;
+                    _double = DEFAULT_DOUBLE_VALUE;
+                    break;
             }
         }
 
@@ -179,23 +168,23 @@ namespace Chow
 
             if (!DataTypeMap.TryGetValue(typeOf, out var targetDataType))
             {
-                if (_objVal is TDataType typedObject)
+                if (_obj is TDataType typedObject)
                 {
                     return typedObject;
                 }
 
-                throw new InvalidOperationException($"Cannot convert {DataType} to {typeOf}");
+                throw new InvalidOperationException($"Cannot convert {Type} to {typeOf}");
             }
 
             switch (targetDataType)
             {
-                case DataType.Bool:
+                case Tag.Bool:
                 {
                     return (TDataType)(object)ToBool();
                 }
-                case DataType.Int:
+                case Tag.Long:
                 {
-                    // The map aliases both typeof(long) and typeof(int) to DataType.Int.
+                    // The map aliases both typeof(long) and typeof(int) to Tag.Long.
                     // For T == int we truncate; for T == long we return the full 64-bit value.
                     if (typeOf == typeof(int))
                     {
@@ -205,19 +194,19 @@ namespace Chow
 
                     return (TDataType)(object)ToLong();
                 }
-                case DataType.Float:
+                case Tag.Double:
                 {
                     return (TDataType)(object)ToDouble();
                 }
-                case DataType.Str:
+                case Tag.Str:
                 {
                     return (TDataType)(object)ToStr();
                 }
-                case DataType.List:
-                case DataType.Dict:
-                case DataType.Range:
+                case Tag.List:
+                case Tag.Dict:
+                case Tag.Range:
                 {
-                    if (_objVal is TDataType typedObject)
+                    if (_obj is TDataType typedObject)
                     {
                         return typedObject;
                     }
@@ -226,7 +215,7 @@ namespace Chow
                 }
             }
 
-            throw new InvalidOperationException($"Cannot convert {DataType} to {typeof(TDataType)}");
+            throw new InvalidOperationException($"Cannot convert {Type} to {typeof(TDataType)}");
         }
 
         /// <summary>Whether the Chow value of this instance is of the provided data type.</summary>
@@ -237,14 +226,14 @@ namespace Chow
         {
             var checkType = typeof(TDataType);
 
-            // If it is not a type defined by the DataType enum
+            // If it is not a type defined by the Tag enum
             if (!DataTypeMap.TryGetValue(checkType, out var chowDataType))
             {
-                return DataType == DataType.Object && _objVal is TDataType;
+                return Type == Tag.Object && _obj is TDataType;
             }
 
             // The map includes values representing data types that are from the Chow namespace
-            return DataType == chowDataType;
+            return Type == chowDataType;
         }
 
         public bool IsTruthy()
@@ -276,12 +265,12 @@ namespace Chow
                 }
                 case ConversionCase.Nothing:
                 {
-                    if (DataType == DataType.List && rightOperand.DataType == DataType.List)
+                    if (Type == Tag.List && rightOperand.Type == Tag.List)
                     {
                         return new ChowValue(InternalList.Concat(AsType<InternalList>(), rightOperand.AsType<InternalList>()));
                     }
 
-                    if (DataType == DataType.Str && rightOperand.DataType == DataType.Str)
+                    if (Type == Tag.Str && rightOperand.Type == Tag.Str)
                     {
                         return new ChowValue(AsType<string>() + rightOperand.AsType<string>());
                     }
@@ -331,22 +320,22 @@ namespace Chow
                 case ConversionCase.Nothing:
                 {
                     // Python treats bool as a subtype of int, so [1] * True and "ab" * True are valid.
-                    if (DataType == DataType.List && IsIntegerTag(rightOperand.DataType))
+                    if (Type == Tag.List && IsIntegerTag(rightOperand.Type))
                     {
                         return new ChowValue(InternalList.Repeat(AsType<InternalList>(), rightOperand.AsType<int>()));
                     }
 
-                    if (IsIntegerTag(DataType) && rightOperand.DataType == DataType.List)
+                    if (IsIntegerTag(Type) && rightOperand.Type == Tag.List)
                     {
                         return new ChowValue(InternalList.Repeat(rightOperand.AsType<InternalList>(), AsType<int>()));
                     }
 
-                    if (DataType == DataType.Str && IsIntegerTag(rightOperand.DataType))
+                    if (Type == Tag.Str && IsIntegerTag(rightOperand.Type))
                     {
                         return new ChowValue(RepeatString(AsType<string>(), rightOperand.AsType<int>()));
                     }
 
-                    if (IsIntegerTag(DataType) && rightOperand.DataType == DataType.Str)
+                    if (IsIntegerTag(Type) && rightOperand.Type == Tag.Str)
                     {
                         return new ChowValue(RepeatString(rightOperand.AsType<string>(), AsType<int>()));
                     }
@@ -491,7 +480,7 @@ namespace Chow
         internal ChowValue CreateUnion(ChowValue rightOperand)
         {
             if (LookupBinary(ExpressionOp.BinaryOr, rightOperand) == ConversionCase.Nothing
-                && DataType == DataType.Dict && rightOperand.DataType == DataType.Dict)
+                && Type == Tag.Dict && rightOperand.Type == Tag.Dict)
             {
                 return new ChowValue(InternalDict.Merge(AsType<InternalDict>(), rightOperand.AsType<InternalDict>()));
             }
@@ -588,7 +577,7 @@ namespace Chow
                 }
                 case ConversionCase.Nothing:
                 {
-                    if (DataType == DataType.Str && other.DataType == DataType.Str)
+                    if (Type == Tag.Str && other.Type == Tag.Str)
                     {
                         return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) < 0;
                     }
@@ -614,7 +603,7 @@ namespace Chow
                 }
                 case ConversionCase.Nothing:
                 {
-                    if (DataType == DataType.Str && other.DataType == DataType.Str)
+                    if (Type == Tag.Str && other.Type == Tag.Str)
                     {
                         return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) > 0;
                     }
@@ -640,7 +629,7 @@ namespace Chow
                 }
                 case ConversionCase.Nothing:
                 {
-                    if (DataType == DataType.Str && other.DataType == DataType.Str)
+                    if (Type == Tag.Str && other.Type == Tag.Str)
                     {
                         return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) <= 0;
                     }
@@ -666,7 +655,7 @@ namespace Chow
                 }
                 case ConversionCase.Nothing:
                 {
-                    if (DataType == DataType.Str && other.DataType == DataType.Str)
+                    if (Type == Tag.Str && other.Type == Tag.Str)
                     {
                         return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) >= 0;
                     }
@@ -684,17 +673,17 @@ namespace Chow
 
         internal ChowValue InvokeHostDelegate(ChowValue[] args)
         {
-            if (DataType != DataType.Object)
+            if (Type != Tag.Object)
             {
-                throw new TypeException($"'{DataType}' object is not callable");
+                throw new TypeException($"'{Type}' object is not callable");
             }
 
-            if (_objVal is Func<ChowValue[], ChowValue> methodDelegate)
+            if (_obj is Func<ChowValue[], ChowValue> methodDelegate)
             {
                 return methodDelegate(args ?? Array.Empty<ChowValue>());
             }
 
-            throw new InvalidOperationException($"Object of type '{_objVal.GetType().Name}' is not callable");
+            throw new InvalidOperationException($"Object of type '{_obj.GetType().Name}' is not callable");
         }
 
         #endregion
@@ -703,7 +692,7 @@ namespace Chow
 
         /// <summary>
         /// Strict structural equality: returns <c>true</c> only when <paramref name="obj"/> is a
-        /// <see cref="ChowValue"/> of the same <see cref="DataType"/> with the same underlying value.
+        /// <see cref="ChowValue"/> of the same <see cref="Type"/> with the same underlying value.
         /// No cross-type conversion is performed — <c>True</c> is not equal to <c>1</c>, and
         /// <c>1</c> is not equal to <c>1.0</c>. For Python <c>==</c> semantics that promote across
         /// numeric types, use <see cref="IsTypeAgnosticEqualTo"/> instead.
@@ -720,43 +709,43 @@ namespace Chow
         {
             int valueHash;
 
-            switch (DataType)
+            switch (Type)
             {
-                case DataType.Int:
+                case Tag.Long:
                 {
-                    valueHash = _longVal.GetHashCode();
+                    valueHash = _long.GetHashCode();
                     break;
                 }
-                case DataType.Float:
+                case Tag.Double:
                 {
-                    valueHash = _doubleVal.GetHashCode();
+                    valueHash = _double.GetHashCode();
                     break;
                 }
-                case DataType.Bool:
+                case Tag.Bool:
                 {
-                    valueHash = _boolValue.GetHashCode();
+                    valueHash = BoolValue.GetHashCode();
                     break;
                 }
-                case DataType.List:
+                case Tag.List:
                 {
-                    valueHash = InternalList.ElementsHashCode((InternalList)_objVal);
+                    valueHash = InternalList.ElementsHashCode((InternalList)_obj);
                     break;
                 }
-                case DataType.Dict:
+                case Tag.Dict:
                 {
-                    valueHash = InternalDict.ElementsHashCode((InternalDict)_objVal);
+                    valueHash = InternalDict.ElementsHashCode((InternalDict)_obj);
                     break;
                 }
                 default:
                 {
-                    valueHash = _objVal?.GetHashCode() ?? 0;
+                    valueHash = _obj?.GetHashCode() ?? 0;
                     break;
                 }
             }
 
             unchecked
             {
-                return DataType.GetHashCode() * HASH_COMBINE_PRIME ^ valueHash;
+                return Type.GetHashCode() * HASH_COMBINE_PRIME ^ valueHash;
             }
         }
 
@@ -777,41 +766,41 @@ namespace Chow
 
         internal bool ToBool()
         {
-            switch (DataType)
+            switch (Type)
             {
-                case DataType.None:
+                case Tag.None:
                 {
                     return NONE_REP_BOOL_VALUE;
                 }
-                case DataType.Bool:
+                case Tag.Bool:
                 {
-                    return _boolValue;
+                    return BoolValue;
                 }
-                case DataType.Object:
+                case Tag.Object:
                 {
                     return OBJECT_REP_BOOL_VALUE;
                 }
-                case DataType.Int:
+                case Tag.Long:
                 {
-                    return _longVal != LONG_REP_BOOL_FALSE;
+                    return _long != LONG_REP_BOOL_FALSE;
                 }
-                case DataType.Float:
+                case Tag.Double:
                 {
-                    return _doubleVal != DOUBLE_REP_BOOL_FALSE;
+                    return _double != DOUBLE_REP_BOOL_FALSE;
                 }
-                case DataType.Str:
+                case Tag.Str:
                 {
                     return StrToBool();
                 }
-                case DataType.List:
+                case Tag.List:
                 {
                     return ListToBool();
                 }
-                case DataType.Dict:
+                case Tag.Dict:
                 {
                     return DictToBool();
                 }
-                case DataType.Range:
+                case Tag.Range:
                 {
                     return RangeToBool();
                 }
@@ -822,41 +811,41 @@ namespace Chow
 
         internal long ToLong()
         {
-            switch (DataType)
+            switch (Type)
             {
-                case DataType.None:
+                case Tag.None:
                 {
                     throw new InvalidOperationException("Cannot convert None to long");
                 }
-                case DataType.Bool:
+                case Tag.Bool:
                 {
-                    return _boolValue ? BOOL_TRUE_REP_LONG : BOOL_FALSE_REP_LONG;
+                    return BoolValue ? BOOL_TRUE_LONG : BOOL_FALSE_LONG;
                 }
-                case DataType.Int:
+                case Tag.Long:
                 {
-                    return _longVal;
+                    return _long;
                 }
-                case DataType.Float:
+                case Tag.Double:
                 {
-                    return (long)_doubleVal;
+                    return (long)_double;
                 }
-                case DataType.Str:
+                case Tag.Str:
                 {
                     return StrToLong();
                 }
-                case DataType.Object:
+                case Tag.Object:
                 {
                     throw new InvalidOperationException("Cannot convert Object to long");
                 }
-                case DataType.List:
+                case Tag.List:
                 {
                     throw new InvalidOperationException("Cannot convert List to long");
                 }
-                case DataType.Dict:
+                case Tag.Dict:
                 {
                     throw new InvalidOperationException("Cannot convert Dict to long");
                 }
-                case DataType.Range:
+                case Tag.Range:
                 {
                     throw new InvalidOperationException("Cannot convert Range to long");
                 }
@@ -867,41 +856,41 @@ namespace Chow
 
         internal double ToDouble()
         {
-            switch (DataType)
+            switch (Type)
             {
-                case DataType.None:
+                case Tag.None:
                 {
                     throw new InvalidOperationException("Cannot convert None to double");
                 }
-                case DataType.Bool:
+                case Tag.Bool:
                 {
-                    return _boolValue ? BOOL_TRUE_REP_DOUBLE : BOOL_FALSE_REP_DOUBLE;
+                    return BoolValue ? BOOL_TRUE_REP_DOUBLE : BOOL_FALSE_REP_DOUBLE;
                 }
-                case DataType.Int:
+                case Tag.Long:
                 {
-                    return _longVal;
+                    return _long;
                 }
-                case DataType.Float:
+                case Tag.Double:
                 {
-                    return _doubleVal;
+                    return _double;
                 }
-                case DataType.Str:
+                case Tag.Str:
                 {
                     return StrToDouble();
                 }
-                case DataType.Object:
+                case Tag.Object:
                 {
                     throw new InvalidOperationException("Cannot convert Object to double");
                 }
-                case DataType.List:
+                case Tag.List:
                 {
                     throw new InvalidOperationException("Cannot convert List to double");
                 }
-                case DataType.Dict:
+                case Tag.Dict:
                 {
                     throw new InvalidOperationException("Cannot convert Dict to double");
                 }
-                case DataType.Range:
+                case Tag.Range:
                 {
                     throw new InvalidOperationException("Cannot convert Range to double");
                 }
@@ -912,31 +901,31 @@ namespace Chow
 
         internal object ToObject()
         {
-            switch (DataType)
+            switch (Type)
             {
-                case DataType.None:
+                case Tag.None:
                 {
                     return null;
                 }
-                case DataType.Bool:
+                case Tag.Bool:
                 {
-                    return _boolValue;
+                    return BoolValue;
                 }
-                case DataType.Int:
+                case Tag.Long:
                 {
-                    return _longVal;
+                    return _long;
                 }
-                case DataType.Float:
+                case Tag.Double:
                 {
-                    return _doubleVal;
+                    return _double;
                 }
-                case DataType.Str:
-                case DataType.Object:
-                case DataType.List:
-                case DataType.Dict:
-                case DataType.Range:
+                case Tag.Str:
+                case Tag.Object:
+                case Tag.List:
+                case Tag.Dict:
+                case Tag.Range:
                 {
-                    return _objVal;
+                    return _obj;
                 }
             }
 
@@ -945,40 +934,40 @@ namespace Chow
 
         internal string ToStr()
         {
-            switch (DataType)
+            switch (Type)
             {
-                case DataType.None:
+                case Tag.None:
                 {
                     return NONE_REP_STR_VALUE;
                 }
-                case DataType.Bool:
+                case Tag.Bool:
                 {
-                    return _boolValue ? BOOL_TRUE_REP_STR : BOOL_FALSE_REP_STR;
+                    return BoolValue ? BOOL_TRUE_REP_STR : BOOL_FALSE_REP_STR;
                 }
-                case DataType.Int:
+                case Tag.Long:
                 {
-                    return _longVal.ToString(CultureInfo.InvariantCulture);
+                    return _long.ToString(CultureInfo.InvariantCulture);
                 }
-                case DataType.Float:
+                case Tag.Double:
                 {
                     return FloatToStr();
                 }
-                case DataType.Str:
+                case Tag.Str:
                 {
                     return StrToStr();
                 }
-                case DataType.Object:
-                case DataType.List:
-                case DataType.Dict:
-                case DataType.Range:
+                case Tag.Object:
+                case Tag.List:
+                case Tag.Dict:
+                case Tag.Range:
                 {
-                    if (_objVal == null)
+                    if (_obj == null)
                     {
                         // This should never happen, but we'll check just in case
-                        throw new InvalidOperationException($"{nameof(ChowValue)} object with type {DataType} null");
+                        throw new InvalidOperationException($"{nameof(ChowValue)} object with type {Type} null");
                     }
 
-                    return _objVal.ToString();
+                    return _obj.ToString();
                 }
             }
 
@@ -991,7 +980,7 @@ namespace Chow
 
         bool StrToBool()
         {
-            if (_objVal is string strValue)
+            if (_obj is string strValue)
             {
                 return strValue.Length != STR_LENGTH_REP_BOOL_FALSE;
             }
@@ -1001,7 +990,7 @@ namespace Chow
 
         bool ListToBool()
         {
-            if (_objVal is InternalList listValue)
+            if (_obj is InternalList listValue)
             {
                 return listValue.Count != LIST_COUNT_REP_BOOL_FALSE;
             }
@@ -1011,7 +1000,7 @@ namespace Chow
 
         bool DictToBool()
         {
-            if (_objVal is InternalDict dictValue)
+            if (_obj is InternalDict dictValue)
             {
                 return dictValue.Count != DICT_COUNT_REP_BOOL_FALSE;
             }
@@ -1021,7 +1010,7 @@ namespace Chow
 
         bool RangeToBool()
         {
-            if (_objVal is InternalRange rangeValue)
+            if (_obj is InternalRange rangeValue)
             {
                 return rangeValue.Count != RANGE_COUNT_REP_BOOL_FALSE;
             }
@@ -1031,7 +1020,7 @@ namespace Chow
 
         long StrToLong()
         {
-            if (!(_objVal is string strValue))
+            if (!(_obj is string strValue))
             {
                 throw new InvalidOperationException("Expected string value for long conversion");
             }
@@ -1046,7 +1035,7 @@ namespace Chow
 
         double StrToDouble()
         {
-            if (!(_objVal is string strValue))
+            if (!(_obj is string strValue))
             {
                 throw new InvalidOperationException("Expected string value for double conversion");
             }
@@ -1061,7 +1050,7 @@ namespace Chow
 
         string FloatToStr()
         {
-            var formatted = _doubleVal.ToString(CultureInfo.InvariantCulture);
+            var formatted = _double.ToString(CultureInfo.InvariantCulture);
 
             if (IsFractionalSuffix(formatted))
             {
@@ -1080,7 +1069,7 @@ namespace Chow
 
         string StrToStr()
         {
-            if (_objVal is string strValue)
+            if (_obj is string strValue)
             {
                 return strValue;
             }
@@ -1094,67 +1083,67 @@ namespace Chow
 
         // Promotion-rule lookup and result-coercion helpers used by the arithmetic/comparison instance
         // methods above. Operand promotion is intentionally limited to the three numeric tags
-        // (Bool/Int/Float); the map guarantees ToInt/ToFloat is only reported for those.
+        // (Bool/Long/Double); the map guarantees ToInt/ToFloat is only reported for those.
 
         ConversionCase LookupBinary(ExpressionOp op, ChowValue right)
         {
-            return DataTypeConversionMap.GetLeftRightConversionCase(op, DataType, right.DataType);
+            return DataTypeConversionMap.GetLeftRightConversionCase(op, Type, right.Type);
         }
 
         ConversionCase LookupUnary(ExpressionOp op)
         {
-            return DataTypeConversionMap.GetOperandConversionCase(op, DataType);
+            return DataTypeConversionMap.GetOperandConversionCase(op, Type);
         }
 
         TypeException UnsupportedBinary(ExpressionOp op, ChowValue right)
         {
-            return new TypeException($"unsupported operand type(s) for {op}: '{DataType}' and '{right.DataType}'");
+            return new TypeException($"unsupported operand type(s) for {op}: '{Type}' and '{right.Type}'");
         }
 
         TypeException UnsupportedUnary(ExpressionOp op)
         {
-            return new TypeException($"bad operand type for unary {op}: '{DataType}'");
+            return new TypeException($"bad operand type for unary {op}: '{Type}'");
         }
 
         // TODO: These are redundant, the ToX methods should be used instead.
         long PromoteToLong()
         {
-            switch (DataType)
+            switch (Type)
             {
-                case DataType.Bool:
+                case Tag.Bool:
                 {
-                    return _boolValue ? 1L : 0L;
+                    return BoolValue ? 1L : 0L;
                 }
-                case DataType.Int:
+                case Tag.Long:
                 {
-                    return _longVal;
+                    return _long;
                 }
                 default:
                 {
-                    throw new InvalidOperationException($"Cannot promote {DataType} to int");
+                    throw new InvalidOperationException($"Cannot promote {Type} to int");
                 }
             }
         }
 
         double PromoteToDouble()
         {
-            switch (DataType)
+            switch (Type)
             {
-                case DataType.Bool:
+                case Tag.Bool:
                 {
-                    return _boolValue ? 1.0 : 0.0;
+                    return BoolValue ? 1.0 : 0.0;
                 }
-                case DataType.Int:
+                case Tag.Long:
                 {
-                    return _longVal;
+                    return _long;
                 }
-                case DataType.Float:
+                case Tag.Double:
                 {
-                    return _doubleVal;
+                    return _double;
                 }
                 default:
                 {
-                    throw new InvalidOperationException($"Cannot promote {DataType} to float");
+                    throw new InvalidOperationException($"Cannot promote {Type} to float");
                 }
             }
         }
@@ -1164,45 +1153,45 @@ namespace Chow
         // delegate to the underlying value's identity/structural equality.
         bool EqualsNoConversion(ChowValue other)
         {
-            if (DataType != other.DataType)
+            if (Type != other.Type)
             {
                 return false;
             }
 
-            switch (DataType)
+            switch (Type)
             {
-                case DataType.None:
+                case Tag.None:
                 {
                     return true;
                 }
-                case DataType.Bool:
+                case Tag.Bool:
                 {
-                    return _boolValue == other._boolValue;
+                    return BoolValue == other.BoolValue;
                 }
-                case DataType.Int:
+                case Tag.Long:
                 {
-                    return _longVal == other._longVal;
+                    return _long == other._long;
                 }
-                case DataType.Float:
+                case Tag.Double:
                 {
-                    return _doubleVal.Equals(other._doubleVal);
+                    return _double.Equals(other._double);
                 }
-                case DataType.Str:
+                case Tag.Str:
                 {
-                    return (string)_objVal == (string)other._objVal;
+                    return (string)_obj == (string)other._obj;
                 }
-                case DataType.List:
+                case Tag.List:
                 {
-                    return InternalList.ElementsEqual((InternalList)_objVal, (InternalList)other._objVal);
+                    return InternalList.ElementsEqual((InternalList)_obj, (InternalList)other._obj);
                 }
-                case DataType.Dict:
+                case Tag.Dict:
                 {
-                    return InternalDict.ElementsEqual((InternalDict)_objVal, (InternalDict)other._objVal);
+                    return InternalDict.ElementsEqual((InternalDict)_obj, (InternalDict)other._obj);
                 }
-                case DataType.Range:
-                case DataType.Object:
+                case Tag.Range:
+                case Tag.Object:
                 {
-                    return ReferenceEquals(_objVal, other._objVal);
+                    return ReferenceEquals(_obj, other._obj);
                 }
                 default:
                 {
@@ -1228,10 +1217,10 @@ namespace Chow
             return builder.ToString();
         }
 
-        // Bool is treated as a subtype of Int for container-repeat dispatch (Python parity).
-        static bool IsIntegerTag(DataType dataType)
+        // Bool is treated as a subtype of Long for container-repeat dispatch (Python parity).
+        static bool IsIntegerTag(Tag tag)
         {
-            return dataType == DataType.Int || dataType == DataType.Bool;
+            return tag == Tag.Long || tag == Tag.Bool;
         }
 
         // TODO: Make it so an overflow throws an exception instead of wrapping silently.
@@ -1281,8 +1270,8 @@ namespace Chow
         const bool OBJECT_REP_BOOL_VALUE = true;
 
         // ToLong source representations (bool -> long)
-        const long BOOL_FALSE_REP_LONG = 0L;
-        const long BOOL_TRUE_REP_LONG = 1L;
+        const long BOOL_FALSE_LONG = 0L;
+        const long BOOL_TRUE_LONG = 1L;
 
         // ToDouble source representations (bool -> double)
         const double BOOL_FALSE_REP_DOUBLE = 0.0;
@@ -1301,8 +1290,6 @@ namespace Chow
 
         // String.IndexOf "not found" sentinel (used by ToStr float formatting check)
         const int CHAR_NOT_FOUND_INDEX = -1;
-
-        const int LONG_FALSE_VAL = 0;
 
         #endregion
 

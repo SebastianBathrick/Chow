@@ -254,10 +254,10 @@ namespace Chow.StandardLibrary
 
             if (!HasZeroArguments(args))
             {
-                if (args[0].DataType != DataType.Dict)
+                if (args[0].Type != Tag.Dict)
                 {
                     // Python: TypeError. Chow has no kwargs/mapping protocol yet, so only dict copy is supported.
-                    throw new TypeException($"'{args[0].DataType}' object is not iterable");
+                    throw new TypeException($"'{args[0].Type}' object is not iterable");
                 }
 
                 result.GetMethod("update")(new[]
@@ -273,50 +273,50 @@ namespace Chow.StandardLibrary
         {
             var value = args[0];
 
-            switch (value.DataType)
+            switch (value.Type)
             {
-                case DataType.Str:
+                case Tag.Str:
                     {
                         return new ChowValue(value.AsType<string>().Length);
                     }
-                case DataType.List:
+                case Tag.List:
                     {
                         return new ChowValue(value.AsType<InternalList>().Count);
                     }
-                case DataType.Dict:
+                case Tag.Dict:
                     {
                         return new ChowValue(value.AsType<InternalDict>().Count);
                     }
-                case DataType.Range:
+                case Tag.Range:
                     {
                         return new ChowValue(value.AsType<InternalRange>().Count);
                     }
             }
 
-            throw new TypeException($"object of type '{value.DataType}' has no len()");
+            throw new TypeException($"object of type '{value.Type}' has no len()");
         }
 
         static ChowValue Abs(ChowValue[] args)
         {
             var value = args[0];
 
-            switch (value.DataType)
+            switch (value.Type)
             {
-                case DataType.Int:
+                case Tag.Long:
                     {
                         return new ChowValue(Math.Abs(value.AsType<long>()));
                     }
-                case DataType.Float:
+                case Tag.Double:
                     {
                         return new ChowValue(Math.Abs(value.AsType<double>()));
                     }
-                case DataType.Bool:
+                case Tag.Bool:
                     {
                         return new ChowValue(value.AsType<bool>() ? 1L : 0L);
                     }
             }
 
-            throw new TypeException($"bad operand type for abs(): '{value.DataType}'");
+            throw new TypeException($"bad operand type for abs(): '{value.Type}'");
         }
 
         static ChowValue Round(ChowValue[] args)
@@ -417,10 +417,10 @@ namespace Chow.StandardLibrary
 
         static long RequireRangeInt(ChowValue arg)
         {
-            if (arg.DataType != DataType.Int)
+            if (arg.Type != Tag.Long)
             {
                 throw new TypeException(
-                    $"'{arg.DataType}' object cannot be interpreted as an integer");
+                    $"'{arg.Type}' object cannot be interpreted as an integer");
             }
 
             return arg.AsType<long>();

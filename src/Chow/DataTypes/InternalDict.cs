@@ -101,9 +101,9 @@ namespace Chow.DataTypes
         {
             ValidateArgCount(args, 1);
 
-            if (args[0].DataType != DataType.Dict)
+            if (args[0].Type != Tag.Dict)
             {
-                throw new TypeException($"'{args[0].DataType}' object is not a dict");
+                throw new TypeException($"'{args[0].Type}' object is not a dict");
             }
 
             var other = args[0].AsType<InternalDict>();
@@ -226,20 +226,20 @@ namespace Chow.DataTypes
 
         public static void ValidateHashable(ChowValue key)
         {
-            switch (key.DataType)
+            switch (key.Type)
             {
-                case DataType.None:
-                case DataType.Bool:
-                case DataType.Int:
-                case DataType.Float:
-                case DataType.Str:
+                case Tag.None:
+                case Tag.Bool:
+                case Tag.Long:
+                case Tag.Double:
+                case Tag.Str:
                     return;
-                case DataType.Object:
-                case DataType.List:
-                case DataType.Dict:
-                case DataType.Range:
+                case Tag.Object:
+                case Tag.List:
+                case Tag.Dict:
+                case Tag.Range:
                 default:
-                    throw new TypeException($"unhashable type: '{TypeName(key.DataType)}'");
+                    throw new TypeException($"unhashable type: '{TypeName(key.Type)}'");
             }
         }
 
@@ -269,21 +269,21 @@ namespace Chow.DataTypes
         // a standalone string prints without quotes via ChowStr.ToString.
         static void Repr(StringBuilder sb, ChowValue value)
         {
-            switch (value.DataType)
+            switch (value.Type)
             {
-                case DataType.None:
+                case Tag.None:
                     sb.Append("None");
                     return;
 
-                case DataType.Bool:
+                case Tag.Bool:
                     sb.Append(value.AsType<bool>() ? "True" : "False");
                     return;
 
-                case DataType.Int:
+                case Tag.Long:
                     sb.Append(value.AsType<long>());
                     return;
 
-                case DataType.Float:
+                case Tag.Double:
                     var f = value.AsType<double>();
                     var fs = f.ToString("R", CultureInfo.InvariantCulture);
 
@@ -295,22 +295,22 @@ namespace Chow.DataTypes
                     sb.Append(fs);
                     return;
 
-                case DataType.Str:
+                case Tag.Str:
                     sb.Append('\'');
                     sb.Append(value.AsType<string>());
                     sb.Append('\'');
                     return;
 
-                case DataType.List:
+                case Tag.List:
                     sb.Append(value.AsType<InternalList>());
                     return;
 
-                case DataType.Dict:
+                case Tag.Dict:
                     sb.Append(value.AsType<InternalDict>());
                     return;
 
-                case DataType.Object:
-                case DataType.Range:
+                case Tag.Object:
+                case Tag.Range:
                 default:
                     sb.Append(value.ToString());
                     return;
@@ -324,23 +324,23 @@ namespace Chow.DataTypes
             return sb.ToString();
         }
 
-        static string TypeName(DataType dataType)
+        static string TypeName(Tag tag)
         {
-            switch (dataType)
+            switch (tag)
             {
-                case DataType.List:
+                case Tag.List:
                     return "list";
-                case DataType.Dict:
+                case Tag.Dict:
                     return "dict";
-                case DataType.None:
-                case DataType.Bool:
-                case DataType.Object:
-                case DataType.Int:
-                case DataType.Float:
-                case DataType.Str:
-                case DataType.Range:
+                case Tag.None:
+                case Tag.Bool:
+                case Tag.Object:
+                case Tag.Long:
+                case Tag.Double:
+                case Tag.Str:
+                case Tag.Range:
                 default:
-                    return dataType.ToString().ToLowerInvariant();
+                    return tag.ToString().ToLowerInvariant();
             }
         }
 

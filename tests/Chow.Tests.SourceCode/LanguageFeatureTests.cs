@@ -65,7 +65,7 @@ public class LanguageFeatureTests
 
         #endregion
 
-        #region Float Literals
+        #region Double Literals
 
         // Single leading / Single trailing
         new(
@@ -208,8 +208,8 @@ public class LanguageFeatureTests
     static readonly IReadOnlyList<CaseExecute> ExecuteArithmeticOperatorCases =
     [
         // Note: Passing the ChowValue constructor a long or an int will result in a ChowValue
-        // instance with DataType.Int. However, passing a float or a double will result in an
-        // instance with DataType.Float. Always double-check the literal passed to the constructor.
+        // instance with Tag.Long. However, passing a float or a double will result in an
+        // instance with Tag.Double. Always double-check the literal passed to the constructor.
         
         //--- Positive and Negative Operands ---
         
@@ -367,7 +367,7 @@ public class LanguageFeatureTests
 
         #endregion
 
-        #region Float Positive Operands
+        #region Double Positive Operands
 
         new(
             "1.2" + PLUS + "2.3",
@@ -406,7 +406,7 @@ public class LanguageFeatureTests
 
         #endregion
 
-        #region Float Negative Operands
+        #region Double Negative Operands
 
         new(
             "-1.2" + PLUS + "-2.3",
@@ -445,7 +445,7 @@ public class LanguageFeatureTests
 
         #endregion
 
-        #region Float Positive and Negative Operands
+        #region Double Positive and Negative Operands
 
         new(
             "1.2" + PLUS + "-2.3",
@@ -603,7 +603,7 @@ public class LanguageFeatureTests
 
         #endregion
 
-        #region Left Larger Float Operand
+        #region Left Larger Double Operand
 
         new(
             "8.75" + PLUS + "2.5",
@@ -642,7 +642,7 @@ public class LanguageFeatureTests
 
         #endregion
         
-        #region Right Larger Float Operand
+        #region Right Larger Double Operand
 
         new(
             "2.25" + PLUS + "8.5",
@@ -785,7 +785,7 @@ public class LanguageFeatureTests
 
         #endregion
         
-        #region Integer/Float Mixed Operands
+        #region Integer/Double Mixed Operands
 
         new(
             "2.5" + PLUS + "7",
@@ -927,7 +927,7 @@ public class LanguageFeatureTests
 
         #endregion
 
-        #region Float/Boolean Mixed Operands
+        #region Double/Boolean Mixed Operands
 
         // A boolean operand mixed with a float yields a Chow float result
 
@@ -1119,7 +1119,7 @@ public class LanguageFeatureTests
 
         #endregion
 
-        #region Float Unary Minus
+        #region Double Unary Minus
 
         new(
             "-3.25",
@@ -1249,7 +1249,7 @@ public class LanguageFeatureTests
 
         #endregion
 
-        #region Float Operands
+        #region Double Operands
 
         new(
             "1.0" + EQUALS + "1.0",
@@ -1346,7 +1346,7 @@ public class LanguageFeatureTests
 
         //--- Mixed-Type Operands ---
         
-        #region Left Integer Right Float Mixed Operands
+        #region Left Integer Right Double Mixed Operands
 
         // An integer and a float compare equal when they share the same numeric value
         new(
@@ -1432,7 +1432,7 @@ public class LanguageFeatureTests
 
         #endregion
 
-        #region Right Integer Left Float Mixed Operands
+        #region Right Integer Left Double Mixed Operands
 
         // A float and an integer compare equal when they share the same numeric value
         new(
@@ -1702,7 +1702,7 @@ public class LanguageFeatureTests
 
         #endregion
 
-        #region Float Unary Not
+        #region Double Unary Not
 
         new(
             NOT + "0.0",

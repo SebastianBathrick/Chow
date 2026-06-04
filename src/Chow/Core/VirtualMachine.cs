@@ -532,7 +532,7 @@ namespace Chow.Core
         static bool IsClosure(ChowValue calleeValue)
         {
 
-            return calleeValue.DataType == DataType.Object && calleeValue.ToObject() is Closure;
+            return calleeValue.Type == Tag.Object && calleeValue.ToObject() is Closure;
         }
 
         void CallInteropFunction(ChowValue calleeValue, ChowValue[] args)
@@ -565,7 +565,7 @@ namespace Chow.Core
         // TODO: Split each op into separate methods to avoid evaluating the operation code twice
         void EvaluateBinaryOperation(OperationCode opCode)
         {
-            // Float/bool promotion happens inside ChowValue's instance operator methods (CreateSum etc.)
+            // Double/bool promotion happens inside ChowValue's instance operator methods (CreateSum etc.)
             var right = _valStack.Pop();
             var left = _valStack.Pop();
 
@@ -686,11 +686,11 @@ namespace Chow.Core
             var needle = _valStack.Pop();
             var found = false;
 
-            if (container.DataType == DataType.Dict)
+            if (container.Type == Tag.Dict)
             {
                 found = ((InternalDict)container.ToObject()).ContainsKey(needle);
             }
-            else if (container.DataType == DataType.List)
+            else if (container.Type == Tag.List)
             {
                 var list = (InternalList)container.ToObject();
 
@@ -701,7 +701,7 @@ namespace Chow.Core
             }
             else
             {
-                throw new TypeException($"argument of type '{container.DataType}' is not iterable");
+                throw new TypeException($"argument of type '{container.Type}' is not iterable");
             }
 
             _valStack.Push(new ChowValue(negate ? !found : found));
@@ -717,7 +717,7 @@ namespace Chow.Core
             var target = _valStack.Pop();
 
             // TODO: Add a branch here for strings.
-            if (target.DataType == DataType.Dict)
+            if (target.Type == Tag.Dict)
             {
                 try
                 {
@@ -728,11 +728,11 @@ namespace Chow.Core
                     throw new DictKeyException(ex.KeyRepr, GetCurrentLineNumber());
                 }
             }
-            else if (target.DataType == DataType.List)
+            else if (target.Type == Tag.List)
             {
-                if (index.DataType != DataType.Int)
+                if (index.Type != Tag.Long)
                 {
-                    throw new TypeException($"list indices must be integers, not {index.DataType}");
+                    throw new TypeException($"list indices must be integers, not {index.Type}");
                 }
 
                 _valStack.Push(((InternalList)target.ToObject())[(int)index.ToLong()]);
@@ -740,7 +740,7 @@ namespace Chow.Core
             else
             {
                 throw new TypeException(
-                    $"'{ParseDataTypeName(target.DataType)}' object is not subscriptable");
+                    $"'{ParseDataTypeName(target.Type)}' object is not subscriptable");
             }
         }
 
@@ -752,9 +752,9 @@ namespace Chow.Core
             var target = _valStack.Pop();
 
             // FUTURE: strings add a parallel slice branch.
-            if (target.DataType != DataType.List)
+            if (target.Type != Tag.List)
             {
-                throw new TypeException($"'{target.DataType}' object is not subscriptable");
+                throw new TypeException($"'{target.Type}' object is not subscriptable");
             }
 
             _valStack.Push(((InternalList)target.ToObject()).GetSlice(start, stop, step));
@@ -766,15 +766,15 @@ namespace Chow.Core
             var index = _valStack.Pop();
             var target = _valStack.Pop();
 
-            if (target.DataType == DataType.Dict)
+            if (target.Type == Tag.Dict)
             {
                 ((InternalDict)target.ToObject())[index] = value;
             }
-            else if (target.DataType == DataType.List)
+            else if (target.Type == Tag.List)
             {
-                if (index.DataType != DataType.Int)
+                if (index.Type != Tag.Long)
                 {
-                    throw new TypeException($"list indices must be integers, not {index.DataType}");
+                    throw new TypeException($"list indices must be integers, not {index.Type}");
                 }
 
                 ((InternalList)target.ToObject())[(int)index.ToLong()] = value;
@@ -782,7 +782,7 @@ namespace Chow.Core
             else
             {
                 throw new TypeException(
-                    $"'{ParseDataTypeName(target.DataType)}' object does not support item assignment");
+                    $"'{ParseDataTypeName(target.Type)}' object does not support item assignment");
             }
         }
 
@@ -796,32 +796,32 @@ namespace Chow.Core
             var target = _valStack.Pop();
 
             // TODO: class instances add a branch that consults the instance attribute table, then the class method table.
-            if (target.DataType == DataType.List)
+            if (target.Type == Tag.List)
             {
                 var list = (InternalList)target.ToObject();
 
                 if (!list.HasMethod(attrName))
                 {
-                    throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
+                    throw new AttributeException(ParseDataTypeName(target.Type), attrName, GetCurrentLineNumber());
                 }
 
                 _valStack.Push(list[attrName]);
             }
-            else if (target.DataType == DataType.Dict)
+            else if (target.Type == Tag.Dict)
             {
                 // TODO: Create a ToInternalDict and ToInternalList to clean this up
                 var dict = (InternalDict)target.ToObject();
 
                 if (!dict.HasMethod(attrName))
                 {
-                    throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
+                    throw new AttributeException(ParseDataTypeName(target.Type), attrName, GetCurrentLineNumber());
                 }
 
                 _valStack.Push(dict[attrName]);
             }
             else
             {
-                throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
+                throw new AttributeException(ParseDataTypeName(target.Type), attrName, GetCurrentLineNumber());
             }
         }
 
@@ -831,17 +831,17 @@ namespace Chow.Core
             _valStack.Pop();
             var target = _valStack.Pop();
 
-            throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
+            throw new AttributeException(ParseDataTypeName(target.Type), attrName, GetCurrentLineNumber());
         }
 
         #endregion
 
         #region Helper Methods
 
-        static string ParseDataTypeName(DataType dataType)
+        static string ParseDataTypeName(Tag tag)
         {
             // TODO: Refactor so there's a single source of truth for datatype names used in error messages
-            return dataType.ToString().ToLowerInvariant();
+            return tag.ToString().ToLowerInvariant();
         }
 
         // TODO: Refactor to get rid of this method, as VirtualMachine no longer indexes the instruction stream directly (CallStack does)

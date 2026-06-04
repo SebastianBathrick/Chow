@@ -65,9 +65,9 @@ namespace Chow.DataTypes
         {
             ValidateArguments(args, 2);
 
-            if (args[0].DataType != DataType.Int)
+            if (args[0].Type != Tag.Long)
             {
-                throw new ArgumentException($"Argument 0 must be of type {DataType.Int}, but was {args[0].DataType}");
+                throw new ArgumentException($"Argument 0 must be of type {Tag.Long}, but was {args[0].Type}");
             }
 
             var idx = (int)args[0].AsType<long>();
@@ -101,9 +101,9 @@ namespace Chow.DataTypes
 
             if (args != null && args.Length == 1)
             {
-                if (args[0].DataType != DataType.Int)
+                if (args[0].Type != Tag.Long)
                 {
-                    throw new ArgumentException($"Argument 0 must be of type {DataType.Int}, but was {args[0].DataType}");
+                    throw new ArgumentException($"Argument 0 must be of type {Tag.Long}, but was {args[0].Type}");
                 }
 
                 index = (int)args[0].AsType<long>();
@@ -307,7 +307,7 @@ namespace Chow.DataTypes
 
             int start;
 
-            if (startValue.DataType == DataType.None)
+            if (startValue.Type == Tag.None)
             {
                 start = step < 0 ? upper : lower;
             }
@@ -333,7 +333,7 @@ namespace Chow.DataTypes
 
             int stop;
 
-            if (stopValue.DataType == DataType.None)
+            if (stopValue.Type == Tag.None)
             {
                 stop = step < 0 ? lower : upper;
             }
@@ -379,14 +379,14 @@ namespace Chow.DataTypes
 
         static int SliceArgOrDefault(ChowValue value, int defaultValue)
         {
-            if (value.DataType == DataType.None)
+            if (value.Type == Tag.None)
             {
                 return defaultValue;
             }
 
-            if (value.DataType != DataType.Int)
+            if (value.Type != Tag.Long)
             {
-                throw new ArgumentException($"slice indices must be integers or None, got {value.DataType}");
+                throw new ArgumentException($"slice indices must be integers or None, got {value.Type}");
             }
 
             return (int)value.AsType<long>();
@@ -416,18 +416,18 @@ namespace Chow.DataTypes
         // a standalone string prints without quotes via ChowStr.ToString.
         static void Repr(StringBuilder sb, ChowValue value)
         {
-            switch (value.DataType)
+            switch (value.Type)
             {
-                case DataType.None:
+                case Tag.None:
                     sb.Append("None");
                     return;
-                case DataType.Bool:
+                case Tag.Bool:
                     sb.Append(value.AsType<bool>() ? "True" : "False");
                     return;
-                case DataType.Int:
+                case Tag.Long:
                     sb.Append(value.AsType<long>());
                     return;
-                case DataType.Float:
+                case Tag.Double:
                     // Python prints `1.0`, not `1`. C#'s default float.ToString() may drop the trailing zero.
                     var f = value.AsType<double>();
                     var fs = f.ToString("R", CultureInfo.InvariantCulture);
@@ -439,26 +439,26 @@ namespace Chow.DataTypes
 
                     sb.Append(fs);
                     return;
-                case DataType.Str:
+                case Tag.Str:
                     sb.Append('\'');
                     sb.Append(value.AsType<string>());
                     sb.Append('\'');
                     return;
-                case DataType.List:
+                case Tag.List:
                     sb.Append(value.AsType<InternalList>());
                     return;
-                case DataType.Dict:
+                case Tag.Dict:
                     sb.Append(value.AsType<InternalDict>());
                     return;
-                case DataType.Object:
-                case DataType.Range:
+                case Tag.Object:
+                case Tag.Range:
                 default:
                     sb.Append(value.ToString());
                     return;
             }
         }
 
-        static void ValidateArguments(ChowValue[] args, int reqArgCount = 0, DataType[] reqTypes = null)
+        static void ValidateArguments(ChowValue[] args, int reqArgCount = 0, Tag[] reqTypes = null)
         {
             var expectedCount = reqTypes?.Length ?? reqArgCount;
             var actualCount = args?.Length ?? 0;
@@ -475,12 +475,12 @@ namespace Chow.DataTypes
             
             for (var i = 0; i < reqTypes.Length; i++)
             {
-                if (args[i].DataType == reqTypes[i])
+                if (args[i].Type == reqTypes[i])
                 {
                     continue;
                 }
 
-                throw new ArgumentException($"Argument {i} must be of type {reqTypes[i]}, but was {args[i].DataType}");
+                throw new ArgumentException($"Argument {i} must be of type {reqTypes[i]}, but was {args[i].Type}");
             }
         }
     }

@@ -1,12 +1,12 @@
 namespace Chow.DataTypes
 {
-    enum DataType : byte
+    enum Tag : byte
     {
         None,
         Bool,
         Object,
-        Int,
-        Float,
+        Long,
+        Double,
         Str,
         List,
         Dict,

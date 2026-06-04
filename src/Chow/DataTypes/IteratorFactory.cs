@@ -5,61 +5,61 @@ namespace Chow.DataTypes
     {
         public static IChowIterator GetIterator(ChowValue source)
         {
-            switch (source.DataType)
+            switch (source.Type)
             {
-                case DataType.List:
+                case Tag.List:
                 {
                     return new InternalListIterator(source.AsType<InternalList>());
                 }
-                case DataType.Str:
+                case Tag.Str:
                 {
                     return new InternalStrIterator(source.AsType<string>());
                 }
-                case DataType.Range:
+                case Tag.Range:
                 {
                     return source.AsType<InternalRange>().GetIterator();
                 }
-                case DataType.None:
-                case DataType.Bool:
-                case DataType.Object:
-                case DataType.Int:
-                case DataType.Float:
-                case DataType.Dict:
+                case Tag.None:
+                case Tag.Bool:
+                case Tag.Object:
+                case Tag.Long:
+                case Tag.Double:
+                case Tag.Dict:
                 default:
                 {
-                    throw new TypeException($"'{TypeNameOf(source.DataType)}' object is not iterable");
+                    throw new TypeException($"'{TypeNameOf(source.Type)}' object is not iterable");
                 }
             }
         }
 
-        static string TypeNameOf(DataType dataType)
+        static string TypeNameOf(Tag tag)
         {
-            switch (dataType)
+            switch (tag)
             {
-                case DataType.None:
+                case Tag.None:
                 {
                     return "NoneType";
                 }
-                case DataType.Bool:
+                case Tag.Bool:
                 {
                     return "bool";
                 }
-                case DataType.Int:
+                case Tag.Long:
                 {
                     return "int";
                 }
-                case DataType.Float:
+                case Tag.Double:
                 {
                     return "float";
                 }
-                case DataType.Object:
-                case DataType.Str:
-                case DataType.List:
-                case DataType.Dict:
-                case DataType.Range:
+                case Tag.Object:
+                case Tag.Str:
+                case Tag.List:
+                case Tag.Dict:
+                case Tag.Range:
                 default:
                 {
-                    return dataType.ToString().ToLowerInvariant();
+                    return tag.ToString().ToLowerInvariant();
                 }
             }
         }

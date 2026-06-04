@@ -10,21 +10,21 @@ namespace Chow.DataTypes
         
         #region Fields
 
-        static readonly Dictionary<(ExpressionOp op, DataType left, DataType right), ConversionCase> BinaryTypeMap =
-            new Dictionary<(ExpressionOp, DataType, DataType), ConversionCase>();
+        static readonly Dictionary<(ExpressionOp op, Tag left, Tag right), ConversionCase> BinaryTypeMap =
+            new Dictionary<(ExpressionOp, Tag, Tag), ConversionCase>();
 
-        static readonly Dictionary<(ExpressionOp op, DataType operand), ConversionCase> UnaryTypeMap =
-            new Dictionary<(ExpressionOp, DataType), ConversionCase>();
+        static readonly Dictionary<(ExpressionOp op, Tag operand), ConversionCase> UnaryTypeMap =
+            new Dictionary<(ExpressionOp, Tag), ConversionCase>();
 
-        static readonly DataType[] NumericTags = { DataType.Bool, DataType.Int, DataType.Float };
+        static readonly Tag[] NumericTags = { Tag.Bool, Tag.Long, Tag.Double };
 
-        static readonly DataType[] AllTags = (DataType[])Enum.GetValues(typeof(DataType));
+        static readonly Tag[] AllTags = (Tag[])Enum.GetValues(typeof(Tag));
 
         #endregion
 
         #region Public API
 
-        public static ConversionCase GetLeftRightConversionCase(ExpressionOp op, DataType left, DataType right)
+        public static ConversionCase GetLeftRightConversionCase(ExpressionOp op, Tag left, Tag right)
         {
             // Note: ExpressionOperator.And/Or are not registered here. The Compiler short-circuits them
             // into jump opcodes (see CompileShortCircuit), so this lookup is never invoked for those ops.
@@ -36,7 +36,7 @@ namespace Chow.DataTypes
 
         }
 
-        public static ConversionCase GetOperandConversionCase(ExpressionOp op, DataType operand)
+        public static ConversionCase GetOperandConversionCase(ExpressionOp op, Tag operand)
         {
             return UnaryTypeMap.TryGetValue((op, operand), out var conversion) 
                 ? conversion 
@@ -107,7 +107,7 @@ namespace Chow.DataTypes
         static void AddComparisonPromotionRules(ExpressionOp op)
         {
             AddArithmeticPromotionRules(op);
-            BinaryTypeMap[(op, DataType.Str, DataType.Str)] = ConversionCase.Nothing;
+            BinaryTypeMap[(op, Tag.Str, Tag.Str)] = ConversionCase.Nothing;
         }
 
         static void AddEqualityRules(ExpressionOp op)
@@ -128,37 +128,37 @@ namespace Chow.DataTypes
 
         static void AddContainerCarveOuts()
         {
-            BinaryTypeMap[(ExpressionOp.Add, DataType.Str, DataType.Str)] = ConversionCase.Nothing;
-            BinaryTypeMap[(ExpressionOp.Add, DataType.List, DataType.List)] = ConversionCase.Nothing;
-            BinaryTypeMap[(ExpressionOp.Multiply, DataType.List, DataType.Int)] = ConversionCase.Nothing;
-            BinaryTypeMap[(ExpressionOp.Multiply, DataType.Int, DataType.List)] = ConversionCase.Nothing;
-            BinaryTypeMap[(ExpressionOp.Multiply, DataType.Str, DataType.Int)] = ConversionCase.Nothing;
-            BinaryTypeMap[(ExpressionOp.Multiply, DataType.Int, DataType.Str)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Add, Tag.Str, Tag.Str)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Add, Tag.List, Tag.List)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Multiply, Tag.List, Tag.Long)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Multiply, Tag.Long, Tag.List)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Multiply, Tag.Str, Tag.Long)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Multiply, Tag.Long, Tag.Str)] = ConversionCase.Nothing;
             // Python treats bool as a subtype of int, so `True * "ab"` and `[1] * True` are valid.
-            BinaryTypeMap[(ExpressionOp.Multiply, DataType.List, DataType.Bool)] = ConversionCase.Nothing;
-            BinaryTypeMap[(ExpressionOp.Multiply, DataType.Bool, DataType.List)] = ConversionCase.Nothing;
-            BinaryTypeMap[(ExpressionOp.Multiply, DataType.Str, DataType.Bool)] = ConversionCase.Nothing;
-            BinaryTypeMap[(ExpressionOp.Multiply, DataType.Bool, DataType.Str)] = ConversionCase.Nothing;
-            BinaryTypeMap[(ExpressionOp.BinaryOr, DataType.Dict, DataType.Dict)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Multiply, Tag.List, Tag.Bool)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Multiply, Tag.Bool, Tag.List)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Multiply, Tag.Str, Tag.Bool)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.Multiply, Tag.Bool, Tag.Str)] = ConversionCase.Nothing;
+            BinaryTypeMap[(ExpressionOp.BinaryOr, Tag.Dict, Tag.Dict)] = ConversionCase.Nothing;
         }
 
         static void AddMembershipRules(ExpressionOp op)
         {
             foreach (var leftTag in AllTags)
             {
-                BinaryTypeMap[(op, leftTag, DataType.List)] = ConversionCase.Nothing;
-                BinaryTypeMap[(op, leftTag, DataType.Dict)] = ConversionCase.Nothing;
-                BinaryTypeMap[(op, leftTag, DataType.Range)] = ConversionCase.Nothing;
+                BinaryTypeMap[(op, leftTag, Tag.List)] = ConversionCase.Nothing;
+                BinaryTypeMap[(op, leftTag, Tag.Dict)] = ConversionCase.Nothing;
+                BinaryTypeMap[(op, leftTag, Tag.Range)] = ConversionCase.Nothing;
             }
 
-            BinaryTypeMap[(op, DataType.Str, DataType.Str)] = ConversionCase.Nothing;
+            BinaryTypeMap[(op, Tag.Str, Tag.Str)] = ConversionCase.Nothing;
         }
 
         static void AddUnaryRules()
         {
-            UnaryTypeMap[(ExpressionOp.Negate, DataType.Bool)] = ConversionCase.ToInt;
-            UnaryTypeMap[(ExpressionOp.Negate, DataType.Int)] = ConversionCase.ToInt;
-            UnaryTypeMap[(ExpressionOp.Negate, DataType.Float)] = ConversionCase.ToFloat;
+            UnaryTypeMap[(ExpressionOp.Negate, Tag.Bool)] = ConversionCase.ToInt;
+            UnaryTypeMap[(ExpressionOp.Negate, Tag.Long)] = ConversionCase.ToInt;
+            UnaryTypeMap[(ExpressionOp.Negate, Tag.Double)] = ConversionCase.ToFloat;
 
             foreach (var tag in AllTags)
             {
@@ -167,9 +167,9 @@ namespace Chow.DataTypes
             }
         }
 
-        static bool EitherIsFloat(DataType left, DataType right)
+        static bool EitherIsFloat(Tag left, Tag right)
         {
-            return left == DataType.Float || right == DataType.Float;
+            return left == Tag.Double || right == Tag.Double;
         }
 
         #endregion
