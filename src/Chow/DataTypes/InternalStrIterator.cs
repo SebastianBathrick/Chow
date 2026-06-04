@@ -11,15 +11,15 @@ namespace Chow.DataTypes
             _index = 0;
         }
 
-        public bool TryMoveNext(out ChowValue current)
+        public bool TryMoveNext(out TaggedUnion current)
         {
             if (_index >= _source.Length)
             {
-                current = ChowValue.None;
+                current = TaggedUnion.None;
                 return false;
             }
 
-            current = new ChowValue(_source[_index].ToString());
+            current = new TaggedUnion(_source[_index].ToString());
             _index++;
             return true;
         }

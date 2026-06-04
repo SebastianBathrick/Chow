@@ -28,8 +28,8 @@ public class LanguageFeatureTests
 
     #region Static Readonly Fields
     
-    static readonly ChowValue TrueChow = new(true);
-    static readonly ChowValue FalseChow = new(false);
+    static readonly TaggedUnion TrueChow = new(true);
+    static readonly TaggedUnion FalseChow = new(false);
     
     #endregion
 
@@ -207,7 +207,7 @@ public class LanguageFeatureTests
 
     static readonly IReadOnlyList<CaseExecute> ExecuteArithmeticOperatorCases =
     [
-        // Note: Passing the ChowValue constructor a long or an int will result in a ChowValue
+        // Note: Passing the TaggedUnion constructor a long or an int will result in a TaggedUnion
         // instance with Tag.Long. However, passing a float or a double will result in an
         // instance with Tag.Double. Always double-check the literal passed to the constructor.
         
@@ -1810,7 +1810,7 @@ public class LanguageFeatureTests
                 return a + b
             add(2, 3)
             """,
-            new ChowValue(5)
+            new TaggedUnion(5)
         ),
 
         new(
@@ -1821,7 +1821,7 @@ public class LanguageFeatureTests
                 return x
             read_local() + x
             """,
-            new ChowValue(109)
+            new TaggedUnion(109)
         ),
 
         new(
@@ -1833,7 +1833,7 @@ public class LanguageFeatureTests
             set_global()
             x
             """,
-            new ChowValue(9)
+            new TaggedUnion(9)
         ),
 
         //--- Closures ---
@@ -1849,7 +1849,7 @@ public class LanguageFeatureTests
             test_closure = make_closure()
             test_closure()
             """,
-            new ChowValue(5)
+            new TaggedUnion(5)
         ),
 
         new(
@@ -1865,7 +1865,7 @@ public class LanguageFeatureTests
             test_closure =  outer()
             test_closure()
             """,
-            new ChowValue(100)
+            new TaggedUnion(100)
         ),
 
         // NOTE: Deferred niche function syntax not yet confirmed in Chow:
@@ -1878,7 +1878,7 @@ public class LanguageFeatureTests
 
         new(
             "[10, 20, 30][1]",
-            new ChowValue(20)
+            new TaggedUnion(20)
         ),
 
         new(
@@ -1887,7 +1887,7 @@ public class LanguageFeatureTests
             values[1] = 7
             values[1]
             """,
-            new ChowValue(7)
+            new TaggedUnion(7)
         ),
 
         //--- List Slices ---
@@ -1912,7 +1912,7 @@ public class LanguageFeatureTests
 
         new(
             "{'a': 1, 'b': 2}['b']",
-            new ChowValue(2)
+            new TaggedUnion(2)
         ),
 
         new(
@@ -1921,7 +1921,7 @@ public class LanguageFeatureTests
             values['b'] = 9
             values['b']
             """,
-            new ChowValue(9)
+            new TaggedUnion(9)
         ),
 
         // NOTE: Deferred niche collection syntax not yet confirmed in Chow:
@@ -1939,7 +1939,7 @@ public class LanguageFeatureTests
                 total = total + x
             total
             """,
-            new ChowValue(6)
+            new TaggedUnion(6)
         ),
 
         new(
@@ -1949,7 +1949,7 @@ public class LanguageFeatureTests
                 result = result + char
             result
             """,
-            new ChowValue("abc")
+            new TaggedUnion("abc")
         ),
 
         new(
@@ -1960,7 +1960,7 @@ public class LanguageFeatureTests
                     total = total + i + j
             total
             """,
-            new ChowValue(66)
+            new TaggedUnion(66)
         ),
 
         //--- Iterable Semantics ---
@@ -1985,42 +1985,42 @@ public class LanguageFeatureTests
 
         new(
             "abs(-5)",
-            new ChowValue(5)
+            new TaggedUnion(5)
         ),
 
         new(
             "len([1, 2, 3])",
-            new ChowValue(3)
+            new TaggedUnion(3)
         ),
 
         new(
             "round(2.5)",
-            new ChowValue(2)
+            new TaggedUnion(2)
         ),
 
         new(
             "min(4, -1, 8)",
-            new ChowValue(-1)
+            new TaggedUnion(-1)
         ),
 
         new(
             "max([4, -1, 8])",
-            new ChowValue(8)
+            new TaggedUnion(8)
         ),
 
         new(
             "int(\"12\")",
-            new ChowValue(12)
+            new TaggedUnion(12)
         ),
 
         new(
             "float(\"2.5\")",
-            new ChowValue(2.5)
+            new TaggedUnion(2.5)
         ),
 
         new(
             "str(123)",
-            new ChowValue("123")
+            new TaggedUnion("123")
         ),
 
         new(
@@ -2043,7 +2043,7 @@ public class LanguageFeatureTests
 
         new(
             "\"hello\" + \" \" + \"world\"",
-            new ChowValue("hello world")
+            new TaggedUnion("hello world")
         ),
 
         new(
@@ -2051,7 +2051,7 @@ public class LanguageFeatureTests
             prefix = "Chow"
             prefix + " V2"
             """,
-            new ChowValue("Chow V2")
+            new TaggedUnion("Chow V2")
         ),
 
         //--- f-Strings ---
@@ -2061,12 +2061,12 @@ public class LanguageFeatureTests
             name = "Chow"
             f"Hello, {name}!"
             """,
-            new ChowValue("Hello, Chow!")
+            new TaggedUnion("Hello, Chow!")
         ),
 
         new(
             "f\"{1 + 2}\"",
-            new ChowValue("3")
+            new TaggedUnion("3")
         ),
 
         new(
@@ -2074,7 +2074,7 @@ public class LanguageFeatureTests
             n = 2
             f"Value: {n * 5}"
             """,
-            new ChowValue("Value: 10")
+            new TaggedUnion("Value: 10")
         ),
 
         // NOTE: Deferred niche f-string syntax not yet confirmed in Chow:
@@ -2085,12 +2085,12 @@ public class LanguageFeatureTests
     [
         new(
             string.Empty,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             null!,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         // The supported sequences of characters that make up a single newline are as follows:
@@ -2102,34 +2102,34 @@ public class LanguageFeatureTests
 
         new(
             NEWLINE_LINUX_MAC,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             NEWLINE_WINDOWS,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             NEWLINE_OLD_MAC,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         #region Pure Spaces
 
         new(
             " ",
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             SINGLE_INDENT_SPACES,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             SINGLE_INDENT_SPACES + SINGLE_INDENT_SPACES,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         #endregion
@@ -2138,12 +2138,12 @@ public class LanguageFeatureTests
 
         new(
             SINGLE_INDENT_TAB,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             SINGLE_INDENT_TAB + SINGLE_INDENT_TAB,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         #endregion
@@ -2152,12 +2152,12 @@ public class LanguageFeatureTests
 
         new(
             SINGLE_INDENT_SPACES + SINGLE_INDENT_TAB,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             SINGLE_INDENT_TAB + SINGLE_INDENT_SPACES,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         #endregion
@@ -2166,17 +2166,17 @@ public class LanguageFeatureTests
 
         new(
             NEWLINE_LINUX_MAC + NEWLINE_LINUX_MAC,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             NEWLINE_WINDOWS + NEWLINE_WINDOWS,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             NEWLINE_OLD_MAC + NEWLINE_OLD_MAC,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         #endregion
@@ -2185,22 +2185,22 @@ public class LanguageFeatureTests
 
         new(
             NEWLINE_LINUX_MAC + NEWLINE_WINDOWS,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             NEWLINE_WINDOWS + NEWLINE_OLD_MAC,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             NEWLINE_OLD_MAC + NEWLINE_LINUX_MAC,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             NEWLINE_LINUX_MAC + NEWLINE_WINDOWS + NEWLINE_OLD_MAC,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         #endregion
@@ -2209,27 +2209,27 @@ public class LanguageFeatureTests
 
         new(
             SINGLE_INDENT_SPACES + NEWLINE_LINUX_MAC,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             NEWLINE_LINUX_MAC + SINGLE_INDENT_SPACES,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             SINGLE_INDENT_TAB + NEWLINE_WINDOWS + SINGLE_INDENT_TAB,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             NEWLINE_LINUX_MAC + SINGLE_INDENT_SPACES + NEWLINE_OLD_MAC,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             SINGLE_INDENT_SPACES + NEWLINE_WINDOWS + SINGLE_INDENT_TAB + NEWLINE_LINUX_MAC,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         #endregion
@@ -2240,12 +2240,12 @@ public class LanguageFeatureTests
         // early from SkipToFirstLexeme and is consumed by ScanIndentColumn instead
         new(
             "\f",
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             "\f" + NEWLINE_LINUX_MAC + SINGLE_INDENT_SPACES,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         #endregion
@@ -2255,34 +2255,34 @@ public class LanguageFeatureTests
         // Comment with no trailing newline — SkipRemainingLineChars consumes it and reaches EOF
         new(
             CODE_COMMENT,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             CODE_COMMENT + NEWLINE_LINUX_MAC,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         // Multiple comment lines separated by different newline styles
         new(
             CODE_COMMENT + NEWLINE_LINUX_MAC + CODE_COMMENT,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             CODE_COMMENT + NEWLINE_WINDOWS + CODE_COMMENT + NEWLINE_OLD_MAC + CODE_COMMENT,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         // Leading whitespace before a comment (spaces/tabs are consumed as indent chars first)
         new(
             SINGLE_INDENT_SPACES + CODE_COMMENT,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         new(
             SINGLE_INDENT_TAB + CODE_COMMENT + NEWLINE_LINUX_MAC,
-            ChowValue.None
+            TaggedUnion.None
         ),
 
         #endregion
@@ -2301,7 +2301,7 @@ public class LanguageFeatureTests
             if True:
                True
             """,
-            new ChowValue(true)
+            new TaggedUnion(true)
         ),
         
         new(
@@ -2309,7 +2309,7 @@ public class LanguageFeatureTests
             if False:
                 False
             """,
-            new ChowValue(ChowValue.None)
+            new TaggedUnion(TaggedUnion.None)
         ),
         
         new(
@@ -2319,7 +2319,7 @@ public class LanguageFeatureTests
             else:
                 False
             """,
-            new ChowValue(true)
+            new TaggedUnion(true)
         ),
         
         new(
@@ -2329,7 +2329,7 @@ public class LanguageFeatureTests
             else:
                 True
             """,
-            new ChowValue(true)
+            new TaggedUnion(true)
         ),
         
         new(
@@ -2341,7 +2341,7 @@ public class LanguageFeatureTests
             else:
                 False
             """,
-            new ChowValue(true)
+            new TaggedUnion(true)
         ),
         
         new(
@@ -2353,7 +2353,7 @@ public class LanguageFeatureTests
             else:
                 False
             """,
-            new ChowValue(true)
+            new TaggedUnion(true)
         ),
         
         new(
@@ -2365,7 +2365,7 @@ public class LanguageFeatureTests
             else:
                 True
             """,
-            new ChowValue(true)
+            new TaggedUnion(true)
         ),
 
         // Test case where a block has more than one statement
@@ -2375,7 +2375,7 @@ public class LanguageFeatureTests
                False
                True
             """,
-            new ChowValue(true)
+            new TaggedUnion(true)
         ),
         
         #endregion
@@ -2389,7 +2389,7 @@ public class LanguageFeatureTests
             while False:
                 True
             """,
-            new ChowValue(ChowValue.None)
+            new TaggedUnion(TaggedUnion.None)
         ),
 
         // A counter drives the loop; after it exits, the trailing expression statement
@@ -2401,7 +2401,7 @@ public class LanguageFeatureTests
                 i = i + 1
             i
             """,
-            new ChowValue(3)
+            new TaggedUnion(3)
         ),
 
         // A loop that runs exactly once
@@ -2412,7 +2412,7 @@ public class LanguageFeatureTests
                 i = i + 1
             i
             """,
-            new ChowValue(1)
+            new TaggedUnion(1)
         ),
 
         // A decrementing counter loops down to zero
@@ -2423,7 +2423,7 @@ public class LanguageFeatureTests
                 i = i - 1
             i
             """,
-            new ChowValue(0)
+            new TaggedUnion(0)
         ),
 
         // A boolean flag is cleared inside the body to exit after a single pass
@@ -2434,7 +2434,7 @@ public class LanguageFeatureTests
                 run = False
             run
             """,
-            new ChowValue(false)
+            new TaggedUnion(false)
         ),
 
         // The expression statement inside the body returns the last value evaluated
@@ -2446,7 +2446,7 @@ public class LanguageFeatureTests
                 i = i + 1
                 i
             """,
-            new ChowValue(3)
+            new TaggedUnion(3)
         ),
 
         // A multi-statement body accumulates a running total across iterations
@@ -2459,7 +2459,7 @@ public class LanguageFeatureTests
                 i = i + 1
             total
             """,
-            new ChowValue(6)
+            new TaggedUnion(6)
         ),
 
         #endregion
@@ -2476,7 +2476,7 @@ public class LanguageFeatureTests
                     break
             i
             """,
-            new ChowValue(3)
+            new TaggedUnion(3)
         ),
 
         // Statements after break in the same body are skipped on the breaking iteration
@@ -2488,7 +2488,7 @@ public class LanguageFeatureTests
                 reached = True
             reached
             """,
-            new ChowValue(false)
+            new TaggedUnion(false)
         ),
 
         // A break under an always-true condition exits after a single pass
@@ -2500,7 +2500,7 @@ public class LanguageFeatureTests
                 break
             ran
             """,
-            new ChowValue(true)
+            new TaggedUnion(true)
         ),
 
         //--- Nested Loops ---
@@ -2520,7 +2520,7 @@ public class LanguageFeatureTests
                     total = total + 1
             total
             """,
-            new ChowValue(3)
+            new TaggedUnion(3)
         ),
 
         // A break in the outer loop ends both loops once its condition is met
@@ -2538,7 +2538,7 @@ public class LanguageFeatureTests
                     break
             total
             """,
-            new ChowValue(10)
+            new TaggedUnion(10)
         ),
 
         #endregion
@@ -2556,7 +2556,7 @@ public class LanguageFeatureTests
                 reached = True
             reached
             """,
-            new ChowValue(false)
+            new TaggedUnion(false)
         ),
 
         // continue can skip multiple iterations while the loop still runs to completion
@@ -2571,7 +2571,7 @@ public class LanguageFeatureTests
                 count = count + 1
             count
             """,
-            new ChowValue(3)
+            new TaggedUnion(3)
         ),
 
         //--- Nested Loops ---
@@ -2591,7 +2591,7 @@ public class LanguageFeatureTests
                     total = total + j
             total
             """,
-            new ChowValue(8)
+            new TaggedUnion(8)
         ),
 
         #endregion
@@ -2675,7 +2675,7 @@ public class LanguageFeatureTests
 
     #region Helper Types
 
-    public record CaseExecute(string SourceCode, ChowValue ExpectedResult);
+    public record CaseExecute(string SourceCode, TaggedUnion ExpectedResult);
 
     #endregion
 }

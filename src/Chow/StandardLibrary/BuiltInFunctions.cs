@@ -6,7 +6,7 @@ namespace Chow.StandardLibrary
 {
     static class BuiltInFunctions
     {
-        // Leaving callables as objects because ChowValue will box it into one anyway, and to make
+        // Leaving callables as objects because TaggedUnion will box it into one anyway, and to make
         // it easy to change built-in function object types later. The way built-in functions are
         // currently handled is likely a temporary solution and is subject to change.
         static List<(string name, object callableObject)> _namedInvocableObjects;
@@ -94,9 +94,9 @@ namespace Chow.StandardLibrary
             };
         }
         
-        static Func<ChowValue[], ChowValue> BuildGuardedBuiltIn(BuiltInDefinition builtInDef)
+        static Func<TaggedUnion[], TaggedUnion> BuildGuardedBuiltIn(BuiltInDefinition builtInDef)
         {
-            ChowValue GuardedDelegateInvocation(ChowValue[] args)
+            TaggedUnion GuardedDelegateInvocation(TaggedUnion[] args)
             {
                 if (builtInDef.HasParameters)
                 {
@@ -108,7 +108,7 @@ namespace Chow.StandardLibrary
                     }
 
                     builtInDef.VoidDelegateWithParams(args);
-                    return ChowValue.None;
+                    return TaggedUnion.None;
                 }
 
                 if (!builtInDef.IsVoid)
@@ -117,13 +117,13 @@ namespace Chow.StandardLibrary
                 }
 
                 builtInDef.VoidDelegate();
-                return ChowValue.None;
+                return TaggedUnion.None;
             }
 
             return GuardedDelegateInvocation;
         }
         
-        static void ValidateArgumentCount(BuiltInDefinition builtInDef, ChowValue[] args)
+        static void ValidateArgumentCount(BuiltInDefinition builtInDef, TaggedUnion[] args)
         {
             if (args != null)
             {
@@ -147,9 +147,9 @@ namespace Chow.StandardLibrary
         #region Invocable Object Methods
 
         // NOTE: When converting ChowValues to other types, use the internal conversion methods
-        // like ChowValue.ToBool(), ChowValue.ToStr(), ChowValue.ToLong(), etc...
+        // like TaggedUnion.ToBool(), TaggedUnion.ToStr(), TaggedUnion.ToLong(), etc...
 
-        static void Print(ChowValue[] args)
+        static void Print(TaggedUnion[] args)
         {
             // Match Python: arguments are space-separated and the line is terminated with a single
             // newline. Zero-arg call still emits a blank line.
@@ -174,7 +174,7 @@ namespace Chow.StandardLibrary
 
 
 
-        static ChowValue Input(ChowValue[] args)
+        static TaggedUnion Input(TaggedUnion[] args)
         {
             // If there is an argument, then that is considered a prompt
             if (!HasZeroArguments(args))
@@ -184,7 +184,7 @@ namespace Chow.StandardLibrary
             }
 
             var input = Console.ReadLine() ?? string.Empty;
-            return new ChowValue(input);
+            return new TaggedUnion(input);
         }
 
         static void Clear()
@@ -192,47 +192,47 @@ namespace Chow.StandardLibrary
             Console.Clear();
         }
 
-        static ChowValue Float(ChowValue[] args)
+        static TaggedUnion Float(TaggedUnion[] args)
         {
             if (HasZeroArguments(args))
             {
-                return new ChowValue(0.0);
+                return new TaggedUnion(0.0);
             }
 
-            return new ChowValue(args[0].ToDouble());
+            return new TaggedUnion(args[0].ToDouble());
         }
 
-        static ChowValue Str(ChowValue[] args)
+        static TaggedUnion Str(TaggedUnion[] args)
         {
             if (HasZeroArguments(args))
             {
-                return new ChowValue(string.Empty);
+                return new TaggedUnion(string.Empty);
             }
 
-            return new ChowValue(args[0].ToStr());
+            return new TaggedUnion(args[0].ToStr());
         }
 
-        static ChowValue Int(ChowValue[] args)
+        static TaggedUnion Int(TaggedUnion[] args)
         {
             if (HasZeroArguments(args))
             {
-                return new ChowValue(0L);
+                return new TaggedUnion(0L);
             }
 
-            return new ChowValue(args[0].ToLong());
+            return new TaggedUnion(args[0].ToLong());
         }
 
-        static ChowValue Bool(ChowValue[] args)
+        static TaggedUnion Bool(TaggedUnion[] args)
         {
             if (HasZeroArguments(args))
             {
-                return new ChowValue(false);
+                return new TaggedUnion(false);
             }
 
-            return new ChowValue(args[0].ToBool());
+            return new TaggedUnion(args[0].ToBool());
         }
 
-        static ChowValue List(ChowValue[] args)
+        static TaggedUnion List(TaggedUnion[] args)
         {
             var result = new InternalList();
 
@@ -245,10 +245,10 @@ namespace Chow.StandardLibrary
                 }
             }
 
-            return new ChowValue(result);
+            return new TaggedUnion(result);
         }
 
-        static ChowValue Dict(ChowValue[] args)
+        static TaggedUnion Dict(TaggedUnion[] args)
         {
             var result = new InternalDict();
 
@@ -266,10 +266,10 @@ namespace Chow.StandardLibrary
                 });
             }
 
-            return new ChowValue(result);
+            return new TaggedUnion(result);
         }
 
-        static ChowValue Len(ChowValue[] args)
+        static TaggedUnion Len(TaggedUnion[] args)
         {
             var value = args[0];
 
@@ -277,26 +277,26 @@ namespace Chow.StandardLibrary
             {
                 case Tag.Str:
                     {
-                        return new ChowValue(value.AsType<string>().Length);
+                        return new TaggedUnion(value.AsType<string>().Length);
                     }
                 case Tag.List:
                     {
-                        return new ChowValue(value.AsType<InternalList>().Count);
+                        return new TaggedUnion(value.AsType<InternalList>().Count);
                     }
                 case Tag.Dict:
                     {
-                        return new ChowValue(value.AsType<InternalDict>().Count);
+                        return new TaggedUnion(value.AsType<InternalDict>().Count);
                     }
                 case Tag.Range:
                     {
-                        return new ChowValue(value.AsType<InternalRange>().Count);
+                        return new TaggedUnion(value.AsType<InternalRange>().Count);
                     }
             }
 
             throw new TypeException($"object of type '{value.Type}' has no len()");
         }
 
-        static ChowValue Abs(ChowValue[] args)
+        static TaggedUnion Abs(TaggedUnion[] args)
         {
             var value = args[0];
 
@@ -304,45 +304,45 @@ namespace Chow.StandardLibrary
             {
                 case Tag.Long:
                     {
-                        return new ChowValue(Math.Abs(value.AsType<long>()));
+                        return new TaggedUnion(Math.Abs(value.AsType<long>()));
                     }
                 case Tag.Double:
                     {
-                        return new ChowValue(Math.Abs(value.AsType<double>()));
+                        return new TaggedUnion(Math.Abs(value.AsType<double>()));
                     }
                 case Tag.Bool:
                     {
-                        return new ChowValue(value.AsType<bool>() ? 1L : 0L);
+                        return new TaggedUnion(value.AsType<bool>() ? 1L : 0L);
                     }
             }
 
             throw new TypeException($"bad operand type for abs(): '{value.Type}'");
         }
 
-        static ChowValue Round(ChowValue[] args)
+        static TaggedUnion Round(TaggedUnion[] args)
         {
             var number = args[0].ToDouble();
 
             if (args.Length == 1)
             {
-                return new ChowValue((long)Math.Round(number, MidpointRounding.ToEven));
+                return new TaggedUnion((long)Math.Round(number, MidpointRounding.ToEven));
             }
 
             var ndigits = (int)args[1].ToLong();
-            return new ChowValue(Math.Round(number, ndigits, MidpointRounding.ToEven));
+            return new TaggedUnion(Math.Round(number, ndigits, MidpointRounding.ToEven));
         }
 
-        static ChowValue Min(ChowValue[] args)
+        static TaggedUnion Min(TaggedUnion[] args)
         {
             return MinMax(args, true, "min");
         }
 
-        static ChowValue Max(ChowValue[] args)
+        static TaggedUnion Max(TaggedUnion[] args)
         {
             return MinMax(args, false, "max");
         }
 
-        static ChowValue MinMax(ChowValue[] args, bool findLess, string name)
+        static TaggedUnion MinMax(TaggedUnion[] args, bool findLess, string name)
         {
             IChowIterator iterator;
 
@@ -381,7 +381,7 @@ namespace Chow.StandardLibrary
             return winner;
         }
 
-        static ChowValue Range(ChowValue[] args)
+        static TaggedUnion Range(TaggedUnion[] args)
         {
             long start;
             long stop;
@@ -412,10 +412,10 @@ namespace Chow.StandardLibrary
                 }
             }
 
-            return new ChowValue(new InternalRange(start, stop, step));
+            return new TaggedUnion(new InternalRange(start, stop, step));
         }
 
-        static long RequireRangeInt(ChowValue arg)
+        static long RequireRangeInt(TaggedUnion arg)
         {
             if (arg.Type != Tag.Long)
             {
@@ -426,7 +426,7 @@ namespace Chow.StandardLibrary
             return arg.AsType<long>();
         }
 
-        static bool HasZeroArguments(ChowValue[] args)
+        static bool HasZeroArguments(TaggedUnion[] args)
         {
             return args == null || args.Length == 0;
         }

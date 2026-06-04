@@ -13,15 +13,15 @@ namespace Chow.DataTypes
             _step = range.Step;
         }
 
-        public bool TryMoveNext(out ChowValue current)
+        public bool TryMoveNext(out TaggedUnion current)
         {
             if (_step > 0 ? _next >= _stop : _next <= _stop)
             {
-                current = ChowValue.None;
+                current = TaggedUnion.None;
                 return false;
             }
 
-            current = new ChowValue(_next);
+            current = new TaggedUnion(_next);
             _next += _step;
             return true;
         }

@@ -14,11 +14,11 @@ namespace Chow.DataTypes
         const string METHOD_REVERSE_NAME = "reverse";
 
 
-        readonly List<ChowValue> _elements = new List<ChowValue>();
+        readonly List<TaggedUnion> _elements = new List<TaggedUnion>();
 
         public int Count => _elements.Count;
 
-        public ChowValue this[int index]
+        public TaggedUnion this[int index]
         {
             get
             {
@@ -45,23 +45,23 @@ namespace Chow.DataTypes
         }
 
         // Will throw if method name is invalid, which is the expected behavior
-        public ChowValue this[string name] => new ChowValue(GetMethod(name));
+        public TaggedUnion this[string name] => new TaggedUnion(GetMethod(name));
 
-        ChowValue Append(ChowValue[] args)
+        TaggedUnion Append(TaggedUnion[] args)
         {
             ValidateArguments(args, 1);
             _elements.Add(args[0]);
-            return ChowValue.None;
+            return TaggedUnion.None;
         }
 
-        ChowValue Clear(ChowValue[] args)
+        TaggedUnion Clear(TaggedUnion[] args)
         {
             ValidateArguments(args);
             _elements.Clear();
-            return ChowValue.None;
+            return TaggedUnion.None;
         }
 
-        ChowValue Insert(ChowValue[] args)
+        TaggedUnion Insert(TaggedUnion[] args)
         {
             ValidateArguments(args, 2);
 
@@ -82,10 +82,10 @@ namespace Chow.DataTypes
             }
 
             _elements.Insert(idx, args[1]);
-            return ChowValue.None;
+            return TaggedUnion.None;
         }
 
-        ChowValue Pop(ChowValue[] args)
+        TaggedUnion Pop(TaggedUnion[] args)
         {
             if (args != null && args.Length > 1)
             {
@@ -125,7 +125,7 @@ namespace Chow.DataTypes
             return value;
         }
 
-        ChowValue Remove(ChowValue[] args)
+        TaggedUnion Remove(TaggedUnion[] args)
         {
             ValidateArguments(args, 1);
 
@@ -137,21 +137,21 @@ namespace Chow.DataTypes
                 }
 
                 _elements.RemoveAt(i);
-                return ChowValue.None;
+                return TaggedUnion.None;
             }
 
             throw new ArgumentException("list.remove(x): x not in list");
         }
 
-        ChowValue Reverse(ChowValue[] args)
+        TaggedUnion Reverse(TaggedUnion[] args)
         {
             ValidateArguments(args);
             _elements.Reverse();
-            return ChowValue.None;
+            return TaggedUnion.None;
         }
 
-        // TODO: Refactor to reduce code duplication (e.g. with a dictionary of method name to Func<ChowValue[], ChowValue>)
-        public ChowValue CallMethod(string methodName, ChowValue[] args = null)
+        // TODO: Refactor to reduce code duplication (e.g. with a dictionary of method name to Func<TaggedUnion[], TaggedUnion>)
+        public TaggedUnion CallMethod(string methodName, TaggedUnion[] args = null)
         {
             switch (methodName)
             {
@@ -178,7 +178,7 @@ namespace Chow.DataTypes
             }
         }
 
-        public Func<ChowValue[], ChowValue> GetMethod(string methodName)
+        public Func<TaggedUnion[], TaggedUnion> GetMethod(string methodName)
         {
             switch (methodName)
             {
@@ -199,7 +199,7 @@ namespace Chow.DataTypes
             }
         }
 
-        public void Add(ChowValue element)
+        public void Add(TaggedUnion element)
         {
             _elements.Add(element);
         }
@@ -280,7 +280,7 @@ namespace Chow.DataTypes
         }
 
         // FUTURE: strings will need a parallel GetSlice returning a string, not a list. Do not abstract.
-        public ChowValue GetSlice(ChowValue startValue, ChowValue stopValue, ChowValue stepValue)
+        public TaggedUnion GetSlice(TaggedUnion startValue, TaggedUnion stopValue, TaggedUnion stepValue)
         {
             var length = _elements.Count;
 
@@ -374,10 +374,10 @@ namespace Chow.DataTypes
                 }
             }
 
-            return new ChowValue(sliced);
+            return new TaggedUnion(sliced);
         }
 
-        static int SliceArgOrDefault(ChowValue value, int defaultValue)
+        static int SliceArgOrDefault(TaggedUnion value, int defaultValue)
         {
             if (value.Type == Tag.None)
             {
@@ -414,7 +414,7 @@ namespace Chow.DataTypes
 
         // Python-faithful repr used inside collection contexts: strings get single quotes here, even though
         // a standalone string prints without quotes via ChowStr.ToString.
-        static void Repr(StringBuilder sb, ChowValue value)
+        static void Repr(StringBuilder sb, TaggedUnion value)
         {
             switch (value.Type)
             {
@@ -458,7 +458,7 @@ namespace Chow.DataTypes
             }
         }
 
-        static void ValidateArguments(ChowValue[] args, int reqArgCount = 0, Tag[] reqTypes = null)
+        static void ValidateArguments(TaggedUnion[] args, int reqArgCount = 0, Tag[] reqTypes = null)
         {
             var expectedCount = reqTypes?.Length ?? reqArgCount;
             var actualCount = args?.Length ?? 0;

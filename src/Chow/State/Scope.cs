@@ -8,7 +8,7 @@ namespace Chow.State
     /// </summary>
     sealed class Scope
     {
-        readonly Dictionary<string, ChowValue> _varMap;
+        readonly Dictionary<string, TaggedUnion> _varMap;
 
         /// <summary>
         /// The enclosing scope used for LEGB chain walking, or <c>null</c> at the top of the chain.
@@ -22,7 +22,7 @@ namespace Chow.State
         public Scope(Scope parent = null)
         {
             Parent = parent;
-            _varMap = new Dictionary<string, ChowValue>();
+            _varMap = new Dictionary<string, TaggedUnion>();
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace Chow.State
         /// Binds <paramref name="name"/> to <paramref name="value"/> in this scope. Creates the
         /// binding if it does not exist; otherwise overwrites it in place.
         /// </summary>
-        public void AssignVariableValue(string name, ChowValue value)
+        public void AssignVariableValue(string name, TaggedUnion value)
         {
             _varMap[name] = value;
         }
@@ -46,7 +46,7 @@ namespace Chow.State
         /// <summary>
         /// Returns the value bound to <paramref name="name"/> in this scope. Throws if undefined.
         /// </summary>
-        public ChowValue GetVariableValue(string name)
+        public TaggedUnion GetVariableValue(string name)
         {
             return _varMap[name];
         }

@@ -11,16 +11,16 @@ namespace Chow.StandardLibrary
 
         public bool HasParameters => MaximumArguments > ARGUMENT_COUNT_UNDEFINED;
         
-        public Func<ChowValue[], ChowValue>  ValueReturnDelegateWithParams { get; }
-        public Func<ChowValue> ValueReturnDelegate { get; }
+        public Func<TaggedUnion[], TaggedUnion>  ValueReturnDelegateWithParams { get; }
+        public Func<TaggedUnion> ValueReturnDelegate { get; }
         public Action VoidDelegate { get;  }
-        public Action<ChowValue[]> VoidDelegateWithParams { get; }
+        public Action<TaggedUnion[]> VoidDelegateWithParams { get; }
         
         
         public bool IsVoid { get; }
         
         /// <summary>
-        /// Defines a built-in function that accepts arguments and returns a <see cref="ChowValue"/>.
+        /// Defines a built-in function that accepts arguments and returns a <see cref="TaggedUnion"/>.
         /// </summary>
         /// <param name="name">The source-language name the built-in is bound to in the module scope.</param>
         /// <param name="minimumArguments">The smallest number of arguments accepted at call time.</param>
@@ -31,7 +31,7 @@ namespace Chow.StandardLibrary
             string name,
             int minimumArguments,
             int maximumArguments,
-            Func<ChowValue[], ChowValue> valueReturnDelegateWithParams)
+            Func<TaggedUnion[], TaggedUnion> valueReturnDelegateWithParams)
         {
             Name = name;
             MinimumArguments = minimumArguments;
@@ -45,7 +45,7 @@ namespace Chow.StandardLibrary
 
         /// <summary>
         /// Defines a built-in function that accepts arguments and produces no return value;
-        /// the call result is implicitly <see cref="ChowValue.None"/>.
+        /// the call result is implicitly <see cref="TaggedUnion.None"/>.
         /// </summary>
         /// <param name="name">The source-language name the built-in is bound to in the module scope.</param>
         /// <param name="minimumArguments">The smallest number of arguments accepted at call time.</param>
@@ -56,7 +56,7 @@ namespace Chow.StandardLibrary
             string name,
             int minimumArguments,
             int maximumArguments,
-            Action<ChowValue[]> voidDelegateWithParams)
+            Action<TaggedUnion[]> voidDelegateWithParams)
         {
             Name = name;
             MinimumArguments = minimumArguments;
@@ -69,7 +69,7 @@ namespace Chow.StandardLibrary
         }
 
         /// <summary>
-        /// Defines a built-in function that accepts arguments and returns a <see cref="ChowValue"/>.
+        /// Defines a built-in function that accepts arguments and returns a <see cref="TaggedUnion"/>.
         /// </summary>
         /// <param name="name">The source-language name the built-in is bound to in the module scope.</param>
         /// <param name="valueReturnDelegateWithParams">The delegate invoked with the call's arguments;
@@ -78,7 +78,7 @@ namespace Chow.StandardLibrary
         /// <param name="maximumArguments">The largest number of arguments accepted at call time.</param>
         public BuiltInDefinition(
             string name,
-            Func<ChowValue[], ChowValue> valueReturnDelegateWithParams,
+            Func<TaggedUnion[], TaggedUnion> valueReturnDelegateWithParams,
             int minimumArguments,
             int maximumArguments)
         {
@@ -94,7 +94,7 @@ namespace Chow.StandardLibrary
 
         /// <summary>
         /// Defines a built-in function that accepts arguments and produces no return value;
-        /// the call result is implicitly <see cref="ChowValue.None"/>.
+        /// the call result is implicitly <see cref="TaggedUnion.None"/>.
         /// </summary>
         /// <param name="name">The source-language name the built-in is bound to in the module scope.</param>
         /// <param name="voidDelegateWithParams">The delegate invoked with the call's arguments for
@@ -103,7 +103,7 @@ namespace Chow.StandardLibrary
         /// <param name="maximumArguments">The largest number of arguments accepted at call time.</param>
         public BuiltInDefinition(
             string name,
-            Action<ChowValue[]> voidDelegateWithParams,
+            Action<TaggedUnion[]> voidDelegateWithParams,
             int minimumArguments,
             int maximumArguments)
         {
@@ -118,14 +118,14 @@ namespace Chow.StandardLibrary
         }
 
         /// <summary>
-        /// Defines a built-in function that takes no arguments and returns a <see cref="ChowValue"/>.
+        /// Defines a built-in function that takes no arguments and returns a <see cref="TaggedUnion"/>.
         /// </summary>
         /// <param name="name">The source-language name the built-in is bound to in the module scope.</param>
         /// <param name="valueReturnDelegate">The delegate invoked with no arguments; its return
         /// value is pushed onto the VM stack as the call result.</param>
         public BuiltInDefinition(
             string name,
-            Func<ChowValue> valueReturnDelegate)
+            Func<TaggedUnion> valueReturnDelegate)
         {
             Name = name;
             MinimumArguments = ARGUMENT_COUNT_UNDEFINED;
@@ -139,7 +139,7 @@ namespace Chow.StandardLibrary
 
         /// <summary>
         /// Defines a built-in function that takes no arguments and produces no return value;
-        /// the call result is implicitly <see cref="ChowValue.None"/>.
+        /// the call result is implicitly <see cref="TaggedUnion.None"/>.
         /// </summary>
         /// <param name="name">The source-language name the built-in is bound to in the module scope.</param>
         /// <param name="voidDelegate">The delegate invoked with no arguments for its side effects.</param>

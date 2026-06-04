@@ -11,11 +11,11 @@ namespace Chow.DataTypes
             _index = 0;
         }
 
-        public bool TryMoveNext(out ChowValue current)
+        public bool TryMoveNext(out TaggedUnion current)
         {
             if (_index >= _list.Count)
             {
-                current = ChowValue.None;
+                current = TaggedUnion.None;
                 return false;
             }
 

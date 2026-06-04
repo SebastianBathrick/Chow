@@ -10,7 +10,7 @@ namespace Chow
     /// Represents an immutable Chow value of varying Chow data types, with the main types being:
     /// <b>int, float, str, bool, None, list, dict, and range</b>.
     /// </summary>
-    public readonly struct ChowValue
+    public readonly struct TaggedUnion
     {
         // TODO: Make helper function that is operator agnostic for converting operands to different types
 
@@ -28,8 +28,8 @@ namespace Chow
             { typeof(InternalList), Tag.List }
         };
 
-        /// <summary>Represents the ChowValue equivalent to null/nil/none values.</summary>
-        public static readonly ChowValue None = new ChowValue(Tag.None);
+        /// <summary>Represents the TaggedUnion equivalent to null/nil/none values.</summary>
+        public static readonly TaggedUnion None = new TaggedUnion(Tag.None);
         readonly object _obj;
         readonly long _long;
         readonly double _double;
@@ -46,7 +46,7 @@ namespace Chow
 
         #region Constructors
 
-        ChowValue(
+        TaggedUnion(
             Tag type = Tag.None,
             bool boolValue = DEFAULT_BOOL_VALUE,
             object objVal = DEFAULT_OBJECT_VALUE,
@@ -86,56 +86,56 @@ namespace Chow
             _long = longVal;
         }
 
-        internal ChowValue(long value) : this(Tag.Long, longVal: value) {}
+        internal TaggedUnion(long value) : this(Tag.Long, longVal: value) {}
 
-        internal ChowValue(double val) : this(Tag.Double, doubleVal: val) {}
+        internal TaggedUnion(double val) : this(Tag.Double, doubleVal: val) {}
 
-        internal ChowValue(bool value) : this(Tag.Bool, value) {}
+        internal TaggedUnion(bool value) : this(Tag.Bool, value) {}
 
-        internal ChowValue(string value) : this(Tag.Str, objVal: value) {}
+        internal TaggedUnion(string value) : this(Tag.Str, objVal: value) {}
 
-        internal ChowValue(InternalList list) : this(Tag.List, objVal: list) {}
+        internal TaggedUnion(InternalList list) : this(Tag.List, objVal: list) {}
 
-        internal ChowValue(InternalDict dict) : this(Tag.Dict, objVal: dict) {}
+        internal TaggedUnion(InternalDict dict) : this(Tag.Dict, objVal: dict) {}
 
-        internal ChowValue(InternalRange range) : this(Tag.Range, objVal: range) {}
+        internal TaggedUnion(InternalRange range) : this(Tag.Range, objVal: range) {}
 
         /// <summary>
         /// Resolves and converts the value of <paramref name="obj"/> and initializes instance with
         /// the converted value (if a tag is defined for that type).
         /// </summary>
-        internal ChowValue(object obj)
+        internal TaggedUnion(object obj)
         {
             switch (obj)
             {
                 case null:
-                // TODO: Look into changing this to ChowValue.None.
+                // TODO: Look into changing this to TaggedUnion.None.
                     throw new ArgumentNullException(nameof(obj));
                 case string strValue:
-                    this = new ChowValue(strValue);
+                    this = new TaggedUnion(strValue);
                     break;
                 case long longValue:
-                    this = new ChowValue(longValue);
+                    this = new TaggedUnion(longValue);
                     break;
                 case int intValue:
-                    this = new ChowValue(intValue);
+                    this = new TaggedUnion(intValue);
                     break;
                 case double doubleValue:
-                    this = new ChowValue(doubleValue);
+                    this = new TaggedUnion(doubleValue);
                     break;
                 case bool boolValue:
-                    this = new ChowValue(boolValue);
+                    this = new TaggedUnion(boolValue);
                     break;
                 case InternalList listValue:
-                    this = new ChowValue(listValue);
+                    this = new TaggedUnion(listValue);
                     break;
                 case InternalDict dictValue:
-                    this = new ChowValue(dictValue);
+                    this = new TaggedUnion(dictValue);
                     break;
                 case InternalRange rangeValue:
-                    this = new ChowValue(rangeValue);
+                    this = new TaggedUnion(rangeValue);
                     break;
-                case ChowValue chowValue:
+                case TaggedUnion chowValue:
                     // **IMPORTANT**: CHOW VALUES ARE NEVER DIRECTLY WRAPPED IN OTHER CHOW VALUE INSTANCES
                     this = chowValue;
                     break;
@@ -245,34 +245,34 @@ namespace Chow
 
         #region Arithmetic & Logical Operations
 
-        // Instance methods to avoid passing two ChowValues as parameters. Each returns a new ChowValue
+        // Instance methods to avoid passing two ChowValues as parameters. Each returns a new TaggedUnion
         // (the struct is readonly, so no risk of accidentally mutating this instance's internal state).
         // Promotion rules come from DataTypeConversionMap (the single source of truth). Carve-outs for
         // container/string ops (list+list, list*int, str+str, str*int, dict|dict) are dispatched when
         // the map reports ConversionCase.Nothing.
 
-        internal ChowValue CreateSum(ChowValue rightOperand)
+        internal TaggedUnion CreateSum(TaggedUnion rightOperand)
         {
             switch (LookupBinary(ExpressionOp.Add, rightOperand))
             {
                 case ConversionCase.ToInt:
                 {
-                    return new ChowValue(PromoteToLong() + rightOperand.PromoteToLong());
+                    return new TaggedUnion(PromoteToLong() + rightOperand.PromoteToLong());
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return new ChowValue(PromoteToDouble() + rightOperand.PromoteToDouble());
+                    return new TaggedUnion(PromoteToDouble() + rightOperand.PromoteToDouble());
                 }
                 case ConversionCase.Nothing:
                 {
                     if (Type == Tag.List && rightOperand.Type == Tag.List)
                     {
-                        return new ChowValue(InternalList.Concat(AsType<InternalList>(), rightOperand.AsType<InternalList>()));
+                        return new TaggedUnion(InternalList.Concat(AsType<InternalList>(), rightOperand.AsType<InternalList>()));
                     }
 
                     if (Type == Tag.Str && rightOperand.Type == Tag.Str)
                     {
-                        return new ChowValue(AsType<string>() + rightOperand.AsType<string>());
+                        return new TaggedUnion(AsType<string>() + rightOperand.AsType<string>());
                     }
 
                     break;
@@ -282,16 +282,16 @@ namespace Chow
             throw UnsupportedBinary(ExpressionOp.Add, rightOperand);
         }
 
-        internal ChowValue CreateDifference(ChowValue rightOperand)
+        internal TaggedUnion CreateDifference(TaggedUnion rightOperand)
         {
             if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.ToInt)
             {
-                return new ChowValue(PromoteToLong() - rightOperand.PromoteToLong());
+                return new TaggedUnion(PromoteToLong() - rightOperand.PromoteToLong());
             }
 
             if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.ToFloat)
             {
-                return new ChowValue(PromoteToDouble() - rightOperand.PromoteToDouble());
+                return new TaggedUnion(PromoteToDouble() - rightOperand.PromoteToDouble());
             }
 
             if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.Nothing)
@@ -305,39 +305,39 @@ namespace Chow
             throw UnsupportedBinary(ExpressionOp.Subtract, rightOperand);
         }
 
-        internal ChowValue CreateProduct(ChowValue rightOperand)
+        internal TaggedUnion CreateProduct(TaggedUnion rightOperand)
         {
             switch (LookupBinary(ExpressionOp.Multiply, rightOperand))
             {
                 case ConversionCase.ToInt:
                 {
-                    return new ChowValue(PromoteToLong() * rightOperand.PromoteToLong());
+                    return new TaggedUnion(PromoteToLong() * rightOperand.PromoteToLong());
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return new ChowValue(PromoteToDouble() * rightOperand.PromoteToDouble());
+                    return new TaggedUnion(PromoteToDouble() * rightOperand.PromoteToDouble());
                 }
                 case ConversionCase.Nothing:
                 {
                     // Python treats bool as a subtype of int, so [1] * True and "ab" * True are valid.
                     if (Type == Tag.List && IsIntegerTag(rightOperand.Type))
                     {
-                        return new ChowValue(InternalList.Repeat(AsType<InternalList>(), rightOperand.AsType<int>()));
+                        return new TaggedUnion(InternalList.Repeat(AsType<InternalList>(), rightOperand.AsType<int>()));
                     }
 
                     if (IsIntegerTag(Type) && rightOperand.Type == Tag.List)
                     {
-                        return new ChowValue(InternalList.Repeat(rightOperand.AsType<InternalList>(), AsType<int>()));
+                        return new TaggedUnion(InternalList.Repeat(rightOperand.AsType<InternalList>(), AsType<int>()));
                     }
 
                     if (Type == Tag.Str && IsIntegerTag(rightOperand.Type))
                     {
-                        return new ChowValue(RepeatString(AsType<string>(), rightOperand.AsType<int>()));
+                        return new TaggedUnion(RepeatString(AsType<string>(), rightOperand.AsType<int>()));
                     }
 
                     if (IsIntegerTag(Type) && rightOperand.Type == Tag.Str)
                     {
-                        return new ChowValue(RepeatString(rightOperand.AsType<string>(), AsType<int>()));
+                        return new TaggedUnion(RepeatString(rightOperand.AsType<string>(), AsType<int>()));
                     }
 
                     break;
@@ -347,7 +347,7 @@ namespace Chow
             throw UnsupportedBinary(ExpressionOp.Multiply, rightOperand);
         }
 
-        internal ChowValue CreateQuotient(ChowValue rightOperand)
+        internal TaggedUnion CreateQuotient(TaggedUnion rightOperand)
         {
             // Python semantics: `/` always produces a float, even for int / int.
             switch (LookupBinary(ExpressionOp.Divide, rightOperand))
@@ -358,7 +358,7 @@ namespace Chow
 
                     return divisor == 0.0 
                         ? throw new ZeroDivisionException() 
-                        : new ChowValue(PromoteToDouble() / divisor);
+                        : new TaggedUnion(PromoteToDouble() / divisor);
 
                 }
                 case ConversionCase.Nothing:
@@ -371,7 +371,7 @@ namespace Chow
             throw UnsupportedBinary(ExpressionOp.Divide, rightOperand);
         }
 
-        internal ChowValue CreateModulus(ChowValue rightOperand)
+        internal TaggedUnion CreateModulus(TaggedUnion rightOperand)
         {
             // Python semantics: result has the sign of the divisor.
             switch (LookupBinary(ExpressionOp.Modulus, rightOperand))
@@ -386,7 +386,7 @@ namespace Chow
                         throw new ZeroDivisionException();
                     }
 
-                    return new ChowValue((a % b + b) % b);
+                    return new TaggedUnion((a % b + b) % b);
                 }
                 case ConversionCase.ToFloat:
                 {
@@ -398,14 +398,14 @@ namespace Chow
                         throw new ZeroDivisionException();
                     }
 
-                    return new ChowValue((l % r + r) % r);
+                    return new TaggedUnion((l % r + r) % r);
                 }
             }
 
             throw UnsupportedBinary(ExpressionOp.Modulus, rightOperand);
         }
 
-        internal ChowValue CreateFloorQuotient(ChowValue rightOperand)
+        internal TaggedUnion CreateFloorQuotient(TaggedUnion rightOperand)
         {
             // Python semantics: floors toward negative infinity. Integer path stays in longs (no detour
             // through double) so values past 2^53 remain exact.
@@ -428,7 +428,7 @@ namespace Chow
                         q--;
                     }
 
-                    return new ChowValue(q);
+                    return new TaggedUnion(q);
                 }
                 case ConversionCase.ToFloat:
                 {
@@ -439,14 +439,14 @@ namespace Chow
                         throw new ZeroDivisionException();
                     }
 
-                    return new ChowValue(Math.Floor(PromoteToDouble() / divisor));
+                    return new TaggedUnion(Math.Floor(PromoteToDouble() / divisor));
                 }
             }
 
             throw UnsupportedBinary(ExpressionOp.FloorDivide, rightOperand);
         }
 
-        internal ChowValue CreatePower(ChowValue rightOperand)
+        internal TaggedUnion CreatePower(TaggedUnion rightOperand)
         {
             // Python semantics: float if either operand is float, or if exponent is negative.
             // This is the one documented map override: the negative-exponent rule is value-dependent
@@ -466,64 +466,64 @@ namespace Chow
                     // Exponent is non-negative here (negative-exp routed to float above). Exact integer
                     // exponentiation avoids the 2^53 precision ceiling of (long)Math.Pow. Overflow wraps
                     // silently — matches prior behavior; arbitrary-precision int is a separate concern.
-                    return new ChowValue(IntPow(PromoteToLong(), rightOperand.PromoteToLong()));
+                    return new TaggedUnion(IntPow(PromoteToLong(), rightOperand.PromoteToLong()));
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return new ChowValue(Math.Pow(PromoteToDouble(), rightOperand.PromoteToDouble()));
+                    return new TaggedUnion(Math.Pow(PromoteToDouble(), rightOperand.PromoteToDouble()));
                 }
             }
 
             throw UnsupportedBinary(ExpressionOp.Exponentiate, rightOperand);
         }
 
-        internal ChowValue CreateUnion(ChowValue rightOperand)
+        internal TaggedUnion CreateUnion(TaggedUnion rightOperand)
         {
             if (LookupBinary(ExpressionOp.BinaryOr, rightOperand) == ConversionCase.Nothing
                 && Type == Tag.Dict && rightOperand.Type == Tag.Dict)
             {
-                return new ChowValue(InternalDict.Merge(AsType<InternalDict>(), rightOperand.AsType<InternalDict>()));
+                return new TaggedUnion(InternalDict.Merge(AsType<InternalDict>(), rightOperand.AsType<InternalDict>()));
             }
 
             throw UnsupportedBinary(ExpressionOp.BinaryOr, rightOperand);
         }
 
-        internal ChowValue CreateNegation()
+        internal TaggedUnion CreateNegation()
         {
             switch (LookupUnary(ExpressionOp.Negate))
             {
                 case ConversionCase.ToInt:
                 {
-                    return new ChowValue(-PromoteToLong());
+                    return new TaggedUnion(-PromoteToLong());
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return new ChowValue(-PromoteToDouble());
+                    return new TaggedUnion(-PromoteToDouble());
                 }
             }
 
             throw UnsupportedUnary(ExpressionOp.Negate);
         }
 
-        internal ChowValue CreateLogicalNot()
+        internal TaggedUnion CreateLogicalNot()
         {
             // The map records this as Nothing for every type; consult it for consistency and so that
             // a future map change (e.g. restricting unary `not` to specific types) propagates here.
             LookupUnary(ExpressionOp.Not);
-            return new ChowValue(!IsTruthy());
+            return new TaggedUnion(!IsTruthy());
         }
 
-        internal ChowValue CreateStr()
+        internal TaggedUnion CreateStr()
         {
             LookupUnary(ExpressionOp.ToStr);
-            return new ChowValue(ToStr());
+            return new TaggedUnion(ToStr());
         }
 
         #endregion
 
         #region Comparison Operations
 
-        internal bool IsTypeAgnosticEqualTo(ChowValue other)
+        internal bool IsTypeAgnosticEqualTo(TaggedUnion other)
         {
             switch (LookupBinary(ExpressionOp.Equal, other))
             {
@@ -542,7 +542,7 @@ namespace Chow
             return false;
         }
 
-        internal bool IsNotEqualTo(ChowValue other)
+        internal bool IsNotEqualTo(TaggedUnion other)
         {
             switch (LookupBinary(ExpressionOp.NotEqual, other))
             {
@@ -563,7 +563,7 @@ namespace Chow
             return true;
         }
 
-        internal bool IsLessThan(ChowValue other)
+        internal bool IsLessThan(TaggedUnion other)
         {
             switch (LookupBinary(ExpressionOp.Less, other))
             {
@@ -589,7 +589,7 @@ namespace Chow
             throw UnsupportedBinary(ExpressionOp.Less, other);
         }
 
-        internal bool IsGreaterThan(ChowValue other)
+        internal bool IsGreaterThan(TaggedUnion other)
         {
             switch (LookupBinary(ExpressionOp.Greater, other))
             {
@@ -615,7 +615,7 @@ namespace Chow
             throw UnsupportedBinary(ExpressionOp.Greater, other);
         }
 
-        internal bool IsLessOrEqualTo(ChowValue other)
+        internal bool IsLessOrEqualTo(TaggedUnion other)
         {
             switch (LookupBinary(ExpressionOp.LessEqual, other))
             {
@@ -641,7 +641,7 @@ namespace Chow
             throw UnsupportedBinary(ExpressionOp.LessEqual, other);
         }
 
-        internal bool IsGreaterOrEqualTo(ChowValue other)
+        internal bool IsGreaterOrEqualTo(TaggedUnion other)
         {
             switch (LookupBinary(ExpressionOp.GreaterEqual, other))
             {
@@ -671,16 +671,16 @@ namespace Chow
 
         #region Interop
 
-        internal ChowValue InvokeHostDelegate(ChowValue[] args)
+        internal TaggedUnion InvokeHostDelegate(TaggedUnion[] args)
         {
             if (Type != Tag.Object)
             {
                 throw new TypeException($"'{Type}' object is not callable");
             }
 
-            if (_obj is Func<ChowValue[], ChowValue> methodDelegate)
+            if (_obj is Func<TaggedUnion[], TaggedUnion> methodDelegate)
             {
-                return methodDelegate(args ?? Array.Empty<ChowValue>());
+                return methodDelegate(args ?? Array.Empty<TaggedUnion>());
             }
 
             throw new InvalidOperationException($"Object of type '{_obj.GetType().Name}' is not callable");
@@ -692,7 +692,7 @@ namespace Chow
 
         /// <summary>
         /// Strict structural equality: returns <c>true</c> only when <paramref name="obj"/> is a
-        /// <see cref="ChowValue"/> of the same <see cref="Type"/> with the same underlying value.
+        /// <see cref="TaggedUnion"/> of the same <see cref="Type"/> with the same underlying value.
         /// No cross-type conversion is performed — <c>True</c> is not equal to <c>1</c>, and
         /// <c>1</c> is not equal to <c>1.0</c>. For Python <c>==</c> semantics that promote across
         /// numeric types, use <see cref="IsTypeAgnosticEqualTo"/> instead.
@@ -701,7 +701,7 @@ namespace Chow
         /// <returns><c>true</c> if the objects are structurally equal; otherwise, <c>false</c>.</returns>
         public override bool Equals(object obj)
         {
-            return obj is ChowValue other && EqualsNoConversion(other);
+            return obj is TaggedUnion other && EqualsNoConversion(other);
         }
 
         /// <inheritdoc/>
@@ -964,7 +964,7 @@ namespace Chow
                     if (_obj == null)
                     {
                         // This should never happen, but we'll check just in case
-                        throw new InvalidOperationException($"{nameof(ChowValue)} object with type {Type} null");
+                        throw new InvalidOperationException($"{nameof(TaggedUnion)} object with type {Type} null");
                     }
 
                     return _obj.ToString();
@@ -1085,7 +1085,7 @@ namespace Chow
         // methods above. Operand promotion is intentionally limited to the three numeric tags
         // (Bool/Long/Double); the map guarantees ToInt/ToFloat is only reported for those.
 
-        ConversionCase LookupBinary(ExpressionOp op, ChowValue right)
+        ConversionCase LookupBinary(ExpressionOp op, TaggedUnion right)
         {
             return DataTypeConversionMap.GetLeftRightConversionCase(op, Type, right.Type);
         }
@@ -1095,7 +1095,7 @@ namespace Chow
             return DataTypeConversionMap.GetOperandConversionCase(op, Type);
         }
 
-        TypeException UnsupportedBinary(ExpressionOp op, ChowValue right)
+        TypeException UnsupportedBinary(ExpressionOp op, TaggedUnion right)
         {
             return new TypeException($"unsupported operand type(s) for {op}: '{Type}' and '{right.Type}'");
         }
@@ -1151,7 +1151,7 @@ namespace Chow
         // Equality fallback used when DataTypeConversionMap reports Nothing for ==/!= operands.
         // Cross-type combinations are never equal (Python: 1 == "1" → False); same-type combinations
         // delegate to the underlying value's identity/structural equality.
-        bool EqualsNoConversion(ChowValue other)
+        bool EqualsNoConversion(TaggedUnion other)
         {
             if (Type != other.Type)
             {
