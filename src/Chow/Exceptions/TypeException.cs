@@ -1,27 +1,25 @@
 using System;
 using Chow.DataTypes;
+using Chow.Bytecode;
+using Chow.Expressions;
 
 namespace Chow.Exceptions
 {
     class TypeException : Exception
     {   
-        public TypeException()
-        {
-        }
-
         public TypeException(string message) : base(message)
         {
         }
         
         
-        public TypeException(Tag lTag, Tag rTag, ExpressionOperator op) : base(CreateOperandTypesMessage(lTag, rTag, op))
+        public TypeException(Tag lTag, Tag rTag, OperationCode binaryOp) : base(CreateOperandTypesMessage(lTag, rTag, binaryOp))
         {
         }
 
-        static string CreateOperandTypesMessage(Tag lTag, Tag rTag, ExpressionOperator op)
+        static string CreateOperandTypesMessage(Tag lTag, Tag rTag, OperationCode binaryOp)
         {
             return "TypeError: unsupported operand type(s) for "
-                + $"{OperatorStrings.GetOperatorString(op)}: "
+                + $"{OperatorStrings.EnumToString(binaryOp)}: "
                 + $"'{DataTypeNames.GetTypeName(lTag)}' and "
                 + $"'{DataTypeNames.GetTypeName(rTag)}'";
         }
