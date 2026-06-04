@@ -402,7 +402,7 @@ namespace Chow.Core
             {
                 var opToken = PreviousToken;
                 var rightNode = ParseAnd();
-                leftNode = new ExpressionNode(ExpressionOp.Or, leftNode, rightNode, opToken.LineNum);
+                leftNode = new ExpressionNode(ExpressionOperator.Or, leftNode, rightNode, opToken.LineNum);
             }
 
             return leftNode;
@@ -416,7 +416,7 @@ namespace Chow.Core
             {
                 var opToken = PreviousToken;
                 var rightNode = ParseNot();
-                leftNode = new ExpressionNode(ExpressionOp.And, leftNode, rightNode, opToken.LineNum);
+                leftNode = new ExpressionNode(ExpressionOperator.And, leftNode, rightNode, opToken.LineNum);
             }
 
             return leftNode;
@@ -430,7 +430,7 @@ namespace Chow.Core
             }
 
             var opToken = PreviousToken;
-            return new ExpressionNode(ExpressionOp.Not, ParseNot(), opToken.LineNum);
+            return new ExpressionNode(ExpressionOperator.Not, ParseNot(), opToken.LineNum);
 
         }
 
@@ -441,7 +441,7 @@ namespace Chow.Core
 
             while (true)
             {
-                ExpressionOp op;
+                ExpressionOperator @operator;
                 int opLine;
 
                 if (TryConsumeCurrentTokenType(
@@ -453,7 +453,7 @@ namespace Chow.Core
                     TokenType.SymbolGreaterEqual,
                     TokenType.KeywordIn))
                 {
-                    op = MapTokenTypeToBinary(PreviousToken.Type);
+                    @operator = MapTokenTypeToBinary(PreviousToken.Type);
                     opLine = PreviousToken.LineNum;
                 }
                 else if (IsCurrentTokenType(TokenType.KeywordNot) && PeekNextTokenType(TokenType.KeywordIn))
@@ -461,7 +461,7 @@ namespace Chow.Core
                     opLine = CurrentToken.LineNum;
                     ConsumeToken();
                     ConsumeToken();
-                    op = ExpressionOp.NotIn;
+                    @operator = ExpressionOperator.NotIn;
                 }
                 else
                 {
@@ -469,7 +469,7 @@ namespace Chow.Core
                 }
 
                 var rightNode = ParseBitOr();
-                Node comparison = new ExpressionNode(op, leftNode, rightNode, opLine);
+                Node comparison = new ExpressionNode(@operator, leftNode, rightNode, opLine);
 
                 if (result == null)
                 {
@@ -477,7 +477,7 @@ namespace Chow.Core
                 }
                 else
                 {
-                    result = new ExpressionNode(ExpressionOp.And, result, comparison, opLine);
+                    result = new ExpressionNode(ExpressionOperator.And, result, comparison, opLine);
                 }
 
                 leftNode = rightNode;
@@ -494,7 +494,7 @@ namespace Chow.Core
             {
                 var opToken = PreviousToken;
                 var rightNode = ParseAdd();
-                leftNode = new ExpressionNode(ExpressionOp.BinaryOr, leftNode, rightNode, opToken.LineNum);
+                leftNode = new ExpressionNode(ExpressionOperator.BinaryOr, leftNode, rightNode, opToken.LineNum);
             }
 
             return leftNode;
@@ -534,7 +534,7 @@ namespace Chow.Core
             if (TryConsumeCurrentTokenType(TokenType.SymbolMinus))
             {
                 var opToken = PreviousToken;
-                return new ExpressionNode(ExpressionOp.Negate, ParseFactor(), opToken.LineNum);
+                return new ExpressionNode(ExpressionOperator.Negate, ParseFactor(), opToken.LineNum);
             }
 
             return ParseExponent();
@@ -548,7 +548,7 @@ namespace Chow.Core
             {
                 var opToken = PreviousToken;
                 var rightNode = ParseFactor();
-                return new ExpressionNode(ExpressionOp.Exponentiate, leftNode, rightNode, opToken.LineNum);
+                return new ExpressionNode(ExpressionOperator.Exponentiate, leftNode, rightNode, opToken.LineNum);
             }
 
             return leftNode;
@@ -915,93 +915,93 @@ namespace Chow.Core
             throw new ParserEx("Invalid assignment target.", line);
         }
 
-        static ExpressionOp MapTokenTypeToBinary(TokenType type)
+        static ExpressionOperator MapTokenTypeToBinary(TokenType type)
         {
             switch (type)
             {
                 case TokenType.SymbolPlus:
                 {
-                    return ExpressionOp.Add;
+                    return ExpressionOperator.Add;
                 }
 
                 case TokenType.SymbolMinus:
                 {
-                    return ExpressionOp.Subtract;
+                    return ExpressionOperator.Subtract;
                 }
 
                 case TokenType.SymbolMultiply:
                 {
-                    return ExpressionOp.Multiply;
+                    return ExpressionOperator.Multiply;
                 }
 
                 case TokenType.SymbolDivide:
                 {
-                    return ExpressionOp.Divide;
+                    return ExpressionOperator.Divide;
                 }
 
                 case TokenType.SymbolPercent:
                 {
-                    return ExpressionOp.Modulus;
+                    return ExpressionOperator.Modulus;
                 }
 
                 case TokenType.SymbolExponent:
                 {
-                    return ExpressionOp.Exponentiate;
+                    return ExpressionOperator.Exponentiate;
                 }
 
                 case TokenType.SymbolFloorDivide:
                 {
-                    return ExpressionOp.FloorDivide;
+                    return ExpressionOperator.FloorDivide;
                 }
 
                 case TokenType.SymbolEqualTo:
                 {
-                    return ExpressionOp.Equal;
+                    return ExpressionOperator.Equal;
                 }
 
                 case TokenType.SymbolNotEqual:
                 {
-                    return ExpressionOp.NotEqual;
+                    return ExpressionOperator.NotEqual;
                 }
 
                 case TokenType.SymbolLess:
                 {
-                    return ExpressionOp.Less;
+                    return ExpressionOperator.Less;
                 }
 
                 case TokenType.SymbolGreater:
                 {
-                    return ExpressionOp.Greater;
+                    return ExpressionOperator.Greater;
                 }
 
                 case TokenType.SymbolLessEqual:
                 {
-                    return ExpressionOp.LessEqual;
+                    return ExpressionOperator.LessEqual;
                 }
 
                 case TokenType.SymbolGreaterEqual:
                 {
-                    return ExpressionOp.GreaterEqual;
+                    return ExpressionOperator.GreaterEqual;
                 }
 
                 case TokenType.KeywordAnd:
                 {
-                    return ExpressionOp.And;
+                    return ExpressionOperator.And;
                 }
 
                 case TokenType.KeywordOr:
                 {
-                    return ExpressionOp.Or;
+                    return ExpressionOperator.Or;
                 }
 
                 case TokenType.SymbolPipe:
                 {
-                    return ExpressionOp.BinaryOr;
+                    return ExpressionOperator.BinaryOr;
                 }
 
                 case TokenType.KeywordIn:
                 {
-                    return ExpressionOp.In;
+                    return ExpressionOperator.In;
                 }
 
                 default:

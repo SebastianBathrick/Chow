@@ -14,9 +14,7 @@ namespace Chow
     [StructLayout(LayoutKind.Explicit)]
     public readonly struct TaggedUnion
     {
-        // TODO: Make helper function that is operator agnostic for converting operands to different types
-
-        
+        // TODO: Major refactor going on currently
         public static readonly TaggedUnion None = new TaggedUnion(Tag.None);
         static readonly Dictionary<Type, Tag> DataTypeMap = new Dictionary<Type, Tag>
         {
@@ -255,7 +253,7 @@ namespace Chow
 
         internal TaggedUnion CreateSum(TaggedUnion rightOperand)
         {
-            switch (LookupBinary(ExpressionOp.Add, rightOperand))
+            switch (LookupBinary(ExpressionOperator.Add, rightOperand))
             {
                 case ConversionCase.ToInt:
                 {
@@ -281,22 +279,22 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOp.Add, rightOperand);
+            throw UnsupportedBinary(ExpressionOperator.Add, rightOperand);
         }
 
         internal TaggedUnion CreateDifference(TaggedUnion rightOperand)
         {
-            if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.ToInt)
+            if (LookupBinary(ExpressionOperator.Subtract, rightOperand) == ConversionCase.ToInt)
             {
                 return new TaggedUnion(PromoteToLong() - rightOperand.PromoteToLong());
             }
 
-            if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.ToFloat)
+            if (LookupBinary(ExpressionOperator.Subtract, rightOperand) == ConversionCase.ToFloat)
             {
                 return new TaggedUnion(PromoteToDouble() - rightOperand.PromoteToDouble());
             }
 
-            if (LookupBinary(ExpressionOp.Subtract, rightOperand) == ConversionCase.Nothing)
+            if (LookupBinary(ExpressionOperator.Subtract, rightOperand) == ConversionCase.Nothing)
             {
             }
             else
@@ -304,12 +302,12 @@ namespace Chow
                 throw new ArgumentOutOfRangeException();
             }
 
-            throw UnsupportedBinary(ExpressionOp.Subtract, rightOperand);
+            throw UnsupportedBinary(ExpressionOperator.Subtract, rightOperand);
         }
 
         internal TaggedUnion CreateProduct(TaggedUnion rightOperand)
         {
-            switch (LookupBinary(ExpressionOp.Multiply, rightOperand))
+            switch (LookupBinary(ExpressionOperator.Multiply, rightOperand))
             {
                 case ConversionCase.ToInt:
                 {
@@ -346,13 +344,13 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOp.Multiply, rightOperand);
+            throw UnsupportedBinary(ExpressionOperator.Multiply, rightOperand);
         }
 
         internal TaggedUnion CreateQuotient(TaggedUnion rightOperand)
         {
             // Python semantics: `/` always produces a float, even for int / int.
-            switch (LookupBinary(ExpressionOp.Divide, rightOperand))
+            switch (LookupBinary(ExpressionOperator.Divide, rightOperand))
             {
                 case ConversionCase.ToFloat:
                 {
@@ -370,13 +368,13 @@ namespace Chow
                     throw new ArgumentOutOfRangeException();
             }
 
-            throw UnsupportedBinary(ExpressionOp.Divide, rightOperand);
+            throw UnsupportedBinary(ExpressionOperator.Divide, rightOperand);
         }
 
         internal TaggedUnion CreateModulus(TaggedUnion rightOperand)
         {
             // Python semantics: result has the sign of the divisor.
-            switch (LookupBinary(ExpressionOp.Modulus, rightOperand))
+            switch (LookupBinary(ExpressionOperator.Modulus, rightOperand))
             {
                 case ConversionCase.ToInt:
                 {
@@ -404,14 +402,14 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOp.Modulus, rightOperand);
+            throw UnsupportedBinary(ExpressionOperator.Modulus, rightOperand);
         }
 
         internal TaggedUnion CreateFloorQuotient(TaggedUnion rightOperand)
         {
             // Python semantics: floors toward negative infinity. Integer path stays in longs (no detour
             // through double) so values past 2^53 remain exact.
-            switch (LookupBinary(ExpressionOp.FloorDivide, rightOperand))
+            switch (LookupBinary(ExpressionOperator.FloorDivide, rightOperand))
             {
                 case ConversionCase.ToInt:
                 {
@@ -445,7 +443,7 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOp.FloorDivide, rightOperand);
+            throw UnsupportedBinary(ExpressionOperator.FloorDivide, rightOperand);
         }
 
         internal TaggedUnion CreatePower(TaggedUnion rightOperand)
@@ -454,7 +452,7 @@ namespace Chow
             // This is the one documented map override: the negative-exponent rule is value-dependent
             // (depends on the runtime exponent's sign), not type-dependent, so it cannot live in the
             // type-keyed map. Every other dispatch path defers to DataTypeConversionMap.
-            var conv = LookupBinary(ExpressionOp.Exponentiate, rightOperand);
+            var conv = LookupBinary(ExpressionOperator.Exponentiate, rightOperand);
 
             if (conv == ConversionCase.ToInt && rightOperand.PromoteToLong() < 0)
             {
@@ -476,23 +474,23 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOp.Exponentiate, rightOperand);
+            throw UnsupportedBinary(ExpressionOperator.Exponentiate, rightOperand);
         }
 
         internal TaggedUnion CreateUnion(TaggedUnion rightOperand)
         {
-            if (LookupBinary(ExpressionOp.BinaryOr, rightOperand) == ConversionCase.Nothing
+            if (LookupBinary(ExpressionOperator.BinaryOr, rightOperand) == ConversionCase.Nothing
                 && _tag == Tag.Dict && rightOperand._tag == Tag.Dict)
             {
                 return new TaggedUnion(InternalDict.Merge(AsType<InternalDict>(), rightOperand.AsType<InternalDict>()));
             }
 
-            throw UnsupportedBinary(ExpressionOp.BinaryOr, rightOperand);
+            throw UnsupportedBinary(ExpressionOperator.BinaryOr, rightOperand);
         }
 
         internal TaggedUnion CreateNegation()
         {
-            switch (LookupUnary(ExpressionOp.Negate))
+            switch (LookupUnary(ExpressionOperator.Negate))
             {
                 case ConversionCase.ToInt:
                 {
@@ -504,20 +502,20 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedUnary(ExpressionOp.Negate);
+            throw UnsupportedUnary(ExpressionOperator.Negate);
         }
 
         internal TaggedUnion CreateLogicalNot()
         {
             // The map records this as Nothing for every type; consult it for consistency and so that
             // a future map change (e.g. restricting unary `not` to specific types) propagates here.
-            LookupUnary(ExpressionOp.Not);
+            LookupUnary(ExpressionOperator.Not);
             return new TaggedUnion(!IsTruthy());
         }
 
         internal TaggedUnion CreateStr()
         {
-            LookupUnary(ExpressionOp.ToStr);
+            LookupUnary(ExpressionOperator.ToStr);
             return new TaggedUnion(ToStr());
         }
 
@@ -527,7 +525,7 @@ namespace Chow
 
         internal bool IsTypeAgnosticEqualTo(TaggedUnion other)
         {
-            switch (LookupBinary(ExpressionOp.Equal, other))
+            switch (LookupBinary(ExpressionOperator.Equal, other))
             {
                 case ConversionCase.ToInt:
                     return PromoteToLong() == other.PromoteToLong();
@@ -546,7 +544,7 @@ namespace Chow
 
         internal bool IsNotEqualTo(TaggedUnion other)
         {
-            switch (LookupBinary(ExpressionOp.NotEqual, other))
+            switch (LookupBinary(ExpressionOperator.NotEqual, other))
             {
                 case ConversionCase.ToInt:
                 {
@@ -567,7 +565,7 @@ namespace Chow
 
         internal bool IsLessThan(TaggedUnion other)
         {
-            switch (LookupBinary(ExpressionOp.Less, other))
+            switch (LookupBinary(ExpressionOperator.Less, other))
             {
                 case ConversionCase.ToInt:
                 {
@@ -588,12 +586,12 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOp.Less, other);
+            throw UnsupportedBinary(ExpressionOperator.Less, other);
         }
 
         internal bool IsGreaterThan(TaggedUnion other)
         {
-            switch (LookupBinary(ExpressionOp.Greater, other))
+            switch (LookupBinary(ExpressionOperator.Greater, other))
             {
                 case ConversionCase.ToInt:
                 {
@@ -614,12 +612,12 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOp.Greater, other);
+            throw UnsupportedBinary(ExpressionOperator.Greater, other);
         }
 
         internal bool IsLessOrEqualTo(TaggedUnion other)
         {
-            switch (LookupBinary(ExpressionOp.LessEqual, other))
+            switch (LookupBinary(ExpressionOperator.LessEqual, other))
             {
                 case ConversionCase.ToInt:
                 {
@@ -640,12 +638,12 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOp.LessEqual, other);
+            throw UnsupportedBinary(ExpressionOperator.LessEqual, other);
         }
 
         internal bool IsGreaterOrEqualTo(TaggedUnion other)
         {
-            switch (LookupBinary(ExpressionOp.GreaterEqual, other))
+            switch (LookupBinary(ExpressionOperator.GreaterEqual, other))
             {
                 case ConversionCase.ToInt:
                 {
@@ -666,7 +664,7 @@ namespace Chow
                 }
             }
 
-            throw UnsupportedBinary(ExpressionOp.GreaterEqual, other);
+            throw UnsupportedBinary(ExpressionOperator.GreaterEqual, other);
         }
 
         #endregion
@@ -788,7 +786,7 @@ namespace Chow
                 }
                 case Tag.Double:
                 {
-                    return _dbl != DBL_TO_BOOL_F;
+                    return Math.Abs(_dbl - DBL_TO_BOOL_F) > TOLERANCE;
                 }
                 case Tag.Str:
                 {
@@ -810,6 +808,8 @@ namespace Chow
 
             throw new InvalidOperationException();
         }
+
+        const double TOLERANCE = 0.000000000000001;
 
         internal long ToLong()
         {
@@ -835,25 +835,11 @@ namespace Chow
                 {
                     return StrToLong();
                 }
-                case Tag.Object:
-                {
-                    throw new InvalidOperationException("Cannot convert Object to long");
-                }
-                case Tag.List:
-                {
-                    throw new InvalidOperationException("Cannot convert List to long");
-                }
-                case Tag.Dict:
-                {
-                    throw new InvalidOperationException("Cannot convert Dict to long");
-                }
-                case Tag.Range:
-                {
-                    throw new InvalidOperationException("Cannot convert Range to long");
-                }
+                default:
+            throw new InvalidOperationException();
+                    
             }
 
-            throw new InvalidOperationException();
         }
 
         internal double ToDouble()
@@ -1087,24 +1073,24 @@ namespace Chow
         // methods above. Operand promotion is intentionally limited to the three numeric tags
         // (Bool/Long/Double); the map guarantees ToInt/ToFloat is only reported for those.
 
-        ConversionCase LookupBinary(ExpressionOp op, TaggedUnion right)
+        ConversionCase LookupBinary(ExpressionOperator @operator, TaggedUnion right)
         {
-            return DataTypeConversionMap.GetLeftRightConversionCase(op, _tag, right._tag);
+            return DataTypeConversionMap.GetLeftRightConversionCase(@operator, _tag, right._tag);
         }
 
-        ConversionCase LookupUnary(ExpressionOp op)
+        ConversionCase LookupUnary(ExpressionOperator @operator)
         {
-            return DataTypeConversionMap.GetOperandConversionCase(op, _tag);
+            return DataTypeConversionMap.GetOperandConversionCase(@operator, _tag);
         }
 
-        TypeException UnsupportedBinary(ExpressionOp op, TaggedUnion right)
+        TypeException UnsupportedBinary(ExpressionOperator @operator, TaggedUnion right)
         {
-            return new TypeException($"unsupported operand type(s) for {op}: '{_tag}' and '{right._tag}'");
+            return new TypeException($"unsupported operand type(s) for {@operator}: '{_tag}' and '{right._tag}'");
         }
 
-        TypeException UnsupportedUnary(ExpressionOp op)
+        TypeException UnsupportedUnary(ExpressionOperator @operator)
         {
-            return new TypeException($"bad operand type for unary {op}: '{_tag}'");
+            return new TypeException($"bad operand type for unary {@operator}: '{_tag}'");
         }
 
         // TODO: These are redundant, the ToX methods should be used instead.

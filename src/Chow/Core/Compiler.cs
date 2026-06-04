@@ -524,7 +524,7 @@ namespace Chow.Core
         void CompileExpression(ExpressionNode expressionNode)
         {
             // `and`/`or` short-circuit, so they cannot use the eager postfix layout used by all other binary operators
-            if (expressionNode.Op == ExpressionOp.And || expressionNode.Op == ExpressionOp.Or)
+            if (expressionNode.Operator == ExpressionOperator.And || expressionNode.Operator == ExpressionOperator.Or)
             {
                 CompileShortCircuit(expressionNode);
                 return;
@@ -546,7 +546,7 @@ namespace Chow.Core
         {
             CompileTargetNode(expressionNode.Left);
 
-            var jumpCode = expressionNode.Op == ExpressionOp.And
+            var jumpCode = expressionNode.Operator == ExpressionOperator.And
                 ? OperationCode.JumpIfFalseOrPop
                 : OperationCode.JumpIfTrueOrPop;
 
@@ -765,104 +765,104 @@ namespace Chow.Core
 
         static OperationCode GetExpressionOpCode(ExpressionNode expressionNode)
         {
-            switch (expressionNode.Op)
+            switch (expressionNode.Operator)
             {
-                case ExpressionOp.Add:
+                case ExpressionOperator.Add:
                 {
                     return OperationCode.Add;
                 }
 
-                case ExpressionOp.Subtract:
+                case ExpressionOperator.Subtract:
                 {
                     return OperationCode.Subtract;
                 }
 
-                case ExpressionOp.Multiply:
+                case ExpressionOperator.Multiply:
                 {
                     return OperationCode.Multiply;
                 }
 
-                case ExpressionOp.Divide:
+                case ExpressionOperator.Divide:
                 {
                     return OperationCode.Divide;
                 }
 
-                case ExpressionOp.Modulus:
+                case ExpressionOperator.Modulus:
                 {
                     return OperationCode.Modulus;
                 }
 
-                case ExpressionOp.Exponentiate:
+                case ExpressionOperator.Exponentiate:
                 {
                     return OperationCode.Exponentiate;
                 }
 
-                case ExpressionOp.FloorDivide:
+                case ExpressionOperator.FloorDivide:
                 {
                     return OperationCode.FloorDivide;
                 }
 
-                case ExpressionOp.Negate:
+                case ExpressionOperator.Negate:
                 {
                     return OperationCode.Negate;
                 }
 
-                case ExpressionOp.Equal:
+                case ExpressionOperator.Equal:
                 {
                     return OperationCode.Equal;
                 }
 
-                case ExpressionOp.NotEqual:
+                case ExpressionOperator.NotEqual:
                 {
                     return OperationCode.NotEqual;
                 }
 
-                case ExpressionOp.Less:
+                case ExpressionOperator.Less:
                 {
                     return OperationCode.Less;
                 }
 
-                case ExpressionOp.Greater:
+                case ExpressionOperator.Greater:
                 {
                     return OperationCode.Greater;
                 }
 
-                case ExpressionOp.LessEqual:
+                case ExpressionOperator.LessEqual:
                 {
                     return OperationCode.LessEqual;
                 }
 
-                case ExpressionOp.GreaterEqual:
+                case ExpressionOperator.GreaterEqual:
                 {
                     return OperationCode.GreaterEqual;
                 }
 
-                case ExpressionOp.Not:
+                case ExpressionOperator.Not:
                 {
                     return OperationCode.Not;
                 }
 
-                case ExpressionOp.BinaryOr:
+                case ExpressionOperator.BinaryOr:
                 {
                     return OperationCode.BinaryOr;
                 }
 
-                case ExpressionOp.In:
+                case ExpressionOperator.In:
                 {
                     return OperationCode.In;
                 }
 
-                case ExpressionOp.NotIn:
+                case ExpressionOperator.NotIn:
                 {
                     return OperationCode.NotIn;
                 }
 
-                case ExpressionOp.And:
-                case ExpressionOp.Or:
-                case ExpressionOp.ToStr:
+                case ExpressionOperator.And:
+                case ExpressionOperator.Or:
+                case ExpressionOperator.ToStr:
                 default:
                 {
-                    throw new NotImplementedException(nameof(expressionNode.Op));
+                    throw new NotImplementedException(nameof(expressionNode.Operator));
                 }
             }
         }
