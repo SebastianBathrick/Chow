@@ -254,10 +254,10 @@ namespace Chow.StandardLibrary
 
             if (!HasZeroArguments(args))
             {
-                if (args[0].Type != Tag.Dict)
+                if (args[0].Tag != Tag.Dict)
                 {
                     // Python: TypeError. Chow has no kwargs/mapping protocol yet, so only dict copy is supported.
-                    throw new TypeException($"'{args[0].Type}' object is not iterable");
+                    throw new TypeException($"'{args[0].Tag}' object is not iterable");
                 }
 
                 result.GetMethod("update")(new[]
@@ -273,7 +273,7 @@ namespace Chow.StandardLibrary
         {
             var value = args[0];
 
-            switch (value.Type)
+            switch (value.Tag)
             {
                 case Tag.Str:
                     {
@@ -293,14 +293,14 @@ namespace Chow.StandardLibrary
                     }
             }
 
-            throw new TypeException($"object of type '{value.Type}' has no len()");
+            throw new TypeException($"object of type '{value.Tag}' has no len()");
         }
 
         static TaggedUnion Abs(TaggedUnion[] args)
         {
             var value = args[0];
 
-            switch (value.Type)
+            switch (value.Tag)
             {
                 case Tag.Long:
                     {
@@ -316,7 +316,7 @@ namespace Chow.StandardLibrary
                     }
             }
 
-            throw new TypeException($"bad operand type for abs(): '{value.Type}'");
+            throw new TypeException($"bad operand type for abs(): '{value.Tag}'");
         }
 
         static TaggedUnion Round(TaggedUnion[] args)
@@ -417,10 +417,10 @@ namespace Chow.StandardLibrary
 
         static long RequireRangeInt(TaggedUnion arg)
         {
-            if (arg.Type != Tag.Long)
+            if (arg.Tag != Tag.Long)
             {
                 throw new TypeException(
-                    $"'{arg.Type}' object cannot be interpreted as an integer");
+                    $"'{arg.Tag}' object cannot be interpreted as an integer");
             }
 
             return arg.AsType<long>();

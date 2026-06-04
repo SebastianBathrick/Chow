@@ -65,9 +65,9 @@ namespace Chow.DataTypes
         {
             ValidateArguments(args, 2);
 
-            if (args[0].Type != Tag.Long)
+            if (args[0].Tag != Tag.Long)
             {
-                throw new ArgumentException($"Argument 0 must be of type {Tag.Long}, but was {args[0].Type}");
+                throw new ArgumentException($"Argument 0 must be of type {Tag.Long}, but was {args[0].Tag}");
             }
 
             var idx = (int)args[0].AsType<long>();
@@ -101,9 +101,9 @@ namespace Chow.DataTypes
 
             if (args != null && args.Length == 1)
             {
-                if (args[0].Type != Tag.Long)
+                if (args[0].Tag != Tag.Long)
                 {
-                    throw new ArgumentException($"Argument 0 must be of type {Tag.Long}, but was {args[0].Type}");
+                    throw new ArgumentException($"Argument 0 must be of type {Tag.Long}, but was {args[0].Tag}");
                 }
 
                 index = (int)args[0].AsType<long>();
@@ -307,7 +307,7 @@ namespace Chow.DataTypes
 
             int start;
 
-            if (startValue.Type == Tag.None)
+            if (startValue.Tag == Tag.None)
             {
                 start = step < 0 ? upper : lower;
             }
@@ -333,7 +333,7 @@ namespace Chow.DataTypes
 
             int stop;
 
-            if (stopValue.Type == Tag.None)
+            if (stopValue.Tag == Tag.None)
             {
                 stop = step < 0 ? lower : upper;
             }
@@ -379,14 +379,14 @@ namespace Chow.DataTypes
 
         static int SliceArgOrDefault(TaggedUnion value, int defaultValue)
         {
-            if (value.Type == Tag.None)
+            if (value.Tag == Tag.None)
             {
                 return defaultValue;
             }
 
-            if (value.Type != Tag.Long)
+            if (value.Tag != Tag.Long)
             {
-                throw new ArgumentException($"slice indices must be integers or None, got {value.Type}");
+                throw new ArgumentException($"slice indices must be integers or None, got {value.Tag}");
             }
 
             return (int)value.AsType<long>();
@@ -416,7 +416,7 @@ namespace Chow.DataTypes
         // a standalone string prints without quotes via ChowStr.ToString.
         static void Repr(StringBuilder sb, TaggedUnion value)
         {
-            switch (value.Type)
+            switch (value.Tag)
             {
                 case Tag.None:
                     sb.Append("None");
@@ -475,12 +475,12 @@ namespace Chow.DataTypes
             
             for (var i = 0; i < reqTypes.Length; i++)
             {
-                if (args[i].Type == reqTypes[i])
+                if (args[i].Tag == reqTypes[i])
                 {
                     continue;
                 }
 
-                throw new ArgumentException($"Argument {i} must be of type {reqTypes[i]}, but was {args[i].Type}");
+                throw new ArgumentException($"Argument {i} must be of type {reqTypes[i]}, but was {args[i].Tag}");
             }
         }
     }

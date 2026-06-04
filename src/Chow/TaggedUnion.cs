@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -10,12 +11,13 @@ namespace Chow
     /// Represents an immutable Chow value of varying Chow data types, with the main types being:
     /// <b>int, float, str, bool, None, list, dict, and range</b>.
     /// </summary>
+    [StructLayout(LayoutKind.Explicit)]
     public readonly struct TaggedUnion
     {
         // TODO: Make helper function that is operator agnostic for converting operands to different types
 
-        #region Fields
-
+        
+        public static readonly TaggedUnion None = new TaggedUnion(Tag.None);
         static readonly Dictionary<Type, Tag> DataTypeMap = new Dictionary<Type, Tag>
         {
             { typeof(bool), Tag.Bool },
@@ -28,62 +30,62 @@ namespace Chow
             { typeof(InternalList), Tag.List }
         };
 
+        #region Fields
+        
         /// <summary>Represents the TaggedUnion equivalent to null/nil/none values.</summary>
-        public static readonly TaggedUnion None = new TaggedUnion(Tag.None);
-        readonly object _obj;
-        readonly long _long;
-        readonly double _double;
+        [FieldOffset(OBJ_FIELD_OFFSET)] readonly object _obj;
+        [FieldOffset(LONG_FIELD_OFFSET)] readonly long _long;
+        [FieldOffset(DBL_FIELD_OFFSET)] readonly double _dbl;
+        [FieldOffset(TAG_FIELD_OFFSET)] readonly Tag _tag;
 
         #endregion
 
         #region Properties
 
-        bool BoolValue => _long == BOOL_TRUE_LONG;
+        bool BoolValue => _long == BOOL_T_TO_LONG;
 
-        internal Tag Type { get; }
-
+        internal Tag Tag => _tag;
         #endregion
 
         #region Constructors
 
         TaggedUnion(
-            Tag type = Tag.None,
-            bool boolValue = DEFAULT_BOOL_VALUE,
-            object objVal = DEFAULT_OBJECT_VALUE,
-            long longVal = DEFAULT_LONG_VALUE,
-            double doubleVal = DEFAULT_DOUBLE_VALUE)
+            Tag tag = Tag.None,
+            bool boolValue = NOT_BOOL_INIT,
+            object objVal = NOT_OBJ_INIT,
+            long longVal = NOT_LONG_INIT,
+            double doubleVal = NOT_DBL_INIT)
         {
-            Type = type;
+            _tag = tag;
             _obj = objVal;
-            _double = doubleVal;
 
-            // Run any type-specific logic
-            switch (type)
+            // _long and _dbl share the same FieldOffset (explicit-layout union). The compiler still
+            // requires both to be definitely assigned, so every branch sets the live field to its
+            // value and the dead field to its default — each field is written exactly once.
+            switch (tag)
             {
                 case Tag.Bool:
-                    _long = boolValue ? BOOL_TRUE_LONG : BOOL_FALSE_LONG;
-                    return;
+                    _dbl = NOT_DBL_INIT;
+                    _long = boolValue ? BOOL_T_TO_LONG : BOOL_F_TO_LONG;
+                    break;
+                case Tag.Double:
+                    _long = NOT_LONG_INIT;
+                    _dbl = doubleVal;
+                    break;
                 case Tag.Object:
                 case Tag.List:
                 case Tag.Dict:
                 case Tag.Range:
                 case Tag.Str:
-                    if (objVal == null)
-                    {
-                        throw new ArgumentNullException(nameof(objVal));
-                    }
-                    break;
-                
                 case Tag.None:
                 case Tag.Long:
-                case Tag.Double:
+                    _dbl = NOT_DBL_INIT;
+                    _long = longVal;
                     break;
-                
+
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+                    throw new ArgumentOutOfRangeException(nameof(tag), tag, null);
             }
-            
-            _long = longVal;
         }
 
         internal TaggedUnion(long value) : this(Tag.Long, longVal: value) {}
@@ -140,10 +142,10 @@ namespace Chow
                     this = chowValue;
                     break;
                 default:
-                    Type = Tag.Object;
+                    _tag = Tag.Object;
                     _obj = obj;
-                    _long = DEFAULT_LONG_VALUE;
-                    _double = DEFAULT_DOUBLE_VALUE;
+                    _long = NOT_LONG_INIT;
+                    _dbl = NOT_DBL_INIT;
                     break;
             }
         }
@@ -173,7 +175,7 @@ namespace Chow
                     return typedObject;
                 }
 
-                throw new InvalidOperationException($"Cannot convert {Type} to {typeOf}");
+                throw new InvalidOperationException($"Cannot convert {_tag} to {typeOf}");
             }
 
             switch (targetDataType)
@@ -215,7 +217,7 @@ namespace Chow
                 }
             }
 
-            throw new InvalidOperationException($"Cannot convert {Type} to {typeof(TDataType)}");
+            throw new InvalidOperationException($"Cannot convert {_tag} to {typeof(TDataType)}");
         }
 
         /// <summary>Whether the Chow value of this instance is of the provided data type.</summary>
@@ -229,11 +231,11 @@ namespace Chow
             // If it is not a type defined by the Tag enum
             if (!DataTypeMap.TryGetValue(checkType, out var chowDataType))
             {
-                return Type == Tag.Object && _obj is TDataType;
+                return _tag == Tag.Object && _obj is TDataType;
             }
 
             // The map includes values representing data types that are from the Chow namespace
-            return Type == chowDataType;
+            return _tag == chowDataType;
         }
 
         public bool IsTruthy()
@@ -265,12 +267,12 @@ namespace Chow
                 }
                 case ConversionCase.Nothing:
                 {
-                    if (Type == Tag.List && rightOperand.Type == Tag.List)
+                    if (_tag == Tag.List && rightOperand._tag == Tag.List)
                     {
                         return new TaggedUnion(InternalList.Concat(AsType<InternalList>(), rightOperand.AsType<InternalList>()));
                     }
 
-                    if (Type == Tag.Str && rightOperand.Type == Tag.Str)
+                    if (_tag == Tag.Str && rightOperand._tag == Tag.Str)
                     {
                         return new TaggedUnion(AsType<string>() + rightOperand.AsType<string>());
                     }
@@ -320,22 +322,22 @@ namespace Chow
                 case ConversionCase.Nothing:
                 {
                     // Python treats bool as a subtype of int, so [1] * True and "ab" * True are valid.
-                    if (Type == Tag.List && IsIntegerTag(rightOperand.Type))
+                    if (_tag == Tag.List && IsIntegerTag(rightOperand._tag))
                     {
                         return new TaggedUnion(InternalList.Repeat(AsType<InternalList>(), rightOperand.AsType<int>()));
                     }
 
-                    if (IsIntegerTag(Type) && rightOperand.Type == Tag.List)
+                    if (IsIntegerTag(_tag) && rightOperand._tag == Tag.List)
                     {
                         return new TaggedUnion(InternalList.Repeat(rightOperand.AsType<InternalList>(), AsType<int>()));
                     }
 
-                    if (Type == Tag.Str && IsIntegerTag(rightOperand.Type))
+                    if (_tag == Tag.Str && IsIntegerTag(rightOperand._tag))
                     {
                         return new TaggedUnion(RepeatString(AsType<string>(), rightOperand.AsType<int>()));
                     }
 
-                    if (IsIntegerTag(Type) && rightOperand.Type == Tag.Str)
+                    if (IsIntegerTag(_tag) && rightOperand._tag == Tag.Str)
                     {
                         return new TaggedUnion(RepeatString(rightOperand.AsType<string>(), AsType<int>()));
                     }
@@ -480,7 +482,7 @@ namespace Chow
         internal TaggedUnion CreateUnion(TaggedUnion rightOperand)
         {
             if (LookupBinary(ExpressionOp.BinaryOr, rightOperand) == ConversionCase.Nothing
-                && Type == Tag.Dict && rightOperand.Type == Tag.Dict)
+                && _tag == Tag.Dict && rightOperand._tag == Tag.Dict)
             {
                 return new TaggedUnion(InternalDict.Merge(AsType<InternalDict>(), rightOperand.AsType<InternalDict>()));
             }
@@ -577,7 +579,7 @@ namespace Chow
                 }
                 case ConversionCase.Nothing:
                 {
-                    if (Type == Tag.Str && other.Type == Tag.Str)
+                    if (_tag == Tag.Str && other._tag == Tag.Str)
                     {
                         return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) < 0;
                     }
@@ -603,7 +605,7 @@ namespace Chow
                 }
                 case ConversionCase.Nothing:
                 {
-                    if (Type == Tag.Str && other.Type == Tag.Str)
+                    if (_tag == Tag.Str && other._tag == Tag.Str)
                     {
                         return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) > 0;
                     }
@@ -629,7 +631,7 @@ namespace Chow
                 }
                 case ConversionCase.Nothing:
                 {
-                    if (Type == Tag.Str && other.Type == Tag.Str)
+                    if (_tag == Tag.Str && other._tag == Tag.Str)
                     {
                         return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) <= 0;
                     }
@@ -655,7 +657,7 @@ namespace Chow
                 }
                 case ConversionCase.Nothing:
                 {
-                    if (Type == Tag.Str && other.Type == Tag.Str)
+                    if (_tag == Tag.Str && other._tag == Tag.Str)
                     {
                         return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) >= 0;
                     }
@@ -673,9 +675,9 @@ namespace Chow
 
         internal TaggedUnion InvokeHostDelegate(TaggedUnion[] args)
         {
-            if (Type != Tag.Object)
+            if (_tag != Tag.Object)
             {
-                throw new TypeException($"'{Type}' object is not callable");
+                throw new TypeException($"'{_tag}' object is not callable");
             }
 
             if (_obj is Func<TaggedUnion[], TaggedUnion> methodDelegate)
@@ -692,7 +694,7 @@ namespace Chow
 
         /// <summary>
         /// Strict structural equality: returns <c>true</c> only when <paramref name="obj"/> is a
-        /// <see cref="TaggedUnion"/> of the same <see cref="Type"/> with the same underlying value.
+        /// <see cref="TaggedUnion"/> of the same <see cref="_tag"/> with the same underlying value.
         /// No cross-type conversion is performed — <c>True</c> is not equal to <c>1</c>, and
         /// <c>1</c> is not equal to <c>1.0</c>. For Python <c>==</c> semantics that promote across
         /// numeric types, use <see cref="IsTypeAgnosticEqualTo"/> instead.
@@ -709,7 +711,7 @@ namespace Chow
         {
             int valueHash;
 
-            switch (Type)
+            switch (_tag)
             {
                 case Tag.Long:
                 {
@@ -718,7 +720,7 @@ namespace Chow
                 }
                 case Tag.Double:
                 {
-                    valueHash = _double.GetHashCode();
+                    valueHash = _dbl.GetHashCode();
                     break;
                 }
                 case Tag.Bool:
@@ -745,7 +747,7 @@ namespace Chow
 
             unchecked
             {
-                return Type.GetHashCode() * HASH_COMBINE_PRIME ^ valueHash;
+                return _tag.GetHashCode() * HASH_COMBINE_PRIME ^ valueHash;
             }
         }
 
@@ -766,11 +768,11 @@ namespace Chow
 
         internal bool ToBool()
         {
-            switch (Type)
+            switch (_tag)
             {
                 case Tag.None:
                 {
-                    return NONE_REP_BOOL_VALUE;
+                    return NONE_TO_BOOL_T_AND_F;
                 }
                 case Tag.Bool:
                 {
@@ -778,15 +780,15 @@ namespace Chow
                 }
                 case Tag.Object:
                 {
-                    return OBJECT_REP_BOOL_VALUE;
+                    return OBJ_TO_BOOL_T_AND_F;
                 }
                 case Tag.Long:
                 {
-                    return _long != LONG_REP_BOOL_FALSE;
+                    return _long != LONG_TO_BOOL_F;
                 }
                 case Tag.Double:
                 {
-                    return _double != DOUBLE_REP_BOOL_FALSE;
+                    return _dbl != DBL_TO_BOOL_F;
                 }
                 case Tag.Str:
                 {
@@ -811,7 +813,7 @@ namespace Chow
 
         internal long ToLong()
         {
-            switch (Type)
+            switch (_tag)
             {
                 case Tag.None:
                 {
@@ -819,7 +821,7 @@ namespace Chow
                 }
                 case Tag.Bool:
                 {
-                    return BoolValue ? BOOL_TRUE_LONG : BOOL_FALSE_LONG;
+                    return BoolValue ? BOOL_T_TO_LONG : BOOL_F_TO_LONG;
                 }
                 case Tag.Long:
                 {
@@ -827,7 +829,7 @@ namespace Chow
                 }
                 case Tag.Double:
                 {
-                    return (long)_double;
+                    return (long)_dbl;
                 }
                 case Tag.Str:
                 {
@@ -856,7 +858,7 @@ namespace Chow
 
         internal double ToDouble()
         {
-            switch (Type)
+            switch (_tag)
             {
                 case Tag.None:
                 {
@@ -864,7 +866,7 @@ namespace Chow
                 }
                 case Tag.Bool:
                 {
-                    return BoolValue ? BOOL_TRUE_REP_DOUBLE : BOOL_FALSE_REP_DOUBLE;
+                    return BoolValue ? BOOL_T_TO_DBL : BOOL_F_TO_DBL;
                 }
                 case Tag.Long:
                 {
@@ -872,7 +874,7 @@ namespace Chow
                 }
                 case Tag.Double:
                 {
-                    return _double;
+                    return _dbl;
                 }
                 case Tag.Str:
                 {
@@ -901,7 +903,7 @@ namespace Chow
 
         internal object ToObject()
         {
-            switch (Type)
+            switch (_tag)
             {
                 case Tag.None:
                 {
@@ -917,7 +919,7 @@ namespace Chow
                 }
                 case Tag.Double:
                 {
-                    return _double;
+                    return _dbl;
                 }
                 case Tag.Str:
                 case Tag.Object:
@@ -934,15 +936,15 @@ namespace Chow
 
         internal string ToStr()
         {
-            switch (Type)
+            switch (_tag)
             {
                 case Tag.None:
                 {
-                    return NONE_REP_STR_VALUE;
+                    return NONE_TO_STR;
                 }
                 case Tag.Bool:
                 {
-                    return BoolValue ? BOOL_TRUE_REP_STR : BOOL_FALSE_REP_STR;
+                    return BoolValue ? BOOL_T_TO_STR : BOOL_F_TO_STR;
                 }
                 case Tag.Long:
                 {
@@ -964,7 +966,7 @@ namespace Chow
                     if (_obj == null)
                     {
                         // This should never happen, but we'll check just in case
-                        throw new InvalidOperationException($"{nameof(TaggedUnion)} object with type {Type} null");
+                        throw new InvalidOperationException($"{nameof(TaggedUnion)} object with type {_tag} null");
                     }
 
                     return _obj.ToString();
@@ -982,7 +984,7 @@ namespace Chow
         {
             if (_obj is string strValue)
             {
-                return strValue.Length != STR_LENGTH_REP_BOOL_FALSE;
+                return strValue.Length != STR_LEN_TO_BOOL_F;
             }
 
             throw new InvalidOperationException("Expected string value for boolean comparison");
@@ -992,7 +994,7 @@ namespace Chow
         {
             if (_obj is InternalList listValue)
             {
-                return listValue.Count != LIST_COUNT_REP_BOOL_FALSE;
+                return listValue.Count != LIST_COUNT_TO_BOOL_F;
             }
 
             throw new InvalidOperationException("Expected list value for boolean comparison");
@@ -1002,7 +1004,7 @@ namespace Chow
         {
             if (_obj is InternalDict dictValue)
             {
-                return dictValue.Count != DICT_COUNT_REP_BOOL_FALSE;
+                return dictValue.Count != DICT_LEN_TO_BOOL_F;
             }
 
             throw new InvalidOperationException("Expected dict value for boolean comparison");
@@ -1012,7 +1014,7 @@ namespace Chow
         {
             if (_obj is InternalRange rangeValue)
             {
-                return rangeValue.Count != RANGE_COUNT_REP_BOOL_FALSE;
+                return rangeValue.Count != RNG_LEN_TO_BOOL_F;
             }
 
             throw new InvalidOperationException("Expected range value for boolean comparison");
@@ -1050,11 +1052,11 @@ namespace Chow
 
         string FloatToStr()
         {
-            var formatted = _double.ToString(CultureInfo.InvariantCulture);
+            var formatted = _dbl.ToString(CultureInfo.InvariantCulture);
 
             if (IsFractionalSuffix(formatted))
             {
-                formatted += DOUBLE_INTEGER_FRACTIONAL_SUFFIX;
+                formatted += DBL_LONG_FRACTION_SUFFIX;
             }
 
             return formatted;
@@ -1062,9 +1064,9 @@ namespace Chow
 
         static bool IsFractionalSuffix(string formatted)
         {
-            return formatted.IndexOf(DOUBLE_DECIMAL_POINT_CHAR) == CHAR_NOT_FOUND_INDEX
-                && formatted.IndexOf(DOUBLE_EXPONENT_LOWER_CHAR) == CHAR_NOT_FOUND_INDEX
-                && formatted.IndexOf(DOUBLE_EXPONENT_UPPER_CHAR) == CHAR_NOT_FOUND_INDEX;
+            return formatted.IndexOf(DBL_POINT_CHAR) == CHAR_NOT_FOUND_INX
+                && formatted.IndexOf(DBL_POW_LOWER_CHAR) == CHAR_NOT_FOUND_INX
+                && formatted.IndexOf(DBL_POW_UPPER_CHAR) == CHAR_NOT_FOUND_INX;
         }
 
         string StrToStr()
@@ -1087,28 +1089,28 @@ namespace Chow
 
         ConversionCase LookupBinary(ExpressionOp op, TaggedUnion right)
         {
-            return DataTypeConversionMap.GetLeftRightConversionCase(op, Type, right.Type);
+            return DataTypeConversionMap.GetLeftRightConversionCase(op, _tag, right._tag);
         }
 
         ConversionCase LookupUnary(ExpressionOp op)
         {
-            return DataTypeConversionMap.GetOperandConversionCase(op, Type);
+            return DataTypeConversionMap.GetOperandConversionCase(op, _tag);
         }
 
         TypeException UnsupportedBinary(ExpressionOp op, TaggedUnion right)
         {
-            return new TypeException($"unsupported operand type(s) for {op}: '{Type}' and '{right.Type}'");
+            return new TypeException($"unsupported operand type(s) for {op}: '{_tag}' and '{right._tag}'");
         }
 
         TypeException UnsupportedUnary(ExpressionOp op)
         {
-            return new TypeException($"bad operand type for unary {op}: '{Type}'");
+            return new TypeException($"bad operand type for unary {op}: '{_tag}'");
         }
 
         // TODO: These are redundant, the ToX methods should be used instead.
         long PromoteToLong()
         {
-            switch (Type)
+            switch (_tag)
             {
                 case Tag.Bool:
                 {
@@ -1120,14 +1122,14 @@ namespace Chow
                 }
                 default:
                 {
-                    throw new InvalidOperationException($"Cannot promote {Type} to int");
+                    throw new InvalidOperationException($"Cannot promote {_tag} to int");
                 }
             }
         }
 
         double PromoteToDouble()
         {
-            switch (Type)
+            switch (_tag)
             {
                 case Tag.Bool:
                 {
@@ -1139,11 +1141,11 @@ namespace Chow
                 }
                 case Tag.Double:
                 {
-                    return _double;
+                    return _dbl;
                 }
                 default:
                 {
-                    throw new InvalidOperationException($"Cannot promote {Type} to float");
+                    throw new InvalidOperationException($"Cannot promote {_tag} to float");
                 }
             }
         }
@@ -1153,12 +1155,12 @@ namespace Chow
         // delegate to the underlying value's identity/structural equality.
         bool EqualsNoConversion(TaggedUnion other)
         {
-            if (Type != other.Type)
+            if (_tag != other._tag)
             {
                 return false;
             }
 
-            switch (Type)
+            switch (_tag)
             {
                 case Tag.None:
                 {
@@ -1174,7 +1176,7 @@ namespace Chow
                 }
                 case Tag.Double:
                 {
-                    return _double.Equals(other._double);
+                    return _dbl.Equals(other._dbl);
                 }
                 case Tag.Str:
                 {
@@ -1252,44 +1254,49 @@ namespace Chow
         const int HASH_COMBINE_PRIME = 397;
 
         // Constructor defaults
-        const bool DEFAULT_BOOL_VALUE = false;
-        const object DEFAULT_OBJECT_VALUE = null;
-        const long DEFAULT_LONG_VALUE = 0L;
-        const double DEFAULT_DOUBLE_VALUE = 0.0;
+        const bool NOT_BOOL_INIT = false;
+        const object NOT_OBJ_INIT = null;
+        const long NOT_LONG_INIT = 0L;
+        const double NOT_DBL_INIT = 0.0;
 
         // ToBool source representations (numeric "false" values)
-        const long LONG_REP_BOOL_FALSE = 0L;
-        const double DOUBLE_REP_BOOL_FALSE = 0.0;
+        const long LONG_TO_BOOL_F = 0L;
+        const double DBL_TO_BOOL_F = 0.0;
 
         // ToBool source representations (container/string "false" lengths, plus None/Object fixed reps)
-        const int STR_LENGTH_REP_BOOL_FALSE = 0;
-        const int LIST_COUNT_REP_BOOL_FALSE = 0;
-        const int DICT_COUNT_REP_BOOL_FALSE = 0;
-        const int RANGE_COUNT_REP_BOOL_FALSE = 0;
-        const bool NONE_REP_BOOL_VALUE = false;
-        const bool OBJECT_REP_BOOL_VALUE = true;
+        const int STR_LEN_TO_BOOL_F = 0;
+        const int LIST_COUNT_TO_BOOL_F = 0;
+        const int DICT_LEN_TO_BOOL_F = 0;
+        const int RNG_LEN_TO_BOOL_F = 0;
+        const bool NONE_TO_BOOL_T_AND_F = false;
+        const bool OBJ_TO_BOOL_T_AND_F = true;
 
         // ToLong source representations (bool -> long)
-        const long BOOL_FALSE_LONG = 0L;
-        const long BOOL_TRUE_LONG = 1L;
+        const long BOOL_F_TO_LONG = 0L;
+        const long BOOL_T_TO_LONG = 1L;
 
         // ToDouble source representations (bool -> double)
-        const double BOOL_FALSE_REP_DOUBLE = 0.0;
-        const double BOOL_TRUE_REP_DOUBLE = 1.0;
+        const double BOOL_F_TO_DBL = 0.0;
+        const double BOOL_T_TO_DBL = 1.0;
 
         // ToStr source representations (None/bool -> str)
-        const string NONE_REP_STR_VALUE = "None";
-        const string BOOL_FALSE_REP_STR = "False";
-        const string BOOL_TRUE_REP_STR = "True";
+        const string NONE_TO_STR = "None";
+        const string BOOL_F_TO_STR = "False";
+        const string BOOL_T_TO_STR = "True";
 
-        // ToStr float formatting (append ".0" when ToString output has no decimal point or exponent)
-        const string DOUBLE_INTEGER_FRACTIONAL_SUFFIX = ".0";
-        const char DOUBLE_DECIMAL_POINT_CHAR = '.';
-        const char DOUBLE_EXPONENT_LOWER_CHAR = 'e';
-        const char DOUBLE_EXPONENT_UPPER_CHAR = 'E';
+        // ToStr float formatting (append ".0" when ToString output has no decimal point or pow)
+        const string DBL_LONG_FRACTION_SUFFIX = ".0";
+        const char DBL_POINT_CHAR = '.';
+        const char DBL_POW_LOWER_CHAR = 'e';
+        const char DBL_POW_UPPER_CHAR = 'E';
 
         // String.IndexOf "not found" sentinel (used by ToStr float formatting check)
-        const int CHAR_NOT_FOUND_INDEX = -1;
+        const int CHAR_NOT_FOUND_INX = -1;
+
+        const int OBJ_FIELD_OFFSET = 0;
+        const int LONG_FIELD_OFFSET = 8;
+        const int DBL_FIELD_OFFSET = 8;
+        const int TAG_FIELD_OFFSET = 16;
 
         #endregion
 

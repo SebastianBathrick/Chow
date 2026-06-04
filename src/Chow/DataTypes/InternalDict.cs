@@ -101,9 +101,9 @@ namespace Chow.DataTypes
         {
             ValidateArgCount(args, 1);
 
-            if (args[0].Type != Tag.Dict)
+            if (args[0].Tag != Tag.Dict)
             {
-                throw new TypeException($"'{args[0].Type}' object is not a dict");
+                throw new TypeException($"'{args[0].Tag}' object is not a dict");
             }
 
             var other = args[0].AsType<InternalDict>();
@@ -226,7 +226,7 @@ namespace Chow.DataTypes
 
         public static void ValidateHashable(TaggedUnion key)
         {
-            switch (key.Type)
+            switch (key.Tag)
             {
                 case Tag.None:
                 case Tag.Bool:
@@ -239,7 +239,7 @@ namespace Chow.DataTypes
                 case Tag.Dict:
                 case Tag.Range:
                 default:
-                    throw new TypeException($"unhashable type: '{TypeName(key.Type)}'");
+                    throw new TypeException($"unhashable type: '{TypeName(key.Tag)}'");
             }
         }
 
@@ -269,7 +269,7 @@ namespace Chow.DataTypes
         // a standalone string prints without quotes via ChowStr.ToString.
         static void Repr(StringBuilder sb, TaggedUnion value)
         {
-            switch (value.Type)
+            switch (value.Tag)
             {
                 case Tag.None:
                     sb.Append("None");

@@ -5,7 +5,7 @@ namespace Chow.DataTypes
     {
         public static IChowIterator GetIterator(TaggedUnion source)
         {
-            switch (source.Type)
+            switch (source.Tag)
             {
                 case Tag.List:
                 {
@@ -27,7 +27,7 @@ namespace Chow.DataTypes
                 case Tag.Dict:
                 default:
                 {
-                    throw new TypeException($"'{TypeNameOf(source.Type)}' object is not iterable");
+                    throw new TypeException($"'{TypeNameOf(source.Tag)}' object is not iterable");
                 }
             }
         }

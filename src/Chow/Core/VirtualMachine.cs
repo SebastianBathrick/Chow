@@ -532,7 +532,7 @@ namespace Chow.Core
         static bool IsClosure(TaggedUnion calleeValue)
         {
 
-            return calleeValue.Type == Tag.Object && calleeValue.ToObject() is Closure;
+            return calleeValue.Tag == Tag.Object && calleeValue.ToObject() is Closure;
         }
 
         void CallInteropFunction(TaggedUnion calleeValue, TaggedUnion[] args)
@@ -686,11 +686,11 @@ namespace Chow.Core
             var needle = _valStack.Pop();
             var found = false;
 
-            if (container.Type == Tag.Dict)
+            if (container.Tag == Tag.Dict)
             {
                 found = ((InternalDict)container.ToObject()).ContainsKey(needle);
             }
-            else if (container.Type == Tag.List)
+            else if (container.Tag == Tag.List)
             {
                 var list = (InternalList)container.ToObject();
 
@@ -701,7 +701,7 @@ namespace Chow.Core
             }
             else
             {
-                throw new TypeException($"argument of type '{container.Type}' is not iterable");
+                throw new TypeException($"argument of type '{container.Tag}' is not iterable");
             }
 
             _valStack.Push(new TaggedUnion(negate ? !found : found));
@@ -717,7 +717,7 @@ namespace Chow.Core
             var target = _valStack.Pop();
 
             // TODO: Add a branch here for strings.
-            if (target.Type == Tag.Dict)
+            if (target.Tag == Tag.Dict)
             {
                 try
                 {
@@ -728,11 +728,11 @@ namespace Chow.Core
                     throw new DictKeyException(ex.KeyRepr, GetCurrentLineNumber());
                 }
             }
-            else if (target.Type == Tag.List)
+            else if (target.Tag == Tag.List)
             {
-                if (index.Type != Tag.Long)
+                if (index.Tag != Tag.Long)
                 {
-                    throw new TypeException($"list indices must be integers, not {index.Type}");
+                    throw new TypeException($"list indices must be integers, not {index.Tag}");
                 }
 
                 _valStack.Push(((InternalList)target.ToObject())[(int)index.ToLong()]);
@@ -740,7 +740,7 @@ namespace Chow.Core
             else
             {
                 throw new TypeException(
-                    $"'{ParseDataTypeName(target.Type)}' object is not subscriptable");
+                    $"'{ParseDataTypeName(target.Tag)}' object is not subscriptable");
             }
         }
 
@@ -752,9 +752,9 @@ namespace Chow.Core
             var target = _valStack.Pop();
 
             // FUTURE: strings add a parallel slice branch.
-            if (target.Type != Tag.List)
+            if (target.Tag != Tag.List)
             {
-                throw new TypeException($"'{target.Type}' object is not subscriptable");
+                throw new TypeException($"'{target.Tag}' object is not subscriptable");
             }
 
             _valStack.Push(((InternalList)target.ToObject()).GetSlice(start, stop, step));
@@ -766,15 +766,15 @@ namespace Chow.Core
             var index = _valStack.Pop();
             var target = _valStack.Pop();
 
-            if (target.Type == Tag.Dict)
+            if (target.Tag == Tag.Dict)
             {
                 ((InternalDict)target.ToObject())[index] = value;
             }
-            else if (target.Type == Tag.List)
+            else if (target.Tag == Tag.List)
             {
-                if (index.Type != Tag.Long)
+                if (index.Tag != Tag.Long)
                 {
-                    throw new TypeException($"list indices must be integers, not {index.Type}");
+                    throw new TypeException($"list indices must be integers, not {index.Tag}");
                 }
 
                 ((InternalList)target.ToObject())[(int)index.ToLong()] = value;
@@ -782,7 +782,7 @@ namespace Chow.Core
             else
             {
                 throw new TypeException(
-                    $"'{ParseDataTypeName(target.Type)}' object does not support item assignment");
+                    $"'{ParseDataTypeName(target.Tag)}' object does not support item assignment");
             }
         }
 
@@ -796,32 +796,32 @@ namespace Chow.Core
             var target = _valStack.Pop();
 
             // TODO: class instances add a branch that consults the instance attribute table, then the class method table.
-            if (target.Type == Tag.List)
+            if (target.Tag == Tag.List)
             {
                 var list = (InternalList)target.ToObject();
 
                 if (!list.HasMethod(attrName))
                 {
-                    throw new AttributeException(ParseDataTypeName(target.Type), attrName, GetCurrentLineNumber());
+                    throw new AttributeException(ParseDataTypeName(target.Tag), attrName, GetCurrentLineNumber());
                 }
 
                 _valStack.Push(list[attrName]);
             }
-            else if (target.Type == Tag.Dict)
+            else if (target.Tag == Tag.Dict)
             {
                 // TODO: Create a ToInternalDict and ToInternalList to clean this up
                 var dict = (InternalDict)target.ToObject();
 
                 if (!dict.HasMethod(attrName))
                 {
-                    throw new AttributeException(ParseDataTypeName(target.Type), attrName, GetCurrentLineNumber());
+                    throw new AttributeException(ParseDataTypeName(target.Tag), attrName, GetCurrentLineNumber());
                 }
 
                 _valStack.Push(dict[attrName]);
             }
             else
             {
-                throw new AttributeException(ParseDataTypeName(target.Type), attrName, GetCurrentLineNumber());
+                throw new AttributeException(ParseDataTypeName(target.Tag), attrName, GetCurrentLineNumber());
             }
         }
 
@@ -831,7 +831,7 @@ namespace Chow.Core
             _valStack.Pop();
             var target = _valStack.Pop();
 
-            throw new AttributeException(ParseDataTypeName(target.Type), attrName, GetCurrentLineNumber());
+            throw new AttributeException(ParseDataTypeName(target.Tag), attrName, GetCurrentLineNumber());
         }
 
         #endregion
