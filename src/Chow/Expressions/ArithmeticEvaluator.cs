@@ -16,6 +16,7 @@ namespace Chow.Expressions
         // TODO: Update project's const naming conventions from SNAKE_CASE to PascalCase 
         const int IsDoubleEqualInteger = 0; 
         
+        // Python treats bool as a subtype of int; any float operand promotes the whole op to float.
         static readonly IReadOnlyDictionary<(Tag, Tag), Tag> TagConversionMap =
             new Dictionary<(Tag left, Tag right), Tag>()
             {
@@ -34,6 +35,7 @@ namespace Chow.Expressions
 
         public static TaggedUnion EvaluateAddition(ref TaggedUnion l, ref TaggedUnion r)
         {
+            // No float on either side → int result; otherwise both operands promote to float.
             if (GetConversionTag(l.Tag, r.Tag, ExpressionOperator.Add) == Tag.Long)
             {
                 return new TaggedUnion(l.ToLong() + r.ToLong());
@@ -64,7 +66,8 @@ namespace Chow.Expressions
 
         public static TaggedUnion EvaluateDivision(ref TaggedUnion l, ref TaggedUnion r)
         {
-            // Note: Division always produces a double (referred to as a 'float' in source code).
+            // Python: `/` always yields float (e.g. 9 / 3 → 3.0), even for int operands.
+            // Lookup validates operand types; result type is always double regardless of map value.
             GetConversionTag(l.Tag, r.Tag, ExpressionOperator.Divide);
 
             var rightDbl = r.ToDouble();
@@ -101,6 +104,7 @@ namespace Chow.Expressions
                 throw new ZeroDivisionException();
             }
 
+            // Same divisor-sign fix as ModLong; needed because float `%` also follows C# rules.
             return (l % r + r) % r;
         }
 
@@ -111,6 +115,8 @@ namespace Chow.Expressions
                 throw new ZeroDivisionException();
             }
 
+            // C# `%` keeps the dividend's sign; Python keeps the divisor's sign.
+            // Adding r before the second `%` shifts the result into [0, |r|) or (-|r|, 0].
             return (l % r + r) % r;
         }
 
@@ -124,6 +130,7 @@ namespace Chow.Expressions
             
             if (convTag == Tag.Long)
             {
+                // Integer // stays in longs so large quotients are not rounded via double.
                 return new TaggedUnion(FloorDivideLong(l.ToLong(), r.ToLong()));
             }
             
@@ -138,6 +145,7 @@ namespace Chow.Expressions
                 throw new ZeroDivisionException();
             }
 
+            // Python `//` on floats floors toward negative infinity, not toward zero.
             return Math.Floor(l / r);
         }
 
@@ -150,6 +158,8 @@ namespace Chow.Expressions
 
             var q = l / r;
 
+            // C# truncates toward zero; Python floors toward -∞ when signs differ and there is a remainder.
+            // `l < 0L != r < 0L` is `(l < 0) != (r < 0)` — true when exactly one operand is negative.
             if (l % r != 0L && l < 0L != r < 0L)
             {
                 q--;
@@ -173,14 +183,17 @@ namespace Chow.Expressions
 
                 if (exponentLong >= 0L)
                 {
-                    var expandedForm = ExponentiateLong(baseValue.ToLong(), exponentLong);
-                    return new TaggedUnion(expandedForm);
+                    // Exact integer path; avoids double precision loss (e.g. 10 ** 16).
+                    var result = ExponentiateLong(baseValue.ToLong(), exponentLong);
+                    return new TaggedUnion(result);
                 }
+                // Negative int exponent (e.g. 2 ** -3) falls through to float Math.Pow below.
             }
 
             var baseDbl = baseValue.ToDouble();
             var exponentDbl = exponentValue.ToDouble();
 
+            // Python: 0 ** -n raises ZeroDivisionError; Math.Pow would return Infinity.
             if (IsDoubleValueZero(baseDbl) && exponentDbl < 0.0)
             {
                 throw new ZeroDivisionException();
@@ -190,6 +203,7 @@ namespace Chow.Expressions
         }
 
         // Exponent-by-squaring. Caller guarantees exponent >= 0.
+        // Overflow wraps silently (Python uses arbitrary-precision int; not modeled here).
         static long ExponentiateLong(long l, long r)
         {
             var result = 1L;
@@ -222,12 +236,14 @@ namespace Chow.Expressions
             }
 
             throw new TypeException(
+                // Message shape mirrors Python's TypeError wording and type names.
                 $"TypeError: unsupported operand type(s) for {OperatorStrings.EnumToString(op)}: "
                 + $"'{DataTypeNames.GetTypeName(leftTag)}' and '{DataTypeNames.GetTypeName(rightTag)}'");
         }
 
         static bool IsDoubleValueZero(double divisor)
         {
+            // CompareTo treats -0.0 and +0.0 as equal; `divisor == 0.0` can miss -0.0 edge cases.
             return divisor.CompareTo(0.0) == IsDoubleEqualInteger;
         }
 
