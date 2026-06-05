@@ -8,6 +8,7 @@ namespace Chow.DataTypes
         {
             { Tag.None, "NoneType" },
             { Tag.Bool, "bool" },
+            { Tag.Object, "object" },
             { Tag.Long, "int" },
             { Tag.Double, "float" },
             { Tag.Str, "str" },

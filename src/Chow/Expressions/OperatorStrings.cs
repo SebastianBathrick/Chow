@@ -15,6 +15,12 @@ namespace Chow.Expressions
             { DataTypes.ExpressionOperator.Divide, "/" },
             { DataTypes.ExpressionOperator.Modulus, "%" },
             { DataTypes.ExpressionOperator.Exponentiate, "**" },
+            { DataTypes.ExpressionOperator.Equal, "==" },
+            { DataTypes.ExpressionOperator.NotEqual, "!=" },
+            { DataTypes.ExpressionOperator.Less, "<" },
+            { DataTypes.ExpressionOperator.Greater, ">" },
+            { DataTypes.ExpressionOperator.LessEqual, "<=" },
+            { DataTypes.ExpressionOperator.GreaterEqual, ">=" },
         };
 
 

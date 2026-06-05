@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Chow.Bytecode;
 using Chow.DataTypes;
 using Chow.Exceptions;
+using Chow.Expressions;
 using Chow.State;
 namespace Chow.Core
 {
@@ -615,37 +616,37 @@ namespace Chow.Core
 
                 case OperationCode.Equal:
                 {
-                    _valStack.Push(new TaggedUnion(left.IsTypeAgnosticEqualTo(right)));
+                    _valStack.Push(ComparisonEvaluator.EvaluateEqual(ref left, ref right));
                     break;
                 }
 
                 case OperationCode.NotEqual:
                 {
-                    _valStack.Push(new TaggedUnion(left.IsNotEqualTo(right)));
+                    _valStack.Push(ComparisonEvaluator.EvaluateNotEqual(ref left, ref right));
                     break;
                 }
 
                 case OperationCode.Less:
                 {
-                    _valStack.Push(new TaggedUnion(left.IsLessThan(right)));
+                    _valStack.Push(ComparisonEvaluator.EvaluateLess(ref left, ref right));
                     break;
                 }
 
                 case OperationCode.Greater:
                 {
-                    _valStack.Push(new TaggedUnion(left.IsGreaterThan(right)));
+                    _valStack.Push(ComparisonEvaluator.EvaluateGreater(ref left, ref right));
                     break;
                 }
 
                 case OperationCode.LessEqual:
                 {
-                    _valStack.Push(new TaggedUnion(left.IsLessOrEqualTo(right)));
+                    _valStack.Push(ComparisonEvaluator.EvaluateLessEqual(ref left, ref right));
                     break;
                 }
 
                 case OperationCode.GreaterEqual:
                 {
-                    _valStack.Push(new TaggedUnion(left.IsGreaterOrEqualTo(right)));
+                    _valStack.Push(ComparisonEvaluator.EvaluateGreaterEqual(ref left, ref right));
                     break;
                 }
 
