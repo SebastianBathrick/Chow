@@ -21,7 +21,7 @@ namespace Chow.State
         public Instruction CurrentInstr => CurrFrame.CurrentInstr;
 
         /// <summary>True while the current frame has instructions remaining.</summary>
-        public bool IsInstrToRun => CurrFrame.IsInstrToRun;
+        public bool IsInstructionToExecute => CurrFrame.IsInstrToRun;
 
         /// <summary>The current frame's scope. Captured by <c>PushNewClosureFromTemplate</c> at runtime.</summary>
         public Scope CurrentScope => CurrFrame.Scope;

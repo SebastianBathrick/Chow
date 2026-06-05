@@ -74,8 +74,10 @@ namespace Chow.Expressions
                 case Tag.Long:
                     return CompareLong(l.ToLong(), r.ToLong(), op);
                 case Tag.Double:
+                    // Use relational operators instead of CompareTo so NaN comparisons stay false like Python.
                     return CompareDouble(l.ToDouble(), r.ToDouble(), op);
                 case Tag.Str:
+                    // Python orders strings lexicographically by Unicode code point; ordinal compare matches that.
                     return CompareResult(string.CompareOrdinal(l.ToString(), r.ToString()), op);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(op), op, null);
@@ -137,6 +139,7 @@ namespace Chow.Expressions
         {
             if (TagConversionMap.TryGetValue((l.Tag, r.Tag), out var convTag))
             {
+                // Numeric equality follows Python promotion: True == 1 and 1 == 1.0 are both true.
                 switch (convTag)
                 {
                     case Tag.Long:
@@ -150,19 +153,24 @@ namespace Chow.Expressions
 
             if (l.Tag != r.Tag)
             {
+                // Python equality across unrelated types returns False instead of raising TypeError.
                 return false;
             }
 
             switch (l.Tag)
             {
                 case Tag.None:
+                    // None is a singleton in Python semantics, so None == None is always true.
                     return true;
                 case Tag.List:
+                    // List equality is structural and order-sensitive.
                     return InternalList.ElementsEqual((InternalList)l.ToObject(), (InternalList)r.ToObject());
                 case Tag.Dict:
+                    // Dict equality is structural; key insertion order does not decide equality.
                     return InternalDict.ElementsEqual((InternalDict)l.ToObject(), (InternalDict)r.ToObject());
                 case Tag.Range:
                 case Tag.Object:
+                    // Chow ranges/objects do not have Python structural equality yet; preserve identity behavior.
                     return ReferenceEquals(l.ToObject(), r.ToObject());
                 default:
                     return false;

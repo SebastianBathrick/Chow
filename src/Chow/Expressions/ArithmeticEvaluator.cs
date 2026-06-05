@@ -49,11 +49,13 @@ namespace Chow.Expressions
 
             if (l.Tag == Tag.Str && r.Tag == Tag.Str)
             {
+                // Python overloads `+` for sequence concatenation; strings keep string results.
                 return new TaggedUnion(l.ToString() + r.ToString());
             }
 
             if (l.Tag == Tag.List && r.Tag == Tag.List)
             {
+                // List concatenation creates a new list; neither operand list is mutated.
                 return new TaggedUnion(
                     InternalList.Concat((InternalList)l.ToObject(), (InternalList)r.ToObject()));
             }
@@ -83,21 +85,25 @@ namespace Chow.Expressions
 
             if (l.Tag == Tag.Str && IsIntegerTag(r.Tag))
             {
+                // Python repeats sequences with int-like counts; bool counts as 0 or 1.
                 return new TaggedUnion(RepeatString(l.ToString(), ToRepeatCount(ref r)));
             }
 
             if (IsIntegerTag(l.Tag) && r.Tag == Tag.Str)
             {
+                // Repetition is commutative for sequence/int operands: 3 * "ab" == "ab" * 3.
                 return new TaggedUnion(RepeatString(r.ToString(), ToRepeatCount(ref l)));
             }
 
             if (l.Tag == Tag.List && IsIntegerTag(r.Tag))
             {
+                // InternalList.Repeat mirrors Python's non-positive counts by returning an empty list.
                 return new TaggedUnion(InternalList.Repeat((InternalList)l.ToObject(), ToRepeatCount(ref r)));
             }
 
             if (IsIntegerTag(l.Tag) && r.Tag == Tag.List)
             {
+                // Keep list repetition order-independent for int/list operands, as Python does.
                 return new TaggedUnion(InternalList.Repeat((InternalList)r.ToObject(), ToRepeatCount(ref l)));
             }
 
@@ -272,6 +278,7 @@ namespace Chow.Expressions
             {
                 case Tag.Bool:
                 case Tag.Long:
+                    // Python treats bool as int here: -True -> -1, -False -> 0.
                     return new TaggedUnion(-operand.ToLong());
                 case Tag.Double:
                     return new TaggedUnion(-operand.ToDouble());
@@ -329,6 +336,7 @@ namespace Chow.Expressions
 
         static int ToRepeatCount(ref TaggedUnion value)
         {
+            // Repeat helpers currently take int counts; keep overflow explicit instead of silently truncating.
             return checked((int)value.ToLong());
         }
 
@@ -336,6 +344,7 @@ namespace Chow.Expressions
         {
             if (count <= 0 || source.Length == 0)
             {
+                // Python returns the empty sequence for zero or negative repetition counts.
                 return string.Empty;
             }
 
