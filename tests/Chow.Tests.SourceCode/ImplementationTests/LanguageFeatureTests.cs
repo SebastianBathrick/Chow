@@ -1644,7 +1644,97 @@ public class LanguageFeatureTests
 
         //--- Short-Circuiting ---
 
-        // TODO: Add test cases for short-circuiting logic operators
+        #region Value-Returning And Operator
+
+        new(
+            FALSEY_INT64 + AND + "\"rhs\"",
+            new TaggedUnion(0)
+        ),
+
+        new(
+            TRUTHY_INT64 + AND + "\"rhs\"",
+            new TaggedUnion("rhs")
+        ),
+
+        new(
+            FALSEY_STR + AND + "3",
+            new TaggedUnion(string.Empty)
+        ),
+
+        new(
+            TRUTHY_STR + AND + "3",
+            new TaggedUnion(3)
+        ),
+
+        new(
+            NONE_STR + AND + "3",
+            TaggedUnion.None
+        ),
+
+        new(
+            TRUTHY_LIST + AND + "\"rhs\"",
+            new TaggedUnion("rhs")
+        ),
+
+        #endregion
+
+        #region Value-Returning Or Operator
+
+        new(
+            FALSEY_INT64 + OR + "\"rhs\"",
+            new TaggedUnion("rhs")
+        ),
+
+        new(
+            TRUTHY_INT64 + OR + "\"rhs\"",
+            new TaggedUnion(1)
+        ),
+
+        new(
+            FALSEY_STR + OR + "3",
+            new TaggedUnion(3)
+        ),
+
+        new(
+            TRUTHY_STR + OR + "3",
+            new TaggedUnion("Truthy string")
+        ),
+
+        new(
+            NONE_STR + OR + "3",
+            new TaggedUnion(3)
+        ),
+
+        new(
+            FALSEY_LIST + OR + "\"rhs\"",
+            new TaggedUnion("rhs")
+        ),
+
+        #endregion
+
+        #region Short-Circuiting
+
+        new(
+            FALSEY_INT64 + AND + "(" + "1" + DIV + "0" + ")",
+            new TaggedUnion(0)
+        ),
+
+        new(
+            TRUTHY_INT64 + OR + "(" + "1" + DIV + "0" + ")",
+            new TaggedUnion(1)
+        ),
+
+        new(
+            FALSE_STR + AND + "(" + "1" + DIV + "0" + ")",
+            FalseChow
+        ),
+
+        new(
+            TRUE_STR + OR + "(" + "1" + DIV + "0" + ")",
+            TrueChow
+        ),
+
+        #endregion
 
         //--- Unary Not ---
 

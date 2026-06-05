@@ -140,7 +140,9 @@ namespace Chow.Core
 
                     case OperationCode.JumpIfFalseOrPop:
                     {
-                        if (!_valStack.Peek().ToBool())
+                        var operand = _valStack.Peek();
+
+                        if (LogicEvaluator.ShouldShortCircuitAnd(ref operand))
                         {
                             // Leave the falsy value on the stack as the result of the short-circuited `and`
                             _callStack.JumpToInstr(CurrentOperation.Operand);
@@ -153,7 +155,9 @@ namespace Chow.Core
 
                     case OperationCode.JumpIfTrueOrPop:
                     {
-                        if (_valStack.Peek().ToBool())
+                        var operand = _valStack.Peek();
+
+                        if (LogicEvaluator.ShouldShortCircuitOr(ref operand))
                         {
                             // Leave the truthy value on the stack as the result of the short-circuited `or`
                             _callStack.JumpToInstr(CurrentOperation.Operand);
@@ -167,7 +171,9 @@ namespace Chow.Core
                     case OperationCode.JumpIfFalse:
                     {
                         // Always pops; jumps past the branch body when the condition is false
-                        if (!_valStack.Pop().ToBool())
+                        var operand = _valStack.Pop();
+
+                        if (LogicEvaluator.ShouldShortCircuitAnd(ref operand))
                         {
                             _callStack.JumpToInstr(CurrentOperation.Operand);
                             continue;
@@ -672,7 +678,7 @@ namespace Chow.Core
         void EvaluateNot()
         {
             var operand = _valStack.Pop();
-            _valStack.Push(operand.CreateLogicalNot());
+            _valStack.Push(LogicEvaluator.EvaluateNot(ref operand));
         }
 
         void EvaluateCoerceToStr()
