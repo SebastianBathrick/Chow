@@ -769,44 +769,35 @@ namespace Chow
             switch (_tag)
             {
                 case Tag.None:
-                {
                     return NONE_TO_BOOL_T_AND_F;
-                }
-                case Tag.Bool:
-                {
-                    return BoolValue;
-                }
-                case Tag.Object:
-                {
-                    return OBJ_TO_BOOL_T_AND_F;
-                }
-                case Tag.Long:
-                {
-                    return _long != LONG_TO_BOOL_F;
-                }
-                case Tag.Double:
-                {
-                    return Math.Abs(_dbl - DBL_TO_BOOL_F) > TOLERANCE;
-                }
-                case Tag.Str:
-                {
-                    return StrToBool();
-                }
-                case Tag.List:
-                {
-                    return ListToBool();
-                }
-                case Tag.Dict:
-                {
-                    return DictToBool();
-                }
-                case Tag.Range:
-                {
-                    return RangeToBool();
-                }
-            }
 
-            throw new InvalidOperationException();
+                case Tag.Bool:
+                    return BoolValue;
+
+                case Tag.Object:
+                    return OBJ_TO_BOOL_T_AND_F;
+
+                case Tag.Long:
+                    return _long != LONG_TO_BOOL_F;
+
+                case Tag.Double:
+                    return Math.Abs(_dbl - DBL_TO_BOOL_F) > TOLERANCE;
+
+                case Tag.Str:
+                    return StrToBool();
+
+                case Tag.List:
+                    return ListToBool();
+
+                case Tag.Dict:
+                    return DictToBool();
+                    
+                case Tag.Range:
+                    return RangeToBool();
+
+                default:
+                    throw new TypeException(GetConversionErrorMessage(_tag, Tag.Bool));
+            }
         }
 
         const double TOLERANCE = 0.000000000000001;
@@ -815,29 +806,20 @@ namespace Chow
         {
             switch (_tag)
             {
-                case Tag.None:
-                {
-                    throw new InvalidOperationException("Cannot convert None to long");
-                }
                 case Tag.Bool:
-                {
                     return BoolValue ? BOOL_T_TO_LONG : BOOL_F_TO_LONG;
-                }
-                case Tag.Long:
-                {
-                    return _long;
-                }
-                case Tag.Double:
-                {
-                    return (long)_dbl;
-                }
-                case Tag.Str:
-                {
-                    return StrToLong();
-                }
-                default:
-            throw new InvalidOperationException();
                     
+                case Tag.Long:
+                    return _long;
+                    
+                case Tag.Double:
+                    return (long)_dbl;
+                    
+                case Tag.Str:
+                    return StrToLong();
+                    
+                default:
+                    throw new TypeException(GetConversionErrorMessage(_tag, Tag.Long));
             }
 
         }
@@ -846,45 +828,21 @@ namespace Chow
         {
             switch (_tag)
             {
-                case Tag.None:
-                {
-                    throw new InvalidOperationException("Cannot convert None to double");
-                }
                 case Tag.Bool:
-                {
                     return BoolValue ? BOOL_T_TO_DBL : BOOL_F_TO_DBL;
-                }
-                case Tag.Long:
-                {
-                    return _long;
-                }
-                case Tag.Double:
-                {
-                    return _dbl;
-                }
-                case Tag.Str:
-                {
-                    return StrToDouble();
-                }
-                case Tag.Object:
-                {
-                    throw new InvalidOperationException("Cannot convert Object to double");
-                }
-                case Tag.List:
-                {
-                    throw new InvalidOperationException("Cannot convert List to double");
-                }
-                case Tag.Dict:
-                {
-                    throw new InvalidOperationException("Cannot convert Dict to double");
-                }
-                case Tag.Range:
-                {
-                    throw new InvalidOperationException("Cannot convert Range to double");
-                }
-            }
 
-            throw new InvalidOperationException();
+                case Tag.Long:
+                    return _long;
+
+                case Tag.Double:
+                    return _dbl;
+
+                case Tag.Str:
+                    return StrToDouble();
+                    
+                default:
+                    throw new TypeException(GetConversionErrorMessage(_tag, Tag.Double));
+            }
         }
 
         internal object ToObject()
@@ -892,32 +850,20 @@ namespace Chow
             switch (_tag)
             {
                 case Tag.None:
-                {
                     return null;
-                }
+                    
                 case Tag.Bool:
-                {
                     return BoolValue;
-                }
+                    
                 case Tag.Long:
-                {
                     return _long;
-                }
+                    
                 case Tag.Double:
-                {
                     return _dbl;
-                }
-                case Tag.Str:
-                case Tag.Object:
-                case Tag.List:
-                case Tag.Dict:
-                case Tag.Range:
-                {
-                    return _obj;
-                }
-            }
 
-            throw new InvalidOperationException();
+                default:
+                    return _obj;
+            }
         }
 
         internal string ToStr()
@@ -925,41 +871,25 @@ namespace Chow
             switch (_tag)
             {
                 case Tag.None:
-                {
                     return NONE_TO_STR;
-                }
+                    
                 case Tag.Bool:
-                {
                     return BoolValue ? BOOL_T_TO_STR : BOOL_F_TO_STR;
-                }
+                    
                 case Tag.Long:
-                {
                     return _long.ToString(CultureInfo.InvariantCulture);
-                }
+                    
                 case Tag.Double:
-                {
                     return FloatToStr();
-                }
-                case Tag.Str:
-                {
-                    return StrToStr();
-                }
-                case Tag.Object:
-                case Tag.List:
-                case Tag.Dict:
-                case Tag.Range:
-                {
-                    if (_obj == null)
-                    {
-                        // This should never happen, but we'll check just in case
-                        throw new InvalidOperationException($"{nameof(TaggedUnion)} object with type {_tag} null");
-                    }
 
+                default:
                     return _obj.ToString();
-                }
             }
+        }
 
-            throw new InvalidOperationException();
+        string GetConversionErrorMessage(Tag fromTag, Tag toTag)
+        {
+            return $"Cannot convert {DataTypeNames.GetTypeName(fromTag)} to {DataTypeNames.GetTypeName(toTag)}";
         }
 
         #endregion
@@ -1053,16 +983,6 @@ namespace Chow
             return formatted.IndexOf(DBL_POINT_CHAR) == CHAR_NOT_FOUND_INX
                 && formatted.IndexOf(DBL_POW_LOWER_CHAR) == CHAR_NOT_FOUND_INX
                 && formatted.IndexOf(DBL_POW_UPPER_CHAR) == CHAR_NOT_FOUND_INX;
-        }
-
-        string StrToStr()
-        {
-            if (_obj is string strValue)
-            {
-                return strValue;
-            }
-
-            throw new InvalidOperationException("Expected string value for string conversion");
         }
 
         #endregion
