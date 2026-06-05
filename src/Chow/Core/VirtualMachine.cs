@@ -580,43 +580,43 @@ namespace Chow.Core
             {
                 case OperationCode.Add:
                 {
-                    _valStack.Push(left.CreateSum(right));
+                    _valStack.Push(ArithmeticEvaluator.EvaluateAddition(ref left, ref right));
                     break;
                 }
 
                 case OperationCode.Subtract:
                 {
-                    _valStack.Push(left.CreateDifference(right));
+                    _valStack.Push(ArithmeticEvaluator.EvaluateSubtraction(ref left, ref right));
                     break;
                 }
 
                 case OperationCode.Multiply:
                 {
-                    _valStack.Push(left.CreateProduct(right));
+                    _valStack.Push(ArithmeticEvaluator.EvaluateMultiplication(ref left, ref right));
                     break;
                 }
 
                 case OperationCode.Divide:
                 {
-                    _valStack.Push(left.CreateQuotient(right));
+                    _valStack.Push(ArithmeticEvaluator.EvaluateDivision(ref left, ref right));
                     break;
                 }
 
                 case OperationCode.Modulus:
                 {
-                    _valStack.Push(left.CreateModulus(right));
+                    _valStack.Push(ArithmeticEvaluator.EvaluateModulus(ref left, ref right));
                     break;
                 }
 
                 case OperationCode.Exponentiate:
                 {
-                    _valStack.Push(left.CreatePower(right));
+                    _valStack.Push(ArithmeticEvaluator.EvaluateExponent(ref left, ref right));
                     break;
                 }
 
                 case OperationCode.FloorDivide:
                 {
-                    _valStack.Push(left.CreateFloorQuotient(right));
+                    _valStack.Push(ArithmeticEvaluator.EvaluateFloorDivision(ref left, ref right));
                     break;
                 }
 
@@ -672,7 +672,7 @@ namespace Chow.Core
         void EvaluateNegation()
         {
             var operand = _valStack.Pop();
-            _valStack.Push(operand.CreateNegation());
+            _valStack.Push(ArithmeticEvaluator.EvaluateNegation(ref operand));
         }
 
         void EvaluateNot()

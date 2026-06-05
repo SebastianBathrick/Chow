@@ -36,6 +36,20 @@ public class ArithmeticEvaluatorTests
     }
 
     [Test]
+    public void Addition_StrStr_ReturnsStr()
+    {
+        // Python: "a" + "b" -> "ab"
+        AssertResult(ArithmeticEvaluator.EvaluateAddition, S("a"), S("b"), Tag.Str, "ab");
+    }
+
+    [Test]
+    public void Addition_ListList_ReturnsList()
+    {
+        // Python: [1] + [2] -> [1, 2]
+        AssertValueResult(ArithmeticEvaluator.EvaluateAddition, List(L(1)), List(L(2)), List(L(1), L(2)));
+    }
+
+    [Test]
     public void Addition_IntNone_RaisesTypeError()
     {
         // Python: 2 + None -> TypeError
@@ -64,6 +78,17 @@ public class ArithmeticEvaluatorTests
         AssertResult(ArithmeticEvaluator.EvaluateSubtraction, D(2.5), L(1), Tag.Double, 1.5);
     }
 
+    [Test]
+    public void Subtraction_StrStr_RaisesTypeError()
+    {
+        // Python: "a" - "b" -> TypeError
+        AssertTypeError(
+            () => Evaluate(ArithmeticEvaluator.EvaluateSubtraction, S("a"), S("b")),
+            "-",
+            "str",
+            "str");
+    }
+
     #endregion
 
     #region Multiplication  (Python: *)
@@ -80,6 +105,109 @@ public class ArithmeticEvaluatorTests
     {
         // Python: 2.0 * 3 -> 6.0
         AssertResult(ArithmeticEvaluator.EvaluateMultiplication, D(2.0), L(3), Tag.Double, 6.0);
+    }
+
+    [Test]
+    public void Multiplication_StrInt_ReturnsRepeatedStr()
+    {
+        // Python: "ab" * 3 -> "ababab"
+        AssertResult(ArithmeticEvaluator.EvaluateMultiplication, S("ab"), L(3), Tag.Str, "ababab");
+    }
+
+    [Test]
+    public void Multiplication_IntStr_ReturnsRepeatedStr()
+    {
+        // Python: 3 * "ab" -> "ababab"
+        AssertResult(ArithmeticEvaluator.EvaluateMultiplication, L(3), S("ab"), Tag.Str, "ababab");
+    }
+
+    [Test]
+    public void Multiplication_StrZero_ReturnsEmptyStr()
+    {
+        // Python: "ab" * 0 -> ""
+        AssertResult(ArithmeticEvaluator.EvaluateMultiplication, S("ab"), L(0), Tag.Str, string.Empty);
+    }
+
+    [Test]
+    public void Multiplication_StrNegative_ReturnsEmptyStr()
+    {
+        // Python: "ab" * -1 -> ""
+        AssertResult(ArithmeticEvaluator.EvaluateMultiplication, S("ab"), L(-1), Tag.Str, string.Empty);
+    }
+
+    [Test]
+    public void Multiplication_BoolStr_ReturnsRepeatedStr()
+    {
+        // Python: True * "ab" -> "ab"
+        AssertResult(ArithmeticEvaluator.EvaluateMultiplication, B(true), S("ab"), Tag.Str, "ab");
+    }
+
+    [Test]
+    public void Multiplication_FalseStr_ReturnsEmptyStr()
+    {
+        // Python: False * "ab" -> ""
+        AssertResult(ArithmeticEvaluator.EvaluateMultiplication, B(false), S("ab"), Tag.Str, string.Empty);
+    }
+
+    [Test]
+    public void Multiplication_ListInt_ReturnsRepeatedList()
+    {
+        // Python: [1] * 3 -> [1, 1, 1]
+        AssertValueResult(
+            ArithmeticEvaluator.EvaluateMultiplication,
+            List(L(1)),
+            L(3),
+            List(L(1), L(1), L(1)));
+    }
+
+    [Test]
+    public void Multiplication_IntList_ReturnsRepeatedList()
+    {
+        // Python: 3 * [1] -> [1, 1, 1]
+        AssertValueResult(
+            ArithmeticEvaluator.EvaluateMultiplication,
+            L(3),
+            List(L(1)),
+            List(L(1), L(1), L(1)));
+    }
+
+    [Test]
+    public void Multiplication_ListZero_ReturnsEmptyList()
+    {
+        // Python: [1] * 0 -> []
+        AssertValueResult(ArithmeticEvaluator.EvaluateMultiplication, List(L(1)), L(0), List());
+    }
+
+    [Test]
+    public void Multiplication_ListNegative_ReturnsEmptyList()
+    {
+        // Python: [1] * -1 -> []
+        AssertValueResult(ArithmeticEvaluator.EvaluateMultiplication, List(L(1)), L(-1), List());
+    }
+
+    [Test]
+    public void Multiplication_BoolList_ReturnsRepeatedList()
+    {
+        // Python: True * [1] -> [1]
+        AssertValueResult(ArithmeticEvaluator.EvaluateMultiplication, B(true), List(L(1)), List(L(1)));
+    }
+
+    [Test]
+    public void Multiplication_FalseList_ReturnsEmptyList()
+    {
+        // Python: False * [1] -> []
+        AssertValueResult(ArithmeticEvaluator.EvaluateMultiplication, B(false), List(L(1)), List());
+    }
+
+    [Test]
+    public void Multiplication_StrFloat_RaisesTypeError()
+    {
+        // Python: "a" * 2.5 -> TypeError
+        AssertTypeError(
+            () => Evaluate(ArithmeticEvaluator.EvaluateMultiplication, S("a"), D(2.5)),
+            "*",
+            "str",
+            "float");
     }
 
     #endregion
@@ -117,6 +245,17 @@ public class ArithmeticEvaluatorTests
             "/",
             "int",
             "NoneType");
+    }
+
+    [Test]
+    public void Division_ListInt_RaisesTypeError()
+    {
+        // Python: [] / 2 -> TypeError
+        AssertTypeError(
+            () => Evaluate(ArithmeticEvaluator.EvaluateDivision, List(), L(2)),
+            "/",
+            "list",
+            "int");
     }
 
     #endregion
@@ -198,6 +337,17 @@ public class ArithmeticEvaluatorTests
         AssertResult(ArithmeticEvaluator.EvaluateFloorDivision, D(7.5), D(2.1), Tag.Double, 3.0);
     }
 
+    [Test]
+    public void FloorDivision_ListInt_RaisesTypeErrorWithFloorDivideOperator()
+    {
+        // Python: [] // 2 -> TypeError
+        AssertTypeError(
+            () => Evaluate(ArithmeticEvaluator.EvaluateFloorDivision, List(), L(2)),
+            "//",
+            "list",
+            "int");
+    }
+
     #endregion
 
     #region Exponentiation  (Python: **)
@@ -266,6 +416,48 @@ public class ArithmeticEvaluatorTests
 
     #endregion
 
+    #region Negation  (Python: unary -)
+
+    [Test]
+    public void Negation_True_ReturnsInt()
+    {
+        // Python: -True -> -1
+        AssertUnaryResult(ArithmeticEvaluator.EvaluateNegation, B(true), Tag.Long, -1L);
+    }
+
+    [Test]
+    public void Negation_False_ReturnsInt()
+    {
+        // Python: -False -> 0
+        AssertUnaryResult(ArithmeticEvaluator.EvaluateNegation, B(false), Tag.Long, 0L);
+    }
+
+    [Test]
+    public void Negation_Int_ReturnsInt()
+    {
+        // Python: -3 -> -3
+        AssertUnaryResult(ArithmeticEvaluator.EvaluateNegation, L(3), Tag.Long, -3L);
+    }
+
+    [Test]
+    public void Negation_Float_ReturnsFloat()
+    {
+        // Python: -3.5 -> -3.5
+        AssertUnaryResult(ArithmeticEvaluator.EvaluateNegation, D(3.5), Tag.Double, -3.5);
+    }
+
+    [Test]
+    public void Negation_Str_RaisesTypeError()
+    {
+        // Python: -"a" -> TypeError
+        AssertUnaryTypeError(
+            () => Evaluate(ArithmeticEvaluator.EvaluateNegation, S("a")),
+            "-",
+            "str");
+    }
+
+    #endregion
+
     #region Helpers
 
     static TaggedUnion L(long value) => new TaggedUnion(value);
@@ -274,11 +466,31 @@ public class ArithmeticEvaluatorTests
 
     static TaggedUnion B(bool value) => new TaggedUnion(value);
 
+    static TaggedUnion S(string value) => new TaggedUnion(value);
+
+    static TaggedUnion List(params TaggedUnion[] values)
+    {
+        var list = new InternalList();
+
+        foreach (var value in values)
+        {
+            list.Add(value);
+        }
+
+        return new TaggedUnion(list);
+    }
+
     static TaggedUnion Evaluate(EvaluateBinary evaluate, TaggedUnion left, TaggedUnion right)
     {
         var l = left;
         var r = right;
         return evaluate(ref l, ref r);
+    }
+
+    static TaggedUnion Evaluate(EvaluateUnary evaluate, TaggedUnion operand)
+    {
+        var value = operand;
+        return evaluate(ref value);
     }
 
     static void AssertResult(
@@ -307,6 +519,54 @@ public class ArithmeticEvaluatorTests
         Assert.That(result.AsType<double>(), Is.EqualTo(expectedDouble).Within(Tolerance));
     }
 
+    static void AssertResult(
+        EvaluateBinary evaluate,
+        TaggedUnion left,
+        TaggedUnion right,
+        Tag expectedTag,
+        string expectedString)
+    {
+        var result = Evaluate(evaluate, left, right);
+
+        Assert.That(result.Tag, Is.EqualTo(expectedTag));
+        Assert.That(result.AsType<string>(), Is.EqualTo(expectedString));
+    }
+
+    static void AssertValueResult(
+        EvaluateBinary evaluate,
+        TaggedUnion left,
+        TaggedUnion right,
+        TaggedUnion expectedValue)
+    {
+        var result = Evaluate(evaluate, left, right);
+
+        Assert.That(result, Is.EqualTo(expectedValue));
+    }
+
+    static void AssertUnaryResult(
+        EvaluateUnary evaluate,
+        TaggedUnion operand,
+        Tag expectedTag,
+        long expectedLong)
+    {
+        var result = Evaluate(evaluate, operand);
+
+        Assert.That(result.Tag, Is.EqualTo(expectedTag));
+        Assert.That(result.AsType<long>(), Is.EqualTo(expectedLong));
+    }
+
+    static void AssertUnaryResult(
+        EvaluateUnary evaluate,
+        TaggedUnion operand,
+        Tag expectedTag,
+        double expectedDouble)
+    {
+        var result = Evaluate(evaluate, operand);
+
+        Assert.That(result.Tag, Is.EqualTo(expectedTag));
+        Assert.That(result.AsType<double>(), Is.EqualTo(expectedDouble).Within(Tolerance));
+    }
+
     static void AssertTypeError(TestDelegate action, string op, string leftType, string rightType)
     {
         var ex = Assert.Throws<TypeException>(action);
@@ -316,7 +576,17 @@ public class ArithmeticEvaluatorTests
         Assert.That(ex.Message, Does.Contain("'" + rightType + "'"));
     }
 
+    static void AssertUnaryTypeError(TestDelegate action, string op, string operandType)
+    {
+        var ex = Assert.Throws<TypeException>(action);
+
+        Assert.That(ex.Message, Does.Contain("TypeError: bad operand type for unary " + op));
+        Assert.That(ex.Message, Does.Contain("'" + operandType + "'"));
+    }
+
     delegate TaggedUnion EvaluateBinary(ref TaggedUnion left, ref TaggedUnion right);
+
+    delegate TaggedUnion EvaluateUnary(ref TaggedUnion operand);
 
     #endregion
 }

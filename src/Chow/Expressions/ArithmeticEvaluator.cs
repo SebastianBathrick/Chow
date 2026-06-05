@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using Chow.DataTypes;
 using Chow.Exceptions;
 using Chow.Bytecode;
@@ -36,12 +37,28 @@ namespace Chow.Expressions
         public static TaggedUnion EvaluateAddition(ref TaggedUnion l, ref TaggedUnion r)
         {
             // No float on either side → int result; otherwise both operands promote to float.
-            if (GetConversionTag(l.Tag, r.Tag, ExpressionOperator.Add) == Tag.Long)
+            if (TryGetConversionTag(l.Tag, r.Tag, out var convTag))
             {
-                return new TaggedUnion(l.ToLong() + r.ToLong());
+                if (convTag == Tag.Long)
+                {
+                    return new TaggedUnion(l.ToLong() + r.ToLong());
+                }
+
+                return new TaggedUnion(l.ToDouble() + r.ToDouble());
             }
-            
-            return new TaggedUnion(l.ToDouble() + r.ToDouble());
+
+            if (l.Tag == Tag.Str && r.Tag == Tag.Str)
+            {
+                return new TaggedUnion(l.ToString() + r.ToString());
+            }
+
+            if (l.Tag == Tag.List && r.Tag == Tag.List)
+            {
+                return new TaggedUnion(
+                    InternalList.Concat((InternalList)l.ToObject(), (InternalList)r.ToObject()));
+            }
+
+            throw UnsupportedBinary(l.Tag, r.Tag, ExpressionOperator.Add);
         }
 
         public static TaggedUnion EvaluateSubtraction(ref TaggedUnion l, ref TaggedUnion r)
@@ -56,12 +73,35 @@ namespace Chow.Expressions
 
         public static TaggedUnion EvaluateMultiplication(ref TaggedUnion l, ref TaggedUnion r)
         {
-            if (GetConversionTag(l.Tag, r.Tag, ExpressionOperator.Multiply) == Tag.Long)
+            if (TryGetConversionTag(l.Tag, r.Tag, out var convTag))
             {
-                return new TaggedUnion(l.ToLong() * r.ToLong());
+                return convTag == Tag.Long 
+                    ? new TaggedUnion(l.ToLong() * r.ToLong()) 
+                    : new TaggedUnion(l.ToDouble() * r.ToDouble());
+
             }
-            
-            return new TaggedUnion(l.ToDouble() * r.ToDouble());
+
+            if (l.Tag == Tag.Str && IsIntegerTag(r.Tag))
+            {
+                return new TaggedUnion(RepeatString(l.ToString(), ToRepeatCount(ref r)));
+            }
+
+            if (IsIntegerTag(l.Tag) && r.Tag == Tag.Str)
+            {
+                return new TaggedUnion(RepeatString(r.ToString(), ToRepeatCount(ref l)));
+            }
+
+            if (l.Tag == Tag.List && IsIntegerTag(r.Tag))
+            {
+                return new TaggedUnion(InternalList.Repeat((InternalList)l.ToObject(), ToRepeatCount(ref r)));
+            }
+
+            if (IsIntegerTag(l.Tag) && r.Tag == Tag.List)
+            {
+                return new TaggedUnion(InternalList.Repeat((InternalList)r.ToObject(), ToRepeatCount(ref l)));
+            }
+
+            throw UnsupportedBinary(l.Tag, r.Tag, ExpressionOperator.Multiply);
         }
 
         public static TaggedUnion EvaluateDivision(ref TaggedUnion l, ref TaggedUnion r)
@@ -224,27 +264,89 @@ namespace Chow.Expressions
 
         #endregion
 
+        #region Unary Operations
+
+        public static TaggedUnion EvaluateNegation(ref TaggedUnion operand)
+        {
+            switch (operand.Tag)
+            {
+                case Tag.Bool:
+                case Tag.Long:
+                    return new TaggedUnion(-operand.ToLong());
+                case Tag.Double:
+                    return new TaggedUnion(-operand.ToDouble());
+                default:
+                    throw UnsupportedUnary(operand.Tag, ExpressionOperator.Negate);
+            }
+
+        }
+
+        #endregion
+
         #region Helper Methods
+
+        static bool TryGetConversionTag(Tag leftTag, Tag rightTag, out Tag convTag)
+        {
+            var mapKey = (left: leftTag, right: rightTag);
+            return TagConversionMap.TryGetValue(mapKey, out convTag);
+        }
 
         static Tag GetConversionTag(Tag leftTag, Tag rightTag, ExpressionOperator op)
         {
-            var mapKey = (left: leftTag, right: rightTag);
-
-            if (TagConversionMap.TryGetValue(mapKey, out var convTag))
+            if (TryGetConversionTag(leftTag, rightTag, out var convTag))
             {
                 return convTag;
             }
 
-            throw new TypeException(
-                // Message shape mirrors Python's TypeError wording and type names.
+            throw UnsupportedBinary(leftTag, rightTag, op);
+        }
+
+        static TypeException UnsupportedBinary(Tag leftTag, Tag rightTag, ExpressionOperator op)
+        {
+            // Message shape mirrors Python's TypeError wording and type names.
+            return new TypeException(
                 $"TypeError: unsupported operand type(s) for {OperatorStrings.EnumToString(op)}: "
                 + $"'{DataTypeNames.GetTypeName(leftTag)}' and '{DataTypeNames.GetTypeName(rightTag)}'");
+        }
+
+        static TypeException UnsupportedUnary(Tag operandTag, ExpressionOperator op)
+        {
+            return new TypeException(
+                $"TypeError: bad operand type for unary {OperatorStrings.EnumToString(op)}: "
+                + $"'{DataTypeNames.GetTypeName(operandTag)}'");
         }
 
         static bool IsDoubleValueZero(double divisor)
         {
             // CompareTo treats -0.0 and +0.0 as equal; `divisor == 0.0` can miss -0.0 edge cases.
             return divisor.CompareTo(0.0) == IsDoubleEqualInteger;
+        }
+
+        static bool IsIntegerTag(Tag tag)
+        {
+            return tag == Tag.Long || tag == Tag.Bool;
+        }
+
+        static int ToRepeatCount(ref TaggedUnion value)
+        {
+            return checked((int)value.ToLong());
+        }
+
+        static string RepeatString(string source, int count)
+        {
+            if (count <= 0 || source.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            var builder = new StringBuilder(source.Length * count);
+
+            for (var index = 0; index < count; index++)
+            {
+                builder.Append(source);
+            }
+
+            return builder.ToString();
         }
 
         #endregion

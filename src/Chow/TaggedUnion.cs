@@ -863,7 +863,7 @@ namespace Chow
             }
         }
 
-        string GetConversionErrorMessage(Tag fromTag, Tag toTag)
+        static string GetConversionErrorMessage(Tag fromTag, Tag toTag)
         {
             return $"Cannot convert {DataTypeNames.GetTypeName(fromTag)} to {DataTypeNames.GetTypeName(toTag)}";
         }

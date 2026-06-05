@@ -15,6 +15,8 @@ namespace Chow.Expressions
             { DataTypes.ExpressionOperator.Divide, "/" },
             { DataTypes.ExpressionOperator.Modulus, "%" },
             { DataTypes.ExpressionOperator.Exponentiate, "**" },
+            { DataTypes.ExpressionOperator.FloorDivide, "//" },
+            { DataTypes.ExpressionOperator.Negate, "-" },
             { DataTypes.ExpressionOperator.Equal, "==" },
             { DataTypes.ExpressionOperator.NotEqual, "!=" },
             { DataTypes.ExpressionOperator.Less, "<" },
@@ -32,6 +34,8 @@ namespace Chow.Expressions
             { OperationCode.Divide, "/" },
             { OperationCode.Modulus, "%" },
             { OperationCode.Exponentiate, "**" },
+            { OperationCode.FloorDivide, "//" },
+            { OperationCode.Negate, "-" },
         };
         public static string EnumToString(ExpressionOperator op)
         {

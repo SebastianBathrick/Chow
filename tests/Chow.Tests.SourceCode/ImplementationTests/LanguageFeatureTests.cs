@@ -1,4 +1,5 @@
 ﻿using Chow;
+using Chow.DataTypes;
 namespace Chow.Tests.SourceCode;
 
 [TestFixture]
@@ -781,6 +782,59 @@ public class LanguageFeatureTests
         new(
             FALSE_STR + POW + FALSE_STR,
             new(1)
+        ),
+
+        #endregion
+
+        #region String and List Operands
+
+        new(
+            "\"ab\"" + TIMES + "3",
+            new TaggedUnion("ababab")
+        ),
+
+        new(
+            "3" + TIMES + "\"ab\"",
+            new TaggedUnion("ababab")
+        ),
+
+        new(
+            "\"ab\"" + TIMES + "0",
+            new TaggedUnion(string.Empty)
+        ),
+
+        new(
+            "[1]" + PLUS + "[2]",
+            List(new TaggedUnion(1), new TaggedUnion(2))
+        ),
+
+        new(
+            "[1]" + TIMES + "3",
+            List(new TaggedUnion(1), new TaggedUnion(1), new TaggedUnion(1))
+        ),
+
+        new(
+            "3" + TIMES + "[1]",
+            List(new TaggedUnion(1), new TaggedUnion(1), new TaggedUnion(1))
+        ),
+
+        #endregion
+
+        #region Unary Negation
+
+        new(
+            "-" + TRUE_STR,
+            new TaggedUnion(-1)
+        ),
+
+        new(
+            "-" + FALSE_STR,
+            new TaggedUnion(0)
+        ),
+
+        new(
+            "-3.5",
+            new TaggedUnion(-3.5)
         ),
 
         #endregion
@@ -2764,6 +2818,18 @@ public class LanguageFeatureTests
     #endregion
 
     #region Helper Types
+
+    static TaggedUnion List(params TaggedUnion[] values)
+    {
+        var list = new InternalList();
+
+        foreach (var value in values)
+        {
+            list.Add(value);
+        }
+
+        return new TaggedUnion(list);
+    }
 
     public record CaseExecute(string SourceCode, TaggedUnion ExpectedResult);
 
