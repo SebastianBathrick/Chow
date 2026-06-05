@@ -65,10 +65,10 @@ namespace Chow.Expressions
         public static TaggedUnion EvaluateDivision(ref TaggedUnion l, ref TaggedUnion r)
         {
             // Note: Division always produces a double (referred to as a 'float' in source code).
+            GetConversionTag(l.Tag, r.Tag, ExpressionOperator.Divide);
 
-            // TaggedUnion.ToDouble() throws TypeException if the conversion is not possible.
             var rightDbl = r.ToDouble();
-            var leftDbl = l.ToDouble(); 
+            var leftDbl = l.ToDouble();
 
             if (IsDoubleValueZero(rightDbl))
             {
