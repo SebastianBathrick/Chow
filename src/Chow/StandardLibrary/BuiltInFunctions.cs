@@ -147,7 +147,7 @@ namespace Chow.StandardLibrary
         #region Invocable Object Methods
 
         // NOTE: When converting ChowValues to other types, use the internal conversion methods
-        // like TaggedUnion.ToBool(), TaggedUnion.ToStr(), TaggedUnion.ToLong(), etc...
+        // like TaggedUnion.ToBool(), TaggedUnion.ToString(), TaggedUnion.ToLong(), etc...
 
         static void Print(TaggedUnion[] args)
         {
@@ -166,7 +166,7 @@ namespace Chow.StandardLibrary
                     Console.Write(' ');
                 }
 
-                Console.Write(args[i].ToStr());
+                Console.Write(args[i].ToString());
             }
 
             Console.WriteLine();
@@ -180,7 +180,7 @@ namespace Chow.StandardLibrary
             if (!HasZeroArguments(args))
             {
                 // The prompt will not end the line
-                Console.Write(args[0].ToStr());
+                Console.Write(args[0].ToString());
             }
 
             var input = Console.ReadLine() ?? string.Empty;
@@ -209,7 +209,7 @@ namespace Chow.StandardLibrary
                 return new TaggedUnion(string.Empty);
             }
 
-            return new TaggedUnion(args[0].ToStr());
+            return new TaggedUnion(args[0].ToString());
         }
 
         static TaggedUnion Int(TaggedUnion[] args)

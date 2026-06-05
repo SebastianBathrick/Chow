@@ -151,6 +151,8 @@ namespace Chow
         #endregion
 
         #region Type API
+        // WARNING: THIS METHOD WILL BE REMOVED IN FUTURE REFACTOR!
+        // DO NOT USE ANY OF THESE METHODS IN NEW CLASSES OR ADD THEM TO PRE-EXISTING ONES
 
         /// <summary>Casts Chow value to specified host type, boxes, and returns it.</summary>
         /// <typeparam name="TDataType">The type the value will be casted to.</typeparam>
@@ -200,7 +202,7 @@ namespace Chow
                 }
                 case Tag.Str:
                 {
-                    return (TDataType)(object)ToStr();
+                    return (TDataType)(object)ToString();
                 }
                 case Tag.List:
                 case Tag.Dict:
@@ -217,33 +219,12 @@ namespace Chow
 
             throw new InvalidOperationException($"Cannot convert {_tag} to {typeof(TDataType)}");
         }
-
-        /// <summary>Whether the Chow value of this instance is of the provided data type.</summary>
-        /// <typeparam name="TDataType">The data type to compare to the Chow value's data type.</typeparam>
-        /// <returns>True if the Chow value of this instance is of type <typeparamref name=
-        /// "TDataType"/>; otherwise, false.</returns>
-        public bool IsOfType<TDataType>()
-        {
-            var checkType = typeof(TDataType);
-
-            // If it is not a type defined by the Tag enum
-            if (!DataTypeMap.TryGetValue(checkType, out var chowDataType))
-            {
-                return _tag == Tag.Object && _obj is TDataType;
-            }
-
-            // The map includes values representing data types that are from the Chow namespace
-            return _tag == chowDataType;
-        }
-
-        public bool IsTruthy()
-        {
-            return ToBool();
-        }
-
+        
         #endregion
 
         #region Arithmetic & Logical Operations
+        // WARNING: THESE METHODS WILL BE REMOVED IN FUTURE REFACTOR!
+        // DO NOT USE ANY OF THESE METHODS OUTSIDE OF THE VirtualMachine CLASS
 
         // Instance methods to avoid passing two ChowValues as parameters. Each returns a new TaggedUnion
         // (the struct is readonly, so no risk of accidentally mutating this instance's internal state).
@@ -510,18 +491,20 @@ namespace Chow
             // The map records this as Nothing for every type; consult it for consistency and so that
             // a future map change (e.g. restricting unary `not` to specific types) propagates here.
             LookupUnary(ExpressionOperator.Not);
-            return new TaggedUnion(!IsTruthy());
+            return new TaggedUnion(!ToBool());
         }
 
         internal TaggedUnion CreateStr()
         {
             LookupUnary(ExpressionOperator.ToStr);
-            return new TaggedUnion(ToStr());
+            return new TaggedUnion(ToString());
         }
 
         #endregion
 
         #region Comparison Operations
+        // WARNING: THESE METHODS WILL BE REMOVED IN FUTURE REFACTOR!
+        // DO NOT USE ANY OF THESE METHODS IN NEW CLASSES OR ADD THEM TO PRE-EXISTING ONES
 
         internal bool IsTypeAgnosticEqualTo(TaggedUnion other)
         {
@@ -749,14 +732,6 @@ namespace Chow
             }
         }
 
-        /// <summary>
-        /// Returns a string representation of this instance with the same format as a Chow <b>str</b> value.
-        /// </summary>
-        public override string ToString()
-        {
-            return ToStr();
-        }
-
         #endregion
 
         #region Conversion Methods
@@ -865,12 +840,13 @@ namespace Chow
                     return _obj;
             }
         }
-
-        internal string ToStr()
+        
+        public override string ToString()
         {
             switch (_tag)
             {
                 case Tag.None:
+                    // TODO: Update this class to use DataTypeNames where literals or consts are used
                     return NONE_TO_STR;
                     
                 case Tag.Bool:
@@ -1185,18 +1161,18 @@ namespace Chow
         const double BOOL_F_TO_DBL = 0.0;
         const double BOOL_T_TO_DBL = 1.0;
 
-        // ToStr source representations (None/bool -> str)
+        // ToString source representations (None/bool -> str)
         const string NONE_TO_STR = "None";
         const string BOOL_F_TO_STR = "False";
         const string BOOL_T_TO_STR = "True";
 
-        // ToStr float formatting (append ".0" when ToString output has no decimal point or pow)
+        // ToString float formatting (append ".0" when ToString output has no decimal point or pow)
         const string DBL_LONG_FRACTION_SUFFIX = ".0";
         const char DBL_POINT_CHAR = '.';
         const char DBL_POW_LOWER_CHAR = 'e';
         const char DBL_POW_UPPER_CHAR = 'E';
 
-        // String.IndexOf "not found" sentinel (used by ToStr float formatting check)
+        // String.IndexOf "not found" sentinel (used by ToString float formatting check)
         const int CHAR_NOT_FOUND_INX = -1;
 
         const int OBJ_FIELD_OFFSET = 0;

@@ -139,7 +139,7 @@ namespace Chow.Core
 
                     case OperationCode.JumpIfFalseOrPop:
                     {
-                        if (!_valStack.Peek().IsTruthy())
+                        if (!_valStack.Peek().ToBool())
                         {
                             // Leave the falsy value on the stack as the result of the short-circuited `and`
                             _callStack.JumpToInstr(CurrentOperation.Operand);
@@ -152,7 +152,7 @@ namespace Chow.Core
 
                     case OperationCode.JumpIfTrueOrPop:
                     {
-                        if (_valStack.Peek().IsTruthy())
+                        if (_valStack.Peek().ToBool())
                         {
                             // Leave the truthy value on the stack as the result of the short-circuited `or`
                             _callStack.JumpToInstr(CurrentOperation.Operand);
@@ -166,7 +166,7 @@ namespace Chow.Core
                     case OperationCode.JumpIfFalse:
                     {
                         // Always pops; jumps past the branch body when the condition is false
-                        if (!_valStack.Pop().IsTruthy())
+                        if (!_valStack.Pop().ToBool())
                         {
                             _callStack.JumpToInstr(CurrentOperation.Operand);
                             continue;
