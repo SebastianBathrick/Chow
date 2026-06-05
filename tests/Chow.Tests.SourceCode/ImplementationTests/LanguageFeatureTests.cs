@@ -2821,7 +2821,7 @@ public class LanguageFeatureTests
 
     static TaggedUnion List(params TaggedUnion[] values)
     {
-        var list = new InternalList();
+        var list = new ChowList();
 
         foreach (var value in values)
         {

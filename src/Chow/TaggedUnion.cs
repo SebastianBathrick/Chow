@@ -23,9 +23,9 @@ namespace Chow
             { typeof(int), Tag.Long },
             { typeof(double), Tag.Double },
             { typeof(string), Tag.Str },
-            { typeof(InternalDict), Tag.Dict },
-            { typeof(InternalRange), Tag.Range },
-            { typeof(InternalList), Tag.List }
+            { typeof(ChowDictionary), Tag.Dict },
+            { typeof(ChowRange), Tag.Range },
+            { typeof(ChowList), Tag.List }
         };
 
         #region Fields
@@ -94,11 +94,11 @@ namespace Chow
 
         internal TaggedUnion(string value) : this(Tag.Str, objVal: value) {}
 
-        internal TaggedUnion(InternalList list) : this(Tag.List, objVal: list) {}
+        internal TaggedUnion(ChowList list) : this(Tag.List, objVal: list) {}
 
-        internal TaggedUnion(InternalDict dict) : this(Tag.Dict, objVal: dict) {}
+        internal TaggedUnion(ChowDictionary dictionary) : this(Tag.Dict, objVal: dictionary) {}
 
-        internal TaggedUnion(InternalRange range) : this(Tag.Range, objVal: range) {}
+        internal TaggedUnion(ChowRange range) : this(Tag.Range, objVal: range) {}
 
         /// <summary>
         /// Resolves and converts the value of <paramref name="obj"/> and initializes instance with
@@ -126,13 +126,13 @@ namespace Chow
                 case bool boolValue:
                     this = new TaggedUnion(boolValue);
                     break;
-                case InternalList listValue:
+                case ChowList listValue:
                     this = new TaggedUnion(listValue);
                     break;
-                case InternalDict dictValue:
+                case ChowDictionary dictValue:
                     this = new TaggedUnion(dictValue);
                     break;
-                case InternalRange rangeValue:
+                case ChowRange rangeValue:
                     this = new TaggedUnion(rangeValue);
                     break;
                 case TaggedUnion chowValue:
@@ -248,7 +248,7 @@ namespace Chow
                 {
                     if (_tag == Tag.List && rightOperand._tag == Tag.List)
                     {
-                        return new TaggedUnion(InternalList.Concat(AsType<InternalList>(), rightOperand.AsType<InternalList>()));
+                        return new TaggedUnion(ChowList.Concat(AsType<ChowList>(), rightOperand.AsType<ChowList>()));
                     }
 
                     if (_tag == Tag.Str && rightOperand._tag == Tag.Str)
@@ -303,12 +303,12 @@ namespace Chow
                     // Python treats bool as a subtype of int, so [1] * True and "ab" * True are valid.
                     if (_tag == Tag.List && IsIntegerTag(rightOperand._tag))
                     {
-                        return new TaggedUnion(InternalList.Repeat(AsType<InternalList>(), rightOperand.AsType<int>()));
+                        return new TaggedUnion(ChowList.Repeat(AsType<ChowList>(), rightOperand.AsType<int>()));
                     }
 
                     if (IsIntegerTag(_tag) && rightOperand._tag == Tag.List)
                     {
-                        return new TaggedUnion(InternalList.Repeat(rightOperand.AsType<InternalList>(), AsType<int>()));
+                        return new TaggedUnion(ChowList.Repeat(rightOperand.AsType<ChowList>(), AsType<int>()));
                     }
 
                     if (_tag == Tag.Str && IsIntegerTag(rightOperand._tag))
@@ -463,7 +463,7 @@ namespace Chow
             if (LookupBinary(ExpressionOperator.BinaryOr, rightOperand) == ConversionCase.Nothing
                 && _tag == Tag.Dict && rightOperand._tag == Tag.Dict)
             {
-                return new TaggedUnion(InternalDict.Merge(AsType<InternalDict>(), rightOperand.AsType<InternalDict>()));
+                return new TaggedUnion(ChowDictionary.Merge(AsType<ChowDictionary>(), rightOperand.AsType<ChowDictionary>()));
             }
 
             throw UnsupportedBinary(ExpressionOperator.BinaryOr, rightOperand);
@@ -711,12 +711,12 @@ namespace Chow
                 }
                 case Tag.List:
                 {
-                    valueHash = InternalList.ElementsHashCode((InternalList)_obj);
+                    valueHash = ChowList.ElementsHashCode((ChowList)_obj);
                     break;
                 }
                 case Tag.Dict:
                 {
-                    valueHash = InternalDict.ElementsHashCode((InternalDict)_obj);
+                    valueHash = ChowDictionary.ElementsHashCode((ChowDictionary)_obj);
                     break;
                 }
                 default:
@@ -884,7 +884,7 @@ namespace Chow
 
         bool ListToBool()
         {
-            if (_obj is InternalList listValue)
+            if (_obj is ChowList listValue)
             {
                 return listValue.Count != LIST_COUNT_TO_BOOL_F;
             }
@@ -894,7 +894,7 @@ namespace Chow
 
         bool DictToBool()
         {
-            if (_obj is InternalDict dictValue)
+            if (_obj is ChowDictionary dictValue)
             {
                 return dictValue.Count != DICT_LEN_TO_BOOL_F;
             }
@@ -904,7 +904,7 @@ namespace Chow
 
         bool RangeToBool()
         {
-            if (_obj is InternalRange rangeValue)
+            if (_obj is ChowRange rangeValue)
             {
                 return rangeValue.Count != RNG_LEN_TO_BOOL_F;
             }
@@ -1066,11 +1066,11 @@ namespace Chow
                 }
                 case Tag.List:
                 {
-                    return InternalList.ElementsEqual((InternalList)_obj, (InternalList)other._obj);
+                    return ChowList.ElementsEqual((ChowList)_obj, (ChowList)other._obj);
                 }
                 case Tag.Dict:
                 {
-                    return InternalDict.ElementsEqual((InternalDict)_obj, (InternalDict)other._obj);
+                    return ChowDictionary.ElementsEqual((ChowDictionary)_obj, (ChowDictionary)other._obj);
                 }
                 case Tag.Range:
                 case Tag.Object:

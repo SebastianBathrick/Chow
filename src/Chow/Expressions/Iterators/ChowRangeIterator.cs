@@ -1,12 +1,12 @@
 namespace Chow.DataTypes
 {
-    sealed class InternalRangeIterator : IChowIterator
+    sealed class ChowRangeIterator : IIterator
     {
         readonly long _stop;
         readonly long _step;
         long _next;
 
-        public InternalRangeIterator(InternalRange range)
+        public ChowRangeIterator(ChowRange range)
         {
             _next = range.Start;
             _stop = range.Stop;

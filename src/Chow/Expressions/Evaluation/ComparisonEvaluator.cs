@@ -164,10 +164,10 @@ namespace Chow.Expressions
                     return true;
                 case Tag.List:
                     // List equality is structural and order-sensitive.
-                    return InternalList.ElementsEqual((InternalList)l.ToObject(), (InternalList)r.ToObject());
+                    return ChowList.ElementsEqual((ChowList)l.ToObject(), (ChowList)r.ToObject());
                 case Tag.Dict:
                     // Dict equality is structural; key insertion order does not decide equality.
-                    return InternalDict.ElementsEqual((InternalDict)l.ToObject(), (InternalDict)r.ToObject());
+                    return ChowDictionary.ElementsEqual((ChowDictionary)l.ToObject(), (ChowDictionary)r.ToObject());
                 case Tag.Range:
                 case Tag.Object:
                     // Chow ranges/objects do not have Python structural equality yet; preserve identity behavior.

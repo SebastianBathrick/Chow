@@ -207,7 +207,7 @@ namespace Chow.Core
                     case OperationCode.ForIterNextOrJump:
                     {
                         // Peek the iterator (kept on stack for the whole loop); push next value or jump to exhaust target.
-                        var iter = (IChowIterator)_valStack.Peek().ToObject();
+                        var iter = (IIterator)_valStack.Peek().ToObject();
 
                         if (iter.TryMoveNext(out var current))
                         {
@@ -462,7 +462,7 @@ namespace Chow.Core
                 reversed[i] = _valStack.Pop();
             }
 
-            var list = new InternalList();
+            var list = new ChowList();
 
             for (var i = 0; i < elementCount; i++)
             {
@@ -484,7 +484,7 @@ namespace Chow.Core
                 keys[i] = _valStack.Pop();
             }
 
-            var dict = new InternalDict();
+            var dict = new ChowDictionary();
 
             for (var i = 0; i < pairCount; i++)
             {
@@ -497,10 +497,10 @@ namespace Chow.Core
         void PushNewClosureFromTemplate()
         {
             // Type guarenteed to be at top of stack
-            var template = (ClosureTemplate)_valStack.Pop().ToObject();
+            var template = (ChowFunction)_valStack.Pop().ToObject();
 
             var captured = _callStack.CurrentScope;
-            var closure = new Closure(template.Chunk, captured, template.Name, template.ParamCount);
+            var closure = new ChowFunctionInstance(template.Chunk, captured, template.Name, template.ParamCount);
 
             _valStack.Push(new TaggedUnion(closure));
         }
@@ -527,7 +527,7 @@ namespace Chow.Core
             {
                 // Switches to the closure's frame, so EvaluateChunk will next execute the first
                 // instruction of the closure's chunk.
-                PushClosureStackFrame(argCount, (Closure)calleeValue.ToObject(), args);
+                PushClosureStackFrame(argCount, (ChowFunctionInstance)calleeValue.ToObject(), args);
             }
             else
             {
@@ -539,7 +539,7 @@ namespace Chow.Core
         static bool IsClosure(TaggedUnion calleeValue)
         {
 
-            return calleeValue.Tag == Tag.Object && calleeValue.ToObject() is Closure;
+            return calleeValue.Tag == Tag.Object && calleeValue.ToObject() is ChowFunctionInstance;
         }
 
         void CallInteropFunction(TaggedUnion calleeValue, TaggedUnion[] args)
@@ -547,11 +547,11 @@ namespace Chow.Core
             _valStack.Push(calleeValue.InvokeHostDelegate(args));
         }
 
-        void PushClosureStackFrame(int argCount, Closure closure, TaggedUnion[] args)
+        void PushClosureStackFrame(int argCount, ChowFunctionInstance chowFunctionInstance, TaggedUnion[] args)
         {
-            if (argCount != closure.ParamCount)
+            if (argCount != chowFunctionInstance.ParamCount)
             {
-                throw new TypeException($"{closure.Name}() takes {closure.ParamCount} positional arguments but {argCount} were given");
+                throw new TypeException($"{chowFunctionInstance.Name}() takes {chowFunctionInstance.ParamCount} positional arguments but {argCount} were given");
             }
 
             // Re-push args; function body's first ops are param-bind PopAndAssignToVariable's, popping right-to-left.
@@ -562,7 +562,7 @@ namespace Chow.Core
 
             // Advance caller's IP BEFORE pushing the frame so PushReturnValue lands at the next caller instruction.
             _callStack.MoveToNextInstruction();
-            _callStack.EnterFunctionCall(closure);
+            _callStack.EnterFunctionCall(chowFunctionInstance);
         }
 
         #endregion
@@ -695,11 +695,11 @@ namespace Chow.Core
 
             if (container.Tag == Tag.Dict)
             {
-                found = ((InternalDict)container.ToObject()).ContainsKey(needle);
+                found = ((ChowDictionary)container.ToObject()).ContainsKey(needle);
             }
             else if (container.Tag == Tag.List)
             {
-                var list = (InternalList)container.ToObject();
+                var list = (ChowList)container.ToObject();
 
                 for (var i = 0; i < list.Count && !found; i++)
                 {
@@ -728,7 +728,7 @@ namespace Chow.Core
             {
                 try
                 {
-                    _valStack.Push(((InternalDict)target.ToObject())[index]);
+                    _valStack.Push(((ChowDictionary)target.ToObject())[index]);
                 }
                 catch (DictKeyException ex)
                 {
@@ -742,7 +742,7 @@ namespace Chow.Core
                     throw new TypeException($"list indices must be integers, not {index.Tag}");
                 }
 
-                _valStack.Push(((InternalList)target.ToObject())[(int)index.ToLong()]);
+                _valStack.Push(((ChowList)target.ToObject())[(int)index.ToLong()]);
             }
             else
             {
@@ -764,7 +764,7 @@ namespace Chow.Core
                 throw new TypeException($"'{target.Tag}' object is not subscriptable");
             }
 
-            _valStack.Push(((InternalList)target.ToObject()).GetSlice(start, stop, step));
+            _valStack.Push(((ChowList)target.ToObject()).GetSlice(start, stop, step));
         }
 
         void EvaluateSubscriptSet()
@@ -775,7 +775,7 @@ namespace Chow.Core
 
             if (target.Tag == Tag.Dict)
             {
-                ((InternalDict)target.ToObject())[index] = value;
+                ((ChowDictionary)target.ToObject())[index] = value;
             }
             else if (target.Tag == Tag.List)
             {
@@ -784,7 +784,7 @@ namespace Chow.Core
                     throw new TypeException($"list indices must be integers, not {index.Tag}");
                 }
 
-                ((InternalList)target.ToObject())[(int)index.ToLong()] = value;
+                ((ChowList)target.ToObject())[(int)index.ToLong()] = value;
             }
             else
             {
@@ -805,7 +805,7 @@ namespace Chow.Core
             // TODO: class instances add a branch that consults the instance attribute table, then the class method table.
             if (target.Tag == Tag.List)
             {
-                var list = (InternalList)target.ToObject();
+                var list = (ChowList)target.ToObject();
 
                 if (!list.HasMethod(attrName))
                 {
@@ -817,7 +817,7 @@ namespace Chow.Core
             else if (target.Tag == Tag.Dict)
             {
                 // TODO: Create a ToInternalDict and ToInternalList to clean this up
-                var dict = (InternalDict)target.ToObject();
+                var dict = (ChowDictionary)target.ToObject();
 
                 if (!dict.HasMethod(attrName))
                 {

@@ -247,7 +247,7 @@ public class LogicEvaluatorTests
 
     static TaggedUnion List(params TaggedUnion[] values)
     {
-        var list = new InternalList();
+        var list = new ChowList();
 
         foreach (var value in values)
         {
@@ -259,12 +259,12 @@ public class LogicEvaluatorTests
 
     static TaggedUnion Dict()
     {
-        return new TaggedUnion(new InternalDict());
+        return new TaggedUnion(new ChowDictionary());
     }
 
     static TaggedUnion Dict(TaggedUnion key, TaggedUnion value)
     {
-        var dict = new InternalDict();
+        var dict = new ChowDictionary();
         dict.Add(key, value);
         return new TaggedUnion(dict);
     }

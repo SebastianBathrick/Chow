@@ -3,21 +3,21 @@ namespace Chow.DataTypes
 {
     static class IteratorFactory
     {
-        public static IChowIterator GetIterator(TaggedUnion source)
+        public static IIterator GetIterator(TaggedUnion source)
         {
             switch (source.Tag)
             {
                 case Tag.List:
                 {
-                    return new InternalListIterator(source.AsType<InternalList>());
+                    return new ChowListIterator(source.AsType<ChowList>());
                 }
                 case Tag.Str:
                 {
-                    return new InternalStrIterator(source.AsType<string>());
+                    return new ChowStringIterator(source.AsType<string>());
                 }
                 case Tag.Range:
                 {
-                    return source.AsType<InternalRange>().GetIterator();
+                    return source.AsType<ChowRange>().GetIterator();
                 }
                 case Tag.None:
                 case Tag.Bool:

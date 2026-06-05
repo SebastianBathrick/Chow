@@ -364,7 +364,7 @@ public class ComparisonEvaluatorTests
 
     static TaggedUnion List(params TaggedUnion[] values)
     {
-        var list = new InternalList();
+        var list = new ChowList();
 
         foreach (var value in values)
         {
@@ -376,7 +376,7 @@ public class ComparisonEvaluatorTests
 
     static TaggedUnion Dict(TaggedUnion key, TaggedUnion value)
     {
-        var dict = new InternalDict();
+        var dict = new ChowDictionary();
         dict.Add(key, value);
         return new TaggedUnion(dict);
     }

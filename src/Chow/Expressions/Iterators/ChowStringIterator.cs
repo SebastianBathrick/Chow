@@ -1,25 +1,25 @@
 namespace Chow.DataTypes
 {
-    sealed class InternalListIterator : IChowIterator
+    sealed class ChowStringIterator : IIterator
     {
-        readonly InternalList _list;
+        readonly string _source;
         int _index;
 
-        public InternalListIterator(InternalList list)
+        public ChowStringIterator(string source)
         {
-            _list = list;
+            _source = source;
             _index = 0;
         }
 
         public bool TryMoveNext(out TaggedUnion current)
         {
-            if (_index >= _list.Count)
+            if (_index >= _source.Length)
             {
                 current = TaggedUnion.None;
                 return false;
             }
 
-            current = _list[_index];
+            current = new TaggedUnion(_source[_index].ToString());
             _index++;
             return true;
         }

@@ -176,7 +176,7 @@ namespace Chow.State
         /// is allocated with its parent set to the closure's captured enclosing scope, becoming the
         /// L of LEGB for the duration of the call.
         /// </summary>
-        public void EnterFunctionCall(Closure func)
+        public void EnterFunctionCall(ChowFunctionInstance func)
         {
             var frameScope = new Scope(func.Enclosing);
             var newFrame = new StackFrame(func.Chunk, frameScope);

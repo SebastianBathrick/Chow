@@ -57,7 +57,7 @@ namespace Chow.Expressions
             {
                 // List concatenation creates a new list; neither operand list is mutated.
                 return new TaggedUnion(
-                    InternalList.Concat((InternalList)l.ToObject(), (InternalList)r.ToObject()));
+                    ChowList.Concat((ChowList)l.ToObject(), (ChowList)r.ToObject()));
             }
 
             throw UnsupportedBinary(l.Tag, r.Tag, ExpressionOperator.Add);
@@ -97,14 +97,14 @@ namespace Chow.Expressions
 
             if (l.Tag == Tag.List && IsIntegerTag(r.Tag))
             {
-                // InternalList.Repeat mirrors Python's non-positive counts by returning an empty list.
-                return new TaggedUnion(InternalList.Repeat((InternalList)l.ToObject(), ToRepeatCount(ref r)));
+                // ChowList.Repeat mirrors Python's non-positive counts by returning an empty list.
+                return new TaggedUnion(ChowList.Repeat((ChowList)l.ToObject(), ToRepeatCount(ref r)));
             }
 
             if (IsIntegerTag(l.Tag) && r.Tag == Tag.List)
             {
                 // Keep list repetition order-independent for int/list operands, as Python does.
-                return new TaggedUnion(InternalList.Repeat((InternalList)r.ToObject(), ToRepeatCount(ref l)));
+                return new TaggedUnion(ChowList.Repeat((ChowList)r.ToObject(), ToRepeatCount(ref l)));
             }
 
             throw UnsupportedBinary(l.Tag, r.Tag, ExpressionOperator.Multiply);

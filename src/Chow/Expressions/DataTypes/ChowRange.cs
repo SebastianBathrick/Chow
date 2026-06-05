@@ -5,13 +5,13 @@ namespace Chow.DataTypes
     /// Low-level immutable representation of a Python-style <c>range</c>. Stores the start, stop,
     /// and step values and produces values on demand via <see cref="GetIterator"/>.
     /// </summary>
-    class InternalRange
+    class ChowRange
     {
         public long Start { get; }
         public long Stop { get; }
         public long Step { get; }
 
-        public InternalRange(long start, long stop, long step)
+        public ChowRange(long start, long stop, long step)
         {
             if (step == 0)
             {
@@ -48,9 +48,9 @@ namespace Chow.DataTypes
             }
         }
 
-        public IChowIterator GetIterator()
+        public IIterator GetIterator()
         {
-            return new InternalRangeIterator(this);
+            return new ChowRangeIterator(this);
         }
 
         public override string ToString()

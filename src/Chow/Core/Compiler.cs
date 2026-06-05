@@ -252,10 +252,10 @@ namespace Chow.Core
             var funcCompiler = new Compiler(funcNode);
             var funcChunk = funcCompiler.CompileFunctionBody();
 
-            var template = new ClosureTemplate(funcChunk, funcNode.Name, funcNode.Params.Count);
+            var template = new ChowFunction(funcChunk, funcNode.Name, funcNode.Params.Count);
             var templateIdx = _chunk.RegisterConstant(new TaggedUnion(template));
 
-            // Push template, then runtime PushNewClosureFromTemplate captures the active scope and wraps it as a Closure.
+            // Push template, then runtime PushNewClosureFromTemplate captures the active scope and wraps it as a ChowFunctionInstance.
             _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNumber, templateIdx);
             _chunk.AddInstruction(OperationCode.PushNewClosureFromTemplate, funcNode.LineNumber);
 

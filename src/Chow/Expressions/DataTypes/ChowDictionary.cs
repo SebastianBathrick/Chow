@@ -5,7 +5,7 @@ using System.Text;
 using Chow.Exceptions;
 namespace Chow.DataTypes
 {
-    class InternalDict
+    class ChowDictionary
     {
         const string METHOD_GET_NAME = "get";
         const string METHOD_CLEAR_NAME = "clear";
@@ -106,7 +106,7 @@ namespace Chow.DataTypes
                 throw new TypeException($"'{args[0].Tag}' object is not a dict");
             }
 
-            var other = args[0].AsType<InternalDict>();
+            var other = args[0].AsType<ChowDictionary>();
 
             foreach (var key in other._keys)
             {
@@ -148,7 +148,7 @@ namespace Chow.DataTypes
                     return SetDefault;
             }
 
-            throw new NotImplementedException($"Method '{methodName}' is not implemented for InternalDict");
+            throw new NotImplementedException($"Method '{methodName}' is not implemented for ChowDictionary");
         }
 
         public bool HasMethod(string methodName)
@@ -166,7 +166,7 @@ namespace Chow.DataTypes
             }
         }
 
-        public static bool ElementsEqual(InternalDict a, InternalDict b)
+        public static bool ElementsEqual(ChowDictionary a, ChowDictionary b)
         {
             if (a._entries.Count != b._entries.Count)
             {
@@ -189,7 +189,7 @@ namespace Chow.DataTypes
             return true;
         }
 
-        public static int ElementsHashCode(InternalDict a)
+        public static int ElementsHashCode(ChowDictionary a)
         {
             // Order-independent combine — paired with ElementsEqual's order-insensitive lookup.
             unchecked
@@ -207,9 +207,9 @@ namespace Chow.DataTypes
             }
         }
 
-        public static InternalDict Merge(InternalDict a, InternalDict b)
+        public static ChowDictionary Merge(ChowDictionary a, ChowDictionary b)
         {
-            var result = new InternalDict();
+            var result = new ChowDictionary();
 
             foreach (var key in a._keys)
             {
@@ -302,11 +302,11 @@ namespace Chow.DataTypes
                     return;
 
                 case Tag.List:
-                    sb.Append(value.AsType<InternalList>());
+                    sb.Append(value.AsType<ChowList>());
                     return;
 
                 case Tag.Dict:
-                    sb.Append(value.AsType<InternalDict>());
+                    sb.Append(value.AsType<ChowDictionary>());
                     return;
 
                 case Tag.Object:

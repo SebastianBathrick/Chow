@@ -234,7 +234,7 @@ namespace Chow.StandardLibrary
 
         static TaggedUnion List(TaggedUnion[] args)
         {
-            var result = new InternalList();
+            var result = new ChowList();
 
             if (!HasZeroArguments(args))
             {
@@ -250,7 +250,7 @@ namespace Chow.StandardLibrary
 
         static TaggedUnion Dict(TaggedUnion[] args)
         {
-            var result = new InternalDict();
+            var result = new ChowDictionary();
 
             if (!HasZeroArguments(args))
             {
@@ -281,15 +281,15 @@ namespace Chow.StandardLibrary
                     }
                 case Tag.List:
                     {
-                        return new TaggedUnion(value.AsType<InternalList>().Count);
+                        return new TaggedUnion(value.AsType<ChowList>().Count);
                     }
                 case Tag.Dict:
                     {
-                        return new TaggedUnion(value.AsType<InternalDict>().Count);
+                        return new TaggedUnion(value.AsType<ChowDictionary>().Count);
                     }
                 case Tag.Range:
                     {
-                        return new TaggedUnion(value.AsType<InternalRange>().Count);
+                        return new TaggedUnion(value.AsType<ChowRange>().Count);
                     }
             }
 
@@ -344,7 +344,7 @@ namespace Chow.StandardLibrary
 
         static TaggedUnion MinMax(TaggedUnion[] args, bool findLess, string name)
         {
-            IChowIterator iterator;
+            IIterator iterator;
 
             if (args.Length == 1)
             {
@@ -352,14 +352,14 @@ namespace Chow.StandardLibrary
             }
             else
             {
-                var packed = new InternalList();
+                var packed = new ChowList();
 
                 foreach (var arg in args)
                 {
                     packed.Add(arg);
                 }
 
-                iterator = new InternalListIterator(packed);
+                iterator = new ChowListIterator(packed);
             }
 
             if (!iterator.TryMoveNext(out var winner))
@@ -412,7 +412,7 @@ namespace Chow.StandardLibrary
                 }
             }
 
-            return new TaggedUnion(new InternalRange(start, stop, step));
+            return new TaggedUnion(new ChowRange(start, stop, step));
         }
 
         static long RequireRangeInt(TaggedUnion arg)

@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Text;
 namespace Chow.DataTypes
 {
-    class InternalList
+    class ChowList
     {
         const string METHOD_APPEND_NAME = "append";
         const string METHOD_CLEAR_NAME = "clear";
@@ -174,7 +174,7 @@ namespace Chow.DataTypes
                     return Reverse(args);
 
                 default:
-                    throw new NotImplementedException($"Method '{methodName}' is not implemented for InternalList");
+                    throw new NotImplementedException($"Method '{methodName}' is not implemented for ChowList");
             }
         }
 
@@ -195,7 +195,7 @@ namespace Chow.DataTypes
                 case METHOD_REVERSE_NAME:
                     return Reverse;
                 default:
-                    throw new NotImplementedException($"Method '{methodName}' is not implemented for InternalList");
+                    throw new NotImplementedException($"Method '{methodName}' is not implemented for ChowList");
             }
         }
 
@@ -220,7 +220,7 @@ namespace Chow.DataTypes
             }
         }
 
-        public static bool ElementsEqual(InternalList a, InternalList b)
+        public static bool ElementsEqual(ChowList a, ChowList b)
         {
             if (a._elements.Count != b._elements.Count)
             {
@@ -238,7 +238,7 @@ namespace Chow.DataTypes
             return true;
         }
 
-        public static int ElementsHashCode(InternalList a)
+        public static int ElementsHashCode(ChowList a)
         {
             // Order-sensitive polynomial combine — paired with ElementsEqual's order-sensitive check.
             unchecked
@@ -254,17 +254,17 @@ namespace Chow.DataTypes
             }
         }
 
-        public static InternalList Concat(InternalList a, InternalList b)
+        public static ChowList Concat(ChowList a, ChowList b)
         {
-            var result = new InternalList();
+            var result = new ChowList();
             result._elements.AddRange(a._elements);
             result._elements.AddRange(b._elements);
             return result;
         }
 
-        public static InternalList Repeat(InternalList a, int n)
+        public static ChowList Repeat(ChowList a, int n)
         {
-            var result = new InternalList();
+            var result = new ChowList();
 
             if (n <= 0)
             {
@@ -357,7 +357,7 @@ namespace Chow.DataTypes
                 }
             }
 
-            var sliced = new InternalList();
+            var sliced = new ChowList();
 
             if (step > 0)
             {
@@ -445,10 +445,10 @@ namespace Chow.DataTypes
                     sb.Append('\'');
                     return;
                 case Tag.List:
-                    sb.Append(value.AsType<InternalList>());
+                    sb.Append(value.AsType<ChowList>());
                     return;
                 case Tag.Dict:
-                    sb.Append(value.AsType<InternalDict>());
+                    sb.Append(value.AsType<ChowDictionary>());
                     return;
                 case Tag.Object:
                 case Tag.Range:

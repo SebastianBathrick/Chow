@@ -11,7 +11,7 @@ namespace Chow.DataTypes
     /// <see cref="Enclosing"/> is a live reference — never a copy. Mutations to that scope after capture remain visible
     /// to the function body, matching Python closure semantics.
     /// </remarks>
-    sealed class Closure
+    sealed class ChowFunctionInstance
     {
         /// <summary>The compiled bytecode of the function body.</summary>
         public Chunk Chunk { get; }
@@ -26,7 +26,7 @@ namespace Chow.DataTypes
         public int ParamCount { get; }
 
         /// <summary>Constructs a closure. All fields are readonly; closures are immutable once built.</summary>
-        public Closure(Chunk chunk, Scope enclosing, string name, int paramCount)
+        public ChowFunctionInstance(Chunk chunk, Scope enclosing, string name, int paramCount)
         {
             Chunk = chunk;
             Enclosing = enclosing;
