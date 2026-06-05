@@ -165,12 +165,27 @@ namespace Chow.Expressions
         // Python: negative integer exponent forces float result.
         public static TaggedUnion EvaluateExponent(ref TaggedUnion baseValue, ref TaggedUnion exponentValue)
         {
+            var convTag = GetConversionTag(baseValue.Tag, exponentValue.Tag, ExpressionOperator.Exponentiate);
+
+            if (convTag == Tag.Long)
+            {
+                var exponentLong = exponentValue.ToLong();
+
+                if (exponentLong >= 0L)
+                {
+                    var expandedForm = ExponentiateLong(baseValue.ToLong(), exponentLong);
+                    return new TaggedUnion(expandedForm);
+                }
+            }
+
             var baseDbl = baseValue.ToDouble();
             var exponentDbl = exponentValue.ToDouble();
+
             if (IsDoubleValueZero(baseDbl) && exponentDbl < 0.0)
             {
                 throw new ZeroDivisionException();
             }
+
             return new TaggedUnion(Math.Pow(baseDbl, exponentDbl));
         }
 
