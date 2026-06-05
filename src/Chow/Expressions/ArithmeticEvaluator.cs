@@ -6,10 +6,18 @@ using Chow.Bytecode;
 
 namespace Chow.Expressions
 {
+    // WARNING: This class is still in the development phase. It should not be implemented.
+    /// <summary>
+    /// Static service class for <see cref="Chow.Core.VirtualMachine"/> that performs arithmetic
+    /// operations that behave the same as Python's arithmetic.
+    /// </summary>
     static class ArithmeticEvaluator
     {
+        // TODO: Update project's const naming conventions from SNAKE_CASE to PascalCase 
+        const int IsDoubleEqualInteger = 0; 
+        
         static readonly IReadOnlyDictionary<(Tag, Tag), Tag> TagConversionMap =
-            new Dictionary<(Tag, Tag), Tag>()
+            new Dictionary<(Tag left, Tag right), Tag>()
             {
                 { (Tag.Bool, Tag.Bool), Tag.Long },
                 { (Tag.Bool, Tag.Long), Tag.Long },
@@ -22,230 +30,152 @@ namespace Chow.Expressions
                 { (Tag.Double, Tag.Double), Tag.Double },
             };
 
-        /// <summary>
-        /// Converts an arithmetic operation's operands to their appropriate data types, evaluates
-        /// the expression, and returns its result.
-        /// </summary>
-        /// <param name="l">The left operand.</param>
-        /// <param name="r">The right operand.</param>
-        /// <param name="op">The arithmetic operation to apply.</param>
-        /// <returns>A <see cref="TaggedUnion"/> containing the result of the operation.</returns>
-        /// <exception cref="InvalidOperationException">Thrown when <paramref name="op"/> is not a
-        /// supported arithmetic operation.</exception>
-        public static TaggedUnion Evaluate(
-            ref TaggedUnion l,
-            ref TaggedUnion r,
-            OperationCode op)
-        {
-            switch (op)
-            {
-                case OperationCode.Add:
-                    return EvaluateAddition(ref l, ref r, op);
-                case OperationCode.Subtract:
-                    return EvaluateSubtraction(ref l, ref r, op);
-                case OperationCode.Multiply:
-                    return EvaluateMultiplication(ref l, ref r, op);
-                case OperationCode.Divide:
-                    return EvaluateDivision(ref l, ref r, op);
-                case OperationCode.Modulus:
-                    return EvaluateModulus(ref l, ref r, op);
-                case OperationCode.Exponentiate:
-                    return EvaluateExponent(ref l, ref r, op);
-                case OperationCode.FloorDivide:
-                    return TypeSpecificFloorDivide(ref l, ref r, op);
-                default:
-                    throw new InvalidOperationException(nameof(Evaluate));
-            }
-        }
+        #region Non-Type Specific Operations
 
-        #region Operation Methods
-        
-        static TaggedUnion EvaluateAddition(ref TaggedUnion l, ref TaggedUnion r, OperationCode op)
+        public static TaggedUnion EvaluateAddition(ref TaggedUnion l, ref TaggedUnion r)
         {
-            switch (GetConversionTag(l.Tag, r.Tag))
+            if (GetConversionTag(l.Tag, r.Tag, ExpressionOperator.Add) == Tag.Long)
             {
-                case Tag.Long:
-                    return new TaggedUnion(l.ToLong() + r.ToLong());
-                case Tag.Double:
-                    return new TaggedUnion(l.ToDouble() + r.ToDouble());
-                default:
-                    throw new TypeException(l.Tag, r.Tag, op);
+                return new TaggedUnion(l.ToLong() + r.ToLong());
             }
-        }
-
-        static TaggedUnion EvaluateSubtraction(ref TaggedUnion l, ref TaggedUnion r, OperationCode op)
-        {
-            switch (GetConversionTag(l.Tag, r.Tag))
-            {
-                case Tag.Long:
-                    return new TaggedUnion(l.ToLong() - r.ToLong());
-                case Tag.Double:
-                    return new TaggedUnion(l.ToDouble() - r.ToDouble());
-                default:
-                    throw new TypeException(l.Tag, r.Tag, op);
-            }
-        }
-
-        static TaggedUnion EvaluateMultiplication(ref TaggedUnion l, ref TaggedUnion r, OperationCode op)
-        {
-            switch (GetConversionTag(l.Tag, r.Tag))
-            {
-                case Tag.Long:
-                    return new TaggedUnion(l.ToLong() * r.ToLong());
-                case Tag.Double:
-                    return new TaggedUnion(l.ToDouble() * r.ToDouble());
-                default:
-                    throw new TypeException(l.Tag, r.Tag, op);
-            }
-        }
-
-        // Python: `/` always produces float even for int / int.
-        static TaggedUnion EvaluateDivision(ref TaggedUnion l, ref TaggedUnion r, OperationCode op)
-        {
-            switch (GetConversionTag(l.Tag, r.Tag))
-            {
-                case Tag.Long:
-                case Tag.Double:
-                    return EvaluateDivision(ref l, ref r);
-                default:
-                    throw new TypeException(l.Tag, r.Tag, op);
-            }
-        }
-        
-        // Python: result sign follows the divisor.
-        static TaggedUnion EvaluateModulus(ref TaggedUnion l, ref TaggedUnion r, OperationCode op)
-        {
-            switch (GetConversionTag(l.Tag, r.Tag))
-            {
-                case Tag.Long:
-                case Tag.Double:
-                    return TypeSpecificMod(ref l, ref r);
-                default:
-                    throw new TypeException(l.Tag, r.Tag, op);
-            }
-        }
-        
-        // Python: negative integer exponent forces float result.
-        static TaggedUnion EvaluateExponent(ref TaggedUnion l, ref TaggedUnion r, OperationCode op)
-        {
-            var convTag = GetConversionTag(l.Tag, r.Tag);
             
-            if (convTag == Tag.Long && r.ToLong() < 0)
-                convTag = Tag.Double;
-
-            switch (convTag)
-            {
-                case Tag.Long:
-                    return new TaggedUnion(IntPow(l.ToLong(), r.ToLong()));
-                case Tag.Double:
-                    return new TaggedUnion(Math.Pow(l.ToDouble(), r.ToDouble()));
-                default:
-                    throw new TypeException(l.Tag, r.Tag, op);
-            }
+            return new TaggedUnion(l.ToDouble() + r.ToDouble());
         }
-        
-        static TaggedUnion EvaluateDivision(ref TaggedUnion l, ref TaggedUnion r)
+
+        public static TaggedUnion EvaluateSubtraction(ref TaggedUnion l, ref TaggedUnion r)
         {
-            switch (r.Tag)
+            if (GetConversionTag(l.Tag, r.Tag, ExpressionOperator.Subtract) == Tag.Long)
             {
-                case Tag.Long:
-                case Tag.Bool:
-                case Tag.Double:
-                    return r.ToDouble() == 0.0 
-                        ? throw new ZeroDivisionException() 
-                        : new TaggedUnion(l.ToDouble() / r.ToDouble());
-
-                default:
-                    throw new ZeroDivisionException();
+                return new TaggedUnion(l.ToLong() - r.ToLong());
             }
+            
+            return new TaggedUnion(l.ToDouble() - r.ToDouble());
         }
-        
+
+        public static TaggedUnion EvaluateMultiplication(ref TaggedUnion l, ref TaggedUnion r)
+        {
+            if (GetConversionTag(l.Tag, r.Tag, ExpressionOperator.Multiply) == Tag.Long)
+            {
+                return new TaggedUnion(l.ToLong() * r.ToLong());
+            }
+            
+            return new TaggedUnion(l.ToDouble() * r.ToDouble());
+        }
+
+        public static TaggedUnion EvaluateDivision(ref TaggedUnion l, ref TaggedUnion r)
+        {
+            // Note: Division always produces a double (referred to as a 'float' in source code).
+
+            // TaggedUnion.ToDouble() throws TypeException if the conversion is not possible.
+            var rightDbl = r.ToDouble();
+            var leftDbl = l.ToDouble(); 
+
+            if (IsDoubleValueZero(rightDbl))
+            {
+                throw new ZeroDivisionException();
+            }
+
+            return new TaggedUnion(leftDbl / rightDbl);
+        }
+
         #endregion
 
-        #region Type Helper Methods
-        
-        static TaggedUnion TypeSpecificMod(ref TaggedUnion l, ref TaggedUnion r)
+        #region Modulus Methods
+
+        public static TaggedUnion EvaluateModulus(ref TaggedUnion l, ref TaggedUnion r)
         {
-            switch (r.Tag)
+            var convTag = GetConversionTag(l.Tag, r.Tag, ExpressionOperator.Modulus);
+
+            if (convTag == Tag.Long)
             {
-                case Tag.Bool:
-                case Tag.Long:
-                    var rightLong = r.ToLong();
-
-                    if (rightLong == 0L)
-                    {
-                        throw new ZeroDivisionException();
-                    }
-
-                    var leftLong = l.ToLong();
-                    return new TaggedUnion((leftLong % rightLong + rightLong) % rightLong);
-                
-                case Tag.Double:
-                    var rightDbl = r.ToDouble();
-                    
-                    if (rightDbl == 0.0)
-                    {
-                        throw new ZeroDivisionException();
-                    }
-                    
-                    var leftDbl = l.ToDouble();
-                    return new TaggedUnion((leftDbl % rightDbl + rightDbl) % rightDbl);
-                
-                default:
-                    throw new ZeroDivisionException();
+                return new TaggedUnion(ModLong(l.ToLong(), r.ToLong()));
             }
+
+            return new TaggedUnion(ModDouble(l.ToDouble(), r.ToDouble()));
         }
 
-        // Python: floors toward negative infinity.
-        static TaggedUnion TypeSpecificFloorDivide(ref TaggedUnion l, ref TaggedUnion r, OperationCode op)
+        static TaggedUnion ModDouble(double l, double r)
         {
-            switch (GetConversionTag(l.Tag, r.Tag))
+            if (IsDoubleValueZero(r))
             {
-                case Tag.Long:
-                    var leftLong = l.ToLong();
-                    var rightLong = r.ToLong();
-
-                    if (rightLong == 0L)
-                    {
-                        throw new ZeroDivisionException();
-                    }
-                    
-                    var q = leftLong / rightLong;
-
-                    if (leftLong % rightLong != 0L && leftLong < 0L != rightLong < 0L)
-                    {
-                        q--;
-                    }
-                    
-                    return new TaggedUnion(q);
-                
-                case Tag.Double:
-                    var divisor = r.ToDouble();
-                    
-                    if (divisor == 0.0)
-                    {
-                        throw new ZeroDivisionException();
-                    }
-                    
-                    return new TaggedUnion(Math.Floor(l.ToDouble() / divisor));
-                
-                default:
-                    throw new TypeException(l.Tag, r.Tag, op);
+                throw new ZeroDivisionException();
             }
+
+            return new TaggedUnion((l % r + r) % r);
         }
 
-        static Tag GetConversionTag(Tag l, Tag r)
+        static TaggedUnion ModLong(long l, long r)
         {
-            var mapKey = (left: l, right: r);
-            var convertToTag = TagConversionMap.TryGetValue(mapKey, out var conversion)
-                ? conversion
-                : throw new TypeException(l, r, OperationCode.Add);
+            if (r == 0L)
+            {
+                throw new ZeroDivisionException();
+            }
 
-            return convertToTag;
+            return new TaggedUnion((l % r + r) % r);
+        }
+
+        #endregion
+
+        #region Floor Division Methods
+
+        public static TaggedUnion EvaluateFloorDivision(ref TaggedUnion l, ref TaggedUnion r)
+        {
+            var convTag = GetConversionTag(l.Tag, r.Tag, ExpressionOperator.FloorDivide);
+            
+            if (convTag == Tag.Long)
+            {
+                return new TaggedUnion(FloorDivideLong(l.ToLong(), r.ToLong()));
+            }
+            
+            return new TaggedUnion(FloorDivideDouble(l.ToDouble(), r.ToDouble()));
+        }
+
+
+        static TaggedUnion FloorDivideDouble(double l, double r)
+        {
+            if (IsDoubleValueZero(r))
+            {
+                throw new ZeroDivisionException();
+            }
+
+            return new TaggedUnion(Math.Floor(l / r));
+        }
+
+        static TaggedUnion FloorDivideLong(long l, long r)
+        {
+            if (r == 0L)
+            {
+                throw new ZeroDivisionException();
+            }
+
+            var q = l / r;
+
+            if (l % r != 0L && l < 0L != r < 0L)
+            {
+                q--;
+            }
+
+            return new TaggedUnion(q);
+        }
+
+        #endregion
+
+        #region Exponentiation Methods
+
+        // Python: negative integer exponent forces float result.
+        public static TaggedUnion EvaluateExponent(ref TaggedUnion baseValue, ref TaggedUnion exponentValue)
+        {
+            var baseDbl = baseValue.ToDouble();
+            var exponentDbl = exponentValue.ToDouble();
+            if (IsDoubleValueZero(baseDbl) && exponentDbl < 0.0)
+            {
+                throw new ZeroDivisionException();
+            }
+            return new TaggedUnion(Math.Pow(baseDbl, exponentDbl));
         }
 
         // Exponent-by-squaring. Caller guarantees exponent >= 0.
-        static long IntPow(long l, long r)
+        static long ExponentiateLong(long l, long r)
         {
             var result = 1L;
             
@@ -262,8 +192,31 @@ namespace Chow.Expressions
             
             return result;
         }
-        
+
         #endregion
-        
+
+        #region Helper Methods
+
+        static Tag GetConversionTag(Tag leftTag, Tag rightTag, ExpressionOperator op)
+        {
+            var mapKey = (left: leftTag, right: rightTag);
+
+            if (TagConversionMap.TryGetValue(mapKey, out var convTag))
+            {
+                return convTag;
+            }
+
+            throw new TypeException(
+                $"TypeError: unsupported operand type(s) for {OperatorStrings.EnumToString(op)}: "
+                + $"'{DataTypeNames.GetTypeName(leftTag)}' and '{DataTypeNames.GetTypeName(rightTag)}'");
+        }
+
+        static bool IsDoubleValueZero(double divisor)
+        {
+            return divisor.CompareTo(0.0) == IsDoubleEqualInteger;
+        }
+
+        #endregion
+
     }
 }
