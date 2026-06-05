@@ -49,7 +49,7 @@ namespace Chow.Core
         {
             var lastExprStmntValue = TaggedUnion.None;
 
-            while (_callStack.IsInstrToRun)
+            while (_callStack.IsInstructionToExecute)
             {
                 switch (CurrentOperation.Code)
                 {

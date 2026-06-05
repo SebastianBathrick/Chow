@@ -7,6 +7,6 @@ namespace Chow.Expressions
 {
     interface ITagConversionMap
     {
-        IReadOnlyDictionary<(Tag, Tag), Tag> ConversionRules { get; }
+
     }
 }
