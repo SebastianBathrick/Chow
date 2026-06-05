@@ -6,7 +6,7 @@ namespace Chow.DataTypes
     {
         static readonly IReadOnlyDictionary<Tag, string> DataTypeNameMap = new Dictionary<Tag, string>()
         {
-            { Tag.None, "None" },
+            { Tag.None, "NoneType" },
             { Tag.Bool, "bool" },
             { Tag.Long, "int" },
             { Tag.Double, "float" },
