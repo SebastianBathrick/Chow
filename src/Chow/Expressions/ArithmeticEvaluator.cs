@@ -94,24 +94,24 @@ namespace Chow.Expressions
             return new TaggedUnion(ModDouble(l.ToDouble(), r.ToDouble()));
         }
 
-        static TaggedUnion ModDouble(double l, double r)
+        static double ModDouble(double l, double r)
         {
             if (IsDoubleValueZero(r))
             {
                 throw new ZeroDivisionException();
             }
 
-            return new TaggedUnion((l % r + r) % r);
+            return (l % r + r) % r;
         }
 
-        static TaggedUnion ModLong(long l, long r)
+        static long ModLong(long l, long r)
         {
             if (r == 0L)
             {
                 throw new ZeroDivisionException();
             }
 
-            return new TaggedUnion((l % r + r) % r);
+            return (l % r + r) % r;
         }
 
         #endregion
@@ -131,17 +131,17 @@ namespace Chow.Expressions
         }
 
 
-        static TaggedUnion FloorDivideDouble(double l, double r)
+        static double FloorDivideDouble(double l, double r)
         {
             if (IsDoubleValueZero(r))
             {
                 throw new ZeroDivisionException();
             }
 
-            return new TaggedUnion(Math.Floor(l / r));
+            return Math.Floor(l / r);
         }
 
-        static TaggedUnion FloorDivideLong(long l, long r)
+        static long FloorDivideLong(long l, long r)
         {
             if (r == 0L)
             {
@@ -155,7 +155,7 @@ namespace Chow.Expressions
                 q--;
             }
 
-            return new TaggedUnion(q);
+            return q;
         }
 
         #endregion

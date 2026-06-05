@@ -116,7 +116,7 @@ public class ArithmeticEvaluatorTests
             () => Evaluate(ArithmeticEvaluator.EvaluateDivision, L(2), TaggedUnion.None),
             "/",
             "int",
-            "None");
+            "NoneType");
     }
 
     #endregion
