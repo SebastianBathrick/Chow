@@ -7,12 +7,8 @@ using Chow.Bytecode;
 
 namespace Chow.Expressions
 {
-    // WARNING: This class is still in the development phase. It should not be implemented.
-    /// <summary>
-    /// Static service class for <see cref="Chow.Core.VirtualMachine"/> that performs arithmetic
-    /// operations that behave the same as Python's arithmetic.
-    /// </summary>
-    static class ArithmeticEvaluator
+    // TODO: Replace with more performant, refactored version
+    class ArithmeticEvaluator : IEvaluator
     {
         // TODO: Update project's const naming conventions from SNAKE_CASE to PascalCase 
         const int IsDoubleEqualInteger = 0; 
@@ -31,46 +27,42 @@ namespace Chow.Expressions
                 { (DataType.Double, DataType.Long), DataType.Double },
                 { (DataType.Double, DataType.Double), DataType.Double },
             };
-
-        #region Non-Type Specific Operations
-
+        
+        public RuntimeValue EvaluateBinary(RuntimeValue right, RuntimeValue left)
+        {
+            throw new NotImplementedException();
+        }
+        
         public static RuntimeValue EvaluateAddition(ref RuntimeValue l, ref RuntimeValue r)
         {
             // No float on either side → int result; otherwise both operands promote to float.
             if (TryGetConversionTag(l.DataType, r.DataType, out var convTag))
             {
-                if (convTag == DataType.Long)
-                {
-                    return new RuntimeValue(l.ToLong() + r.ToLong());
-                }
+                return convTag == DataType.Long 
+                    ? new RuntimeValue(l.ToLong() + r.ToLong()) 
+                    : new RuntimeValue(l.ToDouble() + r.ToDouble());
 
-                return new RuntimeValue(l.ToDouble() + r.ToDouble());
             }
 
-            if (l.DataType == DataType.Str && r.DataType == DataType.Str)
+            switch (l.DataType)
             {
-                // Python overloads `+` for sequence concatenation; strings keep string results.
-                return new RuntimeValue(l.ToString() + r.ToString());
+                case DataType.Str when r.DataType == DataType.Str:
+                    // Python overloads `+` for sequence concatenation; strings keep string results.
+                    return new RuntimeValue(l.ToString() + r.ToString());
+                case DataType.List when r.DataType == DataType.List:
+                    // List concatenation creates a new list; neither operand list is mutated.
+                    return new RuntimeValue(
+                        SourceList.Concat((SourceList)l.ToObject(), (SourceList)r.ToObject()));
+                default:
+                    throw UnsupportedBinary(l.DataType, r.DataType, ExpressionOperator.Add);
             }
 
-            if (l.DataType == DataType.List && r.DataType == DataType.List)
-            {
-                // List concatenation creates a new list; neither operand list is mutated.
-                return new RuntimeValue(
-                    SourceList.Concat((SourceList)l.ToObject(), (SourceList)r.ToObject()));
-            }
-
-            throw UnsupportedBinary(l.DataType, r.DataType, ExpressionOperator.Add);
         }
 
         public static RuntimeValue EvaluateSubtraction(ref RuntimeValue l, ref RuntimeValue r)
         {
-            if (GetConversionTag(l.DataType, r.DataType, ExpressionOperator.Subtract) == DataType.Long)
-            {
-                return new RuntimeValue(l.ToLong() - r.ToLong());
-            }
-            
-            return new RuntimeValue(l.ToDouble() - r.ToDouble());
+            return GetConversionTag(l.DataType, r.DataType, ExpressionOperator.Subtract) == DataType.Long ? new RuntimeValue(l.ToLong() - r.ToLong()) : new RuntimeValue(l.ToDouble() - r.ToDouble());
+
         }
 
         public static RuntimeValue EvaluateMultiplication(ref RuntimeValue l, ref RuntimeValue r)
@@ -126,9 +118,7 @@ namespace Chow.Expressions
 
             return new RuntimeValue(leftDbl / rightDbl);
         }
-
-        #endregion
-
+        
         #region Modulus Methods
 
         public static RuntimeValue EvaluateModulus(ref RuntimeValue l, ref RuntimeValue r)
@@ -359,6 +349,7 @@ namespace Chow.Expressions
         }
 
         #endregion
+
 
     }
 }

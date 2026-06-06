@@ -222,7 +222,7 @@ namespace Chow
         
         #endregion
 
-        #region Arithmetic & Logical Operations
+        #region Arithmetic & Logic Operations
         // WARNING: THESE METHODS WILL BE REMOVED IN FUTURE REFACTOR!
         // DO NOT USE ANY OF THESE METHODS OUTSIDE OF THE VirtualMachine CLASS
 
