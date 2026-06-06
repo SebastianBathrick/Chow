@@ -51,7 +51,7 @@ public class ComparisonEvaluatorTests
     public void Equality_NoneNone_ReturnsTrue()
     {
         // Python: None == None -> True
-        AssertBoolResult(ComparisonEvaluator.EvaluateEqual, TaggedUnion.None, TaggedUnion.None, true);
+        AssertBoolResult(ComparisonEvaluator.EvaluateEqual, RuntimeValue.None, RuntimeValue.None, true);
     }
 
     [Test]
@@ -65,7 +65,7 @@ public class ComparisonEvaluatorTests
     public void Equality_NoneInt_ReturnsFalse()
     {
         // Python: None == 0 -> False
-        AssertBoolResult(ComparisonEvaluator.EvaluateEqual, TaggedUnion.None, L(0), false);
+        AssertBoolResult(ComparisonEvaluator.EvaluateEqual, RuntimeValue.None, L(0), false);
     }
 
     [Test]
@@ -132,7 +132,7 @@ public class ComparisonEvaluatorTests
     public void NotEqual_NoneNone_ReturnsFalse()
     {
         // Python: None != None -> False
-        AssertBoolResult(ComparisonEvaluator.EvaluateNotEqual, TaggedUnion.None, TaggedUnion.None, false);
+        AssertBoolResult(ComparisonEvaluator.EvaluateNotEqual, RuntimeValue.None, RuntimeValue.None, false);
     }
 
     [Test]
@@ -193,7 +193,7 @@ public class ComparisonEvaluatorTests
     {
         // Python: 1 < None -> TypeError
         AssertTypeError(
-            () => Evaluate(ComparisonEvaluator.EvaluateLess, L(1), TaggedUnion.None),
+            () => Evaluate(ComparisonEvaluator.EvaluateLess, L(1), RuntimeValue.None),
             "<",
             "int",
             "NoneType");
@@ -215,7 +215,7 @@ public class ComparisonEvaluatorTests
     {
         // Python: None < None -> TypeError
         AssertTypeError(
-            () => Evaluate(ComparisonEvaluator.EvaluateLess, TaggedUnion.None, TaggedUnion.None),
+            () => Evaluate(ComparisonEvaluator.EvaluateLess, RuntimeValue.None, RuntimeValue.None),
             "<",
             "NoneType",
             "NoneType");
@@ -258,7 +258,7 @@ public class ComparisonEvaluatorTests
     {
         // Python: None <= 1 -> TypeError
         AssertTypeError(
-            () => Evaluate(ComparisonEvaluator.EvaluateLessEqual, TaggedUnion.None, L(1)),
+            () => Evaluate(ComparisonEvaluator.EvaluateLessEqual, RuntimeValue.None, L(1)),
             "<=",
             "NoneType",
             "int");
@@ -301,7 +301,7 @@ public class ComparisonEvaluatorTests
     {
         // Python: 1 > None -> TypeError
         AssertTypeError(
-            () => Evaluate(ComparisonEvaluator.EvaluateGreater, L(1), TaggedUnion.None),
+            () => Evaluate(ComparisonEvaluator.EvaluateGreater, L(1), RuntimeValue.None),
             ">",
             "int",
             "NoneType");
@@ -344,7 +344,7 @@ public class ComparisonEvaluatorTests
     {
         // Python: None >= 0 -> TypeError
         AssertTypeError(
-            () => Evaluate(ComparisonEvaluator.EvaluateGreaterEqual, TaggedUnion.None, L(0)),
+            () => Evaluate(ComparisonEvaluator.EvaluateGreaterEqual, RuntimeValue.None, L(0)),
             ">=",
             "NoneType",
             "int");
@@ -354,15 +354,15 @@ public class ComparisonEvaluatorTests
 
     #region Helpers
 
-    static TaggedUnion L(long value) => new TaggedUnion(value);
+    static RuntimeValue L(long value) => new RuntimeValue(value);
 
-    static TaggedUnion D(double value) => new TaggedUnion(value);
+    static RuntimeValue D(double value) => new RuntimeValue(value);
 
-    static TaggedUnion B(bool value) => new TaggedUnion(value);
+    static RuntimeValue B(bool value) => new RuntimeValue(value);
 
-    static TaggedUnion S(string value) => new TaggedUnion(value);
+    static RuntimeValue S(string value) => new RuntimeValue(value);
 
-    static TaggedUnion List(params TaggedUnion[] values)
+    static RuntimeValue List(params RuntimeValue[] values)
     {
         var list = new SourceList();
 
@@ -371,17 +371,17 @@ public class ComparisonEvaluatorTests
             list.Add(value);
         }
 
-        return new TaggedUnion(list);
+        return new RuntimeValue(list);
     }
 
-    static TaggedUnion Dict(TaggedUnion key, TaggedUnion value)
+    static RuntimeValue Dict(RuntimeValue key, RuntimeValue value)
     {
         var dict = new SourceDictionary();
         dict.Add(key, value);
-        return new TaggedUnion(dict);
+        return new RuntimeValue(dict);
     }
 
-    static TaggedUnion Evaluate(EvaluateBinary evaluate, TaggedUnion left, TaggedUnion right)
+    static RuntimeValue Evaluate(EvaluateBinary evaluate, RuntimeValue left, RuntimeValue right)
     {
         var l = left;
         var r = right;
@@ -390,8 +390,8 @@ public class ComparisonEvaluatorTests
 
     static void AssertBoolResult(
         EvaluateBinary evaluate,
-        TaggedUnion left,
-        TaggedUnion right,
+        RuntimeValue left,
+        RuntimeValue right,
         bool expectedBool)
     {
         var result = Evaluate(evaluate, left, right);
@@ -409,7 +409,7 @@ public class ComparisonEvaluatorTests
         Assert.That(ex.Message, Does.Contain("'" + rightType + "'"));
     }
 
-    delegate TaggedUnion EvaluateBinary(ref TaggedUnion left, ref TaggedUnion right);
+    delegate RuntimeValue EvaluateBinary(ref RuntimeValue left, ref RuntimeValue right);
 
     #endregion
 }

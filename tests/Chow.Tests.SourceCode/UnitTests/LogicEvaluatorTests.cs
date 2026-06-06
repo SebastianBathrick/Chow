@@ -99,7 +99,7 @@ public class LogicEvaluatorTests
     public void Not_None_ReturnsTrue()
     {
         // Python: not None -> True
-        AssertBoolResult(LogicEvaluator.EvaluateNot, TaggedUnion.None, true);
+        AssertBoolResult(LogicEvaluator.EvaluateNot, RuntimeValue.None, true);
     }
 
     #endregion
@@ -138,7 +138,7 @@ public class LogicEvaluatorTests
     public void And_NoneLeft_ReturnsLeft()
     {
         // Python: None and 3 -> None
-        AssertValueResult(LogicEvaluator.EvaluateAnd, TaggedUnion.None, L(3), TaggedUnion.None);
+        AssertValueResult(LogicEvaluator.EvaluateAnd, RuntimeValue.None, L(3), RuntimeValue.None);
     }
 
     [Test]
@@ -184,7 +184,7 @@ public class LogicEvaluatorTests
     public void Or_NoneLeft_ReturnsRight()
     {
         // Python: None or 3 -> 3
-        AssertValueResult(LogicEvaluator.EvaluateOr, TaggedUnion.None, L(3), L(3));
+        AssertValueResult(LogicEvaluator.EvaluateOr, RuntimeValue.None, L(3), L(3));
     }
 
     [Test]
@@ -212,7 +212,7 @@ public class LogicEvaluatorTests
     [Test]
     public void IsTruthy_FalsyValues_ReturnsFalse()
     {
-        AssertIsTruthy(TaggedUnion.None, false);
+        AssertIsTruthy(RuntimeValue.None, false);
         AssertIsTruthy(B(false), false);
         AssertIsTruthy(L(0), false);
         AssertIsTruthy(D(0.0), false);
@@ -237,15 +237,15 @@ public class LogicEvaluatorTests
 
     #region Helpers
 
-    static TaggedUnion L(long value) => new TaggedUnion(value);
+    static RuntimeValue L(long value) => new RuntimeValue(value);
 
-    static TaggedUnion D(double value) => new TaggedUnion(value);
+    static RuntimeValue D(double value) => new RuntimeValue(value);
 
-    static TaggedUnion B(bool value) => new TaggedUnion(value);
+    static RuntimeValue B(bool value) => new RuntimeValue(value);
 
-    static TaggedUnion S(string value) => new TaggedUnion(value);
+    static RuntimeValue S(string value) => new RuntimeValue(value);
 
-    static TaggedUnion List(params TaggedUnion[] values)
+    static RuntimeValue List(params RuntimeValue[] values)
     {
         var list = new SourceList();
 
@@ -254,35 +254,35 @@ public class LogicEvaluatorTests
             list.Add(value);
         }
 
-        return new TaggedUnion(list);
+        return new RuntimeValue(list);
     }
 
-    static TaggedUnion Dict()
+    static RuntimeValue Dict()
     {
-        return new TaggedUnion(new SourceDictionary());
+        return new RuntimeValue(new SourceDictionary());
     }
 
-    static TaggedUnion Dict(TaggedUnion key, TaggedUnion value)
+    static RuntimeValue Dict(RuntimeValue key, RuntimeValue value)
     {
         var dict = new SourceDictionary();
         dict.Add(key, value);
-        return new TaggedUnion(dict);
+        return new RuntimeValue(dict);
     }
 
-    static TaggedUnion Evaluate(EvaluateUnary evaluate, TaggedUnion operand)
+    static RuntimeValue Evaluate(EvaluateUnary evaluate, RuntimeValue operand)
     {
         var value = operand;
         return evaluate(ref value);
     }
 
-    static TaggedUnion Evaluate(EvaluateBinary evaluate, TaggedUnion left, TaggedUnion right)
+    static RuntimeValue Evaluate(EvaluateBinary evaluate, RuntimeValue left, RuntimeValue right)
     {
         var l = left;
         var r = right;
         return evaluate(ref l, ref r);
     }
 
-    static void AssertBoolResult(EvaluateUnary evaluate, TaggedUnion operand, bool expectedBool)
+    static void AssertBoolResult(EvaluateUnary evaluate, RuntimeValue operand, bool expectedBool)
     {
         var result = Evaluate(evaluate, operand);
 
@@ -292,24 +292,24 @@ public class LogicEvaluatorTests
 
     static void AssertValueResult(
         EvaluateBinary evaluate,
-        TaggedUnion left,
-        TaggedUnion right,
-        TaggedUnion expectedValue)
+        RuntimeValue left,
+        RuntimeValue right,
+        RuntimeValue expectedValue)
     {
         var result = Evaluate(evaluate, left, right);
 
         Assert.That(result, Is.EqualTo(expectedValue));
     }
 
-    static void AssertIsTruthy(TaggedUnion operand, bool expectedValue)
+    static void AssertIsTruthy(RuntimeValue operand, bool expectedValue)
     {
         var value = operand;
         Assert.That(LogicEvaluator.IsTruthy(ref value), Is.EqualTo(expectedValue));
     }
 
-    delegate TaggedUnion EvaluateUnary(ref TaggedUnion operand);
+    delegate RuntimeValue EvaluateUnary(ref RuntimeValue operand);
 
-    delegate TaggedUnion EvaluateBinary(ref TaggedUnion left, ref TaggedUnion right);
+    delegate RuntimeValue EvaluateBinary(ref RuntimeValue left, ref RuntimeValue right);
 
     #endregion
 }

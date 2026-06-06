@@ -3,7 +3,7 @@ namespace Chow.DataTypes
 {
     static class IteratorFactory
     {
-        public static IIterator GetIterator(TaggedUnion source)
+        public static IIterator GetIterator(RuntimeValue source)
         {
             switch (source.DataType)
             {

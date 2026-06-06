@@ -34,83 +34,83 @@ namespace Chow.Expressions
 
         #region Non-Type Specific Operations
 
-        public static TaggedUnion EvaluateAddition(ref TaggedUnion l, ref TaggedUnion r)
+        public static RuntimeValue EvaluateAddition(ref RuntimeValue l, ref RuntimeValue r)
         {
             // No float on either side → int result; otherwise both operands promote to float.
             if (TryGetConversionTag(l.DataType, r.DataType, out var convTag))
             {
                 if (convTag == DataType.Long)
                 {
-                    return new TaggedUnion(l.ToLong() + r.ToLong());
+                    return new RuntimeValue(l.ToLong() + r.ToLong());
                 }
 
-                return new TaggedUnion(l.ToDouble() + r.ToDouble());
+                return new RuntimeValue(l.ToDouble() + r.ToDouble());
             }
 
             if (l.DataType == DataType.Str && r.DataType == DataType.Str)
             {
                 // Python overloads `+` for sequence concatenation; strings keep string results.
-                return new TaggedUnion(l.ToString() + r.ToString());
+                return new RuntimeValue(l.ToString() + r.ToString());
             }
 
             if (l.DataType == DataType.List && r.DataType == DataType.List)
             {
                 // List concatenation creates a new list; neither operand list is mutated.
-                return new TaggedUnion(
+                return new RuntimeValue(
                     SourceList.Concat((SourceList)l.ToObject(), (SourceList)r.ToObject()));
             }
 
             throw UnsupportedBinary(l.DataType, r.DataType, ExpressionOperator.Add);
         }
 
-        public static TaggedUnion EvaluateSubtraction(ref TaggedUnion l, ref TaggedUnion r)
+        public static RuntimeValue EvaluateSubtraction(ref RuntimeValue l, ref RuntimeValue r)
         {
             if (GetConversionTag(l.DataType, r.DataType, ExpressionOperator.Subtract) == DataType.Long)
             {
-                return new TaggedUnion(l.ToLong() - r.ToLong());
+                return new RuntimeValue(l.ToLong() - r.ToLong());
             }
             
-            return new TaggedUnion(l.ToDouble() - r.ToDouble());
+            return new RuntimeValue(l.ToDouble() - r.ToDouble());
         }
 
-        public static TaggedUnion EvaluateMultiplication(ref TaggedUnion l, ref TaggedUnion r)
+        public static RuntimeValue EvaluateMultiplication(ref RuntimeValue l, ref RuntimeValue r)
         {
             if (TryGetConversionTag(l.DataType, r.DataType, out var convTag))
             {
                 return convTag == DataType.Long 
-                    ? new TaggedUnion(l.ToLong() * r.ToLong()) 
-                    : new TaggedUnion(l.ToDouble() * r.ToDouble());
+                    ? new RuntimeValue(l.ToLong() * r.ToLong()) 
+                    : new RuntimeValue(l.ToDouble() * r.ToDouble());
 
             }
 
             if (l.DataType == DataType.Str && IsIntegerTag(r.DataType))
             {
                 // Python repeats sequences with int-like counts; bool counts as 0 or 1.
-                return new TaggedUnion(RepeatString(l.ToString(), ToRepeatCount(ref r)));
+                return new RuntimeValue(RepeatString(l.ToString(), ToRepeatCount(ref r)));
             }
 
             if (IsIntegerTag(l.DataType) && r.DataType == DataType.Str)
             {
                 // Repetition is commutative for sequence/int operands: 3 * "ab" == "ab" * 3.
-                return new TaggedUnion(RepeatString(r.ToString(), ToRepeatCount(ref l)));
+                return new RuntimeValue(RepeatString(r.ToString(), ToRepeatCount(ref l)));
             }
 
             if (l.DataType == DataType.List && IsIntegerTag(r.DataType))
             {
                 // SourceList.Repeat mirrors Python's non-positive counts by returning an empty list.
-                return new TaggedUnion(SourceList.Repeat((SourceList)l.ToObject(), ToRepeatCount(ref r)));
+                return new RuntimeValue(SourceList.Repeat((SourceList)l.ToObject(), ToRepeatCount(ref r)));
             }
 
             if (IsIntegerTag(l.DataType) && r.DataType == DataType.List)
             {
                 // Keep list repetition order-independent for int/list operands, as Python does.
-                return new TaggedUnion(SourceList.Repeat((SourceList)r.ToObject(), ToRepeatCount(ref l)));
+                return new RuntimeValue(SourceList.Repeat((SourceList)r.ToObject(), ToRepeatCount(ref l)));
             }
 
             throw UnsupportedBinary(l.DataType, r.DataType, ExpressionOperator.Multiply);
         }
 
-        public static TaggedUnion EvaluateDivision(ref TaggedUnion l, ref TaggedUnion r)
+        public static RuntimeValue EvaluateDivision(ref RuntimeValue l, ref RuntimeValue r)
         {
             // Python: `/` always yields float (e.g. 9 / 3 → 3.0), even for int operands.
             // Lookup validates operand types; result type is always double regardless of map value.
@@ -124,23 +124,23 @@ namespace Chow.Expressions
                 throw new ZeroDivisionException();
             }
 
-            return new TaggedUnion(leftDbl / rightDbl);
+            return new RuntimeValue(leftDbl / rightDbl);
         }
 
         #endregion
 
         #region Modulus Methods
 
-        public static TaggedUnion EvaluateModulus(ref TaggedUnion l, ref TaggedUnion r)
+        public static RuntimeValue EvaluateModulus(ref RuntimeValue l, ref RuntimeValue r)
         {
             var convTag = GetConversionTag(l.DataType, r.DataType, ExpressionOperator.Modulus);
 
             if (convTag == DataType.Long)
             {
-                return new TaggedUnion(ModLong(l.ToLong(), r.ToLong()));
+                return new RuntimeValue(ModLong(l.ToLong(), r.ToLong()));
             }
 
-            return new TaggedUnion(ModDouble(l.ToDouble(), r.ToDouble()));
+            return new RuntimeValue(ModDouble(l.ToDouble(), r.ToDouble()));
         }
 
         static double ModDouble(double l, double r)
@@ -170,17 +170,17 @@ namespace Chow.Expressions
 
         #region Floor Division Methods
 
-        public static TaggedUnion EvaluateFloorDivision(ref TaggedUnion l, ref TaggedUnion r)
+        public static RuntimeValue EvaluateFloorDivision(ref RuntimeValue l, ref RuntimeValue r)
         {
             var convTag = GetConversionTag(l.DataType, r.DataType, ExpressionOperator.FloorDivide);
             
             if (convTag == DataType.Long)
             {
                 // Integer // stays in longs so large quotients are not rounded via double.
-                return new TaggedUnion(FloorDivideLong(l.ToLong(), r.ToLong()));
+                return new RuntimeValue(FloorDivideLong(l.ToLong(), r.ToLong()));
             }
             
-            return new TaggedUnion(FloorDivideDouble(l.ToDouble(), r.ToDouble()));
+            return new RuntimeValue(FloorDivideDouble(l.ToDouble(), r.ToDouble()));
         }
 
 
@@ -219,7 +219,7 @@ namespace Chow.Expressions
         #region Exponentiation Methods
 
         // Python: negative integer exponent forces float result.
-        public static TaggedUnion EvaluateExponent(ref TaggedUnion baseValue, ref TaggedUnion exponentValue)
+        public static RuntimeValue EvaluateExponent(ref RuntimeValue baseValue, ref RuntimeValue exponentValue)
         {
             var convTag = GetConversionTag(baseValue.DataType, exponentValue.DataType, ExpressionOperator.Exponentiate);
 
@@ -231,7 +231,7 @@ namespace Chow.Expressions
                 {
                     // Exact integer path; avoids double precision loss (e.g. 10 ** 16).
                     var result = ExponentiateLong(baseValue.ToLong(), exponentLong);
-                    return new TaggedUnion(result);
+                    return new RuntimeValue(result);
                 }
                 // Negative int exponent (e.g. 2 ** -3) falls through to float Math.Pow below.
             }
@@ -245,7 +245,7 @@ namespace Chow.Expressions
                 throw new ZeroDivisionException();
             }
 
-            return new TaggedUnion(Math.Pow(baseDbl, exponentDbl));
+            return new RuntimeValue(Math.Pow(baseDbl, exponentDbl));
         }
 
         // Exponent-by-squaring. Caller guarantees exponent >= 0.
@@ -272,16 +272,16 @@ namespace Chow.Expressions
 
         #region Unary Operations
 
-        public static TaggedUnion EvaluateNegation(ref TaggedUnion operand)
+        public static RuntimeValue EvaluateNegation(ref RuntimeValue operand)
         {
             switch (operand.DataType)
             {
                 case DataType.Bool:
                 case DataType.Long:
                     // Python treats bool as int here: -True -> -1, -False -> 0.
-                    return new TaggedUnion(-operand.ToLong());
+                    return new RuntimeValue(-operand.ToLong());
                 case DataType.Double:
-                    return new TaggedUnion(-operand.ToDouble());
+                    return new RuntimeValue(-operand.ToDouble());
                 default:
                     throw UnsupportedUnary(operand.DataType, ExpressionOperator.Negate);
             }
@@ -334,7 +334,7 @@ namespace Chow.Expressions
             return dataType == DataType.Long || dataType == DataType.Bool;
         }
 
-        static int ToRepeatCount(ref TaggedUnion value)
+        static int ToRepeatCount(ref RuntimeValue value)
         {
             // Repeat helpers currently take int counts; keep overflow explicit instead of silently truncating.
             return checked((int)value.ToLong());

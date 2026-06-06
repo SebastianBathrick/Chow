@@ -14,7 +14,7 @@ namespace Chow.Core
 
         readonly Scope _globalScope;
         readonly CallStack _callStack;
-        readonly Stack<TaggedUnion> _valStack;
+        readonly Stack<RuntimeValue> _valStack;
 
         #endregion
 
@@ -38,16 +38,16 @@ namespace Chow.Core
             // instantiates its own global scope; the caller is responsible for that
             _globalScope = globalScope;
             _callStack = new CallStack(chunk ?? new Chunk(), _globalScope);
-            _valStack = new Stack<TaggedUnion>();
+            _valStack = new Stack<RuntimeValue>();
         }
 
         #endregion
 
         #region Public API
 
-        public TaggedUnion Execute()
+        public RuntimeValue Execute()
         {
-            var lastExprStmntValue = TaggedUnion.None;
+            var lastExprStmntValue = RuntimeValue.None;
 
             while (_callStack.IsInstructionToExecute)
             {
@@ -200,7 +200,7 @@ namespace Chow.Core
                     {
                         var source = _valStack.Pop();
                         var iter = IteratorFactory.GetIterator(source);
-                        _valStack.Push(new TaggedUnion(iter));
+                        _valStack.Push(new RuntimeValue(iter));
                         break;
                     }
 
@@ -366,7 +366,7 @@ namespace Chow.Core
         /// <returns>The result of the function call.</returns>
         /// <remarks>Assumes that there is a global scope already set up that was provided to the
         /// constructor.</remarks>
-        public TaggedUnion CallGlobalFunction(string callVarName, TaggedUnion[] args)
+        public RuntimeValue CallGlobalFunction(string callVarName, RuntimeValue[] args)
         {
             _valStack.Push(_callStack.GetVariableValue(callVarName));
 
@@ -455,7 +455,7 @@ namespace Chow.Core
         void PushNewInternalList(int elementCount)
         {
             // Pop N values; reverse so source order is preserved.
-            var reversed = new TaggedUnion[elementCount];
+            var reversed = new RuntimeValue[elementCount];
 
             for (var i = elementCount - 1; i >= 0; i--)
             {
@@ -469,14 +469,14 @@ namespace Chow.Core
                 list.Add(reversed[i]);
             }
 
-            _valStack.Push(new TaggedUnion(list));
+            _valStack.Push(new RuntimeValue(list));
         }
 
         void PushNewInternalDict(int pairCount)
         {
             // Pop 2N values (value, key, value, key, ...); rebuild source order before insertion.
-            var keys = new TaggedUnion[pairCount];
-            var values = new TaggedUnion[pairCount];
+            var keys = new RuntimeValue[pairCount];
+            var values = new RuntimeValue[pairCount];
 
             for (var i = pairCount - 1; i >= 0; i--)
             {
@@ -491,7 +491,7 @@ namespace Chow.Core
                 dict.Add(keys[i], values[i]);
             }
 
-            _valStack.Push(new TaggedUnion(dict));
+            _valStack.Push(new RuntimeValue(dict));
         }
 
         void PushNewClosureFromTemplate()
@@ -502,7 +502,7 @@ namespace Chow.Core
             var captured = _callStack.CurrentScope;
             var closure = new SourceFunction(template.Chunk, captured, template.Name, template.ParamCount);
 
-            _valStack.Push(new TaggedUnion(closure));
+            _valStack.Push(new RuntimeValue(closure));
         }
 
         #endregion
@@ -512,7 +512,7 @@ namespace Chow.Core
         // Use an out parameter just so it's more explicit
         void CallFunction(int argCount, out bool isClosure)
         {
-            var args = new TaggedUnion[argCount];
+            var args = new RuntimeValue[argCount];
 
             for (var i = argCount - 1; i >= 0; i--)
             {
@@ -522,7 +522,7 @@ namespace Chow.Core
             var calleeValue = _valStack.Pop();
             isClosure = IsClosure(calleeValue);
 
-            // If the TaggedUnion is storing a closure inside (i.e. a function made up of bytecode)
+            // If the RuntimeValue is storing a closure inside (i.e. a function made up of bytecode)
             if (isClosure)
             {
                 // Switches to the closure's frame, so Execute will next execute the first
@@ -536,18 +536,18 @@ namespace Chow.Core
             }
         }
 
-        static bool IsClosure(TaggedUnion calleeValue)
+        static bool IsClosure(RuntimeValue calleeValue)
         {
 
             return calleeValue.DataType == DataType.Object && calleeValue.ToObject() is SourceFunction;
         }
 
-        void CallInteropFunction(TaggedUnion calleeValue, TaggedUnion[] args)
+        void CallInteropFunction(RuntimeValue calleeValue, RuntimeValue[] args)
         {
             _valStack.Push(calleeValue.InvokeHostDelegate(args));
         }
 
-        void PushClosureStackFrame(int argCount, SourceFunction sourceFunction, TaggedUnion[] args)
+        void PushClosureStackFrame(int argCount, SourceFunction sourceFunction, RuntimeValue[] args)
         {
             if (argCount != sourceFunction.ParamCount)
             {
@@ -572,7 +572,7 @@ namespace Chow.Core
         // TODO: Split each op into separate methods to avoid evaluating the operation code twice
         void EvaluateBinaryOperation(OperationCode opCode)
         {
-            // Double/bool promotion happens inside TaggedUnion's instance operator methods (CreateSum etc.)
+            // Double/bool promotion happens inside RuntimeValue's instance operator methods (CreateSum etc.)
             var right = _valStack.Pop();
             var left = _valStack.Pop();
 
@@ -711,7 +711,7 @@ namespace Chow.Core
                 throw new DataTypeException($"argument of type '{container.DataType}' is not iterable");
             }
 
-            _valStack.Push(new TaggedUnion(negate ? !found : found));
+            _valStack.Push(new RuntimeValue(negate ? !found : found));
         }
 
         #endregion

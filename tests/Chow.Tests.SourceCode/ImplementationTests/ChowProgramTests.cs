@@ -172,15 +172,15 @@ public class ChowProgramTests
 
     #region Expected Results
 
-    static readonly TaggedUnion CollatzExpectedResult = new(8L);
-    static readonly TaggedUnion FizzBuzzExpectedResult = new("1,2,Fizz,4,Buzz,Fizz,7,8,Fizz,Buzz,11,Fizz,13,14,FizzBuzz,");
-    static readonly TaggedUnion CaesarCipherExpectedResult = new("hello");
-    static readonly TaggedUnion SieveExpectedResult = new("[2, 3, 5, 7, 11, 13, 17, 19, 23, 29]");
-    static readonly TaggedUnion BankAccountFinalBalanceExpectedResult = new(120L);
-    static readonly TaggedUnion WordFrequencyExpectedResult = new(3L);
-    static readonly TaggedUnion BinarySearchHitExpectedResult = new(6L);
-    static readonly TaggedUnion BinarySearchMissExpectedResult = new(-1L);
-    static readonly TaggedUnion ClosureCounterExpectedResult = new(1L);
+    static readonly RuntimeValue CollatzExpectedResult = new(8L);
+    static readonly RuntimeValue FizzBuzzExpectedResult = new("1,2,Fizz,4,Buzz,Fizz,7,8,Fizz,Buzz,11,Fizz,13,14,FizzBuzz,");
+    static readonly RuntimeValue CaesarCipherExpectedResult = new("hello");
+    static readonly RuntimeValue SieveExpectedResult = new("[2, 3, 5, 7, 11, 13, 17, 19, 23, 29]");
+    static readonly RuntimeValue BankAccountFinalBalanceExpectedResult = new(120L);
+    static readonly RuntimeValue WordFrequencyExpectedResult = new(3L);
+    static readonly RuntimeValue BinarySearchHitExpectedResult = new(6L);
+    static readonly RuntimeValue BinarySearchMissExpectedResult = new(-1L);
+    static readonly RuntimeValue ClosureCounterExpectedResult = new(1L);
 
     #endregion
 

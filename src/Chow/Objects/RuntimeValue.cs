@@ -12,10 +12,10 @@ namespace Chow
     /// <b>int, float, str, bool, None, list, dict, and range</b>.
     /// </summary>
     [StructLayout(LayoutKind.Explicit)]
-    public readonly struct TaggedUnion
+    public readonly struct RuntimeValue
     {
         // TODO: Major refactor going on currently
-        public static readonly TaggedUnion None = new TaggedUnion(DataType.None);
+        public static readonly RuntimeValue None = new RuntimeValue(DataType.None);
         static readonly Dictionary<Type, DataType> DataTypeMap = new Dictionary<Type, DataType>
         {
             { typeof(bool), DataType.Bool },
@@ -30,7 +30,7 @@ namespace Chow
 
         #region Fields
         
-        /// <summary>Represents the TaggedUnion equivalent to null/nil/none values.</summary>
+        /// <summary>Represents the RuntimeValue equivalent to null/nil/none values.</summary>
         [FieldOffset(OBJ_FIELD_OFFSET)] readonly object _obj;
         [FieldOffset(LONG_FIELD_OFFSET)] readonly long _long;
         [FieldOffset(DBL_FIELD_OFFSET)] readonly double _dbl;
@@ -47,7 +47,7 @@ namespace Chow
 
         #region Constructors
 
-        TaggedUnion(
+        RuntimeValue(
             DataType dataType = DataType.None,
             bool boolValue = NOT_BOOL_INIT,
             object objVal = NOT_OBJ_INIT,
@@ -86,56 +86,56 @@ namespace Chow
             }
         }
 
-        internal TaggedUnion(long value) : this(DataType.Long, longVal: value) {}
+        internal RuntimeValue(long value) : this(DataType.Long, longVal: value) {}
 
-        internal TaggedUnion(double val) : this(DataType.Double, doubleVal: val) {}
+        internal RuntimeValue(double val) : this(DataType.Double, doubleVal: val) {}
 
-        internal TaggedUnion(bool value) : this(DataType.Bool, value) {}
+        internal RuntimeValue(bool value) : this(DataType.Bool, value) {}
 
-        internal TaggedUnion(string value) : this(DataType.Str, objVal: value) {}
+        internal RuntimeValue(string value) : this(DataType.Str, objVal: value) {}
 
-        internal TaggedUnion(SourceList list) : this(DataType.List, objVal: list) {}
+        internal RuntimeValue(SourceList list) : this(DataType.List, objVal: list) {}
 
-        internal TaggedUnion(SourceDictionary dictionary) : this(DataType.Dict, objVal: dictionary) {}
+        internal RuntimeValue(SourceDictionary dictionary) : this(DataType.Dict, objVal: dictionary) {}
 
-        internal TaggedUnion(SourceRange range) : this(DataType.Range, objVal: range) {}
+        internal RuntimeValue(SourceRange range) : this(DataType.Range, objVal: range) {}
 
         /// <summary>
         /// Resolves and converts the value of <paramref name="obj"/> and initializes instance with
         /// the converted value (if a dataType is defined for that type).
         /// </summary>
-        internal TaggedUnion(object obj)
+        internal RuntimeValue(object obj)
         {
             switch (obj)
             {
                 case null:
-                // TODO: Look into changing this to TaggedUnion.None.
+                // TODO: Look into changing this to RuntimeValue.None.
                     throw new ArgumentNullException(nameof(obj));
                 case string strValue:
-                    this = new TaggedUnion(strValue);
+                    this = new RuntimeValue(strValue);
                     break;
                 case long longValue:
-                    this = new TaggedUnion(longValue);
+                    this = new RuntimeValue(longValue);
                     break;
                 case int intValue:
-                    this = new TaggedUnion(intValue);
+                    this = new RuntimeValue(intValue);
                     break;
                 case double doubleValue:
-                    this = new TaggedUnion(doubleValue);
+                    this = new RuntimeValue(doubleValue);
                     break;
                 case bool boolValue:
-                    this = new TaggedUnion(boolValue);
+                    this = new RuntimeValue(boolValue);
                     break;
                 case SourceList listValue:
-                    this = new TaggedUnion(listValue);
+                    this = new RuntimeValue(listValue);
                     break;
                 case SourceDictionary dictValue:
-                    this = new TaggedUnion(dictValue);
+                    this = new RuntimeValue(dictValue);
                     break;
                 case SourceRange rangeValue:
-                    this = new TaggedUnion(rangeValue);
+                    this = new RuntimeValue(rangeValue);
                     break;
-                case TaggedUnion chowValue:
+                case RuntimeValue chowValue:
                     // **IMPORTANT**: CHOW VALUES ARE NEVER DIRECTLY WRAPPED IN OTHER CHOW VALUE INSTANCES
                     this = chowValue;
                     break;
@@ -226,34 +226,34 @@ namespace Chow
         // WARNING: THESE METHODS WILL BE REMOVED IN FUTURE REFACTOR!
         // DO NOT USE ANY OF THESE METHODS OUTSIDE OF THE VirtualMachine CLASS
 
-        // Instance methods to avoid passing two ChowValues as parameters. Each returns a new TaggedUnion
+        // Instance methods to avoid passing two ChowValues as parameters. Each returns a new RuntimeValue
         // (the struct is readonly, so no risk of accidentally mutating this instance's internal state).
         // Promotion rules come from DataTypeConversionMap (the single source of truth). Carve-outs for
         // container/string ops (list+list, list*int, str+str, str*int, dict|dict) are dispatched when
         // the map reports ConversionCase.Nothing.
 
-        internal TaggedUnion CreateSum(TaggedUnion rightOperand)
+        internal RuntimeValue CreateSum(RuntimeValue rightOperand)
         {
             switch (LookupBinary(ExpressionOperator.Add, rightOperand))
             {
                 case ConversionCase.ToInt:
                 {
-                    return new TaggedUnion(PromoteToLong() + rightOperand.PromoteToLong());
+                    return new RuntimeValue(PromoteToLong() + rightOperand.PromoteToLong());
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return new TaggedUnion(PromoteToDouble() + rightOperand.PromoteToDouble());
+                    return new RuntimeValue(PromoteToDouble() + rightOperand.PromoteToDouble());
                 }
                 case ConversionCase.Nothing:
                 {
                     if (_dataType == DataType.List && rightOperand._dataType == DataType.List)
                     {
-                        return new TaggedUnion(SourceList.Concat(AsType<SourceList>(), rightOperand.AsType<SourceList>()));
+                        return new RuntimeValue(SourceList.Concat(AsType<SourceList>(), rightOperand.AsType<SourceList>()));
                     }
 
                     if (_dataType == DataType.Str && rightOperand._dataType == DataType.Str)
                     {
-                        return new TaggedUnion(AsType<string>() + rightOperand.AsType<string>());
+                        return new RuntimeValue(AsType<string>() + rightOperand.AsType<string>());
                     }
 
                     break;
@@ -263,16 +263,16 @@ namespace Chow
             throw UnsupportedBinary(ExpressionOperator.Add, rightOperand);
         }
 
-        internal TaggedUnion CreateDifference(TaggedUnion rightOperand)
+        internal RuntimeValue CreateDifference(RuntimeValue rightOperand)
         {
             if (LookupBinary(ExpressionOperator.Subtract, rightOperand) == ConversionCase.ToInt)
             {
-                return new TaggedUnion(PromoteToLong() - rightOperand.PromoteToLong());
+                return new RuntimeValue(PromoteToLong() - rightOperand.PromoteToLong());
             }
 
             if (LookupBinary(ExpressionOperator.Subtract, rightOperand) == ConversionCase.ToFloat)
             {
-                return new TaggedUnion(PromoteToDouble() - rightOperand.PromoteToDouble());
+                return new RuntimeValue(PromoteToDouble() - rightOperand.PromoteToDouble());
             }
 
             if (LookupBinary(ExpressionOperator.Subtract, rightOperand) == ConversionCase.Nothing)
@@ -286,39 +286,39 @@ namespace Chow
             throw UnsupportedBinary(ExpressionOperator.Subtract, rightOperand);
         }
 
-        internal TaggedUnion CreateProduct(TaggedUnion rightOperand)
+        internal RuntimeValue CreateProduct(RuntimeValue rightOperand)
         {
             switch (LookupBinary(ExpressionOperator.Multiply, rightOperand))
             {
                 case ConversionCase.ToInt:
                 {
-                    return new TaggedUnion(PromoteToLong() * rightOperand.PromoteToLong());
+                    return new RuntimeValue(PromoteToLong() * rightOperand.PromoteToLong());
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return new TaggedUnion(PromoteToDouble() * rightOperand.PromoteToDouble());
+                    return new RuntimeValue(PromoteToDouble() * rightOperand.PromoteToDouble());
                 }
                 case ConversionCase.Nothing:
                 {
                     // Python treats bool as a subtype of int, so [1] * True and "ab" * True are valid.
                     if (_dataType == DataType.List && IsIntegerTag(rightOperand._dataType))
                     {
-                        return new TaggedUnion(SourceList.Repeat(AsType<SourceList>(), rightOperand.AsType<int>()));
+                        return new RuntimeValue(SourceList.Repeat(AsType<SourceList>(), rightOperand.AsType<int>()));
                     }
 
                     if (IsIntegerTag(_dataType) && rightOperand._dataType == DataType.List)
                     {
-                        return new TaggedUnion(SourceList.Repeat(rightOperand.AsType<SourceList>(), AsType<int>()));
+                        return new RuntimeValue(SourceList.Repeat(rightOperand.AsType<SourceList>(), AsType<int>()));
                     }
 
                     if (_dataType == DataType.Str && IsIntegerTag(rightOperand._dataType))
                     {
-                        return new TaggedUnion(RepeatString(AsType<string>(), rightOperand.AsType<int>()));
+                        return new RuntimeValue(RepeatString(AsType<string>(), rightOperand.AsType<int>()));
                     }
 
                     if (IsIntegerTag(_dataType) && rightOperand._dataType == DataType.Str)
                     {
-                        return new TaggedUnion(RepeatString(rightOperand.AsType<string>(), AsType<int>()));
+                        return new RuntimeValue(RepeatString(rightOperand.AsType<string>(), AsType<int>()));
                     }
 
                     break;
@@ -328,7 +328,7 @@ namespace Chow
             throw UnsupportedBinary(ExpressionOperator.Multiply, rightOperand);
         }
 
-        internal TaggedUnion CreateQuotient(TaggedUnion rightOperand)
+        internal RuntimeValue CreateQuotient(RuntimeValue rightOperand)
         {
             // Python semantics: `/` always produces a float, even for int / int.
             switch (LookupBinary(ExpressionOperator.Divide, rightOperand))
@@ -339,7 +339,7 @@ namespace Chow
 
                     return divisor == 0.0 
                         ? throw new ZeroDivisionException() 
-                        : new TaggedUnion(PromoteToDouble() / divisor);
+                        : new RuntimeValue(PromoteToDouble() / divisor);
 
                 }
                 case ConversionCase.Nothing:
@@ -352,7 +352,7 @@ namespace Chow
             throw UnsupportedBinary(ExpressionOperator.Divide, rightOperand);
         }
 
-        internal TaggedUnion CreateModulus(TaggedUnion rightOperand)
+        internal RuntimeValue CreateModulus(RuntimeValue rightOperand)
         {
             // Python semantics: result has the sign of the divisor.
             switch (LookupBinary(ExpressionOperator.Modulus, rightOperand))
@@ -367,7 +367,7 @@ namespace Chow
                         throw new ZeroDivisionException();
                     }
 
-                    return new TaggedUnion((a % b + b) % b);
+                    return new RuntimeValue((a % b + b) % b);
                 }
                 case ConversionCase.ToFloat:
                 {
@@ -379,14 +379,14 @@ namespace Chow
                         throw new ZeroDivisionException();
                     }
 
-                    return new TaggedUnion((l % r + r) % r);
+                    return new RuntimeValue((l % r + r) % r);
                 }
             }
 
             throw UnsupportedBinary(ExpressionOperator.Modulus, rightOperand);
         }
 
-        internal TaggedUnion CreateFloorQuotient(TaggedUnion rightOperand)
+        internal RuntimeValue CreateFloorQuotient(RuntimeValue rightOperand)
         {
             // Python semantics: floors toward negative infinity. Integer path stays in longs (no detour
             // through double) so values past 2^53 remain exact.
@@ -409,7 +409,7 @@ namespace Chow
                         q--;
                     }
 
-                    return new TaggedUnion(q);
+                    return new RuntimeValue(q);
                 }
                 case ConversionCase.ToFloat:
                 {
@@ -420,14 +420,14 @@ namespace Chow
                         throw new ZeroDivisionException();
                     }
 
-                    return new TaggedUnion(Math.Floor(PromoteToDouble() / divisor));
+                    return new RuntimeValue(Math.Floor(PromoteToDouble() / divisor));
                 }
             }
 
             throw UnsupportedBinary(ExpressionOperator.FloorDivide, rightOperand);
         }
 
-        internal TaggedUnion CreatePower(TaggedUnion rightOperand)
+        internal RuntimeValue CreatePower(RuntimeValue rightOperand)
         {
             // Python semantics: float if either operand is float, or if exponent is negative.
             // This is the one documented map override: the negative-exponent rule is value-dependent
@@ -447,57 +447,57 @@ namespace Chow
                     // Exponent is non-negative here (negative-exp routed to float above). Exact integer
                     // exponentiation avoids the 2^53 precision ceiling of (long)Math.Pow. Overflow wraps
                     // silently — matches prior behavior; arbitrary-precision int is a separate concern.
-                    return new TaggedUnion(IntPow(PromoteToLong(), rightOperand.PromoteToLong()));
+                    return new RuntimeValue(IntPow(PromoteToLong(), rightOperand.PromoteToLong()));
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return new TaggedUnion(Math.Pow(PromoteToDouble(), rightOperand.PromoteToDouble()));
+                    return new RuntimeValue(Math.Pow(PromoteToDouble(), rightOperand.PromoteToDouble()));
                 }
             }
 
             throw UnsupportedBinary(ExpressionOperator.Exponentiate, rightOperand);
         }
 
-        internal TaggedUnion CreateUnion(TaggedUnion rightOperand)
+        internal RuntimeValue CreateUnion(RuntimeValue rightOperand)
         {
             if (LookupBinary(ExpressionOperator.BinaryOr, rightOperand) == ConversionCase.Nothing
                 && _dataType == DataType.Dict && rightOperand._dataType == DataType.Dict)
             {
-                return new TaggedUnion(SourceDictionary.Merge(AsType<SourceDictionary>(), rightOperand.AsType<SourceDictionary>()));
+                return new RuntimeValue(SourceDictionary.Merge(AsType<SourceDictionary>(), rightOperand.AsType<SourceDictionary>()));
             }
 
             throw UnsupportedBinary(ExpressionOperator.BinaryOr, rightOperand);
         }
 
-        internal TaggedUnion CreateNegation()
+        internal RuntimeValue CreateNegation()
         {
             switch (LookupUnary(ExpressionOperator.Negate))
             {
                 case ConversionCase.ToInt:
                 {
-                    return new TaggedUnion(-PromoteToLong());
+                    return new RuntimeValue(-PromoteToLong());
                 }
                 case ConversionCase.ToFloat:
                 {
-                    return new TaggedUnion(-PromoteToDouble());
+                    return new RuntimeValue(-PromoteToDouble());
                 }
             }
 
             throw UnsupportedUnary(ExpressionOperator.Negate);
         }
 
-        internal TaggedUnion CreateLogicalNot()
+        internal RuntimeValue CreateLogicalNot()
         {
             // The map records this as Nothing for every type; consult it for consistency and so that
             // a future map change (e.g. restricting unary `not` to specific types) propagates here.
             LookupUnary(ExpressionOperator.Not);
-            return new TaggedUnion(!ToBool());
+            return new RuntimeValue(!ToBool());
         }
 
-        internal TaggedUnion CreateStr()
+        internal RuntimeValue CreateStr()
         {
             LookupUnary(ExpressionOperator.ToStr);
-            return new TaggedUnion(ToString());
+            return new RuntimeValue(ToString());
         }
 
         #endregion
@@ -506,7 +506,7 @@ namespace Chow
         // WARNING: THESE METHODS WILL BE REMOVED IN FUTURE REFACTOR!
         // DO NOT USE ANY OF THESE METHODS IN NEW CLASSES OR ADD THEM TO PRE-EXISTING ONES
 
-        internal bool IsTypeAgnosticEqualTo(TaggedUnion other)
+        internal bool IsTypeAgnosticEqualTo(RuntimeValue other)
         {
             switch (LookupBinary(ExpressionOperator.Equal, other))
             {
@@ -525,7 +525,7 @@ namespace Chow
             return false;
         }
 
-        internal bool IsNotEqualTo(TaggedUnion other)
+        internal bool IsNotEqualTo(RuntimeValue other)
         {
             switch (LookupBinary(ExpressionOperator.NotEqual, other))
             {
@@ -546,7 +546,7 @@ namespace Chow
             return true;
         }
 
-        internal bool IsLessThan(TaggedUnion other)
+        internal bool IsLessThan(RuntimeValue other)
         {
             switch (LookupBinary(ExpressionOperator.Less, other))
             {
@@ -572,7 +572,7 @@ namespace Chow
             throw UnsupportedBinary(ExpressionOperator.Less, other);
         }
 
-        internal bool IsGreaterThan(TaggedUnion other)
+        internal bool IsGreaterThan(RuntimeValue other)
         {
             switch (LookupBinary(ExpressionOperator.Greater, other))
             {
@@ -598,7 +598,7 @@ namespace Chow
             throw UnsupportedBinary(ExpressionOperator.Greater, other);
         }
 
-        internal bool IsLessOrEqualTo(TaggedUnion other)
+        internal bool IsLessOrEqualTo(RuntimeValue other)
         {
             switch (LookupBinary(ExpressionOperator.LessEqual, other))
             {
@@ -624,7 +624,7 @@ namespace Chow
             throw UnsupportedBinary(ExpressionOperator.LessEqual, other);
         }
 
-        internal bool IsGreaterOrEqualTo(TaggedUnion other)
+        internal bool IsGreaterOrEqualTo(RuntimeValue other)
         {
             switch (LookupBinary(ExpressionOperator.GreaterEqual, other))
             {
@@ -654,16 +654,16 @@ namespace Chow
 
         #region Interop
 
-        internal TaggedUnion InvokeHostDelegate(TaggedUnion[] args)
+        internal RuntimeValue InvokeHostDelegate(RuntimeValue[] args)
         {
             if (_dataType != DataType.Object)
             {
                 throw new DataTypeException($"'{_dataType}' object is not callable");
             }
 
-            if (_obj is Func<TaggedUnion[], TaggedUnion> methodDelegate)
+            if (_obj is Func<RuntimeValue[], RuntimeValue> methodDelegate)
             {
-                return methodDelegate(args ?? Array.Empty<TaggedUnion>());
+                return methodDelegate(args ?? Array.Empty<RuntimeValue>());
             }
 
             throw new InvalidOperationException($"Object of type '{_obj.GetType().Name}' is not callable");
@@ -675,7 +675,7 @@ namespace Chow
 
         /// <summary>
         /// Strict structural equality: returns <c>true</c> only when <paramref name="obj"/> is a
-        /// <see cref="TaggedUnion"/> of the same <see cref="_dataType"/> with the same underlying value.
+        /// <see cref="RuntimeValue"/> of the same <see cref="_dataType"/> with the same underlying value.
         /// No cross-type conversion is performed — <c>True</c> is not equal to <c>1</c>, and
         /// <c>1</c> is not equal to <c>1.0</c>. For Python <c>==</c> semantics that promote across
         /// numeric types, use <see cref="IsTypeAgnosticEqualTo"/> instead.
@@ -684,7 +684,7 @@ namespace Chow
         /// <returns><c>true</c> if the objects are structurally equal; otherwise, <c>false</c>.</returns>
         public override bool Equals(object obj)
         {
-            return obj is TaggedUnion other && EqualsNoConversion(other);
+            return obj is RuntimeValue other && EqualsNoConversion(other);
         }
 
         /// <inheritdoc/>
@@ -969,7 +969,7 @@ namespace Chow
         // methods above. Operand promotion is intentionally limited to the three numeric tags
         // (Bool/Long/Double); the map guarantees ToInt/ToFloat is only reported for those.
 
-        ConversionCase LookupBinary(ExpressionOperator @operator, TaggedUnion right)
+        ConversionCase LookupBinary(ExpressionOperator @operator, RuntimeValue right)
         {
             return DataTypeConversionMap.GetLeftRightConversionCase(@operator, _dataType, right._dataType);
         }
@@ -979,7 +979,7 @@ namespace Chow
             return DataTypeConversionMap.GetOperandConversionCase(@operator, _dataType);
         }
 
-        DataTypeException UnsupportedBinary(ExpressionOperator @operator, TaggedUnion right)
+        DataTypeException UnsupportedBinary(ExpressionOperator @operator, RuntimeValue right)
         {
             return new DataTypeException($"unsupported operand type(s) for {@operator}: '{_dataType}' and '{right._dataType}'");
         }
@@ -1035,7 +1035,7 @@ namespace Chow
         // Equality fallback used when DataTypeConversionMap reports Nothing for ==/!= operands.
         // Cross-type combinations are never equal (Python: 1 == "1" → False); same-type combinations
         // delegate to the underlying value's identity/structural equality.
-        bool EqualsNoConversion(TaggedUnion other)
+        bool EqualsNoConversion(RuntimeValue other)
         {
             if (_dataType != other._dataType)
             {

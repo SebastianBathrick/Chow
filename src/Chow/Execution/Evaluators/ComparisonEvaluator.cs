@@ -29,45 +29,45 @@ namespace Chow.Expressions
 
         #region Equality Operations
 
-        public static TaggedUnion EvaluateEqual(ref TaggedUnion l, ref TaggedUnion r)
+        public static RuntimeValue EvaluateEqual(ref RuntimeValue l, ref RuntimeValue r)
         {
-            return new TaggedUnion(AreEqual(ref l, ref r));
+            return new RuntimeValue(AreEqual(ref l, ref r));
         }
 
-        public static TaggedUnion EvaluateNotEqual(ref TaggedUnion l, ref TaggedUnion r)
+        public static RuntimeValue EvaluateNotEqual(ref RuntimeValue l, ref RuntimeValue r)
         {
-            return new TaggedUnion(!AreEqual(ref l, ref r));
+            return new RuntimeValue(!AreEqual(ref l, ref r));
         }
 
         #endregion
 
         #region Ordering Operations
 
-        public static TaggedUnion EvaluateLess(ref TaggedUnion l, ref TaggedUnion r)
+        public static RuntimeValue EvaluateLess(ref RuntimeValue l, ref RuntimeValue r)
         {
-            return new TaggedUnion(EvaluateOrdering(ref l, ref r, ExpressionOperator.Less));
+            return new RuntimeValue(EvaluateOrdering(ref l, ref r, ExpressionOperator.Less));
         }
 
-        public static TaggedUnion EvaluateGreater(ref TaggedUnion l, ref TaggedUnion r)
+        public static RuntimeValue EvaluateGreater(ref RuntimeValue l, ref RuntimeValue r)
         {
-            return new TaggedUnion(EvaluateOrdering(ref l, ref r, ExpressionOperator.Greater));
+            return new RuntimeValue(EvaluateOrdering(ref l, ref r, ExpressionOperator.Greater));
         }
 
-        public static TaggedUnion EvaluateLessEqual(ref TaggedUnion l, ref TaggedUnion r)
+        public static RuntimeValue EvaluateLessEqual(ref RuntimeValue l, ref RuntimeValue r)
         {
-            return new TaggedUnion(EvaluateOrdering(ref l, ref r, ExpressionOperator.LessEqual));
+            return new RuntimeValue(EvaluateOrdering(ref l, ref r, ExpressionOperator.LessEqual));
         }
 
-        public static TaggedUnion EvaluateGreaterEqual(ref TaggedUnion l, ref TaggedUnion r)
+        public static RuntimeValue EvaluateGreaterEqual(ref RuntimeValue l, ref RuntimeValue r)
         {
-            return new TaggedUnion(EvaluateOrdering(ref l, ref r, ExpressionOperator.GreaterEqual));
+            return new RuntimeValue(EvaluateOrdering(ref l, ref r, ExpressionOperator.GreaterEqual));
         }
 
         #endregion
 
         #region Helper Methods
 
-        static bool EvaluateOrdering(ref TaggedUnion l, ref TaggedUnion r, ExpressionOperator op)
+        static bool EvaluateOrdering(ref RuntimeValue l, ref RuntimeValue r, ExpressionOperator op)
         {
             switch (GetConversionTag(l.DataType, r.DataType, op))
             {
@@ -135,7 +135,7 @@ namespace Chow.Expressions
             }
         }
 
-        static bool AreEqual(ref TaggedUnion l, ref TaggedUnion r)
+        static bool AreEqual(ref RuntimeValue l, ref RuntimeValue r)
         {
             if (TagConversionMap.TryGetValue((l.DataType, r.DataType), out var convTag))
             {

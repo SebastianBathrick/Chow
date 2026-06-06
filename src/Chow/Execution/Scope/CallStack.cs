@@ -53,7 +53,7 @@ namespace Chow.State
         /// targeted variants <see cref="AssignToGlobal"/> and <see cref="AssignToNonlocal"/>
         /// rebind enclosing or module names.
         /// </summary>
-        public void AssignVariableValue(string name, TaggedUnion value)
+        public void AssignVariableValue(string name, RuntimeValue value)
         {
             CurrFrame.Scope.AssignVariableValue(name, value);
         }
@@ -62,7 +62,7 @@ namespace Chow.State
         /// Binds <paramref name="name"/> to <paramref name="value"/> directly in the module scope,
         /// bypassing the current frame's local scope. Used by the <c>global</c>-targeted opcodes.
         /// </summary>
-        public void AssignToGlobal(string name, TaggedUnion value)
+        public void AssignToGlobal(string name, RuntimeValue value)
         {
             ModuleScope.AssignVariableValue(name, value);
         }
@@ -71,7 +71,7 @@ namespace Chow.State
         /// Reads <paramref name="name"/> directly from the module scope, bypassing any local or
         /// enclosing scopes. Used by the <c>global</c>-targeted read opcode.
         /// </summary>
-        public TaggedUnion GetGlobal(string name)
+        public RuntimeValue GetGlobal(string name)
         {
             return ModuleScope.GetVariableValue(name);
         }
@@ -88,7 +88,7 @@ namespace Chow.State
         /// excluded from the walk. Throws <see cref="KeyNotFoundException"/> if no such scope
         /// exists; semantic analysis is expected to prevent this at compile time.
         /// </summary>
-        public void AssignToNonlocal(string name, TaggedUnion value)
+        public void AssignToNonlocal(string name, RuntimeValue value)
         {
             var scope = FindNonlocalScope(name);
             scope.AssignVariableValue(name, value);
@@ -99,7 +99,7 @@ namespace Chow.State
         /// it. The module scope is excluded from the walk. Throws <see cref="KeyNotFoundException"/>
         /// if no such scope exists; semantic analysis is expected to prevent this at compile time.
         /// </summary>
-        public TaggedUnion GetNonlocal(string name)
+        public RuntimeValue GetNonlocal(string name)
         {
             var scope = FindNonlocalScope(name);
             return scope.GetVariableValue(name);
@@ -144,7 +144,7 @@ namespace Chow.State
         /// missing name surfaces as <see cref="KeyNotFoundException"/> (NameError translation is
         /// the VM's responsibility).
         /// </summary>
-        public TaggedUnion GetVariableValue(string name)
+        public RuntimeValue GetVariableValue(string name)
         {
             for (var s = CurrFrame.Scope; s != null; s = s.Parent)
             {

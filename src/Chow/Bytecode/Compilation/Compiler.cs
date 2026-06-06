@@ -72,7 +72,7 @@ namespace Chow.Core
             CompileTargetNode(funcNode.Block);
 
             // Implicit `return None` for funcs that fall off the end of the body
-            var noneIdx = _chunk.RegisterConstant(TaggedUnion.None);
+            var noneIdx = _chunk.RegisterConstant(RuntimeValue.None);
 
             _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNumber, noneIdx);
             _chunk.AddInstruction(OperationCode.PushReturnValue, funcNode.LineNumber);
@@ -253,7 +253,7 @@ namespace Chow.Core
             var funcChunk = funcCompiler.CompileFunctionBody();
 
             var template = new FunctionDefinition(funcChunk, funcNode.Name, funcNode.Params.Count);
-            var templateIdx = _chunk.RegisterConstant(new TaggedUnion(template));
+            var templateIdx = _chunk.RegisterConstant(new RuntimeValue(template));
 
             // Push template, then runtime PushNewClosureFromTemplate captures the active scope and wraps it as a SourceFunction.
             _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNumber, templateIdx);
@@ -281,7 +281,7 @@ namespace Chow.Core
              * dynamic typing. Here is how the VirtualMachine runs an assignment operation:
              *
              * 1. Pop a value off the stack representing the new/initial value for the variable. The new/initial value
-             *    is stored in a TaggedUnion and represents an expression evaluated at runtime. This can be of any type.
+             *    is stored in a RuntimeValue and represents an expression evaluated at runtime. This can be of any type.
              *
              * 2. Use the current Operation.Operand to get the variable's name stored as a string inside Chunk during
              *    compile-time (i.e., the compilation logic code below). It's stored this way so Operations don't have
@@ -309,7 +309,7 @@ namespace Chow.Core
             else
             {
                 // Bare `return` returns None; PushReturnValue always pops exactly one value off the stack.
-                var noneIdx = _chunk.RegisterConstant(TaggedUnion.None);
+                var noneIdx = _chunk.RegisterConstant(RuntimeValue.None);
                 _chunk.AddInstruction(OperationCode.PushConstant, returnStatementNode.LineNumber, noneIdx);
             }
 
@@ -572,7 +572,7 @@ namespace Chow.Core
 
         void CompileFString(FStringNode node)
         {
-            var firstPartIdx = _chunk.RegisterConstant(new TaggedUnion(node.StringParts[0]));
+            var firstPartIdx = _chunk.RegisterConstant(new RuntimeValue(node.StringParts[0]));
             _chunk.AddInstruction(OperationCode.PushConstant, node.LineNumber, firstPartIdx);
 
             for (var i = 0; i < node.ExpressionParts.Count; i++)
@@ -581,13 +581,13 @@ namespace Chow.Core
                 _chunk.AddInstruction(OperationCode.CoerceToStr, node.LineNumber);
                 _chunk.AddInstruction(OperationCode.Add, node.LineNumber);
 
-                var tailPartIdx = _chunk.RegisterConstant(new TaggedUnion(node.StringParts[i + 1]));
+                var tailPartIdx = _chunk.RegisterConstant(new RuntimeValue(node.StringParts[i + 1]));
                 _chunk.AddInstruction(OperationCode.PushConstant, node.LineNumber, tailPartIdx);
                 _chunk.AddInstruction(OperationCode.Add, node.LineNumber);
             }
         }
 
-        static TaggedUnion BuildLiteralValue(LiteralNode literalNode)
+        static RuntimeValue BuildLiteralValue(LiteralNode literalNode)
         {
             // Cases for LiteralDataType where the boxed Value is the wrong CLR type should not occur unless the Parser is bugged
             switch (literalNode.Type)
@@ -596,7 +596,7 @@ namespace Chow.Core
                 {
                     if (literalNode.Value is long intVal)
                     {
-                        return new TaggedUnion(intVal);
+                        return new RuntimeValue(intVal);
                     }
 
                     break;
@@ -606,7 +606,7 @@ namespace Chow.Core
                 {
                     if (literalNode.Value is double floatVal)
                     {
-                        return new TaggedUnion(floatVal);
+                        return new RuntimeValue(floatVal);
                     }
 
                     break;
@@ -616,7 +616,7 @@ namespace Chow.Core
                 {
                     if (literalNode.Value is bool boolVal)
                     {
-                        return new TaggedUnion(boolVal);
+                        return new RuntimeValue(boolVal);
                     }
 
                     break;
@@ -624,14 +624,14 @@ namespace Chow.Core
 
                 case LiteralDataType.None:
                 {
-                    return TaggedUnion.None;
+                    return RuntimeValue.None;
                 }
 
                 case LiteralDataType.String:
                 {
                     if (literalNode.Value is string strVal)
                     {
-                        return new TaggedUnion(strVal);
+                        return new RuntimeValue(strVal);
                     }
 
                     break;
@@ -690,7 +690,7 @@ namespace Chow.Core
         {
             if (argOrNull == null)
             {
-                var noneIdx = _chunk.RegisterConstant(TaggedUnion.None);
+                var noneIdx = _chunk.RegisterConstant(RuntimeValue.None);
                 _chunk.AddInstruction(OperationCode.PushConstant, sliceLineNum, noneIdx);
             }
             else

@@ -1,6 +1,6 @@
 namespace Chow.DataTypes
 {
-    // TODO: Change this back to internal after converting TaggedUnion to internal
+    // TODO: Change this back to internal after converting RuntimeValue to internal
     public enum DataType : byte
     {
         None,

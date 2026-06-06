@@ -54,7 +54,7 @@ public class ArithmeticEvaluatorTests
     {
         // Python: 2 + None -> TypeError
         AssertTypeError(
-            () => Evaluate(ArithmeticEvaluator.EvaluateAddition, L(2), TaggedUnion.None),
+            () => Evaluate(ArithmeticEvaluator.EvaluateAddition, L(2), RuntimeValue.None),
             "+",
             "int",
             "NoneType");
@@ -241,7 +241,7 @@ public class ArithmeticEvaluatorTests
     {
         // Python: 2 / None -> TypeError
         AssertTypeError(
-            () => Evaluate(ArithmeticEvaluator.EvaluateDivision, L(2), TaggedUnion.None),
+            () => Evaluate(ArithmeticEvaluator.EvaluateDivision, L(2), RuntimeValue.None),
             "/",
             "int",
             "NoneType");
@@ -460,15 +460,15 @@ public class ArithmeticEvaluatorTests
 
     #region Helpers
 
-    static TaggedUnion L(long value) => new TaggedUnion(value);
+    static RuntimeValue L(long value) => new RuntimeValue(value);
 
-    static TaggedUnion D(double value) => new TaggedUnion(value);
+    static RuntimeValue D(double value) => new RuntimeValue(value);
 
-    static TaggedUnion B(bool value) => new TaggedUnion(value);
+    static RuntimeValue B(bool value) => new RuntimeValue(value);
 
-    static TaggedUnion S(string value) => new TaggedUnion(value);
+    static RuntimeValue S(string value) => new RuntimeValue(value);
 
-    static TaggedUnion List(params TaggedUnion[] values)
+    static RuntimeValue List(params RuntimeValue[] values)
     {
         var list = new SourceList();
 
@@ -477,17 +477,17 @@ public class ArithmeticEvaluatorTests
             list.Add(value);
         }
 
-        return new TaggedUnion(list);
+        return new RuntimeValue(list);
     }
 
-    static TaggedUnion Evaluate(EvaluateBinary evaluate, TaggedUnion left, TaggedUnion right)
+    static RuntimeValue Evaluate(EvaluateBinary evaluate, RuntimeValue left, RuntimeValue right)
     {
         var l = left;
         var r = right;
         return evaluate(ref l, ref r);
     }
 
-    static TaggedUnion Evaluate(EvaluateUnary evaluate, TaggedUnion operand)
+    static RuntimeValue Evaluate(EvaluateUnary evaluate, RuntimeValue operand)
     {
         var value = operand;
         return evaluate(ref value);
@@ -495,8 +495,8 @@ public class ArithmeticEvaluatorTests
 
     static void AssertResult(
         EvaluateBinary evaluate,
-        TaggedUnion left,
-        TaggedUnion right,
+        RuntimeValue left,
+        RuntimeValue right,
         DataType expectedDataType,
         long expectedLong)
     {
@@ -508,8 +508,8 @@ public class ArithmeticEvaluatorTests
 
     static void AssertResult(
         EvaluateBinary evaluate,
-        TaggedUnion left,
-        TaggedUnion right,
+        RuntimeValue left,
+        RuntimeValue right,
         DataType expectedDataType,
         double expectedDouble)
     {
@@ -521,8 +521,8 @@ public class ArithmeticEvaluatorTests
 
     static void AssertResult(
         EvaluateBinary evaluate,
-        TaggedUnion left,
-        TaggedUnion right,
+        RuntimeValue left,
+        RuntimeValue right,
         DataType expectedDataType,
         string expectedString)
     {
@@ -534,9 +534,9 @@ public class ArithmeticEvaluatorTests
 
     static void AssertValueResult(
         EvaluateBinary evaluate,
-        TaggedUnion left,
-        TaggedUnion right,
-        TaggedUnion expectedValue)
+        RuntimeValue left,
+        RuntimeValue right,
+        RuntimeValue expectedValue)
     {
         var result = Evaluate(evaluate, left, right);
 
@@ -545,7 +545,7 @@ public class ArithmeticEvaluatorTests
 
     static void AssertUnaryResult(
         EvaluateUnary evaluate,
-        TaggedUnion operand,
+        RuntimeValue operand,
         DataType expectedDataType,
         long expectedLong)
     {
@@ -557,7 +557,7 @@ public class ArithmeticEvaluatorTests
 
     static void AssertUnaryResult(
         EvaluateUnary evaluate,
-        TaggedUnion operand,
+        RuntimeValue operand,
         DataType expectedDataType,
         double expectedDouble)
     {
@@ -584,9 +584,9 @@ public class ArithmeticEvaluatorTests
         Assert.That(ex.Message, Does.Contain("'" + operandType + "'"));
     }
 
-    delegate TaggedUnion EvaluateBinary(ref TaggedUnion left, ref TaggedUnion right);
+    delegate RuntimeValue EvaluateBinary(ref RuntimeValue left, ref RuntimeValue right);
 
-    delegate TaggedUnion EvaluateUnary(ref TaggedUnion operand);
+    delegate RuntimeValue EvaluateUnary(ref RuntimeValue operand);
 
     #endregion
 }

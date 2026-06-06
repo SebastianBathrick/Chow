@@ -7,7 +7,7 @@ namespace Chow.Bytecode
         const int NO_OPERAND = -1;
 
         readonly List<Instruction> _instructions;
-        readonly List<TaggedUnion> _constantPool;
+        readonly List<RuntimeValue> _constantPool;
 
         readonly List<string> _varNames;
         readonly List<int> _instrLines;
@@ -24,7 +24,7 @@ namespace Chow.Bytecode
         public Chunk()
         {
             _instructions = new List<Instruction>();
-            _constantPool = new List<TaggedUnion>();
+            _constantPool = new List<RuntimeValue>();
             _varNames = new List<string>();
             _instrLines = new List<int>();
         }
@@ -63,8 +63,8 @@ namespace Chow.Bytecode
 
         /// <summary>Returns the constant value stored at the provided operand index in the constant pool.</summary>
         /// <param name="operand">The operand index of the constant to retrieve.</param>
-        /// <returns>The <see cref="TaggedUnion"/> constant at the specified operand index.</returns>
-        public TaggedUnion ReadConstant(int operand)
+        /// <returns>The <see cref="RuntimeValue"/> constant at the specified operand index.</returns>
+        public RuntimeValue ReadConstant(int operand)
         {
             return _constantPool[operand];
         }
@@ -73,11 +73,11 @@ namespace Chow.Bytecode
         /// Stores a new constant in the constant pool and returns its pool index. The index is for use as an operand
         /// assigned to <see cref="Instruction"/> instance(s).
         /// </summary>
-        /// <param name="newConst">TaggedUnion containing a constant primitive value.</param>
+        /// <param name="newConst">RuntimeValue containing a constant primitive value.</param>
         /// <returns>Integer representing the operand used to read the constant at runtime.</returns>
         /// <remarks>If an existing constant has the same value as <paramref name="newConst"/> then the operand for 
         /// that existing constant will be returned. Otherwise, the new constant is stored and a new operand is returned</remarks>
-        public int RegisterConstant(TaggedUnion newConst)
+        public int RegisterConstant(RuntimeValue newConst)
         {
             var constIndex = _constantPool.IndexOf(newConst);
 

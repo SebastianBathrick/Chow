@@ -14,12 +14,12 @@ namespace Chow.DataTypes
         const string METHOD_SET_DEFAULT_NAME = "setdefault";
 
 
-        readonly Dictionary<TaggedUnion, TaggedUnion> _entries = new Dictionary<TaggedUnion, TaggedUnion>();
-        readonly List<TaggedUnion> _keys = new List<TaggedUnion>();
+        readonly Dictionary<RuntimeValue, RuntimeValue> _entries = new Dictionary<RuntimeValue, RuntimeValue>();
+        readonly List<RuntimeValue> _keys = new List<RuntimeValue>();
 
         public int Count => _keys.Count;
 
-        public TaggedUnion this[TaggedUnion key]
+        public RuntimeValue this[RuntimeValue key]
         {
             get
             {
@@ -32,11 +32,11 @@ namespace Chow.DataTypes
             set => Add(key, value);
         }
 
-        public TaggedUnion this[string name] =>
+        public RuntimeValue this[string name] =>
             // Will throw if method name is invalid, which is the expected behavior
-            new TaggedUnion(GetMethod(name));
+            new RuntimeValue(GetMethod(name));
 
-        public void Add(TaggedUnion key, TaggedUnion value)
+        public void Add(RuntimeValue key, RuntimeValue value)
         {
             ValidateHashable(key);
 
@@ -48,13 +48,13 @@ namespace Chow.DataTypes
             _entries[key] = value;
         }
 
-        public bool ContainsKey(TaggedUnion key)
+        public bool ContainsKey(RuntimeValue key)
         {
             ValidateHashable(key);
             return _entries.ContainsKey(key);
         }
 
-        TaggedUnion Get(TaggedUnion[] args)
+        RuntimeValue Get(RuntimeValue[] args)
         {
             ValidateArgRange(args, 1, 2);
             var key = args[0];
@@ -65,18 +65,18 @@ namespace Chow.DataTypes
                 return value;
             }
 
-            return args.Length == 2 ? args[1] : TaggedUnion.None;
+            return args.Length == 2 ? args[1] : RuntimeValue.None;
         }
 
-        TaggedUnion Clear(TaggedUnion[] args)
+        RuntimeValue Clear(RuntimeValue[] args)
         {
             ValidateArgCount(args, 0);
             _entries.Clear();
             _keys.Clear();
-            return TaggedUnion.None;
+            return RuntimeValue.None;
         }
 
-        TaggedUnion Pop(TaggedUnion[] args)
+        RuntimeValue Pop(RuntimeValue[] args)
         {
             ValidateArgRange(args, 1, 2);
             var key = args[0];
@@ -97,7 +97,7 @@ namespace Chow.DataTypes
             throw new SubscriptException(KeyRepr(key));
         }
 
-        TaggedUnion Update(TaggedUnion[] args)
+        RuntimeValue Update(RuntimeValue[] args)
         {
             ValidateArgCount(args, 1);
 
@@ -113,10 +113,10 @@ namespace Chow.DataTypes
                 Add(key, other._entries[key]);
             }
 
-            return TaggedUnion.None;
+            return RuntimeValue.None;
         }
 
-        TaggedUnion SetDefault(TaggedUnion[] args)
+        RuntimeValue SetDefault(RuntimeValue[] args)
         {
             ValidateArgRange(args, 1, 2);
             var key = args[0];
@@ -127,12 +127,12 @@ namespace Chow.DataTypes
                 return existing;
             }
 
-            var def = args.Length == 2 ? args[1] : TaggedUnion.None;
+            var def = args.Length == 2 ? args[1] : RuntimeValue.None;
             Add(key, def);
             return def;
         }
 
-        public Func<TaggedUnion[], TaggedUnion> GetMethod(string methodName)
+        public Func<RuntimeValue[], RuntimeValue> GetMethod(string methodName)
         {
             switch (methodName)
             {
@@ -224,7 +224,7 @@ namespace Chow.DataTypes
             return result;
         }
 
-        public static void ValidateHashable(TaggedUnion key)
+        public static void ValidateHashable(RuntimeValue key)
         {
             switch (key.DataType)
             {
@@ -267,7 +267,7 @@ namespace Chow.DataTypes
 
         // Python-faithful repr used inside collection contexts: strings get single quotes here, even though
         // a standalone string prints without quotes via ChowStr.ToSource.
-        static void Repr(StringBuilder sb, TaggedUnion value)
+        static void Repr(StringBuilder sb, RuntimeValue value)
         {
             switch (value.DataType)
             {
@@ -317,7 +317,7 @@ namespace Chow.DataTypes
             }
         }
 
-        static string KeyRepr(TaggedUnion key)
+        static string KeyRepr(RuntimeValue key)
         {
             var sb = new StringBuilder();
             Repr(sb, key);
@@ -344,7 +344,7 @@ namespace Chow.DataTypes
             }
         }
 
-        static void ValidateArgCount(TaggedUnion[] args, int expectedCount)
+        static void ValidateArgCount(RuntimeValue[] args, int expectedCount)
         {
             var actualCount = args?.Length ?? 0;
 
@@ -354,7 +354,7 @@ namespace Chow.DataTypes
             }
         }
 
-        static void ValidateArgRange(TaggedUnion[] args, int min, int max)
+        static void ValidateArgRange(RuntimeValue[] args, int min, int max)
         {
             var actualCount = args?.Length ?? 0;
 
