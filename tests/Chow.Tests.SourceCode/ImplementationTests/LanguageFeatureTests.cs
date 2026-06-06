@@ -209,8 +209,8 @@ public class LanguageFeatureTests
     static readonly IReadOnlyList<CaseExecute> ExecuteArithmeticOperatorCases =
     [
         // Note: Passing the TaggedUnion constructor a long or an int will result in a TaggedUnion
-        // instance with Tag.Long. However, passing a float or a double will result in an
-        // instance with Tag.Double. Always double-check the literal passed to the constructor.
+        // instance with DataType.Long. However, passing a float or a double will result in an
+        // instance with DataType.Double. Always double-check the literal passed to the constructor.
         
         //--- Positive and Negative Operands ---
         
@@ -2821,7 +2821,7 @@ public class LanguageFeatureTests
 
     static TaggedUnion List(params TaggedUnion[] values)
     {
-        var list = new ChowList();
+        var list = new SourceList();
 
         foreach (var value in values)
         {

@@ -247,7 +247,7 @@ public class LogicEvaluatorTests
 
     static TaggedUnion List(params TaggedUnion[] values)
     {
-        var list = new ChowList();
+        var list = new SourceList();
 
         foreach (var value in values)
         {
@@ -259,12 +259,12 @@ public class LogicEvaluatorTests
 
     static TaggedUnion Dict()
     {
-        return new TaggedUnion(new ChowDictionary());
+        return new TaggedUnion(new SourceDictionary());
     }
 
     static TaggedUnion Dict(TaggedUnion key, TaggedUnion value)
     {
-        var dict = new ChowDictionary();
+        var dict = new SourceDictionary();
         dict.Add(key, value);
         return new TaggedUnion(dict);
     }
@@ -286,7 +286,7 @@ public class LogicEvaluatorTests
     {
         var result = Evaluate(evaluate, operand);
 
-        Assert.That(result.Tag, Is.EqualTo(Tag.Bool));
+        Assert.That(result.DataType, Is.EqualTo(DataType.Bool));
         Assert.That(result.AsType<bool>(), Is.EqualTo(expectedBool));
     }
 

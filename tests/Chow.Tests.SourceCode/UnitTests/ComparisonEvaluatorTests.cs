@@ -364,7 +364,7 @@ public class ComparisonEvaluatorTests
 
     static TaggedUnion List(params TaggedUnion[] values)
     {
-        var list = new ChowList();
+        var list = new SourceList();
 
         foreach (var value in values)
         {
@@ -376,7 +376,7 @@ public class ComparisonEvaluatorTests
 
     static TaggedUnion Dict(TaggedUnion key, TaggedUnion value)
     {
-        var dict = new ChowDictionary();
+        var dict = new SourceDictionary();
         dict.Add(key, value);
         return new TaggedUnion(dict);
     }
@@ -396,13 +396,13 @@ public class ComparisonEvaluatorTests
     {
         var result = Evaluate(evaluate, left, right);
 
-        Assert.That(result.Tag, Is.EqualTo(Tag.Bool));
+        Assert.That(result.DataType, Is.EqualTo(DataType.Bool));
         Assert.That(result.AsType<bool>(), Is.EqualTo(expectedBool));
     }
 
     static void AssertTypeError(TestDelegate action, string op, string leftType, string rightType)
     {
-        var ex = Assert.Throws<TypeException>(action);
+        var ex = Assert.Throws<DataTypeException>(action);
 
         Assert.That(ex.Message, Does.Contain("TypeError: unsupported operand type(s) for " + op));
         Assert.That(ex.Message, Does.Contain("'" + leftType + "'"));

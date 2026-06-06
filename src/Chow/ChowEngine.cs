@@ -19,7 +19,7 @@ namespace Chow
             }
 
             var scanner = new Scanner(sourceCode);
-            var tokens = scanner.ScanTokens();
+            var tokens = scanner.TokenizeSourceCode();
 
             var parser = new Parser(tokens);
             var syntaxTreeRoot = parser.BuildTree();
@@ -31,7 +31,7 @@ namespace Chow
             var chunk = compiler.CompileRoot();
 
             var vm = new VirtualMachine(globalScope, chunk);
-            return vm.EvaluateChunk();
+            return vm.Execute();
         }
 
         static void ImportBuiltIns(Scope globalScope)
@@ -47,7 +47,7 @@ namespace Chow
         internal static TaggedUnion ExecuteModuleCode(string sourceCode, Scope moduleGlobalScope)
         {
             var scanner = new Scanner(sourceCode);
-            var tokens = scanner.ScanTokens();
+            var tokens = scanner.TokenizeSourceCode();
 
             var parser = new Parser(tokens);
             var syntaxTreeRoot = parser.BuildTree();
@@ -59,7 +59,7 @@ namespace Chow
             var chunk = compiler.CompileRoot();
 
             var vm = new VirtualMachine(moduleGlobalScope, chunk);
-            return vm.EvaluateChunk();
+            return vm.Execute();
         }
 
         internal static TaggedUnion InvokeChowFunction(Scope moduleGlobalScope, string functionName, TaggedUnion[] args)

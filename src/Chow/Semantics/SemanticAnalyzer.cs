@@ -24,16 +24,16 @@ namespace Chow.Core
     /// </summary>
     sealed class SemanticAnalyzer
     {
-        readonly TopLevelNode _root;
+        readonly ModuleNode _root;
         readonly Stack<ScopeFrame> _scopes;
 
         #region Primary Methods
 
         public SemanticAnalyzer(Node root)
         {
-            if (!(root is TopLevelNode treeRoot))
+            if (!(root is ModuleNode treeRoot))
             {
-                throw new InvalidOperationException("SemanticAnalyzer expects a TopLevelNode.");
+                throw new InvalidOperationException("SemanticAnalyzer expects a ModuleNode.");
             }
 
             _root = treeRoot;
@@ -49,19 +49,21 @@ namespace Chow.Core
 
         #region Per-Scope Analysis
 
-        void AnalyzeModule(TopLevelNode root)
+        void AnalyzeModule(ModuleNode root)
         {
             var frame = ScopeFrame.NewModule();
             _scopes.Push(frame);
 
-            foreach (var stmt in root.Statements)
+            var block = (BlockNode)root.Block;
+
+            foreach (var stmt in block.Statements)
             {
                 PreScan(stmt);
             }
 
             ValidateScope();
 
-            foreach (var stmt in root.Statements)
+            foreach (var stmt in block.Statements)
             {
                 Annotate(stmt);
             }
@@ -74,9 +76,9 @@ namespace Chow.Core
             var frame = ScopeFrame.NewFunction(funcNode);
             _scopes.Push(frame);
 
-            PreScan(funcNode.Body);
+            PreScan(funcNode.Block);
             ValidateScope();
-            Annotate(funcNode.Body);
+            Annotate(funcNode.Block);
 
             _scopes.Pop();
         }
@@ -137,7 +139,7 @@ namespace Chow.Core
                     break;
                 }
 
-                case NonlocalDeclarationNode nonlocalNode:
+                case NonLocalDeclarationNode nonlocalNode:
                 {
                     foreach (var name in nonlocalNode.Names)
                     {
@@ -211,7 +213,7 @@ namespace Chow.Core
                     break;
                 }
 
-                case LiteralListNode listNode:
+                case ListNode listNode:
                 {
                     foreach (var element in listNode.Elements)
                     {
@@ -221,7 +223,7 @@ namespace Chow.Core
                     break;
                 }
 
-                case LiteralDictNode dictNode:
+                case DictionaryNode dictNode:
                 {
                     for (var i = 0; i < dictNode.Keys.Count; i++)
                     {
@@ -325,7 +327,7 @@ namespace Chow.Core
                     }
 
                     case GlobalDeclarationNode _:
-                    case NonlocalDeclarationNode _:
+                    case NonLocalDeclarationNode _:
                     {
                         break;
                     }
@@ -404,7 +406,7 @@ namespace Chow.Core
                         break;
                     }
 
-                    case LiteralListNode listNode:
+                    case ListNode listNode:
                     {
                         foreach (var element in listNode.Elements)
                         {
@@ -414,7 +416,7 @@ namespace Chow.Core
                         break;
                     }
 
-                    case LiteralDictNode dictNode:
+                    case DictionaryNode dictNode:
                     {
                         for (var i = 0; i < dictNode.Keys.Count; i++)
                         {
@@ -644,7 +646,7 @@ namespace Chow.Core
             }
 
             return frame.NonlocalDeclarations.ContainsKey(name) 
-                ? ScopeType.Nonlocal : ScopeType.Local;
+                ? ScopeType.NonLocal : ScopeType.Local;
 
         }
 
