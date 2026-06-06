@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Chow.Core;
+
 namespace Chow.Bytecode
 {
     class Chunk

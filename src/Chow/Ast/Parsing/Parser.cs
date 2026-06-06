@@ -2,13 +2,7 @@ using System;
 using System.Collections.Generic;
 using Chow.DataTypes;
 using Chow.Exceptions;
-using Chow.SyntaxTrees;
-using Chow.SyntaxTrees.Attributes;
-using Chow.SyntaxTrees.Expressions;
-using Chow.SyntaxTrees.Literals;
-using Chow.SyntaxTrees.Scope;
-using Chow.SyntaxTrees.Statements;
-using Chow.SyntaxTrees.Subscripts;
+using Chow.Ast.Nodes;
 using Chow.Tokens;
 namespace Chow.Core
 {

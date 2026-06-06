@@ -1,5 +1,5 @@
 using Chow.DataTypes;
-namespace Chow.SyntaxTrees.Expressions
+namespace Chow.Ast.Nodes
 {
     sealed class ExpressionNode : Node
     {

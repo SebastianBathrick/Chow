@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-namespace Chow.SyntaxTrees.Expressions
+namespace Chow.Ast.Nodes
 {
     sealed class CallNode : Node
     {

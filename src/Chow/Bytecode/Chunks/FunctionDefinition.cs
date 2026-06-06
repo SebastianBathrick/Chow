@@ -1,5 +1,6 @@
-using Chow.Bytecode;
-namespace Chow.DataTypes
+using Chow.DataTypes;
+
+namespace Chow.Bytecode
 {
     /// <summary>
     /// Compile-time-only representation of a function. Stored as a constant in the parent chunk

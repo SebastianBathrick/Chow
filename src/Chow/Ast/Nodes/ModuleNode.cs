@@ -1,4 +1,4 @@
-namespace Chow.SyntaxTrees
+namespace Chow.Ast.Nodes
 {
     sealed class ModuleNode : Node
     {

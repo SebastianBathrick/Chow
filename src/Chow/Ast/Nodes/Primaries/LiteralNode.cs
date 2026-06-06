@@ -1,5 +1,5 @@
 using System;
-namespace Chow.SyntaxTrees.Literals
+namespace Chow.Ast.Nodes
 {
     sealed class LiteralNode : Node
     {

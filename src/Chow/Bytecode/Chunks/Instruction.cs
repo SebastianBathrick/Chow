@@ -1,4 +1,5 @@
 using Chow.Core;
+
 namespace Chow.Bytecode
 {
     /// <summary>Represents a single bytecode instruction, consisting of an operation code and an optional operand.</summary>

@@ -1,4 +1,4 @@
-﻿namespace Chow.SyntaxTrees.Statements
+namespace Chow.Ast.Nodes
 {
     sealed class ReturnStatementNode : Node
     {

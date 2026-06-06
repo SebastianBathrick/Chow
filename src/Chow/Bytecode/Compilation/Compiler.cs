@@ -1,16 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Chow.Bytecode;
+using Chow.Ast.Nodes;
 using Chow.DataTypes;
 using Chow.Exceptions;
-using Chow.SyntaxTrees;
-using Chow.SyntaxTrees.Attributes;
-using Chow.SyntaxTrees.Expressions;
-using Chow.SyntaxTrees.Literals;
-using Chow.SyntaxTrees.Scope;
-using Chow.SyntaxTrees.Statements;
-using Chow.SyntaxTrees.Subscripts;
-namespace Chow.Core
+
+namespace Chow.Bytecode.Compilation
 {
     sealed class Compiler
     {

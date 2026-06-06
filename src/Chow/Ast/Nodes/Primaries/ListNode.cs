@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-namespace Chow.SyntaxTrees.Literals
+namespace Chow.Ast.Nodes
 {
     sealed class ListNode : Node
     {

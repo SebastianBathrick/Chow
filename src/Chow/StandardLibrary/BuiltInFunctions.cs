@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using Chow.BuiltIns;
 using Chow.DataTypes;
 using Chow.Exceptions;
+
 namespace Chow.StandardLibrary
 {
     static class BuiltInFunctions

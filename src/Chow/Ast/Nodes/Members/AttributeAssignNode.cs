@@ -1,4 +1,4 @@
-namespace Chow.SyntaxTrees.Attributes
+namespace Chow.Ast.Nodes
 {
     sealed class AttributeAssignNode : Node
     {

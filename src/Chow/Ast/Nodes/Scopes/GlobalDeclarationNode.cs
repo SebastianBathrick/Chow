@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-namespace Chow.SyntaxTrees.Scope
+namespace Chow.Ast.Nodes
 {
     /// <summary>
     /// A <c>global name1, name2, ...</c> statement. Recorded as a node so semantic analysis can

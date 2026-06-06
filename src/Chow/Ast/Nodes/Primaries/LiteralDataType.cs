@@ -1,4 +1,4 @@
-namespace Chow.SyntaxTrees.Literals
+namespace Chow.Ast.Nodes
 {
     enum LiteralDataType
     {

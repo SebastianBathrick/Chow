@@ -1,6 +1,5 @@
-﻿using Chow.Core;
-using Chow.SyntaxTrees.Scope;
-namespace Chow.SyntaxTrees.Statements
+using Chow.Core;
+namespace Chow.Ast.Nodes
 {
     sealed class AssignStatementNode : Node
     {

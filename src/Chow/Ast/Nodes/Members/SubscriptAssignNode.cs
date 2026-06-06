@@ -1,4 +1,4 @@
-namespace Chow.SyntaxTrees.Subscripts
+namespace Chow.Ast.Nodes
 {
     sealed class SubscriptAssignNode : Node
     {

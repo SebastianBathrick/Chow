@@ -19,6 +19,7 @@ namespace Chow.Expressions
                     return;
                 case EvaluatorType.Comparison:
                     Comparison = evaluatorObject;
+                    return;
                 case EvaluatorType.Logic:
                     Logic = evaluatorObject;
                     return;

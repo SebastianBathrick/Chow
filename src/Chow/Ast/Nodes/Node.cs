@@ -1,4 +1,4 @@
-namespace Chow.SyntaxTrees
+namespace Chow.Ast.Nodes
 {
     abstract class Node
     {

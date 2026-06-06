@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-namespace Chow.SyntaxTrees
+namespace Chow.Ast.Nodes
 {
     sealed class BlockNode : Node
     {

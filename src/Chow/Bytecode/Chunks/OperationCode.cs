@@ -1,4 +1,5 @@
 using Chow.Core;
+
 namespace Chow.Bytecode
 {
     /// <summary>

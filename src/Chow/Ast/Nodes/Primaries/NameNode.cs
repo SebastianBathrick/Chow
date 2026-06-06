@@ -1,6 +1,5 @@
 using Chow.Core;
-using Chow.SyntaxTrees.Scope;
-namespace Chow.SyntaxTrees
+namespace Chow.Ast.Nodes
 {
     sealed class NameNode : Node
     {

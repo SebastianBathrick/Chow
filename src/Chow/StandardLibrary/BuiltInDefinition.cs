@@ -1,6 +1,10 @@
 ﻿using System;
-namespace Chow.StandardLibrary
+
+namespace Chow.BuiltIns
 {
+    // **WARNING**:
+    // Avoid adding new built-in functions until built-ins overhaul. This class is temporary.
+    // The overhaul will include built-in functions THAT DO NOT USE DELEGATES.
     readonly struct BuiltInDefinition
     {
         const int ARGUMENT_COUNT_UNDEFINED = 0;
