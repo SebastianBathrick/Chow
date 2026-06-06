@@ -2,7 +2,7 @@
 using Chow.SyntaxTrees.Scope;
 namespace Chow.SyntaxTrees.Statements
 {
-    sealed class VariableAssignStatementNode : Node
+    sealed class AssignStatementNode : Node
     {
         public string Name { get; }
 
@@ -14,7 +14,7 @@ namespace Chow.SyntaxTrees.Statements
         /// </summary>
         public ScopeType Resolution { get; set; }
 
-        public VariableAssignStatementNode(string name, Node expr, int line) : base(line)
+        public AssignStatementNode(string name, Node expr, int line) : base(line)
         {
             Name = name;
             Expression = expr;

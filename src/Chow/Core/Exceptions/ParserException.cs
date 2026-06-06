@@ -1,11 +1,11 @@
 using System;
 namespace Chow.Exceptions
 {
-    sealed class ParserEx : Exception
+    sealed class ParserException : Exception
     {
         public int LineNum { get; }
 
-        public ParserEx(string msg, int lineNum) : base($"[line {lineNum}] Error: {msg}")
+        public ParserException(string msg, int lineNum) : base($"[line {lineNum}] Error: {msg}")
         {
             LineNum = lineNum;
         }

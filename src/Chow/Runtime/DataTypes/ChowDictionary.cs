@@ -26,7 +26,7 @@ namespace Chow.DataTypes
                 ValidateHashable(key);
 
                 return !_entries.TryGetValue(key, out var value) 
-                    ? throw new DictKeyException(KeyRepr(key)) : value;
+                    ? throw new ChowKeyException(KeyRepr(key)) : value;
 
             }
             set => Add(key, value);
@@ -94,7 +94,7 @@ namespace Chow.DataTypes
                 return args[1];
             }
 
-            throw new DictKeyException(KeyRepr(key));
+            throw new ChowKeyException(KeyRepr(key));
         }
 
         TaggedUnion Update(TaggedUnion[] args)

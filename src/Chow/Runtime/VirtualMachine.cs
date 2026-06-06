@@ -730,9 +730,9 @@ namespace Chow.Core
                 {
                     _valStack.Push(((ChowDictionary)target.ToObject())[index]);
                 }
-                catch (DictKeyException ex)
+                catch (ChowKeyException ex)
                 {
-                    throw new DictKeyException(ex.KeyRepr, GetCurrentLineNumber());
+                    throw new ChowKeyException(ex.KeyRepr, GetCurrentLineNumber());
                 }
             }
             else if (target.Tag == Tag.List)

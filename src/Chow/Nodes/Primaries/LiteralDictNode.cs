@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 namespace Chow.SyntaxTrees.Literals
 {
-    sealed class DictLiteralNode : Node
+    sealed class LiteralDictNode : Node
     {
         public List<Node> Keys { get; }
 
         public List<Node> Values { get; }
 
-        public DictLiteralNode(List<Node> keys, List<Node> values, int line) : base(line)
+        public LiteralDictNode(List<Node> keys, List<Node> values, int line) : base(line)
         {
             Keys = keys;
             Values = values;

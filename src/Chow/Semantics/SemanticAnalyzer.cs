@@ -12,28 +12,28 @@ namespace Chow.Core
 {
     /// <summary>
     /// Performs name-resolution between parsing and compilation. Walks the AST and stamps every
-    /// name-bearing node (<see cref="NameNode"/>, <see cref="VariableAssignStatementNode"/>,
+    /// name-bearing node (<see cref="NameNode"/>, <see cref="AssignStatementNode"/>,
     /// <see cref="FunctionNode"/>) with a <see cref="ScopeType"/> so the
     /// <see cref="Compiler"/> can emit the correct opcode without performing scope analysis itself.
     /// <para>
     /// Validates Python-compatible <c>global</c>/<c>nonlocal</c> rules and raises
-    /// <see cref="SemanticEx"/> on any violation. Each function scope is processed in two phases:
+    /// <see cref="SemanticException"/> on any violation. Each function scope is processed in two phases:
     /// a pre-scan that collects bindings, uses, and declarations; followed by an annotation pass
     /// that stamps <see cref="ScopeType"/> values and recursively analyzes nested function bodies.
     /// </para>
     /// </summary>
     sealed class SemanticAnalyzer
     {
-        readonly TreeRootNode _root;
+        readonly TopLevelNode _root;
         readonly Stack<ScopeFrame> _scopes;
 
         #region Primary Methods
 
         public SemanticAnalyzer(Node root)
         {
-            if (!(root is TreeRootNode treeRoot))
+            if (!(root is TopLevelNode treeRoot))
             {
-                throw new InvalidOperationException("SemanticAnalyzer expects a TreeRootNode.");
+                throw new InvalidOperationException("SemanticAnalyzer expects a TopLevelNode.");
             }
 
             _root = treeRoot;
@@ -49,7 +49,7 @@ namespace Chow.Core
 
         #region Per-Scope Analysis
 
-        void AnalyzeModule(TreeRootNode root)
+        void AnalyzeModule(TopLevelNode root)
         {
             var frame = ScopeFrame.NewModule();
             _scopes.Push(frame);
@@ -107,7 +107,7 @@ namespace Chow.Core
                     break;
                 }
 
-                case VariableAssignStatementNode varAssignNode:
+                case AssignStatementNode varAssignNode:
                 {
                     PreScan(varAssignNode.Expression);
                     RecordBinding(varAssignNode.Name, varAssignNode.LineNumber);
@@ -211,7 +211,7 @@ namespace Chow.Core
                     break;
                 }
 
-                case ListLiteralNode listNode:
+                case LiteralListNode listNode:
                 {
                     foreach (var element in listNode.Elements)
                     {
@@ -221,7 +221,7 @@ namespace Chow.Core
                     break;
                 }
 
-                case DictLiteralNode dictNode:
+                case LiteralDictNode dictNode:
                 {
                     for (var i = 0; i < dictNode.Keys.Count; i++)
                     {
@@ -304,7 +304,7 @@ namespace Chow.Core
                         break;
                     }
 
-                    case VariableAssignStatementNode varAssignNode:
+                    case AssignStatementNode varAssignNode:
                     {
                         Annotate(varAssignNode.Expression);
                         varAssignNode.Resolution = ResolveName(varAssignNode.Name);
@@ -404,7 +404,7 @@ namespace Chow.Core
                         break;
                     }
 
-                    case ListLiteralNode listNode:
+                    case LiteralListNode listNode:
                     {
                         foreach (var element in listNode.Elements)
                         {
@@ -414,7 +414,7 @@ namespace Chow.Core
                         break;
                     }
 
-                    case DictLiteralNode dictNode:
+                    case LiteralDictNode dictNode:
                     {
                         for (var i = 0; i < dictNode.Keys.Count; i++)
                         {
@@ -544,22 +544,22 @@ namespace Chow.Core
         {
             if (frame.Parameters.Contains(name))
             {
-                throw new SemanticEx($"name '{name}' is parameter and global", declareLine);
+                throw new SemanticException($"name '{name}' is parameter and global", declareLine);
             }
 
             if (frame.NonlocalDeclarations.ContainsKey(name))
             {
-                throw new SemanticEx($"name '{name}' is nonlocal and global", declareLine);
+                throw new SemanticException($"name '{name}' is nonlocal and global", declareLine);
             }
 
             if (frame.Bindings.TryGetValue(name, out var bindLine) && bindLine < declareLine)
             {
-                throw new SemanticEx($"name '{name}' is assigned to before global declaration", declareLine);
+                throw new SemanticException($"name '{name}' is assigned to before global declaration", declareLine);
             }
 
             if (frame.Uses.TryGetValue(name, out var useLine) && useLine < declareLine)
             {
-                throw new SemanticEx($"name '{name}' is used prior to global declaration", declareLine);
+                throw new SemanticException($"name '{name}' is used prior to global declaration", declareLine);
             }
         }
 
@@ -567,32 +567,32 @@ namespace Chow.Core
         {
             if (frame.IsModule)
             {
-                throw new SemanticEx("nonlocal declaration not allowed at module level", declareLine);
+                throw new SemanticException("nonlocal declaration not allowed at module level", declareLine);
             }
 
             if (frame.Parameters.Contains(name))
             {
-                throw new SemanticEx($"name '{name}' is parameter and nonlocal", declareLine);
+                throw new SemanticException($"name '{name}' is parameter and nonlocal", declareLine);
             }
 
             if (frame.GlobalDeclarations.ContainsKey(name))
             {
-                throw new SemanticEx($"name '{name}' is nonlocal and global", declareLine);
+                throw new SemanticException($"name '{name}' is nonlocal and global", declareLine);
             }
 
             if (frame.Bindings.TryGetValue(name, out var bindLine) && bindLine < declareLine)
             {
-                throw new SemanticEx($"name '{name}' is assigned to before nonlocal declaration", declareLine);
+                throw new SemanticException($"name '{name}' is assigned to before nonlocal declaration", declareLine);
             }
 
             if (frame.Uses.TryGetValue(name, out var useLine) && useLine < declareLine)
             {
-                throw new SemanticEx($"name '{name}' is used prior to nonlocal declaration", declareLine);
+                throw new SemanticException($"name '{name}' is used prior to nonlocal declaration", declareLine);
             }
 
             if (!HasEnclosingFunctionBinding(name))
             {
-                throw new SemanticEx($"no binding for nonlocal '{name}' found", declareLine);
+                throw new SemanticException($"no binding for nonlocal '{name}' found", declareLine);
             }
         }
 

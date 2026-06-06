@@ -95,7 +95,7 @@ namespace Chow.Core
             }
 
             ConsumeToken(TokenType.EndOfCode, "Expected end of code.");
-            return new TreeRootNode(topLevelStatements);
+            return new TopLevelNode(topLevelStatements);
         }
 
         #endregion
@@ -185,7 +185,7 @@ namespace Chow.Core
 
             if (!IsPrimaryToken())
             {
-                throw new ParserEx("Expected statement.", CurrentToken.LineNum);
+                throw new ParserException("Expected statement.", CurrentToken.LineNum);
             }
 
             // Parse expression first; if an '=' follows, convert the LHS into the appropriate
@@ -681,7 +681,7 @@ namespace Chow.Core
             }
 
             ConsumeToken(TokenType.SymbolRightBracket, "Expected ']' to close list literal.");
-            return new ListLiteralNode(elements, leftBracket.LineNum);
+            return new LiteralListNode(elements, leftBracket.LineNum);
         }
 
         Node ParseDictLiteral()
@@ -701,7 +701,7 @@ namespace Chow.Core
             }
 
             ConsumeToken(TokenType.SymbolRightCurly, "Expected '}' to close dict literal.");
-            return new DictLiteralNode(keys, values, leftCurly.LineNum);
+            return new LiteralDictNode(keys, values, leftCurly.LineNum);
         }
 
         void ParseDictEntry(List<Node> keys, List<Node> values)
@@ -734,7 +734,7 @@ namespace Chow.Core
 
             if (!IsCurrentTokenType(TokenType.EndOfCode))
             {
-                throw new ParserEx("f-string: expression must be a single expression.", CurrentToken.LineNum);
+                throw new ParserException("f-string: expression must be a single expression.", CurrentToken.LineNum);
             }
 
             return node;
@@ -808,7 +808,7 @@ namespace Chow.Core
 
                 default:
                 {
-                    throw new ParserEx("Expected expression.", CurrentToken.LineNum);
+                    throw new ParserException("Expected expression.", CurrentToken.LineNum);
                 }
             }
         }
@@ -856,7 +856,7 @@ namespace Chow.Core
         {
             if (!IsCurrentTokenType(type))
             {
-                throw new ParserEx(message, CurrentToken.LineNum);
+                throw new ParserException(message, CurrentToken.LineNum);
             }
 
             var token = CurrentToken;
@@ -899,7 +899,7 @@ namespace Chow.Core
             {
                 case NameNode nameNode:
                 {
-                    return new VariableAssignStatementNode(nameNode.Name, value, line);
+                    return new AssignStatementNode(nameNode.Name, value, line);
 
                 }
                 case SubscriptNode subscriptNode:
@@ -912,7 +912,7 @@ namespace Chow.Core
                 }
             }
 
-            throw new ParserEx("Invalid assignment target.", line);
+            throw new ParserException("Invalid assignment target.", line);
         }
 
         static ExpressionOperator MapTokenTypeToBinary(TokenType type)

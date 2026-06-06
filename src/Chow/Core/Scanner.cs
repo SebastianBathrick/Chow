@@ -78,7 +78,7 @@ namespace Chow.Core
 
             if (_openingBrackets.Count > 0)
             {
-                throw new ScannerEx("Bracket(s) never closed in source code", _lineNum);
+                throw new ScannerException("Bracket(s) never closed in source code", _lineNum);
             }
 
             // Add dedent tokens for each block nested within the top-level to mark their end
@@ -135,7 +135,7 @@ namespace Chow.Core
             }
             else if (!TryScanSymbolToken())
             {
-                throw new ScannerEx($"Unexpected character '{CurrentChar}'.", _lineNum);
+                throw new ScannerException($"Unexpected character '{CurrentChar}'.", _lineNum);
             }
         }
 
@@ -238,7 +238,7 @@ namespace Chow.Core
 
             if (_indentLevels.Peek() != indentLvl)
             {
-                throw new ScannerEx("Inconsistent dedent.", _lineNum);
+                throw new ScannerException("Inconsistent dedent.", _lineNum);
             }
         }
 
@@ -511,7 +511,7 @@ namespace Chow.Core
 
             if (!IsCharToScan)
             {
-                throw new ScannerEx("Unterminated string literal", _lineNum);
+                throw new ScannerException("Unterminated string literal", _lineNum);
             }
 
             MoveToNextChar();
@@ -529,7 +529,7 @@ namespace Chow.Core
             {
                 if (IsNewlineChar())
                 {
-                    throw new ScannerEx("Unterminated string literal", _lineNum);
+                    throw new ScannerException("Unterminated string literal", _lineNum);
                 }
 
                 if (CurrentChar == '\\')
@@ -538,7 +538,7 @@ namespace Chow.Core
 
                     if (!IsCharToScan)
                     {
-                        throw new ScannerEx("Unterminated string literal", _lineNum);
+                        throw new ScannerException("Unterminated string literal", _lineNum);
                     }
 
                     builder.Append(DecodeEscape(CurrentChar));
@@ -581,7 +581,7 @@ namespace Chow.Core
                 case 'v':
                     return '\v';
                 default:
-                    throw new ScannerEx($"Unknown escape sequence '\\{c}'", _lineNum);
+                    throw new ScannerException($"Unknown escape sequence '\\{c}'", _lineNum);
             }
         }
 
@@ -599,7 +599,7 @@ namespace Chow.Core
             {
                 if (IsNewlineChar())
                 {
-                    throw new ScannerEx("Unterminated f-string literal", _lineNum);
+                    throw new ScannerException("Unterminated f-string literal", _lineNum);
                 }
 
                 if (CurrentChar == '{')
@@ -629,7 +629,7 @@ namespace Chow.Core
                         continue;
                     }
 
-                    throw new ScannerEx("Single '}' is not allowed in f-string", _lineNum);
+                    throw new ScannerException("Single '}' is not allowed in f-string", _lineNum);
                 }
 
                 if (CurrentChar == '\\')
@@ -638,7 +638,7 @@ namespace Chow.Core
 
                     if (!IsCharToScan)
                     {
-                        throw new ScannerEx("Unterminated f-string literal", _lineNum);
+                        throw new ScannerException("Unterminated f-string literal", _lineNum);
                     }
 
                     currentPart.Append(DecodeEscape(CurrentChar));
@@ -652,7 +652,7 @@ namespace Chow.Core
 
             if (!IsCharToScan)
             {
-                throw new ScannerEx("Unterminated f-string literal", _lineNum);
+                throw new ScannerException("Unterminated f-string literal", _lineNum);
             }
 
             stringParts.Add(currentPart.ToString());
@@ -672,7 +672,7 @@ namespace Chow.Core
             {
                 if (IsNewlineChar())
                 {
-                    throw new ScannerEx("Unterminated f-string expression", _lineNum);
+                    throw new ScannerException("Unterminated f-string expression", _lineNum);
                 }
 
                 var c = CurrentChar;
@@ -708,7 +708,7 @@ namespace Chow.Core
                     {
                         if (IsNewlineChar())
                         {
-                            throw new ScannerEx("Unterminated string in f-string expression", _lineNum);
+                            throw new ScannerException("Unterminated string in f-string expression", _lineNum);
                         }
 
                         if (CurrentChar == '\\')
@@ -718,7 +718,7 @@ namespace Chow.Core
 
                             if (!IsCharToScan)
                             {
-                                throw new ScannerEx("Unterminated string in f-string expression", _lineNum);
+                                throw new ScannerException("Unterminated string in f-string expression", _lineNum);
                             }
                         }
 
@@ -728,7 +728,7 @@ namespace Chow.Core
 
                     if (!IsCharToScan)
                     {
-                        throw new ScannerEx("Unterminated string in f-string expression", _lineNum);
+                        throw new ScannerException("Unterminated string in f-string expression", _lineNum);
                     }
 
                     slotSource.Append(CurrentChar); // closing quote
@@ -742,7 +742,7 @@ namespace Chow.Core
 
             if (!IsCharToScan)
             {
-                throw new ScannerEx("Unterminated f-string expression", _lineNum);
+                throw new ScannerException("Unterminated f-string expression", _lineNum);
             }
 
             MoveToNextChar(); // skip closing }
@@ -751,7 +751,7 @@ namespace Chow.Core
 
             if (result.Length == 0)
             {
-                throw new ScannerEx("f-string: empty expression not allowed", _lineNum);
+                throw new ScannerException("f-string: empty expression not allowed", _lineNum);
             }
 
             return result;
@@ -892,7 +892,7 @@ namespace Chow.Core
                 }
                 else
                 {
-                    throw new ScannerEx("Unexpected indentation.", _lineNum);
+                    throw new ScannerException("Unexpected indentation.", _lineNum);
                 }
             }
         }
@@ -914,7 +914,7 @@ namespace Chow.Core
         {
             if (_openingBrackets.Count == 0 || _openingBrackets.Pop() != expectedOpening)
             {
-                throw new ScannerEx($"Unexpected '{closingChar}'", _lineNum);
+                throw new ScannerException($"Unexpected '{closingChar}'", _lineNum);
             }
         }
 

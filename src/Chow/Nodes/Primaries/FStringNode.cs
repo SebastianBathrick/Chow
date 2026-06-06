@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 namespace Chow.SyntaxTrees.Literals
 {
-    // Format specs (e.g. {x:.2f}) are not supported in v1; a colon inside a slot will raise a ParserEx.
+    // Format specs (e.g. {x:.2f}) are not supported in v1; a colon inside a slot will raise a ParserException.
     sealed class FStringNode : Node
     {
         public IReadOnlyList<string> StringParts { get; }

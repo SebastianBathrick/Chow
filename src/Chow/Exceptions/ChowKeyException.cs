@@ -1,12 +1,12 @@
 namespace Chow.Exceptions
 {
-    class DictKeyException : ChowException
+    class ChowKeyException : ChowException
     {
         const string EXCEPTION_ALIAS = "KeyError";
 
         public string KeyRepr { get; }
 
-        public DictKeyException(string keyRepr, int lineNumber = -1) : base(EXCEPTION_ALIAS, keyRepr, lineNumber)
+        public ChowKeyException(string keyRepr, int lineNumber = -1) : base(EXCEPTION_ALIAS, keyRepr, lineNumber)
         {
             KeyRepr = keyRepr;
         }

@@ -18,10 +18,4 @@
         </AssemblyAttribute>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="DataTypes\Enums\" />
-      <Folder Include="DataTypes\Services\" />
-      <Folder Include="DataTypes\Utilities\" />
-    </ItemGroup>
-
 </Project>

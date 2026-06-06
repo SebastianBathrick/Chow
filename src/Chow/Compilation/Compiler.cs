@@ -40,7 +40,7 @@ namespace Chow.Core
 
         public Chunk CompileRoot()
         {
-            if (!(_root is TreeRootNode treeRoot))
+            if (!(_root is TopLevelNode treeRoot))
             {
                 throw new InvalidOperationException();
             }
@@ -108,7 +108,7 @@ namespace Chow.Core
                     break;
                 }
 
-                case VariableAssignStatementNode varAssignNode:
+                case AssignStatementNode varAssignNode:
                 {
                     CompileVariableAssign(varAssignNode);
                     break;
@@ -181,14 +181,14 @@ namespace Chow.Core
                     break;
                 }
 
-                case ListLiteralNode listLiteralNode:
+                case LiteralListNode listLiteralNode:
                 {
                     // TODO: Check if CompileListLiteral & CompileDictLiteral should be grouped with all the other literals
                     CompileListLiteral(listLiteralNode);
                     break;
                 }
 
-                case DictLiteralNode dictLiteralNode:
+                case LiteralDictNode dictLiteralNode:
                 {
                     CompileDictLiteral(dictLiteralNode);
                     break;
@@ -266,7 +266,7 @@ namespace Chow.Core
             _chunk.AddInstruction(GetScopeAssignOpCode(funcNode.Resolution), funcNode.LineNumber, varNameIdx);
         }
 
-        void CompileVariableAssign(VariableAssignStatementNode variableAssignStatementNode)
+        void CompileVariableAssign(AssignStatementNode assignStatementNode)
         {
             /* [NOTE]
              *
@@ -291,12 +291,12 @@ namespace Chow.Core
              *    for Local, the module scope for Global, or the nearest enclosing function scope for Nonlocal.
              */
 
-            CompileTargetNode(variableAssignStatementNode.Expression);
+            CompileTargetNode(assignStatementNode.Expression);
 
             // If a variable with the same name already exists in the chunk, the index of the existing variable will be returned.
             // Otherwise, the new variable will be added to the chunk and its new index will be returned.
-            var varNameIdx = _chunk.RegisterVariableName(variableAssignStatementNode.Name);
-            _chunk.AddInstruction(GetScopeAssignOpCode(variableAssignStatementNode.Resolution), variableAssignStatementNode.LineNumber,
+            var varNameIdx = _chunk.RegisterVariableName(assignStatementNode.Name);
+            _chunk.AddInstruction(GetScopeAssignOpCode(assignStatementNode.Resolution), assignStatementNode.LineNumber,
                 varNameIdx);
         }
 
@@ -471,7 +471,7 @@ namespace Chow.Core
         {
             if (_loopContextStack.Count == 0)
             {
-                throw new ParserEx("'break' outside loop", breakStatementNode.LineNumber);
+                throw new ParserException("'break' outside loop", breakStatementNode.LineNumber);
             }
 
             var loopContext = _loopContextStack.Peek();
@@ -490,8 +490,8 @@ namespace Chow.Core
         {
             if (_loopContextStack.Count == 0)
             {
-                // TODO: Remove ParserEx in the compiler and replace with a more appropriate exception type
-                throw new ParserEx("'continue' not properly in loop", continueStatementNode.LineNumber);
+                // TODO: Remove ParserException in the compiler and replace with a more appropriate exception type
+                throw new ParserException("'continue' not properly in loop", continueStatementNode.LineNumber);
             }
 
             var loopContext = _loopContextStack.Peek();
@@ -647,7 +647,7 @@ namespace Chow.Core
             throw new InvalidOperationException();
         }
 
-        void CompileListLiteral(ListLiteralNode node)
+        void CompileListLiteral(LiteralListNode node)
         {
             foreach (var element in node.Elements)
             {
@@ -657,7 +657,7 @@ namespace Chow.Core
             _chunk.AddInstruction(OperationCode.PushNewInternalList, node.LineNumber, node.Elements.Count);
         }
 
-        void CompileDictLiteral(DictLiteralNode node)
+        void CompileDictLiteral(LiteralDictNode node)
         {
             for (var i = 0; i < node.Keys.Count; i++)
             {
