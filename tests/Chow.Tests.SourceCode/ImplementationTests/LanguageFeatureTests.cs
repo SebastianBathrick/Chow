@@ -1,5 +1,6 @@
 ﻿using Chow;
 using Chow.Objects;
+using Chow.VM.Utilities;
 namespace Chow.Tests.SourceCode;
 
 [TestFixture]
@@ -21,8 +22,11 @@ public class LanguageFeatureTests
     public void Execute_ValidSourceCode_ReturnExpectedResult(CaseExecute caseExecute)
     {
         var returnValue = ChowEngine.Execute(caseExecute.SourceCode);
-        
-        Assert.That(returnValue, Is.EqualTo(caseExecute.ExpectedResult));
+
+        Assert.That(
+            ComparisonEvaluator.EvaluateEqual(returnValue, caseExecute.ExpectedResult).ToBool(),
+            Is.True,
+            $"Expected {caseExecute.ExpectedResult}, but was {returnValue}");
     }
 
     #endregion

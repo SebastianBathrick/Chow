@@ -538,7 +538,10 @@ public class ArithmeticEvaluatorTests
     {
         var result = Evaluate(evaluate, left, right);
 
-        Assert.That(result, Is.EqualTo(expectedValue));
+        Assert.That(
+            ComparisonEvaluator.EvaluateEqual(result, expectedValue).ToBool(),
+            Is.True,
+            $"Expected {expectedValue}, but was {result}");
     }
 
     static void AssertUnaryResult(
