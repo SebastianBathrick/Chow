@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using Chow.Exceptions;
 using Chow.VM;
 using Chow.VM.Utilities;
 namespace Chow.Objects
@@ -28,7 +27,8 @@ namespace Chow.Objects
                 ValidateHashable(key);
 
                 return !_entries.TryGetValue(key, out var value) 
-                    ? throw new SubscriptException(KeyRepr(key)) : value;
+                    ? throw new SubscriptException(KeyRepr(key)) 
+                    : value;
 
             }
             set => Add(key, value);
@@ -208,7 +208,7 @@ namespace Chow.Objects
             return result;
         }
 
-        public static void ValidateHashable(SourceValue key)
+        static void ValidateHashable(SourceValue key)
         {
             switch (key.DataType)
             {

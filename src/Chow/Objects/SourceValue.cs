@@ -13,7 +13,7 @@ namespace Chow.Objects
     /// <b>int, float, str, bool, None, list, dict, and range</b>.
     /// </summary>
     [StructLayout(LayoutKind.Explicit)]
-    public readonly struct SourceValue
+    public readonly struct SourceValue : IEquatable<SourceValue>
     {
         // TODO: Major refactor going on currently
         public static readonly SourceValue None = new SourceValue(DataType.None);
@@ -514,5 +514,29 @@ namespace Chow.Objects
 
         #endregion
 
+        public bool Equals(SourceValue other)
+        {
+            return Equals(_obj, other._obj) 
+                && _long == other._long 
+                && _dbl.Equals(other._dbl)
+                && _dataType == other._dataType;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is SourceValue other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (_obj != null ? _obj.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ _long.GetHashCode();
+                hashCode = (hashCode * 397) ^ _dbl.GetHashCode();
+                hashCode = (hashCode * 397) ^ (int)_dataType;
+                return hashCode;
+            }
+        }
     }
 }
