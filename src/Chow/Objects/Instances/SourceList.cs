@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using Chow.VM.Utilities;
 namespace Chow.Objects
 {
     class SourceList
@@ -130,7 +131,7 @@ namespace Chow.Objects
 
             for (var i = 0; i < _elements.Count; i++)
             {
-                if (!_elements[i].IsTypeAgnosticEqualTo(args[0]))
+                if (!ComparisonEvaluator.EvaluateEqual(_elements[i],args[0]).ToBool())
                 {
                     continue;
                 }
@@ -149,35 +150,7 @@ namespace Chow.Objects
             return SourceValue.None;
         }
 
-        // TODO: Refactor to reduce code duplication (e.g. with a dictionary of method name to Func<SourceValue[], SourceValue>)
-        public SourceValue CallMethod(string methodName, SourceValue[] args = null)
-        {
-            switch (methodName)
-            {
-                case METHOD_APPEND_NAME:
-                    return Append(args);
-
-                case METHOD_CLEAR_NAME:
-                    return Clear(args);
-
-                case METHOD_INSERT_NAME:
-                    return Insert(args);
-
-                case METHOD_POP_NAME:
-                    return Pop(args);
-
-                case METHOD_REMOVE_NAME:
-                    return Remove(args);
-
-                case METHOD_REVERSE_NAME:
-                    return Reverse(args);
-
-                default:
-                    throw new NotImplementedException($"Method '{methodName}' is not implemented for SourceList");
-            }
-        }
-
-        public Func<SourceValue[], SourceValue> GetMethod(string methodName)
+        Func<SourceValue[], SourceValue> GetMethod(string methodName)
         {
             switch (methodName)
             {
@@ -194,7 +167,8 @@ namespace Chow.Objects
                 case METHOD_REVERSE_NAME:
                     return Reverse;
                 default:
-                    throw new NotImplementedException($"Method '{methodName}' is not implemented for SourceList");
+                    throw new NotImplementedException(
+                        $"Method '{methodName}' is not implemented for SourceList");
             }
         }
 
@@ -228,29 +202,13 @@ namespace Chow.Objects
 
             for (var i = 0; i < a._elements.Count; i++)
             {
-                if (!a._elements[i].IsTypeAgnosticEqualTo(b._elements[i]))
+                if (!ComparisonEvaluator.EvaluateEqual(a._elements[i], b._elements[i]).ToBool())
                 {
                     return false;
                 }
             }
 
             return true;
-        }
-
-        public static int ElementsHashCode(SourceList a)
-        {
-            // Order-sensitive polynomial combine — paired with ElementsEqual's order-sensitive check.
-            unchecked
-            {
-                var hash = 17;
-
-                foreach (var element in a._elements)
-                {
-                    hash = hash * 31 + element.GetHashCode();
-                }
-
-                return hash;
-            }
         }
 
         public static SourceList Concat(SourceList a, SourceList b)

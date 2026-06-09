@@ -200,7 +200,7 @@ namespace Chow.VM
 
                 // -- Expression Evaluation Operations --------------------------------------------
                 case OperationCode.CoerceToStr:
-                    EvaluateCoerceToStr();
+                    _valStack.Push(new SourceValue(_valStack.Pop().ToString()));
                     break;
                 case OperationCode.PopExpressionStatementResult:
                     _expressionStatementVal = _valStack.Pop();
@@ -267,7 +267,7 @@ namespace Chow.VM
 
                 for (var i = 0; i < list.Count && !found; i++)
                 {
-                    found = list[i].IsTypeAgnosticEqualTo(needle);
+                    found = ComparisonEvaluator.EvaluateEqual(list[i], needle).ToBool();
                 }
             }
             else
@@ -666,17 +666,7 @@ namespace Chow.VM
         }
 
         #endregion
-
-        #region Expression Evaluation Operations
-
-        void EvaluateCoerceToStr()
-        {
-            var operand = _valStack.Pop();
-            _valStack.Push(operand.CreateStr());
-        }
-
-        #endregion
-
+        
         #region Helper Methods
 
         static string ParseDataTypeName(DataType dataType)

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text;
 using Chow.Exceptions;
 using Chow.VM;
+using Chow.VM.Utilities;
 namespace Chow.Objects
 {
     class SourceDictionary
@@ -181,31 +182,13 @@ namespace Chow.Objects
                     return false;
                 }
 
-                if (!a._entries[key].IsTypeAgnosticEqualTo(bValue))
+                if (!ComparisonEvaluator.EvaluateEqual(a._entries[key], bValue).ToBool())
                 {
                     return false;
                 }
             }
 
             return true;
-        }
-
-        public static int ElementsHashCode(SourceDictionary a)
-        {
-            // Order-independent combine — paired with ElementsEqual's order-insensitive lookup.
-            unchecked
-            {
-                var hash = 0;
-
-                foreach (var key in a._keys)
-                {
-                    var keyHash = key.GetHashCode();
-                    var valueHash = a._entries[key].GetHashCode();
-                    hash ^= keyHash * 31 ^ valueHash;
-                }
-
-                return hash;
-            }
         }
 
         public static SourceDictionary Merge(SourceDictionary a, SourceDictionary b)

@@ -30,12 +30,12 @@ namespace Chow.VM.Utilities
 
         public static SourceValue EvaluateEqual(SourceValue r, SourceValue l)
         {
-            return new SourceValue(AreEqual(ref l, ref r));
+            return new SourceValue(IsEqual(ref l, ref r));
         }
 
         public static SourceValue EvaluateNotEqual(SourceValue r, SourceValue l)
         {
-            return new SourceValue(!AreEqual(ref l, ref r));
+            return new SourceValue(!IsEqual(ref l, ref r));
         }
 
         #endregion
@@ -134,7 +134,7 @@ namespace Chow.VM.Utilities
             }
         }
 
-        static bool AreEqual(ref SourceValue l, ref SourceValue r)
+        static bool IsEqual(ref SourceValue l, ref SourceValue r)
         {
             if (DataTypeConversionMap.TryGetValue((l.DataType, r.DataType), out var convDataType))
             {

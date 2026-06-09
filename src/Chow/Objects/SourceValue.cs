@@ -236,39 +236,8 @@ namespace Chow.Objects
             throw UnsupportedBinary(ExpressionOperator.BinaryOr, rightOperand);
         }
 
-        internal SourceValue CreateStr()
-        {
-            LookupUnary(ExpressionOperator.ToStr);
-            return new SourceValue(ToString());
-        }
-
         #endregion
-
-        #region Comparison Operations
-        // WARNING: THESE METHODS WILL BE REMOVED IN FUTURE REFACTOR!
-        // DO NOT USE ANY OF THESE METHODS IN NEW CLASSES OR ADD THEM TO PRE-EXISTING ONES
-
-        internal bool IsTypeAgnosticEqualTo(SourceValue other)
-        {
-            switch (LookupBinary(ExpressionOperator.Equal, other))
-            {
-                case ConversionCase.ToInt:
-                    return ToLong() == other.ToLong();
-                case ConversionCase.ToFloat:
-                {
-                    return ToDouble() == other.ToDouble();
-                }
-                case ConversionCase.Nothing:
-                {
-                    return EqualsNoConversion(other);
-                }
-            }
-
-            return false;
-        }
-
-        #endregion
-
+        
         #region Interop
 
         internal SourceValue InvokeHostDelegate(SourceValue[] args)
@@ -287,70 +256,7 @@ namespace Chow.Objects
         }
 
         #endregion
-
-        #region Object Overrides
-
-        /// <summary>
-        /// Strict structural equality: returns <c>true</c> only when <paramref name="obj"/> is a
-        /// <see cref="SourceValue"/> of the same <see cref="_dataType"/> with the same underlying value.
-        /// No cross-type conversion is performed — <c>True</c> is not equal to <c>1</c>, and
-        /// <c>1</c> is not equal to <c>1.0</c>. For Python <c>==</c> semantics that promote across
-        /// numeric types, use <see cref="IsTypeAgnosticEqualTo"/> instead.
-        /// </summary>
-        /// <param name="obj">The object to compare with this instance or <c>null</c>.</param>
-        /// <returns><c>true</c> if the objects are structurally equal; otherwise, <c>false</c>.</returns>
-        public override bool Equals(object obj)
-        {
-            return obj is SourceValue other && EqualsNoConversion(other);
-        }
-
-        /// <inheritdoc/>
-        public override int GetHashCode()
-        {
-            int valueHash;
-
-            switch (_dataType)
-            {
-                case DataType.Long:
-                {
-                    valueHash = _long.GetHashCode();
-                    break;
-                }
-                case DataType.Double:
-                {
-                    valueHash = _dbl.GetHashCode();
-                    break;
-                }
-                case DataType.Bool:
-                {
-                    valueHash = BoolValue.GetHashCode();
-                    break;
-                }
-                case DataType.List:
-                {
-                    valueHash = SourceList.ElementsHashCode((SourceList)_obj);
-                    break;
-                }
-                case DataType.Dict:
-                {
-                    valueHash = SourceDictionary.ElementsHashCode((SourceDictionary)_obj);
-                    break;
-                }
-                default:
-                {
-                    valueHash = _obj?.GetHashCode() ?? 0;
-                    break;
-                }
-            }
-
-            unchecked
-            {
-                return _dataType.GetHashCode() * HASH_COMBINE_PRIME ^ valueHash;
-            }
-        }
-
-        #endregion
-
+        
         #region Conversion Methods
 
         // NOTE: These methods are for internal use only and are more performant than AsType<T>()
@@ -590,72 +496,10 @@ namespace Chow.Objects
         {
             return DataTypeConversionMap.GetLeftRightConversionCase(@operator, _dataType, right._dataType);
         }
-
-        ConversionCase LookupUnary(ExpressionOperator @operator)
-        {
-            return DataTypeConversionMap.GetOperandConversionCase(@operator, _dataType);
-        }
-
+        
         DataTypeException UnsupportedBinary(ExpressionOperator @operator, SourceValue right)
         {
             return new DataTypeException($"unsupported operand type(s) for {@operator}: '{_dataType}' and '{right._dataType}'");
-        }
-
-        DataTypeException UnsupportedUnary(ExpressionOperator @operator)
-        {
-            return new DataTypeException($"bad operand type for unary {@operator}: '{_dataType}'");
-        }
-        
-        // Equality fallback used when DataTypeConversionMap reports Nothing for ==/!= operands.
-        // Cross-type combinations are never equal (Python: 1 == "1" → False); same-type combinations
-        // delegate to the underlying value's identity/structural equality.
-        bool EqualsNoConversion(SourceValue other)
-        {
-            if (_dataType != other._dataType)
-            {
-                return false;
-            }
-
-            switch (_dataType)
-            {
-                case DataType.None:
-                {
-                    return true;
-                }
-                case DataType.Bool:
-                {
-                    return BoolValue == other.BoolValue;
-                }
-                case DataType.Long:
-                {
-                    return _long == other._long;
-                }
-                case DataType.Double:
-                {
-                    return _dbl.Equals(other._dbl);
-                }
-                case DataType.Str:
-                {
-                    return (string)_obj == (string)other._obj;
-                }
-                case DataType.List:
-                {
-                    return SourceList.ElementsEqual((SourceList)_obj, (SourceList)other._obj);
-                }
-                case DataType.Dict:
-                {
-                    return SourceDictionary.ElementsEqual((SourceDictionary)_obj, (SourceDictionary)other._obj);
-                }
-                case DataType.Range:
-                case DataType.Object:
-                {
-                    return ReferenceEquals(_obj, other._obj);
-                }
-                default:
-                {
-                    return false;
-                }
-            }
         }
         
         #endregion
