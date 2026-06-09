@@ -1,4 +1,4 @@
-﻿using Chow.Semantics;
+
 namespace Chow.Ast
 {
     sealed class AssignStatementNode : Node

@@ -1,4 +1,5 @@
 using System;
+
 namespace Chow.Ast
 {
     sealed class LiteralNode : Node

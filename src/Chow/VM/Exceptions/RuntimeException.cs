@@ -1,4 +1,4 @@
-﻿using System;
+
 namespace Chow.VM
 {
     public abstract class RuntimeException : Exception

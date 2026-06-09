@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Chow.Objects;
+
 namespace Chow.Utility
 {
     public class DataTypeNames

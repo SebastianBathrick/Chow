@@ -1,4 +1,5 @@
 using System;
+
 namespace Chow.Ast.Parsing
 {
     sealed class ParserException : Exception

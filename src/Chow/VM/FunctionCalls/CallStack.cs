@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Chow.Bytecode;
 using Chow.Objects;
+
 namespace Chow.VM.Utilities
 {
     /// <summary>

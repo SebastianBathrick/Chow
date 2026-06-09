@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+
 namespace Chow.Tokens
 {
     sealed class FStringTokenPayload

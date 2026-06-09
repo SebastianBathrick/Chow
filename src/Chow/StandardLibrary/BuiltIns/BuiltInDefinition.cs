@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using Chow.Objects;
+
 namespace Chow.StandardLibrary.BuiltIns
 {
     // **WARNING**:

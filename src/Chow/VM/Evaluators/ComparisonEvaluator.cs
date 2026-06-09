@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Chow.Objects;
 using Chow.Utility;
+
 namespace Chow.VM.Utilities
 {
     /// <summary>

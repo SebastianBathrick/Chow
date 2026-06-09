@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Chow.Bytecode;
+
 namespace Chow.Utility
 {
     static class OperatorStrings

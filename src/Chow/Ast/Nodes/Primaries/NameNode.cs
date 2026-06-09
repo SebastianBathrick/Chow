@@ -1,4 +1,5 @@
 using Chow.Semantics;
+
 namespace Chow.Ast
 {
     sealed class NameNode : Node

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Chow.Ast;
 using Chow.Bytecode.Compilation;
+
 namespace Chow.Semantics
 {
     /// <summary>

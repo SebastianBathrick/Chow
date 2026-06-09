@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Chow.Objects;
 using Chow.Utility;
+
 namespace Chow.VM.Utilities
 {
     // TODO: Replace with more performant, refactored version

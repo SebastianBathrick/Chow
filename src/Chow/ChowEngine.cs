@@ -5,6 +5,7 @@ using Chow.Semantics;
 using Chow.StandardLibrary.BuiltIns;
 using Chow.Tokens.Scanning;
 using Chow.VM;
+
 namespace Chow
 {
     public sealed class ChowEngine

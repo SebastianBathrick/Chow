@@ -1,4 +1,5 @@
 using System;
+
 namespace Chow.Tokens.Scanning
 {
     sealed class ScannerException : Exception

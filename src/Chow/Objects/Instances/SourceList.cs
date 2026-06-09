@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using Chow.VM.Utilities;
+
 namespace Chow.Objects
 {
     class SourceList

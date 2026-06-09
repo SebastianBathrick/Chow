@@ -1,6 +1,7 @@
 using System;
 using Chow.Ast.Parsing;
 using Chow.VM;
+
 namespace Chow.Semantics
 {
     /// <summary>

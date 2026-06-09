@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Chow.Objects;
 using Chow.VM;
 using Chow.VM.Utilities;
+
 namespace Chow.StandardLibrary.BuiltIns
 {
     static class BuiltInFunctions

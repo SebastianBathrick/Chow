@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Chow.Tokens;
+
 namespace Chow.Utility
 {
     static class Keywords

@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Chow.Semantics;
+
 namespace Chow.Ast
 {
     /// <summary>Represents a node that describes a function's definition and body.</summary>

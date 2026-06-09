@@ -1,4 +1,5 @@
 using Chow.Utility;
+
 namespace Chow.Ast
 {
     /// <summary>
