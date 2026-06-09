@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
+using Chow.Exceptions;
 using Chow.Objects;
 using Chow.Utility;
 namespace Chow.VM.Utilities
@@ -8,98 +9,128 @@ namespace Chow.VM.Utilities
     // TODO: Replace with more performant, refactored version
     class ArithmeticEvaluator
     {
-        // TODO: Update project's const naming conventions from SNAKE_CASE to PascalCase 
-        const int IsDoubleEqualInteger = 0; 
-        
+        // TODO: Update project's const naming conventions from SNAKE_CASE to PascalCase
+        const int IsDoubleEqualInteger = 0;
+
         // Python treats bool as a subtype of int; any float operand promotes the whole op to float.
-        static readonly IReadOnlyDictionary<(DataType, DataType), DataType> TagConversionMap =
+        static readonly IReadOnlyDictionary<(DataType, DataType), DataType> NumericConversionMap =
             new Dictionary<(DataType left, DataType right), DataType>()
             {
-                { (DataType.Bool, DataType.Bool), DataType.Long },
-                { (DataType.Bool, DataType.Long), DataType.Long },
-                { (DataType.Long, DataType.Bool), DataType.Long },
-                { (DataType.Bool, DataType.Double), DataType.Double },
-                { (DataType.Double, DataType.Bool), DataType.Double },
-                { (DataType.Long, DataType.Long), DataType.Long },
-                { (DataType.Long, DataType.Double), DataType.Double },
-                { (DataType.Double, DataType.Long), DataType.Double },
+                { (DataType.Bool,   DataType.Bool),   DataType.Long   },
+                { (DataType.Bool,   DataType.Long),   DataType.Long   },
+                { (DataType.Long,   DataType.Bool),   DataType.Long   },
+                { (DataType.Bool,   DataType.Double), DataType.Double },
+                { (DataType.Double, DataType.Bool),   DataType.Double },
+                { (DataType.Long,   DataType.Long),   DataType.Long   },
+                { (DataType.Long,   DataType.Double), DataType.Double },
+                { (DataType.Double, DataType.Long),   DataType.Double },
                 { (DataType.Double, DataType.Double), DataType.Double },
             };
-        
+
+        // Extends numeric pairs with sequence-concatenation pairs valid for `+`.
+        static readonly IReadOnlyDictionary<(DataType, DataType), DataType> AdditionConversionMap =
+            new Dictionary<(DataType left, DataType right), DataType>()
+            {
+                { (DataType.Bool,   DataType.Bool),   DataType.Long   },
+                { (DataType.Bool,   DataType.Long),   DataType.Long   },
+                { (DataType.Long,   DataType.Bool),   DataType.Long   },
+                { (DataType.Bool,   DataType.Double), DataType.Double },
+                { (DataType.Double, DataType.Bool),   DataType.Double },
+                { (DataType.Long,   DataType.Long),   DataType.Long   },
+                { (DataType.Long,   DataType.Double), DataType.Double },
+                { (DataType.Double, DataType.Long),   DataType.Double },
+                { (DataType.Double, DataType.Double), DataType.Double },
+                { (DataType.Str,    DataType.Str),    DataType.Str    },
+                { (DataType.List,   DataType.List),   DataType.List   },
+            };
+
+        // Extends numeric pairs with sequence-repetition pairs valid for `*`.
+        static readonly IReadOnlyDictionary<(DataType, DataType), DataType> MultiplicationConversionMap =
+            new Dictionary<(DataType left, DataType right), DataType>()
+            {
+                { (DataType.Bool,   DataType.Bool),   DataType.Long   },
+                { (DataType.Bool,   DataType.Long),   DataType.Long   },
+                { (DataType.Long,   DataType.Bool),   DataType.Long   },
+                { (DataType.Bool,   DataType.Double), DataType.Double },
+                { (DataType.Double, DataType.Bool),   DataType.Double },
+                { (DataType.Long,   DataType.Long),   DataType.Long   },
+                { (DataType.Long,   DataType.Double), DataType.Double },
+                { (DataType.Double, DataType.Long),   DataType.Double },
+                { (DataType.Double, DataType.Double), DataType.Double },
+                { (DataType.Str,    DataType.Long),   DataType.Str    },
+                { (DataType.Str,    DataType.Bool),   DataType.Str    },
+                { (DataType.Long,   DataType.Str),    DataType.Str    },
+                { (DataType.Bool,   DataType.Str),    DataType.Str    },
+                { (DataType.List,   DataType.Long),   DataType.List   },
+                { (DataType.List,   DataType.Bool),   DataType.List   },
+                { (DataType.Long,   DataType.List),   DataType.List   },
+                { (DataType.Bool,   DataType.List),   DataType.List   },
+            };
+
         public static SourceValue EvaluateAddition(SourceValue r, SourceValue l)
         {
-            // No float on either side → int result; otherwise both operands promote to float.
-            if (TryGetConversionTag(l.DataType, r.DataType, out var convTag))
+            switch (GetConversionTag(AdditionConversionMap, l.DataType, r.DataType, ExpressionOperator.Add))
             {
-                return convTag == DataType.Long 
-                    ? new SourceValue(l.ToLong() + r.ToLong()) 
-                    : new SourceValue(l.ToDouble() + r.ToDouble());
-
+                case DataType.Long:   return new SourceValue(l.ToLong()   + r.ToLong());
+                case DataType.Double: return new SourceValue(l.ToDouble() + r.ToDouble());
+                
+                // Python overloads `+` for sequence concatenation; strings keep string results.
+                case DataType.Str:    return new SourceValue(l.ToString() + r.ToString());
+                
+                // List concatenation creates a new list; neither operand list is mutated.
+                case DataType.List:   return new SourceValue(SourceList.Concat((SourceList)l.ToObject(), (SourceList)r.ToObject()));
+                default:              throw new UnreachableException(nameof(EvaluateAddition));
             }
-
-            switch (l.DataType)
-            {
-                case DataType.Str when r.DataType == DataType.Str:
-                    // Python overloads `+` for sequence concatenation; strings keep string results.
-                    return new SourceValue(l.ToString() + r.ToString());
-                case DataType.List when r.DataType == DataType.List:
-                    // List concatenation creates a new list; neither operand list is mutated.
-                    return new SourceValue(
-                        SourceList.Concat((SourceList)l.ToObject(), (SourceList)r.ToObject()));
-                default:
-                    throw UnsupportedBinary(l.DataType, r.DataType, ExpressionOperator.Add);
-            }
-
         }
 
         public static SourceValue EvaluateSubtraction(SourceValue r, SourceValue l)
         {
-            return GetConversionTag(l.DataType, r.DataType, ExpressionOperator.Subtract) == DataType.Long ? new SourceValue(l.ToLong() - r.ToLong()) : new SourceValue(l.ToDouble() - r.ToDouble());
-
+            var convTag = GetConversionTag(NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Subtract);
+            return convTag == DataType.Long
+                ? new SourceValue(l.ToLong()   - r.ToLong())
+                : new SourceValue(l.ToDouble() - r.ToDouble());
         }
 
         public static SourceValue EvaluateMultiplication(SourceValue r, SourceValue l)
         {
-            if (TryGetConversionTag(l.DataType, r.DataType, out var convTag))
+            switch (GetConversionTag(MultiplicationConversionMap, l.DataType, r.DataType, ExpressionOperator.Multiply))
             {
-                return convTag == DataType.Long 
-                    ? new SourceValue(l.ToLong() * r.ToLong()) 
-                    : new SourceValue(l.ToDouble() * r.ToDouble());
-
+                case DataType.Long:   return new SourceValue(l.ToLong()   * r.ToLong());
+                case DataType.Double: return new SourceValue(l.ToDouble() * r.ToDouble());
+                case DataType.Str:
+                {
+                    // Python repeats sequences with int-like counts; bool counts as 0 or 1.
+                    var str   = l.DataType == DataType.Str 
+                        ? l.ToString() 
+                        : r.ToString();
+                    
+                    var count = l.DataType == DataType.Str 
+                        ? ToRepeatCount(ref r) 
+                        : ToRepeatCount(ref l);
+                    
+                    return new SourceValue(RepeatString(str, count));
+                }
+                case DataType.List:
+                {
+                    // SourceList.Repeat mirrors Python's non-positive counts by returning an empty list.
+                    var list  = l.DataType == DataType.List 
+                        ? (SourceList)l.ToObject() 
+                        : (SourceList)r.ToObject();
+                    var count = l.DataType == DataType.List 
+                        ? ToRepeatCount(ref r) 
+                        : ToRepeatCount(ref l);
+                    return new SourceValue(SourceList.Repeat(list, count));
+                }
+                default: throw new UnreachableException(nameof(EvaluateMultiplication));
             }
-
-            if (l.DataType == DataType.Str && IsIntegerTag(r.DataType))
-            {
-                // Python repeats sequences with int-like counts; bool counts as 0 or 1.
-                return new SourceValue(RepeatString(l.ToString(), ToRepeatCount(ref r)));
-            }
-
-            if (IsIntegerTag(l.DataType) && r.DataType == DataType.Str)
-            {
-                // Repetition is commutative for sequence/int operands: 3 * "ab" == "ab" * 3.
-                return new SourceValue(RepeatString(r.ToString(), ToRepeatCount(ref l)));
-            }
-
-            if (l.DataType == DataType.List && IsIntegerTag(r.DataType))
-            {
-                // SourceList.Repeat mirrors Python's non-positive counts by returning an empty list.
-                return new SourceValue(SourceList.Repeat((SourceList)l.ToObject(), ToRepeatCount(ref r)));
-            }
-
-            if (IsIntegerTag(l.DataType) && r.DataType == DataType.List)
-            {
-                // Keep list repetition order-independent for int/list operands, as Python does.
-                return new SourceValue(SourceList.Repeat((SourceList)r.ToObject(), ToRepeatCount(ref l)));
-            }
-
-            throw UnsupportedBinary(l.DataType, r.DataType, ExpressionOperator.Multiply);
         }
 
         public static SourceValue EvaluateDivision(SourceValue r, SourceValue l)
         {
             // Python: `/` always yields float (e.g. 9 / 3 → 3.0), even for int operands.
             // Lookup validates operand types; result type is always double regardless of map value.
-            GetConversionTag(l.DataType, r.DataType, ExpressionOperator.Divide);
+            GetConversionTag(
+                NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Divide);
 
             var rightDbl = r.ToDouble();
             var leftDbl = l.ToDouble();
@@ -111,12 +142,13 @@ namespace Chow.VM.Utilities
 
             return new SourceValue(leftDbl / rightDbl);
         }
-        
+
         #region Modulus Methods
 
         public static SourceValue EvaluateModulus(SourceValue r, SourceValue l)
         {
-            var convTag = GetConversionTag(l.DataType, r.DataType, ExpressionOperator.Modulus);
+            var convTag = GetConversionTag(
+                NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Modulus);
 
             if (convTag == DataType.Long)
             {
@@ -155,14 +187,15 @@ namespace Chow.VM.Utilities
 
         public static SourceValue EvaluateFloorDivision(SourceValue r, SourceValue l)
         {
-            var convTag = GetConversionTag(l.DataType, r.DataType, ExpressionOperator.FloorDivide);
-            
+            var convTag = GetConversionTag(
+                NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.FloorDivide);
+
             if (convTag == DataType.Long)
             {
                 // Integer // stays in longs so large quotients are not rounded via double.
                 return new SourceValue(FloorDivideLong(l.ToLong(), r.ToLong()));
             }
-            
+
             return new SourceValue(FloorDivideDouble(l.ToDouble(), r.ToDouble()));
         }
 
@@ -204,7 +237,8 @@ namespace Chow.VM.Utilities
         // Python: negative integer exponent forces float result.
         public static SourceValue EvaluateExponent(SourceValue r, SourceValue l)
         {
-            var convTag = GetConversionTag(l.DataType, r.DataType, ExpressionOperator.Exponentiate);
+            var convTag = GetConversionTag(
+                NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Exponentiate);
 
             if (convTag == DataType.Long)
             {
@@ -236,18 +270,18 @@ namespace Chow.VM.Utilities
         static long ExponentiateLong(long l, long r)
         {
             var result = 1L;
-            
+
             while (r > 0L)
             {
                 if ((r & 1L) == 1L)
                 {
                     result *= l;
                 }
-                
+
                 l *= l;
                 r >>= 1;
             }
-            
+
             return result;
         }
 
@@ -275,15 +309,18 @@ namespace Chow.VM.Utilities
 
         #region Helper Methods
 
-        static bool TryGetConversionTag(DataType leftDataType, DataType rightDataType, out DataType convDataType)
+        static bool TryGetConversionTag(
+            IReadOnlyDictionary<(DataType, DataType), DataType> map,
+            DataType leftDataType, DataType rightDataType, out DataType convDataType)
         {
-            var mapKey = (left: leftDataType, right: rightDataType);
-            return TagConversionMap.TryGetValue(mapKey, out convDataType);
+            return map.TryGetValue((left: leftDataType, right: rightDataType), out convDataType);
         }
 
-        static DataType GetConversionTag(DataType leftDataType, DataType rightDataType, ExpressionOperator op)
+        static DataType GetConversionTag(
+            IReadOnlyDictionary<(DataType, DataType), DataType> map,
+            DataType leftDataType, DataType rightDataType, ExpressionOperator op)
         {
-            if (TryGetConversionTag(leftDataType, rightDataType, out var convTag))
+            if (TryGetConversionTag(map, leftDataType, rightDataType, out var convTag))
             {
                 return convTag;
             }
@@ -310,11 +347,6 @@ namespace Chow.VM.Utilities
         {
             // CompareTo treats -0.0 and +0.0 as equal; `divisor == 0.0` can miss -0.0 edge cases.
             return divisor.CompareTo(0.0) == IsDoubleEqualInteger;
-        }
-
-        static bool IsIntegerTag(DataType dataType)
-        {
-            return dataType == DataType.Long || dataType == DataType.Bool;
         }
 
         static int ToRepeatCount(ref SourceValue value)
