@@ -14,7 +14,7 @@ namespace Chow
         /// <param name="sourceCode">String containing Chow source code, whitespace, or null.</param>
         /// <returns><see cref="SourceValue.None"/>, or the result of the last expression statement
         /// interpreted, if there was one defined in <paramref name="sourceCode"/>, and it is not null.</returns>
-        public static ChowValue Execute(string sourceCode, bool useBuiltIns = true)
+        public static SourceValue Execute(string sourceCode, bool useBuiltIns = true)
         {
             var globalScope = new Scope();
             
@@ -36,7 +36,7 @@ namespace Chow
             var chunk = compiler.CompileRoot();
 
             var vm = new Processor(globalScope, chunk);
-            return new ChowValue(vm.Execute());
+            return vm.Execute();
         }
 
         static void ImportBuiltIns(Scope globalScope)

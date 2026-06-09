@@ -173,15 +173,15 @@ public class ChowProgramTests
 
     #region Expected Results
 
-    static readonly ChowValue CollatzExpectedResult = 8L;
-    static readonly ChowValue FizzBuzzExpectedResult = "1,2,Fizz,4,Buzz,Fizz,7,8,Fizz,Buzz,11,Fizz,13,14,FizzBuzz,";
-    static readonly ChowValue CaesarCipherExpectedResult = "hello";
-    static readonly ChowValue SieveExpectedResult = "[2, 3, 5, 7, 11, 13, 17, 19, 23, 29]";
-    static readonly ChowValue BankAccountFinalBalanceExpectedResult = 120L;
-    static readonly ChowValue WordFrequencyExpectedResult = 3L;
-    static readonly ChowValue BinarySearchHitExpectedResult = 6L;
-    static readonly ChowValue BinarySearchMissExpectedResult = -1L;
-    static readonly ChowValue ClosureCounterExpectedResult = 1L;
+    static readonly SourceValue CollatzExpectedResult = new(8L);
+    static readonly SourceValue FizzBuzzExpectedResult = new("1,2,Fizz,4,Buzz,Fizz,7,8,Fizz,Buzz,11,Fizz,13,14,FizzBuzz,");
+    static readonly SourceValue CaesarCipherExpectedResult = new("hello");
+    static readonly SourceValue SieveExpectedResult = new("[2, 3, 5, 7, 11, 13, 17, 19, 23, 29]");
+    static readonly SourceValue BankAccountFinalBalanceExpectedResult = new(120L);
+    static readonly SourceValue WordFrequencyExpectedResult = new(3L);
+    static readonly SourceValue BinarySearchHitExpectedResult = new(6L);
+    static readonly SourceValue BinarySearchMissExpectedResult = new(-1L);
+    static readonly SourceValue ClosureCounterExpectedResult = new(1L);
 
     #endregion
 

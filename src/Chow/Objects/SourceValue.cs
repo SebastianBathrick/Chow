@@ -13,7 +13,7 @@ namespace Chow.Objects
     /// <b>int, float, str, bool, None, list, dict, and range</b>.
     /// </summary>
     [StructLayout(LayoutKind.Explicit)]
-    readonly struct SourceValue : IEquatable<SourceValue>
+    public readonly struct SourceValue : IEquatable<SourceValue>
     {
         // TODO: Major refactor going on currently
         public static readonly SourceValue None = new SourceValue(DataType.None);
@@ -503,7 +503,7 @@ namespace Chow.Objects
         const int TAG_FIELD_OFFSET = 16;
 
         #endregion
-        
+
         public bool Equals(SourceValue other)
         {
             return Equals(_obj, other._obj) 
