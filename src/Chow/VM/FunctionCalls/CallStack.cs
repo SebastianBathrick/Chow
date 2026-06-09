@@ -173,14 +173,22 @@ namespace Chow.VM.FunctionCalls
         }
 
         /// <summary>
-        /// Pushes a new function frame for <paramref name="func"/>. A fresh <see cref="Scope"/>
-        /// is allocated with its parent set to the closure's captured enclosing scope, becoming the
-        /// L of LEGB for the duration of the call.
+        /// Pushes a new function frame for <paramref name="func"/> after arity-checking the call.
+        /// A fresh <see cref="Scope"/> is allocated with its parent set to the closure's captured
+        /// enclosing scope, becoming the L of LEGB for the duration of the call.
         /// </summary>
-        public void EnterFunctionCall(SourceFunction func)
+        public void EnterFunctionCall(ISourceObject func, int argCount)
         {
-            var frameScope = new Scope(func.Enclosing);
-            var newFrame = new StackFrame(func.Chunk, frameScope);
+            var sourceFunc = (SourceFunction)func;
+
+            if (argCount != sourceFunc.ParamCount)
+            {
+                throw new DataTypeException(
+                    $"{sourceFunc.Name}() takes {sourceFunc.ParamCount} positional arguments but {argCount} were given");
+            }
+
+            var frameScope = new Scope(sourceFunc.Enclosing);
+            var newFrame = new StackFrame(sourceFunc.Chunk, frameScope);
             _callFrames.Push(newFrame);
         }
 

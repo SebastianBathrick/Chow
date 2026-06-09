@@ -23,5 +23,14 @@ namespace Chow.Bytecode
             Name = name;
             ParamCount = paramCount;
         }
+
+        /// <summary>
+        /// Combines this template with the scope active at <c>def</c> time to produce the
+        /// runtime closure value.
+        /// </summary>
+        public ISourceObject MakeClosure(Scope enclosing)
+        {
+            return new SourceFunction(Chunk, enclosing, Name, ParamCount);
+        }
     }
 }

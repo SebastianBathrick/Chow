@@ -176,7 +176,7 @@ namespace Chow.VM
 
                 // -- Function Call Operations ----------------------------------------------------
                 case OperationCode.CallFunction:
-                    // If false, the chunk will have switched to a SourceFunction's
+                    // If false, the chunk will have switched to the called closure's
                     return ExecuteCallFunction(CurrentOperation.Operand);
                 case OperationCode.PushReturnValue:
                     _callStack.ExitFunctionCall();
@@ -604,7 +604,7 @@ namespace Chow.VM
             {
                 // Switches to the closure's frame, so Execute will next execute the first
                 // instruction of the closure's chunk.
-                PushClosureStackFrame(argCount, (SourceFunction)calleeValue.ToObject(), args);
+                PushClosureStackFrame(argCount, calleeValue.ToSourceObject(), args);
                 return StayAtInstruction;
             }
 
@@ -615,7 +615,7 @@ namespace Chow.VM
 
         static bool IsClosure(SourceValue calleeValue)
         {
-            return calleeValue.DataType == DataType.Object && calleeValue.ToObject() is SourceFunction;
+            return calleeValue.DataType == DataType.Function;
         }
 
         void CallInteropFunction(SourceValue calleeValue, SourceValue[] args)
@@ -623,13 +623,8 @@ namespace Chow.VM
             _valStack.Push(calleeValue.InvokeHostDelegate(args));
         }
 
-        void PushClosureStackFrame(int argCount, SourceFunction sourceFunction, SourceValue[] args)
+        void PushClosureStackFrame(int argCount, ISourceObject function, SourceValue[] args)
         {
-            if (argCount != sourceFunction.ParamCount)
-            {
-                throw new DataTypeException($"{sourceFunction.Name}() takes {sourceFunction.ParamCount} positional arguments but {argCount} were given");
-            }
-
             // Re-push args; function body's first ops are param-bind AssignVariable's, popping right-to-left.
             for (var i = 0; i < argCount; i++)
             {
@@ -638,16 +633,14 @@ namespace Chow.VM
 
             // Advance caller's IP BEFORE pushing the frame, so PushReturnValue lands at the next caller instruction.
             _callStack.MoveToNextInstruction();
-            _callStack.EnterFunctionCall(sourceFunction);
+            _callStack.EnterFunctionCall(function, argCount);
         }
 
         void ExecutePushNewSourceFunction()
         {
             // Type guaranteed to be at top of stack
             var template = (FunctionDefinition)_valStack.Pop().ToObject();
-
-            var captured = _callStack.CurrentScope;
-            var closure = new SourceFunction(template.Chunk, captured, template.Name, template.ParamCount);
+            var closure = template.MakeClosure(_callStack.CurrentScope);
 
             _valStack.Push(new SourceValue(closure));
         }
