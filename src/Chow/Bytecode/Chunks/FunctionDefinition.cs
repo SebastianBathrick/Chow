@@ -1,4 +1,4 @@
-using Chow.DataTypes;
+using Chow.Objects;
 
 namespace Chow.Bytecode
 {

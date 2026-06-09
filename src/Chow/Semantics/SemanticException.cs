@@ -1,6 +1,8 @@
 using System;
-using Chow.Core;
-namespace Chow.Exceptions
+using Chow.Ast.Parsing;
+using Chow.Exceptions;
+using Chow.VM;
+namespace Chow.Semantics
 {
     /// <summary>
     /// Compile-time error raised by <see cref="SemanticAnalyzer"/> between parsing and compilation

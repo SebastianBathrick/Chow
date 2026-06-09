@@ -1,5 +1,5 @@
 using System;
-namespace Chow.Exceptions
+namespace Chow.Tokens.Scanning
 {
     sealed class ScannerException : Exception
     {

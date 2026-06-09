@@ -1,5 +1,5 @@
-using Chow.DataTypes;
-namespace Chow.Ast.Nodes
+using Chow.Utility;
+namespace Chow.Ast
 {
     sealed class ExpressionNode : Node
     {

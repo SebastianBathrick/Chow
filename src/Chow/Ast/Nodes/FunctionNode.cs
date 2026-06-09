@@ -1,6 +1,6 @@
-using System.Collections.Generic;
-using Chow.Core;
-namespace Chow.Ast.Nodes
+﻿using System.Collections.Generic;
+using Chow.Semantics;
+namespace Chow.Ast
 {
     sealed class FunctionNode : Node
     {

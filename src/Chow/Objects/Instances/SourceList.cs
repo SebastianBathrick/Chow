@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-namespace Chow.DataTypes
+namespace Chow.Objects
 {
     class SourceList
     {
@@ -12,13 +12,12 @@ namespace Chow.DataTypes
         const string METHOD_POP_NAME = "pop";
         const string METHOD_REMOVE_NAME = "remove";
         const string METHOD_REVERSE_NAME = "reverse";
-
-
-        readonly List<RuntimeValue> _elements = new List<RuntimeValue>();
+        
+        readonly List<SourceValue> _elements = new List<SourceValue>();
 
         public int Count => _elements.Count;
 
-        public RuntimeValue this[int index]
+        public SourceValue this[int index]
         {
             get
             {
@@ -45,23 +44,23 @@ namespace Chow.DataTypes
         }
 
         // Will throw if method name is invalid, which is the expected behavior
-        public RuntimeValue this[string name] => new RuntimeValue(GetMethod(name));
+        public SourceValue this[string name] => new SourceValue(GetMethod(name));
 
-        RuntimeValue Append(RuntimeValue[] args)
+        SourceValue Append(SourceValue[] args)
         {
             ValidateArguments(args, 1);
             _elements.Add(args[0]);
-            return RuntimeValue.None;
+            return SourceValue.None;
         }
 
-        RuntimeValue Clear(RuntimeValue[] args)
+        SourceValue Clear(SourceValue[] args)
         {
             ValidateArguments(args);
             _elements.Clear();
-            return RuntimeValue.None;
+            return SourceValue.None;
         }
 
-        RuntimeValue Insert(RuntimeValue[] args)
+        SourceValue Insert(SourceValue[] args)
         {
             ValidateArguments(args, 2);
 
@@ -82,10 +81,10 @@ namespace Chow.DataTypes
             }
 
             _elements.Insert(idx, args[1]);
-            return RuntimeValue.None;
+            return SourceValue.None;
         }
 
-        RuntimeValue Pop(RuntimeValue[] args)
+        SourceValue Pop(SourceValue[] args)
         {
             if (args != null && args.Length > 1)
             {
@@ -125,7 +124,7 @@ namespace Chow.DataTypes
             return value;
         }
 
-        RuntimeValue Remove(RuntimeValue[] args)
+        SourceValue Remove(SourceValue[] args)
         {
             ValidateArguments(args, 1);
 
@@ -137,21 +136,21 @@ namespace Chow.DataTypes
                 }
 
                 _elements.RemoveAt(i);
-                return RuntimeValue.None;
+                return SourceValue.None;
             }
 
             throw new ArgumentException("list.remove(x): x not in list");
         }
 
-        RuntimeValue Reverse(RuntimeValue[] args)
+        SourceValue Reverse(SourceValue[] args)
         {
             ValidateArguments(args);
             _elements.Reverse();
-            return RuntimeValue.None;
+            return SourceValue.None;
         }
 
-        // TODO: Refactor to reduce code duplication (e.g. with a dictionary of method name to Func<RuntimeValue[], RuntimeValue>)
-        public RuntimeValue CallMethod(string methodName, RuntimeValue[] args = null)
+        // TODO: Refactor to reduce code duplication (e.g. with a dictionary of method name to Func<SourceValue[], SourceValue>)
+        public SourceValue CallMethod(string methodName, SourceValue[] args = null)
         {
             switch (methodName)
             {
@@ -178,7 +177,7 @@ namespace Chow.DataTypes
             }
         }
 
-        public Func<RuntimeValue[], RuntimeValue> GetMethod(string methodName)
+        public Func<SourceValue[], SourceValue> GetMethod(string methodName)
         {
             switch (methodName)
             {
@@ -199,7 +198,7 @@ namespace Chow.DataTypes
             }
         }
 
-        public void Add(RuntimeValue element)
+        public void Add(SourceValue element)
         {
             _elements.Add(element);
         }
@@ -280,7 +279,7 @@ namespace Chow.DataTypes
         }
 
         // FUTURE: strings will need a parallel GetSlice returning a string, not a list. Do not abstract.
-        public RuntimeValue GetSlice(RuntimeValue startValue, RuntimeValue stopValue, RuntimeValue stepValue)
+        public SourceValue GetSlice(SourceValue startValue, SourceValue stopValue, SourceValue stepValue)
         {
             var length = _elements.Count;
 
@@ -374,10 +373,10 @@ namespace Chow.DataTypes
                 }
             }
 
-            return new RuntimeValue(sliced);
+            return new SourceValue(sliced);
         }
 
-        static int SliceArgOrDefault(RuntimeValue value, int defaultValue)
+        static int SliceArgOrDefault(SourceValue value, int defaultValue)
         {
             if (value.DataType == DataType.None)
             {
@@ -414,7 +413,7 @@ namespace Chow.DataTypes
 
         // Python-faithful repr used inside collection contexts: strings get single quotes here, even though
         // a standalone string prints without quotes via ChowStr.ToSource.
-        static void Repr(StringBuilder sb, RuntimeValue value)
+        static void Repr(StringBuilder sb, SourceValue value)
         {
             switch (value.DataType)
             {
@@ -458,7 +457,7 @@ namespace Chow.DataTypes
             }
         }
 
-        static void ValidateArguments(RuntimeValue[] args, int reqArgCount = 0, DataType[] reqTypes = null)
+        static void ValidateArguments(SourceValue[] args, int reqArgCount = 0, DataType[] reqTypes = null)
         {
             var expectedCount = reqTypes?.Length ?? reqArgCount;
             var actualCount = args?.Length ?? 0;

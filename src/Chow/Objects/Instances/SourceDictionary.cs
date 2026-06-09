@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using Chow.Exceptions;
-namespace Chow.DataTypes
+using Chow.VM;
+namespace Chow.Objects
 {
     class SourceDictionary
     {
@@ -14,12 +15,12 @@ namespace Chow.DataTypes
         const string METHOD_SET_DEFAULT_NAME = "setdefault";
 
 
-        readonly Dictionary<RuntimeValue, RuntimeValue> _entries = new Dictionary<RuntimeValue, RuntimeValue>();
-        readonly List<RuntimeValue> _keys = new List<RuntimeValue>();
+        readonly Dictionary<SourceValue, SourceValue> _entries = new Dictionary<SourceValue, SourceValue>();
+        readonly List<SourceValue> _keys = new List<SourceValue>();
 
         public int Count => _keys.Count;
 
-        public RuntimeValue this[RuntimeValue key]
+        public SourceValue this[SourceValue key]
         {
             get
             {
@@ -32,11 +33,11 @@ namespace Chow.DataTypes
             set => Add(key, value);
         }
 
-        public RuntimeValue this[string name] =>
+        public SourceValue this[string name] =>
             // Will throw if method name is invalid, which is the expected behavior
-            new RuntimeValue(GetMethod(name));
+            new SourceValue(GetMethod(name));
 
-        public void Add(RuntimeValue key, RuntimeValue value)
+        public void Add(SourceValue key, SourceValue value)
         {
             ValidateHashable(key);
 
@@ -48,13 +49,13 @@ namespace Chow.DataTypes
             _entries[key] = value;
         }
 
-        public bool ContainsKey(RuntimeValue key)
+        public bool ContainsKey(SourceValue key)
         {
             ValidateHashable(key);
             return _entries.ContainsKey(key);
         }
 
-        RuntimeValue Get(RuntimeValue[] args)
+        SourceValue Get(SourceValue[] args)
         {
             ValidateArgRange(args, 1, 2);
             var key = args[0];
@@ -65,18 +66,18 @@ namespace Chow.DataTypes
                 return value;
             }
 
-            return args.Length == 2 ? args[1] : RuntimeValue.None;
+            return args.Length == 2 ? args[1] : SourceValue.None;
         }
 
-        RuntimeValue Clear(RuntimeValue[] args)
+        SourceValue Clear(SourceValue[] args)
         {
             ValidateArgCount(args, 0);
             _entries.Clear();
             _keys.Clear();
-            return RuntimeValue.None;
+            return SourceValue.None;
         }
 
-        RuntimeValue Pop(RuntimeValue[] args)
+        SourceValue Pop(SourceValue[] args)
         {
             ValidateArgRange(args, 1, 2);
             var key = args[0];
@@ -97,7 +98,7 @@ namespace Chow.DataTypes
             throw new SubscriptException(KeyRepr(key));
         }
 
-        RuntimeValue Update(RuntimeValue[] args)
+        SourceValue Update(SourceValue[] args)
         {
             ValidateArgCount(args, 1);
 
@@ -113,10 +114,10 @@ namespace Chow.DataTypes
                 Add(key, other._entries[key]);
             }
 
-            return RuntimeValue.None;
+            return SourceValue.None;
         }
 
-        RuntimeValue SetDefault(RuntimeValue[] args)
+        SourceValue SetDefault(SourceValue[] args)
         {
             ValidateArgRange(args, 1, 2);
             var key = args[0];
@@ -127,12 +128,12 @@ namespace Chow.DataTypes
                 return existing;
             }
 
-            var def = args.Length == 2 ? args[1] : RuntimeValue.None;
+            var def = args.Length == 2 ? args[1] : SourceValue.None;
             Add(key, def);
             return def;
         }
 
-        public Func<RuntimeValue[], RuntimeValue> GetMethod(string methodName)
+        public Func<SourceValue[], SourceValue> GetMethod(string methodName)
         {
             switch (methodName)
             {
@@ -224,7 +225,7 @@ namespace Chow.DataTypes
             return result;
         }
 
-        public static void ValidateHashable(RuntimeValue key)
+        public static void ValidateHashable(SourceValue key)
         {
             switch (key.DataType)
             {
@@ -267,7 +268,7 @@ namespace Chow.DataTypes
 
         // Python-faithful repr used inside collection contexts: strings get single quotes here, even though
         // a standalone string prints without quotes via ChowStr.ToSource.
-        static void Repr(StringBuilder sb, RuntimeValue value)
+        static void Repr(StringBuilder sb, SourceValue value)
         {
             switch (value.DataType)
             {
@@ -317,7 +318,7 @@ namespace Chow.DataTypes
             }
         }
 
-        static string KeyRepr(RuntimeValue key)
+        static string KeyRepr(SourceValue key)
         {
             var sb = new StringBuilder();
             Repr(sb, key);
@@ -344,7 +345,7 @@ namespace Chow.DataTypes
             }
         }
 
-        static void ValidateArgCount(RuntimeValue[] args, int expectedCount)
+        static void ValidateArgCount(SourceValue[] args, int expectedCount)
         {
             var actualCount = args?.Length ?? 0;
 
@@ -354,7 +355,7 @@ namespace Chow.DataTypes
             }
         }
 
-        static void ValidateArgRange(RuntimeValue[] args, int min, int max)
+        static void ValidateArgRange(SourceValue[] args, int min, int max)
         {
             var actualCount = args?.Length ?? 0;
 

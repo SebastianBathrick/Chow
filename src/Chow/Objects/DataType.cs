@@ -1,6 +1,6 @@
-namespace Chow.DataTypes
+namespace Chow.Objects
 {
-    // TODO: Change this back to internal after converting RuntimeValue to internal
+    // TODO: Change this back to internal after converting SourceValue to internal
     public enum DataType : byte
     {
         None,

@@ -1,6 +1,6 @@
 using Chow;
-using Chow.DataTypes;
-using Chow.Expressions;
+using Chow.Objects;
+using Chow.VM.Utilities;
 
 namespace Chow.Tests.SourceCode.UnitTests;
 
@@ -99,7 +99,7 @@ public class LogicEvaluatorTests
     public void Not_None_ReturnsTrue()
     {
         // Python: not None -> True
-        AssertBoolResult(LogicEvaluator.EvaluateNot, RuntimeValue.None, true);
+        AssertBoolResult(LogicEvaluator.EvaluateNot, SourceValue.None, true);
     }
 
     #endregion
@@ -138,7 +138,7 @@ public class LogicEvaluatorTests
     public void And_NoneLeft_ReturnsLeft()
     {
         // Python: None and 3 -> None
-        AssertValueResult(LogicEvaluator.EvaluateAnd, RuntimeValue.None, L(3), RuntimeValue.None);
+        AssertValueResult(LogicEvaluator.EvaluateAnd, SourceValue.None, L(3), SourceValue.None);
     }
 
     [Test]
@@ -184,7 +184,7 @@ public class LogicEvaluatorTests
     public void Or_NoneLeft_ReturnsRight()
     {
         // Python: None or 3 -> 3
-        AssertValueResult(LogicEvaluator.EvaluateOr, RuntimeValue.None, L(3), L(3));
+        AssertValueResult(LogicEvaluator.EvaluateOr, SourceValue.None, L(3), L(3));
     }
 
     [Test]
@@ -212,7 +212,7 @@ public class LogicEvaluatorTests
     [Test]
     public void IsTruthy_FalsyValues_ReturnsFalse()
     {
-        AssertIsTruthy(RuntimeValue.None, false);
+        AssertIsTruthy(SourceValue.None, false);
         AssertIsTruthy(B(false), false);
         AssertIsTruthy(L(0), false);
         AssertIsTruthy(D(0.0), false);
@@ -237,15 +237,15 @@ public class LogicEvaluatorTests
 
     #region Helpers
 
-    static RuntimeValue L(long value) => new RuntimeValue(value);
+    static SourceValue L(long value) => new SourceValue(value);
 
-    static RuntimeValue D(double value) => new RuntimeValue(value);
+    static SourceValue D(double value) => new SourceValue(value);
 
-    static RuntimeValue B(bool value) => new RuntimeValue(value);
+    static SourceValue B(bool value) => new SourceValue(value);
 
-    static RuntimeValue S(string value) => new RuntimeValue(value);
+    static SourceValue S(string value) => new SourceValue(value);
 
-    static RuntimeValue List(params RuntimeValue[] values)
+    static SourceValue List(params SourceValue[] values)
     {
         var list = new SourceList();
 
@@ -254,35 +254,35 @@ public class LogicEvaluatorTests
             list.Add(value);
         }
 
-        return new RuntimeValue(list);
+        return new SourceValue(list);
     }
 
-    static RuntimeValue Dict()
+    static SourceValue Dict()
     {
-        return new RuntimeValue(new SourceDictionary());
+        return new SourceValue(new SourceDictionary());
     }
 
-    static RuntimeValue Dict(RuntimeValue key, RuntimeValue value)
+    static SourceValue Dict(SourceValue key, SourceValue value)
     {
         var dict = new SourceDictionary();
         dict.Add(key, value);
-        return new RuntimeValue(dict);
+        return new SourceValue(dict);
     }
 
-    static RuntimeValue Evaluate(EvaluateUnary evaluate, RuntimeValue operand)
+    static SourceValue Evaluate(EvaluateUnary evaluate, SourceValue operand)
     {
         var value = operand;
         return evaluate(ref value);
     }
 
-    static RuntimeValue Evaluate(EvaluateBinary evaluate, RuntimeValue left, RuntimeValue right)
+    static SourceValue Evaluate(EvaluateBinary evaluate, SourceValue left, SourceValue right)
     {
         var l = left;
         var r = right;
         return evaluate(ref l, ref r);
     }
 
-    static void AssertBoolResult(EvaluateUnary evaluate, RuntimeValue operand, bool expectedBool)
+    static void AssertBoolResult(EvaluateUnary evaluate, SourceValue operand, bool expectedBool)
     {
         var result = Evaluate(evaluate, operand);
 
@@ -292,24 +292,24 @@ public class LogicEvaluatorTests
 
     static void AssertValueResult(
         EvaluateBinary evaluate,
-        RuntimeValue left,
-        RuntimeValue right,
-        RuntimeValue expectedValue)
+        SourceValue left,
+        SourceValue right,
+        SourceValue expectedValue)
     {
         var result = Evaluate(evaluate, left, right);
 
         Assert.That(result, Is.EqualTo(expectedValue));
     }
 
-    static void AssertIsTruthy(RuntimeValue operand, bool expectedValue)
+    static void AssertIsTruthy(SourceValue operand, bool expectedValue)
     {
         var value = operand;
         Assert.That(LogicEvaluator.IsTruthy(ref value), Is.EqualTo(expectedValue));
     }
 
-    delegate RuntimeValue EvaluateUnary(ref RuntimeValue operand);
+    delegate SourceValue EvaluateUnary(ref SourceValue operand);
 
-    delegate RuntimeValue EvaluateBinary(ref RuntimeValue left, ref RuntimeValue right);
+    delegate SourceValue EvaluateBinary(ref SourceValue left, ref SourceValue right);
 
     #endregion
 }

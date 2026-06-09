@@ -1,7 +1,8 @@
 using Chow;
-using Chow.DataTypes;
-using Chow.Expressions;
 using Chow.Exceptions;
+using Chow.Objects;
+using Chow.VM;
+using Chow.VM.Utilities;
 
 namespace Chow.Tests.SourceCode.UnitTests;
 
@@ -51,7 +52,7 @@ public class ComparisonEvaluatorTests
     public void Equality_NoneNone_ReturnsTrue()
     {
         // Python: None == None -> True
-        AssertBoolResult(ComparisonEvaluator.EvaluateEqual, RuntimeValue.None, RuntimeValue.None, true);
+        AssertBoolResult(ComparisonEvaluator.EvaluateEqual, SourceValue.None, SourceValue.None, true);
     }
 
     [Test]
@@ -65,7 +66,7 @@ public class ComparisonEvaluatorTests
     public void Equality_NoneInt_ReturnsFalse()
     {
         // Python: None == 0 -> False
-        AssertBoolResult(ComparisonEvaluator.EvaluateEqual, RuntimeValue.None, L(0), false);
+        AssertBoolResult(ComparisonEvaluator.EvaluateEqual, SourceValue.None, L(0), false);
     }
 
     [Test]
@@ -132,7 +133,7 @@ public class ComparisonEvaluatorTests
     public void NotEqual_NoneNone_ReturnsFalse()
     {
         // Python: None != None -> False
-        AssertBoolResult(ComparisonEvaluator.EvaluateNotEqual, RuntimeValue.None, RuntimeValue.None, false);
+        AssertBoolResult(ComparisonEvaluator.EvaluateNotEqual, SourceValue.None, SourceValue.None, false);
     }
 
     [Test]
@@ -193,7 +194,7 @@ public class ComparisonEvaluatorTests
     {
         // Python: 1 < None -> TypeError
         AssertTypeError(
-            () => Evaluate(ComparisonEvaluator.EvaluateLess, L(1), RuntimeValue.None),
+            () => Evaluate(ComparisonEvaluator.EvaluateLess, L(1), SourceValue.None),
             "<",
             "int",
             "NoneType");
@@ -215,7 +216,7 @@ public class ComparisonEvaluatorTests
     {
         // Python: None < None -> TypeError
         AssertTypeError(
-            () => Evaluate(ComparisonEvaluator.EvaluateLess, RuntimeValue.None, RuntimeValue.None),
+            () => Evaluate(ComparisonEvaluator.EvaluateLess, SourceValue.None, SourceValue.None),
             "<",
             "NoneType",
             "NoneType");
@@ -258,7 +259,7 @@ public class ComparisonEvaluatorTests
     {
         // Python: None <= 1 -> TypeError
         AssertTypeError(
-            () => Evaluate(ComparisonEvaluator.EvaluateLessEqual, RuntimeValue.None, L(1)),
+            () => Evaluate(ComparisonEvaluator.EvaluateLessEqual, SourceValue.None, L(1)),
             "<=",
             "NoneType",
             "int");
@@ -301,7 +302,7 @@ public class ComparisonEvaluatorTests
     {
         // Python: 1 > None -> TypeError
         AssertTypeError(
-            () => Evaluate(ComparisonEvaluator.EvaluateGreater, L(1), RuntimeValue.None),
+            () => Evaluate(ComparisonEvaluator.EvaluateGreater, L(1), SourceValue.None),
             ">",
             "int",
             "NoneType");
@@ -344,7 +345,7 @@ public class ComparisonEvaluatorTests
     {
         // Python: None >= 0 -> TypeError
         AssertTypeError(
-            () => Evaluate(ComparisonEvaluator.EvaluateGreaterEqual, RuntimeValue.None, L(0)),
+            () => Evaluate(ComparisonEvaluator.EvaluateGreaterEqual, SourceValue.None, L(0)),
             ">=",
             "NoneType",
             "int");
@@ -354,15 +355,15 @@ public class ComparisonEvaluatorTests
 
     #region Helpers
 
-    static RuntimeValue L(long value) => new RuntimeValue(value);
+    static SourceValue L(long value) => new SourceValue(value);
 
-    static RuntimeValue D(double value) => new RuntimeValue(value);
+    static SourceValue D(double value) => new SourceValue(value);
 
-    static RuntimeValue B(bool value) => new RuntimeValue(value);
+    static SourceValue B(bool value) => new SourceValue(value);
 
-    static RuntimeValue S(string value) => new RuntimeValue(value);
+    static SourceValue S(string value) => new SourceValue(value);
 
-    static RuntimeValue List(params RuntimeValue[] values)
+    static SourceValue List(params SourceValue[] values)
     {
         var list = new SourceList();
 
@@ -371,17 +372,17 @@ public class ComparisonEvaluatorTests
             list.Add(value);
         }
 
-        return new RuntimeValue(list);
+        return new SourceValue(list);
     }
 
-    static RuntimeValue Dict(RuntimeValue key, RuntimeValue value)
+    static SourceValue Dict(SourceValue key, SourceValue value)
     {
         var dict = new SourceDictionary();
         dict.Add(key, value);
-        return new RuntimeValue(dict);
+        return new SourceValue(dict);
     }
 
-    static RuntimeValue Evaluate(EvaluateBinary evaluate, RuntimeValue left, RuntimeValue right)
+    static SourceValue Evaluate(EvaluateBinary evaluate, SourceValue left, SourceValue right)
     {
         var l = left;
         var r = right;
@@ -390,8 +391,8 @@ public class ComparisonEvaluatorTests
 
     static void AssertBoolResult(
         EvaluateBinary evaluate,
-        RuntimeValue left,
-        RuntimeValue right,
+        SourceValue left,
+        SourceValue right,
         bool expectedBool)
     {
         var result = Evaluate(evaluate, left, right);
@@ -409,7 +410,7 @@ public class ComparisonEvaluatorTests
         Assert.That(ex.Message, Does.Contain("'" + rightType + "'"));
     }
 
-    delegate RuntimeValue EvaluateBinary(ref RuntimeValue left, ref RuntimeValue right);
+    delegate SourceValue EvaluateBinary(ref SourceValue left, ref SourceValue right);
 
     #endregion
 }

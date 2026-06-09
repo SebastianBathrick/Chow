@@ -1,5 +1,5 @@
-using Chow.Core;
-namespace Chow.Ast.Nodes
+using Chow.Semantics;
+namespace Chow.Ast
 {
     sealed class NameNode : Node
     {

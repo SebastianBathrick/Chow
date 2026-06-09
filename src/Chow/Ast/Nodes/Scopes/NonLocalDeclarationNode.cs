@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-namespace Chow.Ast.Nodes
+namespace Chow.Ast
 {
     /// <summary>
     /// A <c>nonlocal name1, name2, ...</c> statement. Recorded as a node so semantic analysis can

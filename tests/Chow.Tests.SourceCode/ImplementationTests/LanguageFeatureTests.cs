@@ -1,5 +1,5 @@
 ﻿using Chow;
-using Chow.DataTypes;
+using Chow.Objects;
 namespace Chow.Tests.SourceCode;
 
 [TestFixture]
@@ -29,8 +29,8 @@ public class LanguageFeatureTests
 
     #region Static Readonly Fields
     
-    static readonly RuntimeValue TrueChow = new(true);
-    static readonly RuntimeValue FalseChow = new(false);
+    static readonly SourceValue TrueChow = new(true);
+    static readonly SourceValue FalseChow = new(false);
     
     #endregion
 
@@ -208,7 +208,7 @@ public class LanguageFeatureTests
 
     static readonly IReadOnlyList<CaseExecute> ExecuteArithmeticOperatorCases =
     [
-        // Note: Passing the RuntimeValue constructor a long or an int will result in a RuntimeValue
+        // Note: Passing the SourceValue constructor a long or an int will result in a SourceValue
         // instance with DataType.Long. However, passing a float or a double will result in an
         // instance with DataType.Double. Always double-check the literal passed to the constructor.
         
@@ -790,32 +790,32 @@ public class LanguageFeatureTests
 
         new(
             "\"ab\"" + TIMES + "3",
-            new RuntimeValue("ababab")
+            new SourceValue("ababab")
         ),
 
         new(
             "3" + TIMES + "\"ab\"",
-            new RuntimeValue("ababab")
+            new SourceValue("ababab")
         ),
 
         new(
             "\"ab\"" + TIMES + "0",
-            new RuntimeValue(string.Empty)
+            new SourceValue(string.Empty)
         ),
 
         new(
             "[1]" + PLUS + "[2]",
-            List(new RuntimeValue(1), new RuntimeValue(2))
+            List(new SourceValue(1), new SourceValue(2))
         ),
 
         new(
             "[1]" + TIMES + "3",
-            List(new RuntimeValue(1), new RuntimeValue(1), new RuntimeValue(1))
+            List(new SourceValue(1), new SourceValue(1), new SourceValue(1))
         ),
 
         new(
             "3" + TIMES + "[1]",
-            List(new RuntimeValue(1), new RuntimeValue(1), new RuntimeValue(1))
+            List(new SourceValue(1), new SourceValue(1), new SourceValue(1))
         ),
 
         #endregion
@@ -824,17 +824,17 @@ public class LanguageFeatureTests
 
         new(
             "-" + TRUE_STR,
-            new RuntimeValue(-1)
+            new SourceValue(-1)
         ),
 
         new(
             "-" + FALSE_STR,
-            new RuntimeValue(0)
+            new SourceValue(0)
         ),
 
         new(
             "-3.5",
-            new RuntimeValue(-3.5)
+            new SourceValue(-3.5)
         ),
 
         #endregion
@@ -1702,32 +1702,32 @@ public class LanguageFeatureTests
 
         new(
             FALSEY_INT64 + AND + "\"rhs\"",
-            new RuntimeValue(0)
+            new SourceValue(0)
         ),
 
         new(
             TRUTHY_INT64 + AND + "\"rhs\"",
-            new RuntimeValue("rhs")
+            new SourceValue("rhs")
         ),
 
         new(
             FALSEY_STR + AND + "3",
-            new RuntimeValue(string.Empty)
+            new SourceValue(string.Empty)
         ),
 
         new(
             TRUTHY_STR + AND + "3",
-            new RuntimeValue(3)
+            new SourceValue(3)
         ),
 
         new(
             NONE_STR + AND + "3",
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             TRUTHY_LIST + AND + "\"rhs\"",
-            new RuntimeValue("rhs")
+            new SourceValue("rhs")
         ),
 
         #endregion
@@ -1736,32 +1736,32 @@ public class LanguageFeatureTests
 
         new(
             FALSEY_INT64 + OR + "\"rhs\"",
-            new RuntimeValue("rhs")
+            new SourceValue("rhs")
         ),
 
         new(
             TRUTHY_INT64 + OR + "\"rhs\"",
-            new RuntimeValue(1)
+            new SourceValue(1)
         ),
 
         new(
             FALSEY_STR + OR + "3",
-            new RuntimeValue(3)
+            new SourceValue(3)
         ),
 
         new(
             TRUTHY_STR + OR + "3",
-            new RuntimeValue("Truthy string")
+            new SourceValue("Truthy string")
         ),
 
         new(
             NONE_STR + OR + "3",
-            new RuntimeValue(3)
+            new SourceValue(3)
         ),
 
         new(
             FALSEY_LIST + OR + "\"rhs\"",
-            new RuntimeValue("rhs")
+            new SourceValue("rhs")
         ),
 
         #endregion
@@ -1770,12 +1770,12 @@ public class LanguageFeatureTests
 
         new(
             FALSEY_INT64 + AND + "(" + "1" + DIV + "0" + ")",
-            new RuntimeValue(0)
+            new SourceValue(0)
         ),
 
         new(
             TRUTHY_INT64 + OR + "(" + "1" + DIV + "0" + ")",
-            new RuntimeValue(1)
+            new SourceValue(1)
         ),
 
         new(
@@ -1954,7 +1954,7 @@ public class LanguageFeatureTests
                 return a + b
             add(2, 3)
             """,
-            new RuntimeValue(5)
+            new SourceValue(5)
         ),
 
         new(
@@ -1965,7 +1965,7 @@ public class LanguageFeatureTests
                 return x
             read_local() + x
             """,
-            new RuntimeValue(109)
+            new SourceValue(109)
         ),
 
         new(
@@ -1977,7 +1977,7 @@ public class LanguageFeatureTests
             set_global()
             x
             """,
-            new RuntimeValue(9)
+            new SourceValue(9)
         ),
 
         //--- Closures ---
@@ -1993,7 +1993,7 @@ public class LanguageFeatureTests
             test_closure = make_closure()
             test_closure()
             """,
-            new RuntimeValue(5)
+            new SourceValue(5)
         ),
 
         new(
@@ -2009,7 +2009,7 @@ public class LanguageFeatureTests
             test_closure =  outer()
             test_closure()
             """,
-            new RuntimeValue(100)
+            new SourceValue(100)
         ),
 
         // NOTE: Deferred niche function syntax not yet confirmed in Chow:
@@ -2022,7 +2022,7 @@ public class LanguageFeatureTests
 
         new(
             "[10, 20, 30][1]",
-            new RuntimeValue(20)
+            new SourceValue(20)
         ),
 
         new(
@@ -2031,7 +2031,7 @@ public class LanguageFeatureTests
             values[1] = 7
             values[1]
             """,
-            new RuntimeValue(7)
+            new SourceValue(7)
         ),
 
         //--- List Slices ---
@@ -2056,7 +2056,7 @@ public class LanguageFeatureTests
 
         new(
             "{'a': 1, 'b': 2}['b']",
-            new RuntimeValue(2)
+            new SourceValue(2)
         ),
 
         new(
@@ -2065,7 +2065,7 @@ public class LanguageFeatureTests
             values['b'] = 9
             values['b']
             """,
-            new RuntimeValue(9)
+            new SourceValue(9)
         ),
 
         // NOTE: Deferred niche collection syntax not yet confirmed in Chow:
@@ -2083,7 +2083,7 @@ public class LanguageFeatureTests
                 total = total + x
             total
             """,
-            new RuntimeValue(6)
+            new SourceValue(6)
         ),
 
         new(
@@ -2093,7 +2093,7 @@ public class LanguageFeatureTests
                 result = result + char
             result
             """,
-            new RuntimeValue("abc")
+            new SourceValue("abc")
         ),
 
         new(
@@ -2104,7 +2104,7 @@ public class LanguageFeatureTests
                     total = total + i + j
             total
             """,
-            new RuntimeValue(66)
+            new SourceValue(66)
         ),
 
         //--- Iterable Semantics ---
@@ -2129,42 +2129,42 @@ public class LanguageFeatureTests
 
         new(
             "abs(-5)",
-            new RuntimeValue(5)
+            new SourceValue(5)
         ),
 
         new(
             "len([1, 2, 3])",
-            new RuntimeValue(3)
+            new SourceValue(3)
         ),
 
         new(
             "round(2.5)",
-            new RuntimeValue(2)
+            new SourceValue(2)
         ),
 
         new(
             "min(4, -1, 8)",
-            new RuntimeValue(-1)
+            new SourceValue(-1)
         ),
 
         new(
             "max([4, -1, 8])",
-            new RuntimeValue(8)
+            new SourceValue(8)
         ),
 
         new(
             "int(\"12\")",
-            new RuntimeValue(12)
+            new SourceValue(12)
         ),
 
         new(
             "float(\"2.5\")",
-            new RuntimeValue(2.5)
+            new SourceValue(2.5)
         ),
 
         new(
             "str(123)",
-            new RuntimeValue("123")
+            new SourceValue("123")
         ),
 
         new(
@@ -2187,7 +2187,7 @@ public class LanguageFeatureTests
 
         new(
             "\"hello\" + \" \" + \"world\"",
-            new RuntimeValue("hello world")
+            new SourceValue("hello world")
         ),
 
         new(
@@ -2195,7 +2195,7 @@ public class LanguageFeatureTests
             prefix = "Chow"
             prefix + " V2"
             """,
-            new RuntimeValue("Chow V2")
+            new SourceValue("Chow V2")
         ),
 
         //--- f-Strings ---
@@ -2205,12 +2205,12 @@ public class LanguageFeatureTests
             name = "Chow"
             f"Hello, {name}!"
             """,
-            new RuntimeValue("Hello, Chow!")
+            new SourceValue("Hello, Chow!")
         ),
 
         new(
             "f\"{1 + 2}\"",
-            new RuntimeValue("3")
+            new SourceValue("3")
         ),
 
         new(
@@ -2218,7 +2218,7 @@ public class LanguageFeatureTests
             n = 2
             f"Value: {n * 5}"
             """,
-            new RuntimeValue("Value: 10")
+            new SourceValue("Value: 10")
         ),
 
         // NOTE: Deferred niche f-string syntax not yet confirmed in Chow:
@@ -2229,12 +2229,12 @@ public class LanguageFeatureTests
     [
         new(
             string.Empty,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             null!,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         // The supported sequences of characters that make up a single newline are as follows:
@@ -2246,34 +2246,34 @@ public class LanguageFeatureTests
 
         new(
             NEWLINE_LINUX_MAC,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             NEWLINE_WINDOWS,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             NEWLINE_OLD_MAC,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         #region Pure Spaces
 
         new(
             " ",
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             SINGLE_INDENT_SPACES,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             SINGLE_INDENT_SPACES + SINGLE_INDENT_SPACES,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         #endregion
@@ -2282,12 +2282,12 @@ public class LanguageFeatureTests
 
         new(
             SINGLE_INDENT_TAB,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             SINGLE_INDENT_TAB + SINGLE_INDENT_TAB,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         #endregion
@@ -2296,12 +2296,12 @@ public class LanguageFeatureTests
 
         new(
             SINGLE_INDENT_SPACES + SINGLE_INDENT_TAB,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             SINGLE_INDENT_TAB + SINGLE_INDENT_SPACES,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         #endregion
@@ -2310,17 +2310,17 @@ public class LanguageFeatureTests
 
         new(
             NEWLINE_LINUX_MAC + NEWLINE_LINUX_MAC,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             NEWLINE_WINDOWS + NEWLINE_WINDOWS,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             NEWLINE_OLD_MAC + NEWLINE_OLD_MAC,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         #endregion
@@ -2329,22 +2329,22 @@ public class LanguageFeatureTests
 
         new(
             NEWLINE_LINUX_MAC + NEWLINE_WINDOWS,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             NEWLINE_WINDOWS + NEWLINE_OLD_MAC,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             NEWLINE_OLD_MAC + NEWLINE_LINUX_MAC,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             NEWLINE_LINUX_MAC + NEWLINE_WINDOWS + NEWLINE_OLD_MAC,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         #endregion
@@ -2353,27 +2353,27 @@ public class LanguageFeatureTests
 
         new(
             SINGLE_INDENT_SPACES + NEWLINE_LINUX_MAC,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             NEWLINE_LINUX_MAC + SINGLE_INDENT_SPACES,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             SINGLE_INDENT_TAB + NEWLINE_WINDOWS + SINGLE_INDENT_TAB,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             NEWLINE_LINUX_MAC + SINGLE_INDENT_SPACES + NEWLINE_OLD_MAC,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             SINGLE_INDENT_SPACES + NEWLINE_WINDOWS + SINGLE_INDENT_TAB + NEWLINE_LINUX_MAC,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         #endregion
@@ -2384,12 +2384,12 @@ public class LanguageFeatureTests
         // early from SkipToFirstLexeme and is consumed by ScanIndentColumn instead
         new(
             "\f",
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             "\f" + NEWLINE_LINUX_MAC + SINGLE_INDENT_SPACES,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         #endregion
@@ -2399,34 +2399,34 @@ public class LanguageFeatureTests
         // Comment with no trailing newline — SkipRemainingLineChars consumes it and reaches EOF
         new(
             CODE_COMMENT,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             CODE_COMMENT + NEWLINE_LINUX_MAC,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         // Multiple comment lines separated by different newline styles
         new(
             CODE_COMMENT + NEWLINE_LINUX_MAC + CODE_COMMENT,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             CODE_COMMENT + NEWLINE_WINDOWS + CODE_COMMENT + NEWLINE_OLD_MAC + CODE_COMMENT,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         // Leading whitespace before a comment (spaces/tabs are consumed as indent chars first)
         new(
             SINGLE_INDENT_SPACES + CODE_COMMENT,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         new(
             SINGLE_INDENT_TAB + CODE_COMMENT + NEWLINE_LINUX_MAC,
-            RuntimeValue.None
+            SourceValue.None
         ),
 
         #endregion
@@ -2445,7 +2445,7 @@ public class LanguageFeatureTests
             if True:
                True
             """,
-            new RuntimeValue(true)
+            new SourceValue(true)
         ),
         
         new(
@@ -2453,7 +2453,7 @@ public class LanguageFeatureTests
             if False:
                 False
             """,
-            new RuntimeValue(RuntimeValue.None)
+            new SourceValue(SourceValue.None)
         ),
         
         new(
@@ -2463,7 +2463,7 @@ public class LanguageFeatureTests
             else:
                 False
             """,
-            new RuntimeValue(true)
+            new SourceValue(true)
         ),
         
         new(
@@ -2473,7 +2473,7 @@ public class LanguageFeatureTests
             else:
                 True
             """,
-            new RuntimeValue(true)
+            new SourceValue(true)
         ),
         
         new(
@@ -2485,7 +2485,7 @@ public class LanguageFeatureTests
             else:
                 False
             """,
-            new RuntimeValue(true)
+            new SourceValue(true)
         ),
         
         new(
@@ -2497,7 +2497,7 @@ public class LanguageFeatureTests
             else:
                 False
             """,
-            new RuntimeValue(true)
+            new SourceValue(true)
         ),
         
         new(
@@ -2509,7 +2509,7 @@ public class LanguageFeatureTests
             else:
                 True
             """,
-            new RuntimeValue(true)
+            new SourceValue(true)
         ),
 
         // Test case where a block has more than one statement
@@ -2519,7 +2519,7 @@ public class LanguageFeatureTests
                False
                True
             """,
-            new RuntimeValue(true)
+            new SourceValue(true)
         ),
         
         #endregion
@@ -2533,7 +2533,7 @@ public class LanguageFeatureTests
             while False:
                 True
             """,
-            new RuntimeValue(RuntimeValue.None)
+            new SourceValue(SourceValue.None)
         ),
 
         // A counter drives the loop; after it exits, the trailing expression statement
@@ -2545,7 +2545,7 @@ public class LanguageFeatureTests
                 i = i + 1
             i
             """,
-            new RuntimeValue(3)
+            new SourceValue(3)
         ),
 
         // A loop that runs exactly once
@@ -2556,7 +2556,7 @@ public class LanguageFeatureTests
                 i = i + 1
             i
             """,
-            new RuntimeValue(1)
+            new SourceValue(1)
         ),
 
         // A decrementing counter loops down to zero
@@ -2567,7 +2567,7 @@ public class LanguageFeatureTests
                 i = i - 1
             i
             """,
-            new RuntimeValue(0)
+            new SourceValue(0)
         ),
 
         // A boolean flag is cleared inside the body to exit after a single pass
@@ -2578,7 +2578,7 @@ public class LanguageFeatureTests
                 run = False
             run
             """,
-            new RuntimeValue(false)
+            new SourceValue(false)
         ),
 
         // The expression statement inside the body returns the last value evaluated
@@ -2590,7 +2590,7 @@ public class LanguageFeatureTests
                 i = i + 1
                 i
             """,
-            new RuntimeValue(3)
+            new SourceValue(3)
         ),
 
         // A multi-statement body accumulates a running total across iterations
@@ -2603,7 +2603,7 @@ public class LanguageFeatureTests
                 i = i + 1
             total
             """,
-            new RuntimeValue(6)
+            new SourceValue(6)
         ),
 
         #endregion
@@ -2620,7 +2620,7 @@ public class LanguageFeatureTests
                     break
             i
             """,
-            new RuntimeValue(3)
+            new SourceValue(3)
         ),
 
         // Statements after break in the same body are skipped on the breaking iteration
@@ -2632,7 +2632,7 @@ public class LanguageFeatureTests
                 reached = True
             reached
             """,
-            new RuntimeValue(false)
+            new SourceValue(false)
         ),
 
         // A break under an always-true condition exits after a single pass
@@ -2644,7 +2644,7 @@ public class LanguageFeatureTests
                 break
             ran
             """,
-            new RuntimeValue(true)
+            new SourceValue(true)
         ),
 
         //--- Nested Loops ---
@@ -2664,7 +2664,7 @@ public class LanguageFeatureTests
                     total = total + 1
             total
             """,
-            new RuntimeValue(3)
+            new SourceValue(3)
         ),
 
         // A break in the outer loop ends both loops once its condition is met
@@ -2682,7 +2682,7 @@ public class LanguageFeatureTests
                     break
             total
             """,
-            new RuntimeValue(10)
+            new SourceValue(10)
         ),
 
         #endregion
@@ -2700,7 +2700,7 @@ public class LanguageFeatureTests
                 reached = True
             reached
             """,
-            new RuntimeValue(false)
+            new SourceValue(false)
         ),
 
         // continue can skip multiple iterations while the loop still runs to completion
@@ -2715,7 +2715,7 @@ public class LanguageFeatureTests
                 count = count + 1
             count
             """,
-            new RuntimeValue(3)
+            new SourceValue(3)
         ),
 
         //--- Nested Loops ---
@@ -2735,7 +2735,7 @@ public class LanguageFeatureTests
                     total = total + j
             total
             """,
-            new RuntimeValue(8)
+            new SourceValue(8)
         ),
 
         #endregion
@@ -2819,7 +2819,7 @@ public class LanguageFeatureTests
 
     #region Helper Types
 
-    static RuntimeValue List(params RuntimeValue[] values)
+    static SourceValue List(params SourceValue[] values)
     {
         var list = new SourceList();
 
@@ -2828,10 +2828,10 @@ public class LanguageFeatureTests
             list.Add(value);
         }
 
-        return new RuntimeValue(list);
+        return new SourceValue(list);
     }
 
-    public record CaseExecute(string SourceCode, RuntimeValue ExpectedResult);
+    public record CaseExecute(string SourceCode, SourceValue ExpectedResult);
 
     #endregion
 }

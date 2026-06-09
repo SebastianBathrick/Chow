@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Chow.DataTypes;
-using Chow.Exceptions;
-using Chow.Ast.Nodes;
 using Chow.Tokens;
-namespace Chow.Core
+using Chow.Tokens.Scanning;
+using Chow.Utility;
+namespace Chow.Ast.Parsing
 {
     /// <summary>
     /// <para>

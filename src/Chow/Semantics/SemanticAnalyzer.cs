@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Chow.Exceptions;
-using Chow.Ast.Nodes;
+using Chow.Ast;
 using Chow.Bytecode.Compilation;
-namespace Chow.Core
+namespace Chow.Semantics
 {
     /// <summary>
     /// Performs name-resolution between parsing and compilation. Walks the AST and stamps every

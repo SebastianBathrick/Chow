@@ -1,7 +1,8 @@
 ﻿using Chow;
-using Chow.DataTypes;
-using Chow.Expressions;
 using Chow.Exceptions;
+using Chow.Objects;
+using Chow.VM;
+using Chow.VM.Utilities;
 
 namespace Chow.Tests.SourceCode.UnitTests;
 
@@ -54,7 +55,7 @@ public class ArithmeticEvaluatorTests
     {
         // Python: 2 + None -> TypeError
         AssertTypeError(
-            () => Evaluate(ArithmeticEvaluator.EvaluateAddition, L(2), RuntimeValue.None),
+            () => Evaluate(ArithmeticEvaluator.EvaluateAddition, L(2), SourceValue.None),
             "+",
             "int",
             "NoneType");
@@ -241,7 +242,7 @@ public class ArithmeticEvaluatorTests
     {
         // Python: 2 / None -> TypeError
         AssertTypeError(
-            () => Evaluate(ArithmeticEvaluator.EvaluateDivision, L(2), RuntimeValue.None),
+            () => Evaluate(ArithmeticEvaluator.EvaluateDivision, L(2), SourceValue.None),
             "/",
             "int",
             "NoneType");
@@ -460,15 +461,15 @@ public class ArithmeticEvaluatorTests
 
     #region Helpers
 
-    static RuntimeValue L(long value) => new RuntimeValue(value);
+    static SourceValue L(long value) => new SourceValue(value);
 
-    static RuntimeValue D(double value) => new RuntimeValue(value);
+    static SourceValue D(double value) => new SourceValue(value);
 
-    static RuntimeValue B(bool value) => new RuntimeValue(value);
+    static SourceValue B(bool value) => new SourceValue(value);
 
-    static RuntimeValue S(string value) => new RuntimeValue(value);
+    static SourceValue S(string value) => new SourceValue(value);
 
-    static RuntimeValue List(params RuntimeValue[] values)
+    static SourceValue List(params SourceValue[] values)
     {
         var list = new SourceList();
 
@@ -477,17 +478,17 @@ public class ArithmeticEvaluatorTests
             list.Add(value);
         }
 
-        return new RuntimeValue(list);
+        return new SourceValue(list);
     }
 
-    static RuntimeValue Evaluate(EvaluateBinary evaluate, RuntimeValue left, RuntimeValue right)
+    static SourceValue Evaluate(EvaluateBinary evaluate, SourceValue left, SourceValue right)
     {
         var l = left;
         var r = right;
         return evaluate(ref l, ref r);
     }
 
-    static RuntimeValue Evaluate(EvaluateUnary evaluate, RuntimeValue operand)
+    static SourceValue Evaluate(EvaluateUnary evaluate, SourceValue operand)
     {
         var value = operand;
         return evaluate(ref value);
@@ -495,8 +496,8 @@ public class ArithmeticEvaluatorTests
 
     static void AssertResult(
         EvaluateBinary evaluate,
-        RuntimeValue left,
-        RuntimeValue right,
+        SourceValue left,
+        SourceValue right,
         DataType expectedDataType,
         long expectedLong)
     {
@@ -508,8 +509,8 @@ public class ArithmeticEvaluatorTests
 
     static void AssertResult(
         EvaluateBinary evaluate,
-        RuntimeValue left,
-        RuntimeValue right,
+        SourceValue left,
+        SourceValue right,
         DataType expectedDataType,
         double expectedDouble)
     {
@@ -521,8 +522,8 @@ public class ArithmeticEvaluatorTests
 
     static void AssertResult(
         EvaluateBinary evaluate,
-        RuntimeValue left,
-        RuntimeValue right,
+        SourceValue left,
+        SourceValue right,
         DataType expectedDataType,
         string expectedString)
     {
@@ -534,9 +535,9 @@ public class ArithmeticEvaluatorTests
 
     static void AssertValueResult(
         EvaluateBinary evaluate,
-        RuntimeValue left,
-        RuntimeValue right,
-        RuntimeValue expectedValue)
+        SourceValue left,
+        SourceValue right,
+        SourceValue expectedValue)
     {
         var result = Evaluate(evaluate, left, right);
 
@@ -545,7 +546,7 @@ public class ArithmeticEvaluatorTests
 
     static void AssertUnaryResult(
         EvaluateUnary evaluate,
-        RuntimeValue operand,
+        SourceValue operand,
         DataType expectedDataType,
         long expectedLong)
     {
@@ -557,7 +558,7 @@ public class ArithmeticEvaluatorTests
 
     static void AssertUnaryResult(
         EvaluateUnary evaluate,
-        RuntimeValue operand,
+        SourceValue operand,
         DataType expectedDataType,
         double expectedDouble)
     {
@@ -584,9 +585,9 @@ public class ArithmeticEvaluatorTests
         Assert.That(ex.Message, Does.Contain("'" + operandType + "'"));
     }
 
-    delegate RuntimeValue EvaluateBinary(ref RuntimeValue left, ref RuntimeValue right);
+    delegate SourceValue EvaluateBinary(ref SourceValue left, ref SourceValue right);
 
-    delegate RuntimeValue EvaluateUnary(ref RuntimeValue operand);
+    delegate SourceValue EvaluateUnary(ref SourceValue operand);
 
     #endregion
 }

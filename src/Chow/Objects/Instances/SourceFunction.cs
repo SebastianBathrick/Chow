@@ -1,6 +1,5 @@
 using Chow.Bytecode;
-using Chow.State;
-namespace Chow.DataTypes
+namespace Chow.Objects
 {
     /// <summary>
     /// Runtime function value produced by a <c>def</c> statement in Chow source (as opposed to interop delegates supplied

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-namespace Chow.Ast.Nodes
+namespace Chow.Ast
 {
     // Format specs (e.g. {x:.2f}) are not supported in v1; a colon inside a slot will raise a ParserException.
     sealed class FStringNode : Node

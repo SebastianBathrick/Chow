@@ -1,5 +1,6 @@
 using System.Collections.Generic;
-using Chow.Core;
+using Chow.Objects;
+using Chow.VM;
 
 namespace Chow.Bytecode
 {
@@ -8,7 +9,7 @@ namespace Chow.Bytecode
         const int NO_OPERAND = -1;
 
         readonly List<Instruction> _instructions;
-        readonly List<RuntimeValue> _constantPool;
+        readonly List<SourceValue> _constantPool;
 
         readonly List<string> _varNames;
         readonly List<int> _instrLines;
@@ -25,7 +26,7 @@ namespace Chow.Bytecode
         public Chunk()
         {
             _instructions = new List<Instruction>();
-            _constantPool = new List<RuntimeValue>();
+            _constantPool = new List<SourceValue>();
             _varNames = new List<string>();
             _instrLines = new List<int>();
         }
@@ -33,7 +34,7 @@ namespace Chow.Bytecode
         #region Instruction Methods
 
         /// <summary>Creates and adds a new <see cref="Instruction"/> with the provided operation code, operand, and line number </summary>
-        /// <param name="code">Operation code associated with the instruction's logic in the <see cref="VirtualMachine"/></param>
+        /// <param name="code">Operation code associated with the instruction's logic in the <see cref="Processor"/></param>
         /// <param name="line">The line number in the source code associated with this instruction.</param>
         /// <param name="operand">Optional operand for the instruction, default is -1.</param>
         public void AddInstruction(OperationCode code, int line, int operand = NO_OPERAND)
@@ -64,8 +65,8 @@ namespace Chow.Bytecode
 
         /// <summary>Returns the constant value stored at the provided operand index in the constant pool.</summary>
         /// <param name="operand">The operand index of the constant to retrieve.</param>
-        /// <returns>The <see cref="RuntimeValue"/> constant at the specified operand index.</returns>
-        public RuntimeValue ReadConstant(int operand)
+        /// <returns>The <see cref="SourceValue"/> constant at the specified operand index.</returns>
+        public SourceValue ReadConstant(int operand)
         {
             return _constantPool[operand];
         }
@@ -74,11 +75,11 @@ namespace Chow.Bytecode
         /// Stores a new constant in the constant pool and returns its pool index. The index is for use as an operand
         /// assigned to <see cref="Instruction"/> instance(s).
         /// </summary>
-        /// <param name="newConst">RuntimeValue containing a constant primitive value.</param>
+        /// <param name="newConst">SourceValue containing a constant primitive value.</param>
         /// <returns>Integer representing the operand used to read the constant at runtime.</returns>
         /// <remarks>If an existing constant has the same value as <paramref name="newConst"/> then the operand for 
         /// that existing constant will be returned. Otherwise, the new constant is stored and a new operand is returned</remarks>
-        public int RegisterConstant(RuntimeValue newConst)
+        public int RegisterConstant(SourceValue newConst)
         {
             var constIndex = _constantPool.IndexOf(newConst);
 

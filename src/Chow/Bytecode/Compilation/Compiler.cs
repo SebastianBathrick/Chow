@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Chow.Ast.Nodes;
-using Chow.DataTypes;
+using Chow.Ast;
+using Chow.Ast.Parsing;
 using Chow.Exceptions;
+using Chow.Objects;
+using Chow.Utility;
 
 namespace Chow.Bytecode.Compilation
 {
@@ -66,7 +68,7 @@ namespace Chow.Bytecode.Compilation
             CompileTargetNode(funcNode.Block);
 
             // Implicit `return None` for funcs that fall off the end of the body
-            var noneIdx = _chunk.RegisterConstant(RuntimeValue.None);
+            var noneIdx = _chunk.RegisterConstant(SourceValue.None);
 
             _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNumber, noneIdx);
             _chunk.AddInstruction(OperationCode.PushReturnValue, funcNode.LineNumber);
@@ -247,7 +249,7 @@ namespace Chow.Bytecode.Compilation
             var funcChunk = funcCompiler.CompileFunctionBody();
 
             var template = new FunctionDefinition(funcChunk, funcNode.Name, funcNode.Params.Count);
-            var templateIdx = _chunk.RegisterConstant(new RuntimeValue(template));
+            var templateIdx = _chunk.RegisterConstant(new SourceValue(template));
 
             // Push template, then runtime PushNewClosureFromTemplate captures the active scope and wraps it as a SourceFunction.
             _chunk.AddInstruction(OperationCode.PushConstant, funcNode.LineNumber, templateIdx);
@@ -272,10 +274,10 @@ namespace Chow.Bytecode.Compilation
              * [HOW VARIABLE ASSIGNMENTS WORK]
              *
              * Assignments and declarations share syntax because the virtual machine handles them similarly due to
-             * dynamic typing. Here is how the VirtualMachine runs an assignment operation:
+             * dynamic typing. Here is how the Processor runs an assignment operation:
              *
              * 1. Pop a value off the stack representing the new/initial value for the variable. The new/initial value
-             *    is stored in a RuntimeValue and represents an expression evaluated at runtime. This can be of any type.
+             *    is stored in a SourceValue and represents an expression evaluated at runtime. This can be of any type.
              *
              * 2. Use the current Operation.Operand to get the variable's name stored as a string inside Chunk during
              *    compile-time (i.e., the compilation logic code below). It's stored this way so Operations don't have
@@ -303,7 +305,7 @@ namespace Chow.Bytecode.Compilation
             else
             {
                 // Bare `return` returns None; PushReturnValue always pops exactly one value off the stack.
-                var noneIdx = _chunk.RegisterConstant(RuntimeValue.None);
+                var noneIdx = _chunk.RegisterConstant(SourceValue.None);
                 _chunk.AddInstruction(OperationCode.PushConstant, returnStatementNode.LineNumber, noneIdx);
             }
 
@@ -566,7 +568,7 @@ namespace Chow.Bytecode.Compilation
 
         void CompileFString(FStringNode node)
         {
-            var firstPartIdx = _chunk.RegisterConstant(new RuntimeValue(node.StringParts[0]));
+            var firstPartIdx = _chunk.RegisterConstant(new SourceValue(node.StringParts[0]));
             _chunk.AddInstruction(OperationCode.PushConstant, node.LineNumber, firstPartIdx);
 
             for (var i = 0; i < node.ExpressionParts.Count; i++)
@@ -575,13 +577,13 @@ namespace Chow.Bytecode.Compilation
                 _chunk.AddInstruction(OperationCode.CoerceToStr, node.LineNumber);
                 _chunk.AddInstruction(OperationCode.Add, node.LineNumber);
 
-                var tailPartIdx = _chunk.RegisterConstant(new RuntimeValue(node.StringParts[i + 1]));
+                var tailPartIdx = _chunk.RegisterConstant(new SourceValue(node.StringParts[i + 1]));
                 _chunk.AddInstruction(OperationCode.PushConstant, node.LineNumber, tailPartIdx);
                 _chunk.AddInstruction(OperationCode.Add, node.LineNumber);
             }
         }
 
-        static RuntimeValue BuildLiteralValue(LiteralNode literalNode)
+        static SourceValue BuildLiteralValue(LiteralNode literalNode)
         {
             // Cases for LiteralDataType where the boxed Value is the wrong CLR type should not occur unless the Parser is bugged
             switch (literalNode.Type)
@@ -590,7 +592,7 @@ namespace Chow.Bytecode.Compilation
                 {
                     if (literalNode.Value is long intVal)
                     {
-                        return new RuntimeValue(intVal);
+                        return new SourceValue(intVal);
                     }
 
                     break;
@@ -600,7 +602,7 @@ namespace Chow.Bytecode.Compilation
                 {
                     if (literalNode.Value is double floatVal)
                     {
-                        return new RuntimeValue(floatVal);
+                        return new SourceValue(floatVal);
                     }
 
                     break;
@@ -610,7 +612,7 @@ namespace Chow.Bytecode.Compilation
                 {
                     if (literalNode.Value is bool boolVal)
                     {
-                        return new RuntimeValue(boolVal);
+                        return new SourceValue(boolVal);
                     }
 
                     break;
@@ -618,14 +620,14 @@ namespace Chow.Bytecode.Compilation
 
                 case LiteralDataType.None:
                 {
-                    return RuntimeValue.None;
+                    return SourceValue.None;
                 }
 
                 case LiteralDataType.String:
                 {
                     if (literalNode.Value is string strVal)
                     {
-                        return new RuntimeValue(strVal);
+                        return new SourceValue(strVal);
                     }
 
                     break;
@@ -684,7 +686,7 @@ namespace Chow.Bytecode.Compilation
         {
             if (argOrNull == null)
             {
-                var noneIdx = _chunk.RegisterConstant(RuntimeValue.None);
+                var noneIdx = _chunk.RegisterConstant(SourceValue.None);
                 _chunk.AddInstruction(OperationCode.PushConstant, sliceLineNum, noneIdx);
             }
             else

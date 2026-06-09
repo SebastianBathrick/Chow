@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using Chow.DataTypes;
-using Chow.Exceptions;
-using Chow.Tokens;
-namespace Chow.Core
+using Chow.Utility;
+namespace Chow.Tokens.Scanning
 {
     /// <summary>
     /// <para>

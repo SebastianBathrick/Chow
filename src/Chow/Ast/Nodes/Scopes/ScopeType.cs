@@ -1,6 +1,6 @@
 using Chow.Bytecode.Compilation;
-using Chow.Core;
-namespace Chow.Ast.Nodes
+using Chow.Semantics;
+namespace Chow.Ast
 {
     /// <summary>
     /// How a name binding or reference resolves at runtime. Stamped onto name-bearing AST nodes by
