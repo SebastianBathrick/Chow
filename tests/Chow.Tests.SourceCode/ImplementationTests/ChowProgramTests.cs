@@ -1,4 +1,5 @@
 ﻿using Chow.Objects;
+
 namespace Chow.Tests.SourceCode;
 
 [TestFixture]

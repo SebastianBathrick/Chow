@@ -1,6 +1,7 @@
 using Chow.Bytecode;
+using Chow.Objects;
 
-namespace Chow.VM.Utilities
+namespace Chow.VM.FunctionCalls
 {
     /// <summary>
     /// One slot on the <see cref="CallStack"/>. Pairs a <see cref="Chunk"/> being executed with its associated
@@ -17,7 +18,7 @@ namespace Chow.VM.Utilities
         public Chunk Chunk { get; }
 
         /// <summary>The frame's scope: parentless for the module frame, parented to the closure's enclosing scope for any function frame.</summary>
-        public Objects.Scope Scope { get; }
+        public Scope Scope { get; }
 
         /// <summary>The instruction at the current pointer.</summary>
         public Instruction CurrentInstr => Chunk[_instrIdx];
@@ -29,7 +30,7 @@ namespace Chow.VM.Utilities
         public int CurrentLineNum => Chunk.GetInstructionLineIndex(_instrIdx);
 
         /// <summary>Creates a frame positioned at the first instruction.</summary>
-        public StackFrame(Chunk chunk, Objects.Scope scope)
+        public StackFrame(Chunk chunk, Scope scope)
         {
             Chunk = chunk;
             Scope = scope;

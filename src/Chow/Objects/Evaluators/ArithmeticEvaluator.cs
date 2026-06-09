@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Chow.Objects;
 using Chow.Utility;
+using Chow.VM;
 
-
-namespace Chow.VM.Utilities
+namespace Chow.Objects
 {
     // TODO: Replace with more performant, refactored version
     class ArithmeticEvaluator

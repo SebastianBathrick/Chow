@@ -1,7 +1,6 @@
 ﻿using Chow;
 using Chow.Objects;
 using Chow.VM;
-using Chow.VM.Utilities;
 
 namespace Chow.Tests.SourceCode.UnitTests;
 

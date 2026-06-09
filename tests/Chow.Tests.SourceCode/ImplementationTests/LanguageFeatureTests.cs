@@ -1,6 +1,7 @@
 ﻿using Chow;
 using Chow.Objects;
-using Chow.VM.Utilities;
+using Chow.VM;
+
 namespace Chow.Tests.SourceCode;
 
 [TestFixture]

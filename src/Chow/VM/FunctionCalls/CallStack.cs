@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Chow.Bytecode;
 using Chow.Objects;
 
-namespace Chow.VM.Utilities
+namespace Chow.VM.FunctionCalls
 {
     /// <summary>
     /// Owns the module frame plus a stack of function-call frames, and exposes scope-aware
@@ -25,10 +25,10 @@ namespace Chow.VM.Utilities
         public bool IsInstructionToExecute => CurrFrame.IsInstrToRun;
 
         /// <summary>The current frame's scope. Captured by <c>PushNewSourceFunction</c> at runtime.</summary>
-        public Objects.Scope CurrentScope => CurrFrame.Scope;
+        public Scope CurrentScope => CurrFrame.Scope;
 
         /// <summary>The module-level scope (the bottom of every LEGB chain). Future <c>global</c>-targeted ops route directly here.</summary>
-        public Objects.Scope ModuleScope => _moduleLvl.Scope;
+        public Scope ModuleScope => _moduleLvl.Scope;
 
         /// <summary>Source line number associated with the current frame's pointer.</summary>
         public int CurrentLineNum => CurrFrame.CurrentLineNum;
@@ -41,7 +41,7 @@ namespace Chow.VM.Utilities
         /// <summary>Creates a call stack rooted at a single module frame.</summary>
         /// <param name="moduleChunk">The compiled bytecode for the module being executed.</param>
         /// <param name="moduleScope">The module scope to operate against; persists across <c>ChowState.Execute</c> calls.</param>
-        public CallStack(Chunk moduleChunk, Objects.Scope moduleScope)
+        public CallStack(Chunk moduleChunk, Scope moduleScope)
         {
             _moduleLvl = new StackFrame(moduleChunk, moduleScope);
             _callFrames = new Stack<StackFrame>();
@@ -109,7 +109,7 @@ namespace Chow.VM.Utilities
         // Walks ParentOrNull from CurrFrame.Scope upward, stopping before the module scope
         // (compared by reference against _moduleLvl.Scope), and returns the first scope that
         // defines `name`. Throws KeyNotFoundException if none does.
-        Objects.Scope FindNonlocalScope(string name)
+        Scope FindNonlocalScope(string name)
         {
             for (var s = CurrFrame.Scope.Parent; s != null && !ReferenceEquals(s, _moduleLvl.Scope); s = s.Parent)
             {
@@ -179,7 +179,7 @@ namespace Chow.VM.Utilities
         /// </summary>
         public void EnterFunctionCall(SourceFunction func)
         {
-            var frameScope = new Objects.Scope(func.Enclosing);
+            var frameScope = new Scope(func.Enclosing);
             var newFrame = new StackFrame(func.Chunk, frameScope);
             _callFrames.Push(newFrame);
         }

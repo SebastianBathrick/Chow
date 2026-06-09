@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
-using Chow.Objects;
 using System;
+using Chow.Objects;
 using Chow.Utility;
 
 namespace Chow
@@ -83,56 +83,46 @@ namespace Chow
             return value.SourceValue.ToString();
         }
 
-        public static bool operator ==(ChowValue left, ChowValue right)
+        public static bool operator ==(ChowValue l, ChowValue right)
         {
-            if (ReferenceEquals(left, right)) return true;
-            if (left is null || right is null) return false;
-            return left.SourceValue.Equals(right.SourceValue);
+            if (ReferenceEquals(l, right)) return true;
+            if (l is null || right is null) return false;
+            return l.SourceValue.Equals(right.SourceValue);
         }
 
-        public static bool operator !=(ChowValue left, ChowValue right)
+        public static bool operator !=(ChowValue l, ChowValue right)
         {
-            return !(left == right);
+            return !(l == right);
         }
 
-        public static bool operator ==(ChowValue left, bool right)
+        public static bool operator ==(ChowValue l, bool right)
         {
-            return left?.SourceValue.ToBool() == right;
+            return l?.SourceValue.ToBool() == right;
         }
 
-        public static bool operator !=(ChowValue left, bool right)
+        public static bool operator !=(ChowValue l, bool right)
         {
-            return !(left == right);
+            return !(l == right);
         }
 
-        public static bool operator ==(ChowValue left, long right)
+        public static bool operator ==(ChowValue l, long right)
         {
-            return left?.SourceValue.ToLong() == right;
+            return l?.SourceValue.ToLong() == right;
         }
 
-        public static bool operator !=(ChowValue left, long right)
+        public static bool operator !=(ChowValue l, long right)
         {
-            return !(left == right);
+            return !(l == right);
         }
 
-        public static bool operator ==(ChowValue left, double right)
+        public static bool operator ==(ChowValue l, double right)
         {
-            return  !(left is null) && left.SourceValue.ToDouble().Equals(right);
+            return  !(l is null) && l.SourceValue.ToDouble().Equals(right);
         }
 
-        public static bool operator !=(ChowValue left, double right)
+        public static bool operator !=(ChowValue l, double right)
         {
-            return !(left == right);
-        }
-
-        public static bool operator ==(ChowValue left, string right)
-        {
-            return left?.SourceValue.ToString() == right;
-        }
-
-        public static bool operator !=(ChowValue left, string right)
-        {
-            return !(left == right);
+            return !(l == right);
         }
         
         #endregion

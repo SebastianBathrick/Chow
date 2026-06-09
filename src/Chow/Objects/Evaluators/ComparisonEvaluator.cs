@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Chow.Objects;
 using Chow.Utility;
+using Chow.VM;
 
-namespace Chow.VM.Utilities
+namespace Chow.Objects
 {
     /// <summary>
     /// Static service class for <see cref="Processor"/> that performs comparison
