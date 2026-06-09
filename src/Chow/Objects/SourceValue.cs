@@ -503,6 +503,96 @@ namespace Chow.Objects
 
         #endregion
 
+        public static SourceValue Add(SourceValue r, SourceValue l)
+        {
+            return ArithmeticEvaluator.Add(ref r, ref l);
+        }
+
+        public static SourceValue Subtract(SourceValue r, SourceValue l)
+        {
+            return ArithmeticEvaluator.Subtract(ref r, ref l);
+        }
+
+        public static SourceValue Multiply(SourceValue r, SourceValue l)
+        {
+            return ArithmeticEvaluator.Multiply(ref r, ref l);
+        }
+
+        public static SourceValue Divide(SourceValue r, SourceValue l)
+        {
+            return ArithmeticEvaluator.Divide(ref r, ref l);
+        }
+
+        public static SourceValue Pow(SourceValue r, SourceValue l)
+        {
+            return ArithmeticEvaluator.Pow(ref r, ref l);
+        }
+
+        public static SourceValue EvaluateFloorDivision(SourceValue r, SourceValue l)
+        {
+            return ArithmeticEvaluator.EvaluateFloorDivision(ref r, ref l);
+        }
+
+        public static SourceValue EvaluateExponent(SourceValue r, SourceValue l)
+        {
+            return ArithmeticEvaluator.EvaluateExponent(ref r, ref l);
+        }
+
+        public static SourceValue EvaluateNegation(SourceValue operand)
+        {
+            return ArithmeticEvaluator.EvaluateNegation(ref operand);
+        }
+
+        public static SourceValue EvaluateEqual(SourceValue r, SourceValue l)
+        {
+            return ComparisonEvaluator.EvaluateEqual(ref r, ref l);
+        }
+
+        public static SourceValue EvaluateNotEqual(SourceValue r, SourceValue l)
+        {
+            return ComparisonEvaluator.EvaluateNotEqual(ref r, ref l);
+        }
+
+        public static SourceValue EvaluateLess(SourceValue r, SourceValue l)
+        {
+            return ComparisonEvaluator.EvaluateLess(ref r, ref l);
+        }
+
+        public static SourceValue EvaluateGreater(SourceValue r, SourceValue l)
+        {
+            return ComparisonEvaluator.EvaluateGreater(ref r, ref l);
+        }
+
+        public static SourceValue EvaluateLessEqual(SourceValue r, SourceValue l)
+        {
+            return ComparisonEvaluator.EvaluateLessEqual(ref r, ref l);
+        }
+
+        public static SourceValue EvaluateGreaterEqual(SourceValue r, SourceValue l)
+        {
+            return ComparisonEvaluator.EvaluateGreaterEqual(ref r, ref l);
+        }
+
+        public static SourceValue EvaluateAnd(SourceValue r, SourceValue l)
+        {
+            return LogicEvaluator.EvaluateAnd(ref r, ref l);
+        }
+
+        public static SourceValue EvaluateOr(SourceValue r, SourceValue l)
+        {
+            return LogicEvaluator.EvaluateOr(ref r, ref l);
+        }
+
+        public static SourceValue EvaluateUnion(SourceValue r, SourceValue l)
+        {
+            return LogicEvaluator.EvaluateUnion(ref r, ref l);
+        }
+
+        public static SourceValue EvaluateNot(SourceValue operand)
+        {
+            return LogicEvaluator.EvaluateNot(ref operand);
+        }
+        
         public bool Equals(SourceValue other)
         {
             return Equals(_obj, other._obj) 

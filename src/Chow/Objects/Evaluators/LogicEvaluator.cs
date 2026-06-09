@@ -11,19 +11,19 @@ namespace Chow.Objects
     {
         #region Binary Operations
 
-        public static SourceValue EvaluateAnd(SourceValue r, SourceValue l)
+        public static SourceValue EvaluateAnd(ref SourceValue r, ref SourceValue l)
         {
             // Python `and` returns an operand value, not a coerced bool.
             return IsTruthy(ref l) ? r : l;
         }
 
-        public static SourceValue EvaluateOr(SourceValue r, SourceValue l)
+        public static SourceValue EvaluateOr(ref SourceValue r, ref SourceValue l)
         {
             // Python `or` returns the first truthy operand, otherwise the right operand.
             return IsTruthy(ref l) ? l : r;
         }
 
-        public static SourceValue EvaluateUnion(SourceValue r, SourceValue l)
+        public static SourceValue EvaluateUnion(ref SourceValue r, ref SourceValue l)
         {
             // Among Chow's current types, Python only defines `|` for dicts (PEP 584 merge).
             if (l.DataType == DataType.Dict && r.DataType == DataType.Dict)
@@ -39,7 +39,7 @@ namespace Chow.Objects
 
         #region Unary Operations
 
-        public static SourceValue EvaluateNot(SourceValue operand)
+        public static SourceValue EvaluateNot(ref SourceValue operand)
         {
             // Unlike `and`/`or`, Python `not` always produces an actual bool.
             return new SourceValue(!IsTruthy(ref operand));

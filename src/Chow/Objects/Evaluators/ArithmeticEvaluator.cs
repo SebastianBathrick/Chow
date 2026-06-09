@@ -67,7 +67,7 @@ namespace Chow.Objects
                 { (DataType.Bool,   DataType.List),   DataType.List   },
             };
 
-        public static SourceValue Add(SourceValue r, SourceValue l)
+        public static SourceValue Add(ref SourceValue r, ref SourceValue l)
         {
             switch (GetConversionDataType(AdditionConversionMap, l.DataType, r.DataType, ExpressionOperator.Add))
             {
@@ -83,7 +83,7 @@ namespace Chow.Objects
             }
         }
 
-        public static SourceValue Subtract(SourceValue r, SourceValue l)
+        public static SourceValue Subtract(ref SourceValue r, ref SourceValue l)
         {
             var convDataType = GetConversionDataType(NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Subtract);
             return convDataType == DataType.Long
@@ -91,7 +91,7 @@ namespace Chow.Objects
                 : new SourceValue(l.ToDouble() - r.ToDouble());
         }
 
-        public static SourceValue Multiply(SourceValue r, SourceValue l)
+        public static SourceValue Multiply(ref SourceValue r, ref SourceValue l)
         {
             switch (GetConversionDataType(MultiplicationConversionMap, l.DataType, r.DataType, ExpressionOperator.Multiply))
             {
@@ -125,7 +125,7 @@ namespace Chow.Objects
             }
         }
 
-        public static SourceValue Divide(SourceValue r, SourceValue l)
+        public static SourceValue Divide(ref SourceValue r, ref SourceValue l)
         {
             // Python: `/` always yields float (e.g. 9 / 3 → 3.0), even for int operands.
             // Lookup validates operand types; result type is always double regardless of map value.
@@ -145,7 +145,7 @@ namespace Chow.Objects
 
         #region Modulus Methods
 
-        public static SourceValue Pow(SourceValue r, SourceValue l)
+        public static SourceValue Pow(ref SourceValue r, ref SourceValue l)
         {
             var convDataType = GetConversionDataType(
                 NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Modulus);
@@ -185,7 +185,7 @@ namespace Chow.Objects
 
         #region Floor Division Methods
 
-        public static SourceValue EvaluateFloorDivision(SourceValue r, SourceValue l)
+        public static SourceValue EvaluateFloorDivision(ref SourceValue r, ref SourceValue l)
         {
             var convDataType = GetConversionDataType(
                 NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.FloorDivide);
@@ -235,7 +235,7 @@ namespace Chow.Objects
         #region Exponentiation Methods
 
         // Python: negative integer exponent forces float result.
-        public static SourceValue EvaluateExponent(SourceValue r, SourceValue l)
+        public static SourceValue EvaluateExponent(ref SourceValue r, ref SourceValue l)
         {
             var convDataType = GetConversionDataType(
                 NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Exponentiate);
@@ -289,7 +289,7 @@ namespace Chow.Objects
 
         #region Unary Operations
 
-        public static SourceValue EvaluateNegation(SourceValue operand)
+        public static SourceValue EvaluateNegation(ref SourceValue operand)
         {
             switch (operand.DataType)
             {
