@@ -242,7 +242,7 @@ namespace Chow.StandardLibrary.BuiltIns
                 var iterator = IteratorFactory.GetIterator(args[0]);
                 while (iterator.TryMoveNext(out var current))
                 {
-                    result.Add(current);
+                    result.Append(current);
                 }
             }
 
@@ -279,11 +279,9 @@ namespace Chow.StandardLibrary.BuiltIns
                 case DataType.Str:
                     return new SourceValue(value.ToString().Length);
                 case DataType.List:
-                    return new SourceValue(((SourceList)value.ToObject()).Count);
                 case DataType.Dict:
-                    return new SourceValue(((SourceDictionary)value.ToObject()).Count);
                 case DataType.Range:
-                    return new SourceValue(((SourceRange)value.ToObject()).Count);
+                    return new SourceValue(value.ToSourceObject().Length);
             }
 
             throw new DataTypeException($"object of type '{value.DataType}' has no len()");
@@ -343,10 +341,10 @@ namespace Chow.StandardLibrary.BuiltIns
 
                 foreach (var arg in args)
                 {
-                    packed.Add(arg);
+                    packed.Append(arg);
                 }
 
-                iterator = new SourceListIterator(packed);
+                iterator = packed.GetIterator();
             }
 
             if (!iterator.TryMoveNext(out var winner))

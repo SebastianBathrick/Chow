@@ -8,11 +8,10 @@ namespace Chow.SourceData
             switch (source.DataType)
             {
                 case DataType.List:
-                    return new SourceListIterator(source.AsType<SourceList>());
+                case DataType.Range:
+                    return source.ToSourceObject().GetIterator();
                 case DataType.Str:
                     return new SourceStringIterator(source.AsType<string>());
-                case DataType.Range:
-                    return source.AsType<SourceRange>().GetIterator();
                 case DataType.None:
                 case DataType.Bool:
                 case DataType.Object:

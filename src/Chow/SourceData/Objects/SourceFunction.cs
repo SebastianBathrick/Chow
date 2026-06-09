@@ -10,8 +10,10 @@ namespace Chow.SourceData
     /// <see cref="Enclosing"/> is a live reference — never a copy. Mutations to that scope after capture remain visible
     /// to the function body, matching Python closure semantics.
     /// </remarks>
-    sealed class SourceFunction
+    sealed class SourceFunction : SourceObject
     {
+        public override DataType Type => DataType.Function;
+
         /// <summary>The compiled bytecode of the function body.</summary>
         public Chunk Chunk { get; }
 
@@ -31,6 +33,11 @@ namespace Chow.SourceData
             Enclosing = enclosing;
             Name = name;
             ParamCount = paramCount;
+        }
+
+        public override string ToRepresentation()
+        {
+            return $"<function {Name}>";
         }
     }
 }

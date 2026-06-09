@@ -2,9 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using Chow.VM;
 namespace Chow.SourceData
 {
-    class SourceList
+    class SourceList : SourceObject
     {
         const string METHOD_APPEND_NAME = "append";
         const string METHOD_CLEAR_NAME = "clear";
@@ -12,10 +13,86 @@ namespace Chow.SourceData
         const string METHOD_POP_NAME = "pop";
         const string METHOD_REMOVE_NAME = "remove";
         const string METHOD_REVERSE_NAME = "reverse";
-        
+
         readonly List<SourceValue> _elements = new List<SourceValue>();
 
         public int Count => _elements.Count;
+
+        public override DataType Type => DataType.List;
+
+        public override bool HasLength => true;
+
+        public override int Length => _elements.Count;
+
+        public override SourceValue GetItem(SourceValue key)
+        {
+            if (key.DataType == DataType.Long)
+            {
+                return this[(int)key.ToLong()];
+            }
+
+            if (key.DataType == DataType.Slice)
+            {
+                var slice = (SourceSlice)key.ToSourceObject();
+                return GetSlice(slice.Start, slice.Stop, slice.Step);
+            }
+
+            throw new DataTypeException($"list indices must be integers, not {key.DataType}");
+        }
+
+        public override void SetItem(SourceValue key, SourceValue value)
+        {
+            if (key.DataType != DataType.Long)
+            {
+                throw new DataTypeException($"list indices must be integers, not {key.DataType}");
+            }
+
+            this[(int)key.ToLong()] = value;
+        }
+
+        public override void Append(SourceValue value)
+        {
+            _elements.Add(value);
+        }
+
+        public override SourceValue GetAttribute(SourceValue name)
+        {
+            return new SourceValue(GetMethod(name.ToString()));
+        }
+
+        public override List<string> Directory => new List<string>
+        {
+            METHOD_APPEND_NAME,
+            METHOD_CLEAR_NAME,
+            METHOD_INSERT_NAME,
+            METHOD_POP_NAME,
+            METHOD_REMOVE_NAME,
+            METHOD_REVERSE_NAME
+        };
+
+        // Python `in` compares with == semantics, not strict identity/equality.
+        public override bool Contains(SourceValue value)
+        {
+            for (var i = 0; i < _elements.Count; i++)
+            {
+                if (SourceValue.EvaluateEqual(r: value, l: _elements[i]).ToBool())
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public override IIterator GetIterator()
+        {
+            return new SourceListIterator(this);
+        }
+
+        public override bool EqualsTo(SourceObject other)
+        {
+            return other is SourceList list && ElementsEqual(this, list);
+        }
 
         public SourceValue this[int index]
         {
@@ -42,9 +119,6 @@ namespace Chow.SourceData
 
             return idx;
         }
-
-        // Will throw if method name is invalid, which is the expected behavior
-        public SourceValue this[string name] => new SourceValue(GetMethod(name));
 
         SourceValue Append(SourceValue[] args)
         {
@@ -171,27 +245,6 @@ namespace Chow.SourceData
             }
         }
 
-        public void Add(SourceValue element)
-        {
-            _elements.Add(element);
-        }
-
-        public bool HasMethod(string methodName)
-        {
-            switch (methodName)
-            {
-                case METHOD_APPEND_NAME:
-                case METHOD_CLEAR_NAME:
-                case METHOD_INSERT_NAME:
-                case METHOD_POP_NAME:
-                case METHOD_REMOVE_NAME:
-                case METHOD_REVERSE_NAME:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
         public static bool ElementsEqual(SourceList a, SourceList b)
         {
             if (a._elements.Count != b._elements.Count)
@@ -236,7 +289,7 @@ namespace Chow.SourceData
         }
 
         // FUTURE: strings will need a parallel GetSlice returning a string, not a list. Do not abstract.
-        public SourceValue GetSlice(SourceValue startValue, SourceValue stopValue, SourceValue stepValue)
+        SourceValue GetSlice(SourceValue startValue, SourceValue stopValue, SourceValue stepValue)
         {
             var length = _elements.Count;
 
@@ -348,7 +401,7 @@ namespace Chow.SourceData
             return (int)value.AsType<long>();
         }
 
-        public override string ToString()
+        public override string ToRepresentation()
         {
             // FUTURE: once dicts/class instances exist, ToRepresentation below will grow branches for them.
             var sb = new StringBuilder();

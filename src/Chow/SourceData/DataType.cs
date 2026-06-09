@@ -12,6 +12,7 @@ namespace Chow.SourceData
         List,
         Dict,
         Range,
-        Function
+        Function,
+        Slice
     }
 }

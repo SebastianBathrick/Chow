@@ -22,10 +22,7 @@ namespace Chow.SourceData
             { typeof(long), DataType.Long },
             { typeof(int), DataType.Long },
             { typeof(double), DataType.Double },
-            { typeof(string), DataType.Str },
-            { typeof(ISourceObject), DataType.Dict },
-            { typeof(ISourceObject), DataType.Range },
-            { typeof(ISourceObject), DataType.List }
+            { typeof(string), DataType.Str }
         };
         
         /// <summary>Represents the SourceValue equivalent to null/nil/none values.</summary>
@@ -67,6 +64,8 @@ namespace Chow.SourceData
                 case DataType.List:
                 case DataType.Dict:
                 case DataType.Range:
+                case DataType.Function:
+                case DataType.Slice:
                 case DataType.Str:
                 case DataType.None:
                 case DataType.Long:
@@ -87,11 +86,8 @@ namespace Chow.SourceData
 
         internal SourceValue(string value) : this(DataType.Str, objVal: value) {}
 
-        internal SourceValue(SourceList list) : this(DataType.List, objVal: list) {}
-
-        internal SourceValue(SourceDictionary dictionary) : this(DataType.Dict, objVal: dictionary) {}
-
-        internal SourceValue(SourceRange range) : this(DataType.Range, objVal: range) {}
+        /// <summary>The value's tag comes from the object itself, so every ISourceObject kind shares this path.</summary>
+        internal SourceValue(ISourceObject srcObj) : this(srcObj.Type, objVal: srcObj) {}
 
         /// <summary>
         /// Resolves and converts the value of <paramref name="obj"/> and initializes instance with
@@ -245,7 +241,9 @@ namespace Chow.SourceData
                 case DataType.List:
                 case DataType.Dict:
                 case DataType.Range:
-                    ((ISourceObject)_obj).Truthiness();
+                case DataType.Function:
+                case DataType.Slice:
+                    return ((ISourceObject)_obj).Truthiness;
                 default:
                     throw new DataTypeException(GetConversionErrorMessage(_dataType, DataType.Bool));
             }
@@ -317,7 +315,7 @@ namespace Chow.SourceData
             }
         }
 
-        public ISourceObject ToSourceObject()
+        internal ISourceObject ToSourceObject()
         {
             return (ISourceObject)_obj;
         }

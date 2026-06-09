@@ -241,19 +241,9 @@ namespace Chow.VM
             var needle = _valStack.Pop();
             var found = false;
 
-            if (container.DataType == DataType.Dict)
+            if (container.DataType == DataType.Dict || container.DataType == DataType.List)
             {
                 found = container.ToSourceObject().Contains(needle);
-            }
-            else if (container.DataType == DataType.List)
-            {
-                var list = container.ToSourceObject();
-
-                for (var i = 0; i < list.Length && !found; i++)
-                {
-                    var listItem = list.GetItem(new SourceValue(i));
-                    found = SourceValue.EvaluateEqual(r: needle, l: listItem).ToBool();
-                }
             }
             else
             {

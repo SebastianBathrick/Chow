@@ -328,7 +328,7 @@ public class LogicEvaluatorTests
 
         foreach (var value in values)
         {
-            list.Add(value);
+            list.Append(value);
         }
 
         return new SourceValue(list);

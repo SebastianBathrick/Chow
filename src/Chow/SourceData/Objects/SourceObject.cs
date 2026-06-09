@@ -13,15 +13,15 @@ namespace Chow.SourceData
     {
         // ---------------- Construction ----------------
 
-        
-        
         public void Initialize()
         {
             Initialize(Array.Empty<SourceValue>());
         }
 
-        /// <summary>(Python: <c>__init__</c>)</summary>
-        public abstract void Initialize(params SourceValue[] args);
+        /// <summary>(Python: <c>__init__</c>) Default accepts no state; constructor-initialized types need not override.</summary>
+        public virtual void Initialize(params SourceValue[] args)
+        {
+        }
 
         // ---------------- Type ----------------
 

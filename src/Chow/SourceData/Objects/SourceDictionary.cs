@@ -5,7 +5,7 @@ using System.Text;
 using Chow.VM;
 namespace Chow.SourceData
 {
-    class SourceDictionary
+    class SourceDictionary : SourceObject
     {
         const string METHOD_GET_NAME = "get";
         const string METHOD_CLEAR_NAME = "clear";
@@ -18,6 +18,58 @@ namespace Chow.SourceData
         readonly List<SourceValue> _keys = new List<SourceValue>();
 
         public int Count => _keys.Count;
+
+        public override DataType Type => DataType.Dict;
+
+        public override bool HasLength => true;
+
+        public override int Length => _keys.Count;
+
+        public override SourceValue GetItem(SourceValue key)
+        {
+            return this[key];
+        }
+
+        public override void SetItem(SourceValue key, SourceValue value)
+        {
+            Add(key, value);
+        }
+
+        public override void DeleteItem(SourceValue key)
+        {
+            ValidateHashable(key);
+
+            if (!_entries.Remove(key))
+            {
+                throw new SubscriptException(KeyRepr(key));
+            }
+
+            _keys.Remove(key);
+        }
+
+        public override bool Contains(SourceValue value)
+        {
+            return ContainsKey(value);
+        }
+
+        public override SourceValue GetAttribute(SourceValue name)
+        {
+            return new SourceValue(GetMethod(name.ToString()));
+        }
+
+        public override List<string> Directory => new List<string>
+        {
+            METHOD_GET_NAME,
+            METHOD_CLEAR_NAME,
+            METHOD_POP_NAME,
+            METHOD_UPDATE_NAME,
+            METHOD_SET_DEFAULT_NAME
+        };
+
+        public override bool EqualsTo(SourceObject other)
+        {
+            return other is SourceDictionary dict && ElementsEqual(this, dict);
+        }
 
         public SourceValue this[SourceValue key]
         {
@@ -32,10 +84,6 @@ namespace Chow.SourceData
             }
             set => Add(key, value);
         }
-
-        public SourceValue this[string name] =>
-            // Will throw if method name is invalid, which is the expected behavior
-            new SourceValue(GetMethod(name));
 
         public void Add(SourceValue key, SourceValue value)
         {
@@ -152,21 +200,6 @@ namespace Chow.SourceData
             throw new NotImplementedException($"Method '{methodName}' is not implemented for SourceDictionary");
         }
 
-        public bool HasMethod(string methodName)
-        {
-            switch (methodName)
-            {
-                case METHOD_GET_NAME:
-                case METHOD_CLEAR_NAME:
-                case METHOD_POP_NAME:
-                case METHOD_UPDATE_NAME:
-                case METHOD_SET_DEFAULT_NAME:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
         public static bool ElementsEqual(SourceDictionary a, SourceDictionary b)
         {
             if (a._entries.Count != b._entries.Count)
@@ -226,7 +259,7 @@ namespace Chow.SourceData
             }
         }
 
-        public override string ToString()
+        public override string ToRepresentation()
         {
             var sb = new StringBuilder();
             sb.Append('{');
