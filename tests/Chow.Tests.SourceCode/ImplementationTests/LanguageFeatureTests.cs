@@ -204,6 +204,18 @@ public class LanguageFeatureTests
             TrueChow
         ),
 
+        // dict `|` merge (PEP 584): disjoint keys combine.
+        new(
+            "({'a': 1} | {'b': 2}) == {'a': 1, 'b': 2}",
+            TrueChow
+        ),
+
+        // dict `|` merge: on key conflict the right operand wins.
+        new(
+            "({'a': 1} | {'a': 9}) == {'a': 9}",
+            TrueChow
+        ),
+
         // NOTE: Deferred niche literal syntax not yet confirmed in Chow:
         // bytes literals, set literals/comprehensions, and raw/triple-prefixed combinations.
 

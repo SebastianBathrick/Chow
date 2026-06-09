@@ -1,5 +1,6 @@
 using Chow;
 using Chow.Objects;
+using Chow.VM;
 using Chow.VM.Utilities;
 
 namespace Chow.Tests.SourceCode.UnitTests;
@@ -196,6 +197,83 @@ public class LogicEvaluatorTests
 
     #endregion
 
+    #region Union  (Python: dict | dict)
+
+    [Test]
+    public void Union_DisjointDicts_MergesEntries()
+    {
+        // Python: {'a': 1} | {'b': 2} -> {'a': 1, 'b': 2}
+        AssertDictResult(
+            LogicEvaluator.EvaluateUnion,
+            Dict(S("a"), L(1)),
+            Dict(S("b"), L(2)),
+            DictOf((S("a"), L(1)), (S("b"), L(2))));
+    }
+
+    [Test]
+    public void Union_ConflictingKeys_RightOperandWins()
+    {
+        // Python: {'a': 1} | {'a': 9} -> {'a': 9}
+        AssertDictResult(
+            LogicEvaluator.EvaluateUnion,
+            Dict(S("a"), L(1)),
+            Dict(S("a"), L(9)),
+            Dict(S("a"), L(9)));
+    }
+
+    [Test]
+    public void Union_EmptyDicts_ReturnsEmptyDict()
+    {
+        // Python: {} | {} -> {}
+        AssertDictResult(LogicEvaluator.EvaluateUnion, Dict(), Dict(), Dict());
+    }
+
+    [Test]
+    public void Union_DictInt_RaisesTypeError()
+    {
+        // Python: {'a': 1} | 1 -> TypeError
+        AssertTypeError(
+            () => Evaluate(LogicEvaluator.EvaluateUnion, Dict(S("a"), L(1)), L(1)),
+            "|",
+            "dict",
+            "int");
+    }
+
+    [Test]
+    public void Union_IntDict_RaisesTypeError()
+    {
+        // Python: 1 | {'a': 1} -> TypeError
+        AssertTypeError(
+            () => Evaluate(LogicEvaluator.EvaluateUnion, L(1), Dict(S("a"), L(1))),
+            "|",
+            "int",
+            "dict");
+    }
+
+    [Test]
+    public void Union_ListList_RaisesTypeError()
+    {
+        // Python: [1] | [2] -> TypeError
+        AssertTypeError(
+            () => Evaluate(LogicEvaluator.EvaluateUnion, List(L(1)), List(L(2))),
+            "|",
+            "list",
+            "list");
+    }
+
+    [Test]
+    public void Union_IntInt_RaisesTypeError()
+    {
+        // Chow does not implement integer bitwise-or yet, so `|` between ints is unsupported.
+        AssertTypeError(
+            () => Evaluate(LogicEvaluator.EvaluateUnion, L(1), L(2)),
+            "|",
+            "int",
+            "int");
+    }
+
+    #endregion
+
     #region Truthiness Helpers
 
     [Test]
@@ -269,6 +347,18 @@ public class LogicEvaluatorTests
         return new SourceValue(dict);
     }
 
+    static SourceValue DictOf(params (SourceValue Key, SourceValue Value)[] entries)
+    {
+        var dict = new SourceDictionary();
+
+        foreach (var entry in entries)
+        {
+            dict.Add(entry.Key, entry.Value);
+        }
+
+        return new SourceValue(dict);
+    }
+
     static SourceValue Evaluate(EvaluateUnary evaluate, SourceValue operand)
     {
         return evaluate(operand);
@@ -296,6 +386,30 @@ public class LogicEvaluatorTests
         var result = Evaluate(evaluate, left, right);
 
         Assert.That(result, Is.EqualTo(expectedValue));
+    }
+
+    static void AssertDictResult(
+        EvaluateBinary evaluate,
+        SourceValue left,
+        SourceValue right,
+        SourceValue expectedValue)
+    {
+        var result = Evaluate(evaluate, left, right);
+
+        Assert.That(result.DataType, Is.EqualTo(DataType.Dict));
+        Assert.That(
+            ComparisonEvaluator.EvaluateEqual(result, expectedValue).ToBool(),
+            Is.True,
+            $"Expected {expectedValue}, but was {result}");
+    }
+
+    static void AssertTypeError(TestDelegate action, string op, string leftType, string rightType)
+    {
+        var ex = Assert.Throws<DataTypeException>(action);
+
+        Assert.That(ex.Message, Does.Contain("TypeError: unsupported operand type(s) for " + op));
+        Assert.That(ex.Message, Does.Contain("'" + leftType + "'"));
+        Assert.That(ex.Message, Does.Contain("'" + rightType + "'"));
     }
 
     static void AssertIsTruthy(SourceValue operand, bool expectedValue)

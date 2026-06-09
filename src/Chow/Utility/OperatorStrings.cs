@@ -21,6 +21,7 @@ namespace Chow.Utility
             { ExpressionOperator.Greater, ">" },
             { ExpressionOperator.LessEqual, "<=" },
             { ExpressionOperator.GreaterEqual, ">=" },
+            { ExpressionOperator.BinaryOr, "|" },
         };
 
 

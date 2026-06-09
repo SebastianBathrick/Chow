@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
 using Chow.Exceptions;
-using Chow.Objects.Conversion;
 using Chow.Utility;
 using Chow.VM;
 namespace Chow.Objects
@@ -214,30 +213,7 @@ namespace Chow.Objects
 
             throw new InvalidOperationException($"Cannot convert {_dataType} to {typeof(TDataType)}");
         }
-        
-        #region Arithmetic & Logic Operations
-        // WARNING: THESE METHODS WILL BE REMOVED IN FUTURE REFACTOR!
-        // DO NOT USE ANY OF THESE METHODS OUTSIDE OF THE Processor CLASS
 
-        // Instance methods to avoid passing two ChowValues as parameters. Each returns a new SourceValue
-        // (the struct is readonly, so no risk of accidentally mutating this instance's internal state).
-        // Promotion rules come from DataTypeConversionMap (the single source of truth). Carve-outs for
-        // container/string ops (list+list, list*int, str+str, str*int, dict|dict) are dispatched when
-        // the map reports ConversionCase.Nothing.
-
-        internal SourceValue CreateUnion(SourceValue rightOperand)
-        {
-            if (LookupBinary(ExpressionOperator.BinaryOr, rightOperand) == ConversionCase.Nothing
-                && _dataType == DataType.Dict && rightOperand._dataType == DataType.Dict)
-            {
-                return new SourceValue(SourceDictionary.Merge(AsType<SourceDictionary>(), rightOperand.AsType<SourceDictionary>()));
-            }
-
-            throw UnsupportedBinary(ExpressionOperator.BinaryOr, rightOperand);
-        }
-
-        #endregion
-        
         #region Interop
 
         internal SourceValue InvokeHostDelegate(SourceValue[] args)
@@ -484,24 +460,6 @@ namespace Chow.Objects
                 && formatted.IndexOf(DBL_POW_UPPER_CHAR) == CHAR_NOT_FOUND_INX;
         }
 
-        #endregion
-
-        #region Operator Dispatch Helpers
-
-        // Promotion-rule lookup and result-coercion helpers used by the arithmetic/comparison instance
-        // methods above. Operand promotion is intentionally limited to the three numeric tags
-        // (Bool/Long/Double); the map guarantees ToInt/ToFloat is only reported for those.
-
-        ConversionCase LookupBinary(ExpressionOperator @operator, SourceValue right)
-        {
-            return DataTypeConversionMap.GetLeftRightConversionCase(@operator, _dataType, right._dataType);
-        }
-        
-        DataTypeException UnsupportedBinary(ExpressionOperator @operator, SourceValue right)
-        {
-            return new DataTypeException($"unsupported operand type(s) for {@operator}: '{_dataType}' and '{right._dataType}'");
-        }
-        
         #endregion
 
         #region Constants

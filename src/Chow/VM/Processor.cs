@@ -245,10 +245,9 @@ namespace Chow.VM
 
         void ExecuteBinaryUnion()
         {
-            // TODO: Add bitwise ors to the LogicEvaluator
             var r = _valStack.Pop();
             var l = _valStack.Pop();
-            _valStack.Push(l.CreateUnion(r));
+            _valStack.Push(LogicEvaluator.EvaluateUnion(r, l));
         }
 
         void EvaluateIn(bool negate)
