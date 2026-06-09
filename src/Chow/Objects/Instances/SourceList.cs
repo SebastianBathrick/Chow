@@ -131,7 +131,7 @@ namespace Chow.Objects
 
             for (var i = 0; i < _elements.Count; i++)
             {
-                if (!ComparisonEvaluator.EvaluateEqual(_elements[i],args[0]).ToBool())
+                if (!SourceValue.EvaluateEqual(_elements[i], args[0]).ToBool())
                 {
                     continue;
                 }
@@ -202,7 +202,7 @@ namespace Chow.Objects
 
             for (var i = 0; i < a._elements.Count; i++)
             {
-                if (!ComparisonEvaluator.EvaluateEqual(a._elements[i], b._elements[i]).ToBool())
+                if (!SourceValue.EvaluateEqual(a._elements[i], b._elements[i]).ToBool())
                 {
                     return false;
                 }

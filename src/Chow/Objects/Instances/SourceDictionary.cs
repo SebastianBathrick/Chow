@@ -182,7 +182,7 @@ namespace Chow.Objects
                     return false;
                 }
 
-                if (!ComparisonEvaluator.EvaluateEqual(a._entries[key], bValue).ToBool())
+                if (!SourceValue.EvaluateEqual(a._entries[key], bValue).ToBool())
                 {
                     return false;
                 }

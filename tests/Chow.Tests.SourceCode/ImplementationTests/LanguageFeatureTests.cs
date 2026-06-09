@@ -25,7 +25,7 @@ public class LanguageFeatureTests
         var returnValue = ChowEngine.Execute(caseExecute.SourceCode);
 
         Assert.That(
-            ComparisonEvaluator.EvaluateEqual(returnValue, caseExecute.ExpectedResult).ToBool(),
+            SourceValue.EvaluateEqual(returnValue, caseExecute.ExpectedResult).ToBool(),
             Is.True,
             $"Expected {caseExecute.ExpectedResult}, but was {returnValue}");
     }

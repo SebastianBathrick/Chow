@@ -50,56 +50,43 @@ namespace Chow.VM
 
                 // -- Binary Operations------------------------------------------------------------
                 case OperationCode.BinaryAdd:
-                    _valStack.Push(ArithmeticEvaluator.Add(
-                        r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.Add(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinarySubtract:
-                    _valStack.Push(ArithmeticEvaluator.Subtract(
-                        r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.Subtract(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryMultiply:
-                    _valStack.Push(ArithmeticEvaluator.Multiply(
-                        r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.Multiply(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryDivide:
-                    _valStack.Push(ArithmeticEvaluator.Divide(
-                        r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.Divide(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryModulus:
-                    _valStack.Push(ArithmeticEvaluator.Pow(
-                        r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.Pow(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryPow:
-                    _valStack.Push(ArithmeticEvaluator.EvaluateExponent(
-                        r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.EvaluateExponent(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryFloor:
-                    _valStack.Push(ArithmeticEvaluator.EvaluateFloorDivision(
-                        r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.EvaluateFloorDivision(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryEqual:
-                    _valStack.Push(ComparisonEvaluator.EvaluateEqual(
-                        r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.EvaluateEqual(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryNotEqual:
-                    _valStack.Push(ComparisonEvaluator.EvaluateNotEqual(
-                        r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.EvaluateNotEqual(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryLess:
-                    _valStack.Push(ComparisonEvaluator.EvaluateLess(
-                        r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.EvaluateLess(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryGreater:
-                    _valStack.Push(ComparisonEvaluator.EvaluateGreater(
-                        r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.EvaluateGreater(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryLessEqual:
-                    _valStack.Push(ComparisonEvaluator.EvaluateLessEqual(
-                        r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.EvaluateLessEqual(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryGreaterEqual:
-                    _valStack.Push(ComparisonEvaluator.EvaluateGreaterEqual(
-                        r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.EvaluateGreaterEqual(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryUnion:
                     ExecuteBinaryUnion();
@@ -115,10 +102,10 @@ namespace Chow.VM
 
                 // -- Unary Operations-------------------------------------------------------------
                 case OperationCode.UnaryNot:
-                    _valStack.Push(LogicEvaluator.EvaluateNot(_valStack.Pop()));
+                    _valStack.Push(SourceValue.EvaluateNot(_valStack.Pop()));
                     break;
                 case OperationCode.UnaryNegate:
-                    _valStack.Push(ArithmeticEvaluator.EvaluateNegation(_valStack.Pop()));
+                    _valStack.Push(SourceValue.EvaluateNegation(_valStack.Pop()));
                     break;
 
                 // -- Control Structure Operations ------------------------------------------------
@@ -245,9 +232,7 @@ namespace Chow.VM
 
         void ExecuteBinaryUnion()
         {
-            var r = _valStack.Pop();
-            var l = _valStack.Pop();
-            _valStack.Push(LogicEvaluator.EvaluateUnion(r, l));
+            _valStack.Push(SourceValue.EvaluateUnion(r: _valStack.Pop(), l: _valStack.Pop()));
         }
 
         void EvaluateIn(bool negate)
@@ -266,7 +251,7 @@ namespace Chow.VM
 
                 for (var i = 0; i < list.Count && !found; i++)
                 {
-                    found = ComparisonEvaluator.EvaluateEqual(list[i], needle).ToBool();
+                    found = SourceValue.EvaluateEqual(r: needle, l: list[i]).ToBool();
                 }
             }
             else
