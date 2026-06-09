@@ -5,7 +5,7 @@ namespace Chow.SourceData
     /// Low-level immutable representation of a Python-style <c>range</c>. Stores the start, stop,
     /// and step values and produces values on demand via <see cref="GetIterator"/>.
     /// </summary>
-    class SourceRange
+    class SourceRange 
     {
         public long Start { get; }
         public long Stop { get; }

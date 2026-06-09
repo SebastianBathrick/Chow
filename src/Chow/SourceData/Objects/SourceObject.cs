@@ -9,17 +9,21 @@ namespace Chow.SourceData
     /// support throw <see cref="NotSupportedException"/> (Python's
     /// <c>TypeError</c>); subclasses opt in by overriding.
     /// </summary>
-    abstract class SourceObject
+    abstract class SourceObject : ISourceObject
     {
         // ---------------- Construction ----------------
 
-        protected void Initialize()
+        public void Initialize()
         {
             Initialize(Array.Empty<SourceValue>());
         }
 
         /// <summary>(Python: <c>__init__</c>)</summary>
-        protected abstract void Initialize(params SourceValue[] args);
+        public abstract void Initialize(params SourceValue[] args);
+
+        // ---------------- Type ----------------
+
+        public abstract DataType Type { get; }
 
         // ---------------- String representations ----------------
 
@@ -45,22 +49,25 @@ namespace Chow.SourceData
         /// <c>Length() != 0</c> — mirroring Python's
         /// <c>__bool__</c> → <c>__len__</c> fallback.
         /// </summary>
-        public virtual bool Truthiness()
+        public virtual bool Truthiness
         {
-            if (HasLength())
+            get
             {
-                return Length() != 0;
+                if (HasLength)
+                {
+                    return Length != 0;
+                }
+                return true;
             }
-            return true;
         }
 
         /// <summary>
         /// (Python: <c>__len__</c>) Override together with
         /// <see cref="HasLength"/> to make the object sized.
         /// </summary>
-        public virtual int Length()
+        public virtual int Length
         {
-            throw new NotSupportedException(nameof(Length));
+            get { throw new NotSupportedException(nameof(Length)); }
         }
 
         /// <summary>
@@ -69,7 +76,7 @@ namespace Chow.SourceData
         /// checks for the presence of <c>__len__</c>; C# needs an
         /// explicit flag.)
         /// </summary>
-        protected virtual bool HasLength() => false;
+        public virtual bool HasLength => false;
 
         // ---------------- Attribute protocol ----------------
 
@@ -97,9 +104,9 @@ namespace Chow.SourceData
         }
 
         /// <summary>(Python: <c>__dir__</c>) Names only.</summary>
-        public virtual IEnumerable<string> Dir()
+        public virtual List<string> Directory
         {
-            yield break;
+            get;
         }
 
         // ---------------- Item (container) protocol ----------------

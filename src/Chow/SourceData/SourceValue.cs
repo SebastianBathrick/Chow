@@ -23,9 +23,9 @@ namespace Chow.SourceData
             { typeof(int), DataType.Long },
             { typeof(double), DataType.Double },
             { typeof(string), DataType.Str },
-            { typeof(SourceDictionary), DataType.Dict },
-            { typeof(SourceRange), DataType.Range },
-            { typeof(SourceList), DataType.List }
+            { typeof(ISourceObject), DataType.Dict },
+            { typeof(ISourceObject), DataType.Range },
+            { typeof(ISourceObject), DataType.List }
         };
         
         /// <summary>Represents the SourceValue equivalent to null/nil/none values.</summary>
@@ -119,14 +119,8 @@ namespace Chow.SourceData
                 case bool boolValue:
                     this = new SourceValue(boolValue);
                     break;
-                case SourceList listValue:
-                    this = new SourceValue(listValue);
-                    break;
-                case SourceDictionary dictValue:
-                    this = new SourceValue(dictValue);
-                    break;
-                case SourceRange rangeValue:
-                    this = new SourceValue(rangeValue);
+                case ISourceObject srcObj:
+                    this = new SourceValue(srcObj);
                     break;
                 case SourceValue chowValue:
                     // **IMPORTANT**: CHOW VALUES ARE NEVER DIRECTLY WRAPPED IN OTHER CHOW VALUE INSTANCES
@@ -249,14 +243,9 @@ namespace Chow.SourceData
                     return StrToBool();
 
                 case DataType.List:
-                    return ListToBool();
-
                 case DataType.Dict:
-                    return DictToBool();
-                    
                 case DataType.Range:
-                    return RangeToBool();
-
+                    ((ISourceObject)_obj).Truthiness();
                 default:
                     throw new DataTypeException(GetConversionErrorMessage(_dataType, DataType.Bool));
             }
@@ -327,6 +316,11 @@ namespace Chow.SourceData
                     return _obj;
             }
         }
+
+        public ISourceObject ToSourceObject()
+        {
+            return (ISourceObject)_obj;
+        }
         
         public override string ToString()
         {
@@ -368,37 +362,6 @@ namespace Chow.SourceData
 
             throw new InvalidOperationException("Expected string value for boolean comparison");
         }
-
-        bool ListToBool()
-        {
-            if (_obj is SourceList listValue)
-            {
-                return listValue.Count != LIST_COUNT_TO_BOOL_F;
-            }
-
-            throw new InvalidOperationException("Expected list value for boolean comparison");
-        }
-
-        bool DictToBool()
-        {
-            if (_obj is SourceDictionary dictValue)
-            {
-                return dictValue.Count != DICT_LEN_TO_BOOL_F;
-            }
-
-            throw new InvalidOperationException("Expected dict value for boolean comparison");
-        }
-
-        bool RangeToBool()
-        {
-            if (_obj is SourceRange rangeValue)
-            {
-                return rangeValue.Count != RNG_LEN_TO_BOOL_F;
-            }
-
-            throw new InvalidOperationException("Expected range value for boolean comparison");
-        }
-
         long StrToLong()
         {
             if (!(_obj is string strValue))

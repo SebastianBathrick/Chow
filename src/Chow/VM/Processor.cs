@@ -243,15 +243,16 @@ namespace Chow.VM
 
             if (container.DataType == DataType.Dict)
             {
-                found = ((SourceDictionary)container.ToObject()).ContainsKey(needle);
+                found = container.ToSourceObject().Contains(needle);
             }
             else if (container.DataType == DataType.List)
             {
-                var list = (SourceList)container.ToObject();
+                var list = container.ToSourceObject();
 
-                for (var i = 0; i < list.Count && !found; i++)
+                for (var i = 0; i < list.Length && !found; i++)
                 {
-                    found = SourceValue.EvaluateEqual(r: needle, l: list[i]).ToBool();
+                    var listItem = list.GetItem(new SourceValue(i));
+                    found = SourceValue.EvaluateEqual(r: needle, l: listItem).ToBool();
                 }
             }
             else
@@ -414,14 +415,15 @@ namespace Chow.VM
             else if (target.DataType == DataType.Dict)
             {
                 // TODO: Create a ToInternalDict and ToInternalList to clean this up
-                var dict = (SourceDictionary)target.ToObject();
+                var dict = target.ToSourceObject();
 
-                if (!dict.HasMethod(attrName))
+                if (!dict.Directory.Contains(attrName))
                 {
                     throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
                 }
 
-                _valStack.Push(dict[attrName]);
+                // TODO: Add implicit overloads to convert strings/longs/ints/doubles/etc to SourceValues
+                _valStack.Push(dict.GetAttribute(new SourceValue(attrName)));
             }
             else
             {
