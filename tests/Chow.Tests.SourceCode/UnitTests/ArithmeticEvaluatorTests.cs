@@ -481,12 +481,12 @@ public class ArithmeticEvaluatorTests
 
     static SourceValue Evaluate(EvaluateBinary evaluate, SourceValue left, SourceValue right)
     {
-        return evaluate(right, left);
+        return evaluate(ref right, ref left);
     }
 
     static SourceValue Evaluate(EvaluateUnary evaluate, SourceValue operand)
     {
-        return evaluate(operand);
+        return evaluate(ref operand);
     }
 
     static void AssertResult(
@@ -537,7 +537,7 @@ public class ArithmeticEvaluatorTests
         var result = Evaluate(evaluate, left, right);
 
         Assert.That(
-            ComparisonEvaluator.EvaluateEqual(result, expectedValue).ToBool(),
+            ComparisonEvaluator.EvaluateEqual(ref result, ref expectedValue).ToBool(),
             Is.True,
             $"Expected {expectedValue}, but was {result}");
     }
@@ -583,9 +583,9 @@ public class ArithmeticEvaluatorTests
         Assert.That(ex.Message, Does.Contain("'" + operandType + "'"));
     }
 
-    delegate SourceValue EvaluateBinary(SourceValue r, SourceValue l);
+    delegate SourceValue EvaluateBinary(ref SourceValue r, ref SourceValue l);
 
-    delegate SourceValue EvaluateUnary(SourceValue operand);
+    delegate SourceValue EvaluateUnary(ref SourceValue operand);
 
     #endregion
 }

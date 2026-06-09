@@ -382,7 +382,7 @@ public class ComparisonEvaluatorTests
 
     static SourceValue Evaluate(EvaluateBinary evaluate, SourceValue left, SourceValue right)
     {
-        return evaluate(right, left);
+        return evaluate(ref right, ref left);
     }
 
     static void AssertBoolResult(
@@ -406,7 +406,7 @@ public class ComparisonEvaluatorTests
         Assert.That(ex.Message, Does.Contain("'" + rightType + "'"));
     }
 
-    delegate SourceValue EvaluateBinary(SourceValue r, SourceValue l);
+    delegate SourceValue EvaluateBinary(ref SourceValue r, ref SourceValue l);
 
     #endregion
 }

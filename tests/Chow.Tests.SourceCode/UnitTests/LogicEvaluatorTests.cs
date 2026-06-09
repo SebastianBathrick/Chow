@@ -360,12 +360,12 @@ public class LogicEvaluatorTests
 
     static SourceValue Evaluate(EvaluateUnary evaluate, SourceValue operand)
     {
-        return evaluate(operand);
+        return evaluate(ref operand);
     }
 
     static SourceValue Evaluate(EvaluateBinary evaluate, SourceValue left, SourceValue right)
     {
-        return evaluate(right, left);
+        return evaluate(ref right, ref left);
     }
 
     static void AssertBoolResult(EvaluateUnary evaluate, SourceValue operand, bool expectedBool)
@@ -397,7 +397,7 @@ public class LogicEvaluatorTests
 
         Assert.That(result.DataType, Is.EqualTo(DataType.Dict));
         Assert.That(
-            ComparisonEvaluator.EvaluateEqual(result, expectedValue).ToBool(),
+            ComparisonEvaluator.EvaluateEqual(ref result, ref expectedValue).ToBool(),
             Is.True,
             $"Expected {expectedValue}, but was {result}");
     }
@@ -417,9 +417,9 @@ public class LogicEvaluatorTests
         Assert.That(LogicEvaluator.IsTruthy(ref value), Is.EqualTo(expectedValue));
     }
 
-    delegate SourceValue EvaluateUnary(SourceValue operand);
+    delegate SourceValue EvaluateUnary(ref SourceValue operand);
 
-    delegate SourceValue EvaluateBinary(SourceValue r, SourceValue l);
+    delegate SourceValue EvaluateBinary(ref SourceValue r, ref SourceValue l);
 
     #endregion
 }
