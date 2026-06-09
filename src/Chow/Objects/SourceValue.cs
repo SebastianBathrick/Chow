@@ -253,10 +253,10 @@ namespace Chow.Objects
             switch (LookupBinary(ExpressionOperator.Equal, other))
             {
                 case ConversionCase.ToInt:
-                    return PromoteToLong() == other.PromoteToLong();
+                    return ToLong() == other.ToLong();
                 case ConversionCase.ToFloat:
                 {
-                    return PromoteToDouble() == other.PromoteToDouble();
+                    return ToDouble() == other.ToDouble();
                 }
                 case ConversionCase.Nothing:
                 {
@@ -605,50 +605,7 @@ namespace Chow.Objects
         {
             return new DataTypeException($"bad operand type for unary {@operator}: '{_dataType}'");
         }
-
-        // TODO: These are redundant, the ToX methods should be used instead.
-        long PromoteToLong()
-        {
-            switch (_dataType)
-            {
-                case DataType.Bool:
-                {
-                    return BoolValue ? 1L : 0L;
-                }
-                case DataType.Long:
-                {
-                    return _long;
-                }
-                default:
-                {
-                    throw new InvalidOperationException($"Cannot promote {_dataType} to int");
-                }
-            }
-        }
-
-        double PromoteToDouble()
-        {
-            switch (_dataType)
-            {
-                case DataType.Bool:
-                {
-                    return BoolValue ? 1.0 : 0.0;
-                }
-                case DataType.Long:
-                {
-                    return _long;
-                }
-                case DataType.Double:
-                {
-                    return _dbl;
-                }
-                default:
-                {
-                    throw new InvalidOperationException($"Cannot promote {_dataType} to float");
-                }
-            }
-        }
-
+        
         // Equality fallback used when DataTypeConversionMap reports Nothing for ==/!= operands.
         // Cross-type combinations are never equal (Python: 1 == "1" → False); same-type combinations
         // delegate to the underlying value's identity/structural equality.
