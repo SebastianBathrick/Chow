@@ -25,7 +25,7 @@ public class LanguageFeatureTests
         var returnValue = ChowEngine.Execute(caseExecute.SourceCode);
 
         Assert.That(
-            SourceValue.EvaluateEqual(returnValue, caseExecute.ExpectedResult).ToBool(),
+            SourceValue.IsEqual(returnValue, caseExecute.ExpectedResult).ToBool(),
             Is.True,
             $"Expected {caseExecute.ExpectedResult}, but was {returnValue}");
     }
@@ -2470,7 +2470,7 @@ public class LanguageFeatureTests
             if False:
                 False
             """,
-            new SourceValue(SourceValue.None)
+            SourceValue.None
         ),
         
         new(
@@ -2550,7 +2550,7 @@ public class LanguageFeatureTests
             while False:
                 True
             """,
-            new SourceValue(SourceValue.None)
+            SourceValue.None
         ),
 
         // A counter drives the loop; after it exits, the trailing expression statement

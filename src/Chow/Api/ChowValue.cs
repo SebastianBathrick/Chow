@@ -7,18 +7,6 @@ namespace Chow
 {
     public class ChowValue
     {
-        static readonly Dictionary<Type, DataType> DataTypeMap = new Dictionary<Type, DataType>
-        {
-            { typeof(bool), DataType.Bool },
-            { typeof(long), DataType.Long },
-            { typeof(int), DataType.Long },
-            { typeof(double), DataType.Double },
-            { typeof(string), DataType.Str },
-            { typeof(SourceDictionary), DataType.Dict },
-            { typeof(SourceRange), DataType.Range },
-            { typeof(SourceList), DataType.List }
-        };
-
         internal SourceValue SourceValue { get; }
         
         internal ChowValue(SourceValue srcVal)

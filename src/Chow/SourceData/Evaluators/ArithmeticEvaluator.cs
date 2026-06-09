@@ -144,7 +144,7 @@ namespace Chow.SourceData
 
         #region Modulus Methods
 
-        public static SourceValue Pow(ref SourceValue r, ref SourceValue l)
+        public static SourceValue Mod(ref SourceValue r, ref SourceValue l)
         {
             var convDataType = GetConversionDataType(
                 NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Modulus);
@@ -234,7 +234,7 @@ namespace Chow.SourceData
         #region Exponentiation Methods
 
         // Python: negative integer exponent forces float result.
-        public static SourceValue EvaluateExponent(ref SourceValue r, ref SourceValue l)
+        public static SourceValue Pow(ref SourceValue r, ref SourceValue l)
         {
             var convDataType = GetConversionDataType(
                 NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Exponentiate);
@@ -249,13 +249,13 @@ namespace Chow.SourceData
                     var result = ExponentiateLong(l.ToLong(), exponentLong);
                     return new SourceValue(result);
                 }
-                // Negative int exponent (e.g. 2 ** -3) falls through to float Math.Pow below.
+                // Negative int exponent (e.g. 2 ** -3) falls through to float Math.Mod below.
             }
 
             var baseDbl = l.ToDouble();
             var exponentDbl = r.ToDouble();
 
-            // Python: 0 ** -n raises ZeroDivisionError; Math.Pow would return Infinity.
+            // Python: 0 ** -n raises ZeroDivisionError; Math.Mod would return Infinity.
             if (IsDoubleValueZero(baseDbl) && exponentDbl < 0.0)
             {
                 throw new ZeroDivisionException();

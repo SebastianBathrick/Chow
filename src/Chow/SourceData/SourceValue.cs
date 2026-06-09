@@ -463,6 +463,50 @@ namespace Chow.SourceData
 
         #endregion
 
+        #region Implicit Operators
+
+        public static implicit operator SourceValue(bool value)
+        {
+            return new SourceValue(value);
+        }
+
+        public static implicit operator bool(SourceValue value)
+        {
+            return value.ToBool();
+        }
+
+        public static implicit operator SourceValue(long value)
+        {
+            return new SourceValue(value);
+        }
+
+        public static implicit operator long(SourceValue value)
+        {
+            return value.ToLong();
+        }
+
+        public static implicit operator SourceValue(double value)
+        {
+            return new SourceValue(value);
+        }
+
+        public static implicit operator double(SourceValue value)
+        {
+            return value.ToDouble();
+        }
+
+        public static implicit operator SourceValue(string value)
+        {
+            return new SourceValue(value);
+        }
+
+        public static implicit operator string(SourceValue value)
+        {
+            return value.ToString();
+        }
+
+        #endregion
+
         public static SourceValue Add(SourceValue r, SourceValue l)
         {
             return ArithmeticEvaluator.Add(ref r, ref l);
@@ -483,72 +527,72 @@ namespace Chow.SourceData
             return ArithmeticEvaluator.Divide(ref r, ref l);
         }
 
+        public static SourceValue Mod(SourceValue r, SourceValue l)
+        {
+            return ArithmeticEvaluator.Mod(ref r, ref l);
+        }
+
+        public static SourceValue Floor(SourceValue r, SourceValue l)
+        {
+            return ArithmeticEvaluator.EvaluateFloorDivision(ref r, ref l);
+        }
+
         public static SourceValue Pow(SourceValue r, SourceValue l)
         {
             return ArithmeticEvaluator.Pow(ref r, ref l);
         }
 
-        public static SourceValue EvaluateFloorDivision(SourceValue r, SourceValue l)
-        {
-            return ArithmeticEvaluator.EvaluateFloorDivision(ref r, ref l);
-        }
-
-        public static SourceValue EvaluateExponent(SourceValue r, SourceValue l)
-        {
-            return ArithmeticEvaluator.EvaluateExponent(ref r, ref l);
-        }
-
-        public static SourceValue EvaluateNegation(SourceValue operand)
+        public static SourceValue Negate(SourceValue operand)
         {
             return ArithmeticEvaluator.EvaluateNegation(ref operand);
         }
 
-        public static SourceValue EvaluateEqual(SourceValue r, SourceValue l)
+        public static SourceValue IsEqual(SourceValue r, SourceValue l)
         {
             return ComparisonEvaluator.EvaluateEqual(ref r, ref l);
         }
 
-        public static SourceValue EvaluateNotEqual(SourceValue r, SourceValue l)
+        public static SourceValue IsNotEqual(SourceValue r, SourceValue l)
         {
             return ComparisonEvaluator.EvaluateNotEqual(ref r, ref l);
         }
 
-        public static SourceValue EvaluateLess(SourceValue r, SourceValue l)
+        public static SourceValue IsLess(SourceValue r, SourceValue l)
         {
             return ComparisonEvaluator.EvaluateLess(ref r, ref l);
         }
 
-        public static SourceValue EvaluateGreater(SourceValue r, SourceValue l)
+        public static SourceValue IsGreater(SourceValue r, SourceValue l)
         {
             return ComparisonEvaluator.EvaluateGreater(ref r, ref l);
         }
 
-        public static SourceValue EvaluateLessEqual(SourceValue r, SourceValue l)
+        public static SourceValue IsLessOrEqual(SourceValue r, SourceValue l)
         {
             return ComparisonEvaluator.EvaluateLessEqual(ref r, ref l);
         }
 
-        public static SourceValue EvaluateGreaterEqual(SourceValue r, SourceValue l)
+        public static SourceValue IsGreaterOrEqual(SourceValue r, SourceValue l)
         {
             return ComparisonEvaluator.EvaluateGreaterEqual(ref r, ref l);
         }
 
-        public static SourceValue EvaluateAnd(SourceValue r, SourceValue l)
+        public static SourceValue And(SourceValue r, SourceValue l)
         {
             return LogicEvaluator.EvaluateAnd(ref r, ref l);
         }
 
-        public static SourceValue EvaluateOr(SourceValue r, SourceValue l)
+        public static SourceValue Or(SourceValue r, SourceValue l)
         {
             return LogicEvaluator.EvaluateOr(ref r, ref l);
         }
 
-        public static SourceValue EvaluateUnion(SourceValue r, SourceValue l)
+        public static SourceValue Unite(SourceValue r, SourceValue l)
         {
             return LogicEvaluator.EvaluateUnion(ref r, ref l);
         }
 
-        public static SourceValue EvaluateNot(SourceValue operand)
+        public static SourceValue Not(SourceValue operand)
         {
             return LogicEvaluator.EvaluateNot(ref operand);
         }

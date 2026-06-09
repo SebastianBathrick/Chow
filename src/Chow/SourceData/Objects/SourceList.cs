@@ -77,7 +77,7 @@ namespace Chow.SourceData
         {
             for (var i = 0; i < _elements.Count; i++)
             {
-                if (SourceValue.EvaluateEqual(r: value, l: _elements[i]).ToBool())
+                if (SourceValue.IsEqual(r: value, l: _elements[i]).ToBool())
                 {
                     return true;
                 }
@@ -206,7 +206,7 @@ namespace Chow.SourceData
 
             for (var i = 0; i < _elements.Count; i++)
             {
-                if (!SourceValue.EvaluateEqual(_elements[i], args[0]).ToBool())
+                if (!SourceValue.IsEqual(_elements[i], args[0]).ToBool())
                 {
                     continue;
                 }
@@ -256,7 +256,7 @@ namespace Chow.SourceData
 
             for (var i = 0; i < a._elements.Count; i++)
             {
-                if (!SourceValue.EvaluateEqual(a._elements[i], b._elements[i]).ToBool())
+                if (!SourceValue.IsEqual(a._elements[i], b._elements[i]).ToBool())
                 {
                     return false;
                 }

@@ -265,28 +265,28 @@ public class ArithmeticEvaluatorTests
     public void Modulus_PositiveOperands_ReturnsInt()
     {
         // Python: 7 % 3 -> 1
-        AssertResult(ArithmeticEvaluator.Pow, L(7), L(3), DataType.Long, 1L);
+        AssertResult(ArithmeticEvaluator.Mod, L(7), L(3), DataType.Long, 1L);
     }
 
     [Test]
     public void Modulus_NegativeDividend_ReturnsInt()
     {
         // Python: -3 % 2 -> 1
-        AssertResult(ArithmeticEvaluator.Pow, L(-3), L(2), DataType.Long, 1L);
+        AssertResult(ArithmeticEvaluator.Mod, L(-3), L(2), DataType.Long, 1L);
     }
 
     [Test]
     public void Modulus_NegativeDivisor_ReturnsInt()
     {
         // Python: 3 % -2 -> -1
-        AssertResult(ArithmeticEvaluator.Pow, L(3), L(-2), DataType.Long, -1L);
+        AssertResult(ArithmeticEvaluator.Mod, L(3), L(-2), DataType.Long, -1L);
     }
 
     [Test]
     public void Modulus_BothNegative_ReturnsInt()
     {
         // Python: -17 % -4 -> -1
-        AssertResult(ArithmeticEvaluator.Pow, L(-17), L(-4), DataType.Long, -1L);
+        AssertResult(ArithmeticEvaluator.Mod, L(-17), L(-4), DataType.Long, -1L);
     }
 
     [Test]
@@ -294,7 +294,7 @@ public class ArithmeticEvaluatorTests
     {
         // Python: 7 % 0 -> ZeroDivisionError
         Assert.Throws<ZeroDivisionException>(
-            () => Evaluate(ArithmeticEvaluator.Pow, L(7), L(0)));
+            () => Evaluate(ArithmeticEvaluator.Mod, L(7), L(0)));
     }
 
     #endregion
@@ -355,21 +355,21 @@ public class ArithmeticEvaluatorTests
     public void Exponentiation_IntInt_ReturnsInt()
     {
         // Python: 2 ** 3 -> 8
-        AssertResult(ArithmeticEvaluator.EvaluateExponent, L(2), L(3), DataType.Long, 8L);
+        AssertResult(ArithmeticEvaluator.Pow, L(2), L(3), DataType.Long, 8L);
     }
 
     [Test]
     public void Exponentiation_NegativeExponent_ReturnsFloat()
     {
         // Python: 2 ** -3 -> 0.125
-        AssertResult(ArithmeticEvaluator.EvaluateExponent, L(2), L(-3), DataType.Double, 0.125);
+        AssertResult(ArithmeticEvaluator.Pow, L(2), L(-3), DataType.Double, 0.125);
     }
 
     [Test]
     public void Exponentiation_ZeroToZero_ReturnsInt()
     {
         // Python: 0 ** 0 -> 1
-        AssertResult(ArithmeticEvaluator.EvaluateExponent, L(0), L(0), DataType.Long, 1L);
+        AssertResult(ArithmeticEvaluator.Pow, L(0), L(0), DataType.Long, 1L);
     }
 
     [Test]
@@ -377,28 +377,28 @@ public class ArithmeticEvaluatorTests
     {
         // Python: 0 ** -1 -> ZeroDivisionError
         Assert.Throws<ZeroDivisionException>(
-            () => Evaluate(ArithmeticEvaluator.EvaluateExponent, L(0), L(-1)));
+            () => Evaluate(ArithmeticEvaluator.Pow, L(0), L(-1)));
     }
 
     [Test]
     public void Exponentiation_LargeIntExponent_ReturnsExactInt()
     {
         // Python: 10 ** 16 -> 10000000000000000
-        AssertResult(ArithmeticEvaluator.EvaluateExponent, L(10), L(16), DataType.Long, 10_000_000_000_000_000L);
+        AssertResult(ArithmeticEvaluator.Pow, L(10), L(16), DataType.Long, 10_000_000_000_000_000L);
     }
 
     [Test]
     public void Exponentiation_FloatBase_ReturnsFloat()
     {
         // Python: 2.0 ** 3 -> 8.0
-        AssertResult(ArithmeticEvaluator.EvaluateExponent, D(2.0), L(3), DataType.Double, 8.0);
+        AssertResult(ArithmeticEvaluator.Pow, D(2.0), L(3), DataType.Double, 8.0);
     }
 
     [Test]
     public void Exponentiation_NegativeBase_ReturnsInt()
     {
         // Python: (-2) ** 3 -> -8
-        AssertResult(ArithmeticEvaluator.EvaluateExponent, L(-2), L(3), DataType.Long, -8L);
+        AssertResult(ArithmeticEvaluator.Pow, L(-2), L(3), DataType.Long, -8L);
     }
 
     [Test]
@@ -406,7 +406,7 @@ public class ArithmeticEvaluatorTests
     {
         // Python: 11 ** -3 -> 0.0007513148009015778
         AssertResult(
-            ArithmeticEvaluator.EvaluateExponent,
+            ArithmeticEvaluator.Pow,
             L(11),
             L(-3),
             DataType.Double,

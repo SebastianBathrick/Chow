@@ -62,31 +62,31 @@ namespace Chow.VM
                     _valStack.Push(SourceValue.Divide(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryModulus:
-                    _valStack.Push(SourceValue.Pow(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.Mod(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryPow:
-                    _valStack.Push(SourceValue.EvaluateExponent(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.Pow(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryFloor:
-                    _valStack.Push(SourceValue.EvaluateFloorDivision(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.Floor(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryEqual:
-                    _valStack.Push(SourceValue.EvaluateEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.IsEqual(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryNotEqual:
-                    _valStack.Push(SourceValue.EvaluateNotEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.IsNotEqual(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryLess:
-                    _valStack.Push(SourceValue.EvaluateLess(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.IsLess(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryGreater:
-                    _valStack.Push(SourceValue.EvaluateGreater(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.IsGreater(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryLessEqual:
-                    _valStack.Push(SourceValue.EvaluateLessEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.IsLessOrEqual(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryGreaterEqual:
-                    _valStack.Push(SourceValue.EvaluateGreaterEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.IsGreaterOrEqual(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryUnion:
                     ExecuteBinaryUnion();
@@ -102,10 +102,10 @@ namespace Chow.VM
 
                 // -- Unary Operations-------------------------------------------------------------
                 case OperationCode.UnaryNot:
-                    _valStack.Push(SourceValue.EvaluateNot(_valStack.Pop()));
+                    _valStack.Push(SourceValue.Not(_valStack.Pop()));
                     break;
                 case OperationCode.UnaryNegate:
-                    _valStack.Push(SourceValue.EvaluateNegation(_valStack.Pop()));
+                    _valStack.Push(SourceValue.Negate(_valStack.Pop()));
                     break;
 
                 // -- Control Structure Operations ------------------------------------------------
@@ -232,7 +232,7 @@ namespace Chow.VM
 
         void ExecuteBinaryUnion()
         {
-            _valStack.Push(SourceValue.EvaluateUnion(r: _valStack.Pop(), l: _valStack.Pop()));
+            _valStack.Push(SourceValue.Unite(r: _valStack.Pop(), l: _valStack.Pop()));
         }
 
         void EvaluateIn(bool negate)
@@ -261,6 +261,7 @@ namespace Chow.VM
         {
             var operand = _valStack.Peek();
 
+            // TODO: Move this to SourceValue
             if (LogicEvaluator.ShouldShortCircuitAnd(ref operand))
             {
                 // Leave the falsy value on the stack as the result of the short-circuited `and`

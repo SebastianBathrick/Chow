@@ -214,7 +214,7 @@ namespace Chow.SourceData
                     return false;
                 }
 
-                if (!SourceValue.EvaluateEqual(a._entries[key], bValue).ToBool())
+                if (!SourceValue.IsEqual(a._entries[key], bValue).ToBool())
                 {
                     return false;
                 }

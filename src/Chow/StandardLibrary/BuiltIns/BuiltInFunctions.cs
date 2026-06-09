@@ -356,8 +356,8 @@ namespace Chow.StandardLibrary.BuiltIns
             while (iterator.TryMoveNext(out var next))
             {
                 var replace = findLess
-                    ? SourceValue.EvaluateLess(r: winner, l: next).ToBool()
-                    : SourceValue.EvaluateGreater(r: winner, l: next).ToBool();
+                    ? SourceValue.IsLess(r: winner, l: next).ToBool()
+                    : SourceValue.IsGreater(r: winner, l: next).ToBool();
                 
                 if (replace)
                 {
