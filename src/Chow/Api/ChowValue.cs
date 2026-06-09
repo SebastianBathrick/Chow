@@ -7,6 +7,8 @@ namespace Chow
 {
     public class ChowValue
     {
+        public static readonly ChowValue None = new ChowValue(SourceValue.None);
+        
         static readonly Dictionary<Type, DataType> DataTypeMap = new Dictionary<Type, DataType>
         {
             { typeof(bool), DataType.Bool },

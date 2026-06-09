@@ -1,4 +1,4 @@
-﻿using Chow;
+using Chow;
 using Chow.Objects;
 using Chow.VM.Utilities;
 namespace Chow.Tests.SourceCode;
@@ -7,7 +7,7 @@ namespace Chow.Tests.SourceCode;
 public class LanguageFeatureTests
 {
     #region Methods
-    
+
     [TestCaseSource(nameof(ControlFlowCases))]
     [TestCaseSource(nameof(ExecuteStringConcatenationAndFStringCases))]
     [TestCaseSource(nameof(ExecuteBuiltInFunctionCases))]
@@ -32,14 +32,14 @@ public class LanguageFeatureTests
     #endregion
 
     #region Static Readonly Fields
-    
-    static readonly SourceValue TrueChow = new(true);
-    static readonly SourceValue FalseChow = new(false);
-    
+
+    static readonly ChowValue TrueChow = true;
+    static readonly ChowValue FalseChow = false;
+
     #endregion
 
     #region Execute: Expression Statements
-    
+
     static readonly IReadOnlyList<CaseExecute> LiteralValueCases =
     [
         #region Integer Literals
@@ -47,25 +47,25 @@ public class LanguageFeatureTests
         // Single-digit
         new(
             "1",
-            new(1)
+            1
         ),
-        
+
         // Multi-digit
         new(
             "123",
-            new(123)
+            123
         ),
 
         // Negative Single-digit
         new(
             "-1",
-            new(-1)
+            -1
         ),
-        
+
         // Negative Multi-digit
         new(
             "-123",
-            new(-123)
+            -123
         ),
 
         #endregion
@@ -75,115 +75,115 @@ public class LanguageFeatureTests
         // Single leading / Single trailing
         new(
             "1.2",
-            new(1.2)
+            1.2
         ),
 
         // Multi leading / Single trailing
         new(
             "12.3",
-            new(12.3)
+            12.3
         ),
 
         // Single leading / Multi trailing
         new(
             "1.23",
-            new(1.23)
+            1.23
         ),
 
         // Multi leading / Multi trailing
         new(
             "12.34",
-            new(12.34)
+            12.34
         ),
 
         // Negative Single leading / Single trailing
         new(
             "-1.2",
-            new(-1.2)
+            -1.2
         ),
 
         // Negative Multi leading / Single trailing
         new(
             "-12.3",
-            new(-12.3)
+            -12.3
         ),
 
         // Negative Single leading / Multi trailing
         new(
             "-1.23",
-            new(-1.23)
+            -1.23
         ),
 
         // Negative Multi leading / Multi trailing
         new(
             "-12.34",
-            new(-12.34)
+            -12.34
         ),
 
         // Leading decimal / Single trailing
         new(
             ".1",
-            new(0.1)
+            0.1
         ),
 
         // Leading decimal / Multi trailing
         new(
             ".12",
-            new(0.12)
+            0.12
         ),
 
         // Single leading / Trailing decimal
         new(
             "1.",
-            new(1.0)
+            1.0
         ),
 
         // Multi leading / Trailing decimal
         new(
             "12.",
-            new(12.0)
+            12.0
         ),
 
         // Negative leading decimal / Single trailing
         new(
             "-.1",
-            new(-0.1)
+            -0.1
         ),
 
         // Negative leading decimal / Multi trailing
         new(
             "-.12",
-            new(-0.12)
+            -0.12
         ),
 
         // Negative single leading / Trailing decimal
         new(
             "-1.",
-            new(-1.0)
+            -1.0
         ),
 
         // Negative multi leading / Trailing decimal
         new(
             "-12.",
-            new(-12.0)
+            -12.0
         ),
 
         #endregion
 
         #region String, List, and Dict Literals
-        
+
         new(
             "\"Hello, Chow\"",
-            new("Hello, Chow")
+            "Hello, Chow"
         ),
 
         new(
             "'Single quoted'",
-            new("Single quoted")
+            "Single quoted"
         ),
 
         // TODO: Write tests when host language data type conversion is added for dicts and lists
-        
+
         new(
             "[] == []",
             TrueChow
@@ -227,44 +227,44 @@ public class LanguageFeatureTests
         // Note: Passing the SourceValue constructor a long or an int will result in a SourceValue
         // instance with DataType.Long. However, passing a float or a double will result in an
         // instance with DataType.Double. Always double-check the literal passed to the constructor.
-        
+
         //--- Positive and Negative Operands ---
-        
+
         #region Integer Positive Operands
 
         new(
             "1" + PLUS + "2",
-            new(3)
+            3
         ),
 
         new(
             "6" + MINUS + "3",
-            new(3)
+            3
         ),
 
         new(
             "7" + TIMES + "8",
-            new(56)
+            56
         ),
 
         new(
             "9" + DIV + "3",
-            new(3.0) // Division always converts operands to be Chow floats
+            3.0 // Division always converts operands to be Chow floats
         ),
 
         new(
             "17" + FLOOR + "4",
-            new(4)
+            4
         ),
 
         new(
             "3" + MOD + "2",
-            new(1)
+            1
         ),
 
         new(
             "11" + POW + "3",
-            new(1331)
+            1331
         ),
 
         #endregion
@@ -273,37 +273,37 @@ public class LanguageFeatureTests
 
         new(
             "-1" + PLUS + "-2",
-            new(-3)
+            -3
         ),
 
         new(
             "-6" + MINUS + "-3",
-            new(-3)
+            -3
         ),
 
         new(
             "-7" + TIMES + "-8",
-            new(56)
+            56
         ),
 
         new(
             "-9" + DIV + "-3",
-            new(3.0) // Division always converts operands to be Chow floats
+            3.0 // Division always converts operands to be Chow floats
         ),
 
         new(
             "-17" + FLOOR + "-4",
-            new(4)
+            4
         ),
 
         new(
             "-3" + MOD + "-2",
-            new(-1)
+            -1
         ),
 
         new(
             "-11" + POW + "-3",
-            new(-0.0007513148009015778)
+            -0.0007513148009015778
         ),
 
         #endregion
@@ -312,74 +312,74 @@ public class LanguageFeatureTests
 
         new(
             "1" + PLUS + "-2",
-            new(-1)
+            -1
         ),
 
         new(
             "-1" + PLUS + "2",
-            new(1)
+            1
         ),
 
         new(
             "6" + MINUS + "-3",
-            new(9)
+            9
         ),
 
         new(
             "-6" + MINUS + "3",
-            new(-9)
+            -9
         ),
 
         new(
             "7" + TIMES + "-8",
-            new(-56)
+            -56
         ),
 
         new(
             "-7" + TIMES + "8",
-            new(-56)
+            -56
         ),
 
         new(
             "9" + DIV + "-3",
-            new(-3.0)
+            -3.0
         ),
 
         new(
             "-9" + DIV + "3",
-            new(-3.0) 
+            -3.0
         ),
 
         new(
             "17" + FLOOR + "-4",
-            new(-5)
+            -5
         ),
 
         new(
             "-17" + FLOOR + "4",
-            new(-5)
+            -5
         ),
 
         // Modulus result takes the sign of the right operand (Python rule)
         new(
             "3" + MOD + "-2",
-            new(-1)
+            -1
         ),
 
         new(
             "-3" + MOD + "2",
-            new(1)
+            1
         ),
 
         new(
             "11" + POW + "-3",
-            new(0.0007513148009015778)
+            0.0007513148009015778
         ),
 
         // Parses as -(11 ** 3) because exponentiation binds tighter than unary minus
         new(
             "-11" + POW + "3",
-            new(-1331)
+            -1331
         ),
 
         #endregion
@@ -388,37 +388,37 @@ public class LanguageFeatureTests
 
         new(
             "1.2" + PLUS + "2.3",
-            new(3.5)
+            3.5
         ),
 
         new(
             "6.2" + MINUS + "3.0",
-            new(3.2)
+            3.2
         ),
 
         new(
             "7.35" + TIMES + "8.002",
-            new(58.8147)
+            58.8147
         ),
 
         new(
             "9.245" + DIV + "0.5",
-            new(18.49)
+            18.49
         ),
 
         new(
             "17.8" + FLOOR + "4.2",
-            new(4.0)
+            4.0
         ),
 
         new(
             "3.34" + MOD + "1.2",
-            new(0.9399999999999997)
+            0.9399999999999997
         ),
 
         new(
             "11.5" + POW + "2.3",
-            new(275.1725020936858)
+            275.1725020936858
         ),
 
         #endregion
@@ -427,37 +427,37 @@ public class LanguageFeatureTests
 
         new(
             "-1.2" + PLUS + "-2.3",
-            new(-3.5)
+            -3.5
         ),
 
         new(
             "-6.2" + MINUS + "-3.0",
-            new(-3.2)
+            -3.2
         ),
 
         new(
             "-7.35" + TIMES + "-8.002",
-            new(58.8147)
+            58.8147
         ),
 
         new(
             "-9.245" + DIV + "-0.5",
-            new(18.49)
+            18.49
         ),
 
         new(
             "-17.8" + FLOOR + "-4.2",
-            new(4.0)
+            4.0
         ),
-        
+
         new(
             "-3.34" + MOD + "-1.2",
-            new(-0.9399999999999997)
+            -0.9399999999999997
         ),
 
         new(
             "-11.5" + POW + "-2.3",
-            new(-0.0036340840468846625)
+            -0.0036340840468846625
         ),
 
         #endregion
@@ -466,75 +466,75 @@ public class LanguageFeatureTests
 
         new(
             "1.2" + PLUS + "-2.3",
-            new(-1.0999999999999999)
+            -1.0999999999999999
         ),
 
         new(
             "-1.2" + PLUS + "2.3",
-            new(1.0999999999999999)
+            1.0999999999999999
         ),
 
         new(
             "6.2" + MINUS + "-3.0",
-            new(9.2)
+            9.2
         ),
 
         new(
             "-6.2" + MINUS + "3.0",
-            new(-9.2)
+            -9.2
         ),
 
         new(
             "7.35" + TIMES + "-8.002",
-            new(-58.8147)
+            -58.8147
         ),
 
         new(
             "-7.35" + TIMES + "8.002",
-            new(-58.8147)
+            -58.8147
         ),
 
         new(
             "9.245" + DIV + "-0.5",
-            new(-18.49)
+            -18.49
         ),
 
         new(
             "-9.245" + DIV + "0.5",
-            new(-18.49)
+            -18.49
         ),
 
         // Floor division rounds toward negative infinity (Python rule), not toward zero
         new(
             "17.8" + FLOOR + "-4.2",
-            new(-5.0)
+            -5.0
         ),
 
         new(
             "-17.8" + FLOOR + "4.2",
-            new(-5.0)
+            -5.0
         ),
 
         // Modulus result takes the sign of the right operand (Python rule)
         new(
             "3.34" + MOD + "-1.2",
-            new(-0.26)
+            -0.26
         ),
 
         new(
             "-3.34" + MOD + "1.2",
-            new(0.26)
+            0.26
         ),
 
         new(
             "11.5" + POW + "-2.3",
-            new(0.0036340840468846625)
+            0.0036340840468846625
         ),
 
         // Parses as -(11.5 ** 2.3) because exponentiation binds tighter than unary minus
         new(
             "-11.5" + POW + "2.3",
-            new(-275.1725020936858)
+            -275.1725020936858
         ),
 
         #endregion
@@ -546,37 +546,37 @@ public class LanguageFeatureTests
 
         new(
             "5" + PLUS + "1",
-            new(6)
+            6
             ),
 
         new(
             "8" + MINUS + "3",
-            new(5)
+            5
         ),
 
         new(
             "7" + TIMES + "2",
-            new(14)
+            14
         ),
 
         new(
             "10" + DIV + "4",
-            new(2.5) // Division always converts operands to be Chow floats
+            2.5 // Division always converts operands to be Chow floats
         ),
 
         new(
             "17" + FLOOR + "4",
-            new(4)
+            4
         ),
 
         new(
             "9" + MOD + "4",
-            new(1)
+            1
         ),
 
         new(
             "5" + POW + "2",
-            new(25)
+            25
         ),
 
         #endregion
@@ -585,37 +585,37 @@ public class LanguageFeatureTests
 
         new(
             "1" + PLUS + "5",
-            new(6)
+            6
         ),
 
         new(
             "3" + MINUS + "8",
-            new(-5)
+            -5
         ),
 
         new(
             "2" + TIMES + "7",
-            new(14)
+            14
         ),
 
         new(
             "4" + DIV + "10",
-            new(0.4) // Division always converts operands to be Chow floats
+            0.4 // Division always converts operands to be Chow floats
         ),
 
         new(
             "4" + FLOOR + "17",
-            new(0)
+            0
         ),
 
         new(
             "4" + MOD + "9",
-            new(4)
+            4
         ),
 
         new(
             "2" + POW + "5",
-            new(32)
+            32
         ),
 
         #endregion
@@ -624,127 +624,127 @@ public class LanguageFeatureTests
 
         new(
             "8.75" + PLUS + "2.5",
-            new(11.25)
+            11.25
         ),
 
         new(
             "9.5" + MINUS + "3.25",
-            new(6.25)
+            6.25
         ),
 
         new(
             "6.5" + TIMES + "2.5",
-            new(16.25)
+            16.25
         ),
 
         new(
             "9.75" + DIV + "2.5",
-            new(3.9)
+            3.9
         ),
 
         new(
             "17.8" + FLOOR + "4.2",
-            new(4.0)
+            4.0
         ),
 
         new(
             "9.75" + MOD + "2.5",
-            new(2.25)
+            2.25
         ),
 
         new(
             "6.25" + POW + "2.5",
-            new(97.65625)
+            97.65625
         ),
 
         #endregion
-        
+
         #region Right Larger Double Operand
 
         new(
             "2.25" + PLUS + "8.5",
-            new(10.75)
+            10.75
         ),
 
         new(
             "3.25" + MINUS + "9.5",
-            new(-6.25)
+            -6.25
         ),
 
         new(
             "2.5" + TIMES + "6.5",
-            new(16.25)
+            16.25
         ),
 
         new(
             "4.2" + DIV + "16.8",
-            new(0.25)
+            0.25
         ),
 
         new(
             "4.2" + FLOOR + "17.8",
-            new(0.0)
+            0.0
         ),
 
         new(
             "2.5" + MOD + "9.75",
-            new(2.5)
+            2.5
         ),
 
         new(
             "2.5" + POW + "6.25",
-            new(306.9905834186854)
+            306.9905834186854
         ),
 
         #endregion
-        
+
         //--- Data Type Coercion ---
-        
+
         #region Boolean Operands
 
         new(
             TRUE_STR + PLUS + TRUE_STR,
-            new(2)
+            2
         ),
 
         new(
             TRUE_STR + PLUS + FALSE_STR,
-            new(1)
+            1
         ),
 
         new(
             FALSE_STR + PLUS + FALSE_STR,
-            new(0)
+            0
         ),
 
         new(
             TRUE_STR + MINUS + TRUE_STR,
-            new(0)
+            0
         ),
 
         new(
             TRUE_STR + MINUS + FALSE_STR,
-            new(1)
+            1
         ),
 
         new(
             FALSE_STR + MINUS + FALSE_STR,
-            new(0)
+            0
         ),
 
         new(
             TRUE_STR + TIMES + TRUE_STR,
-            new(1)
+            1
         ),
 
         new(
             TRUE_STR + TIMES + FALSE_STR,
-            new(0)
+            0
         ),
 
         new(
             FALSE_STR + TIMES + FALSE_STR,
-            new(0)
+            0
         ),
 
         // Note: Exclude False as right operand for division, floor, & modulus tests because False
@@ -752,52 +752,52 @@ public class LanguageFeatureTests
 
         new(
             TRUE_STR + DIV + TRUE_STR,
-            new(1.0)
+            1.0
         ),
 
         new(
             FALSE_STR + DIV + TRUE_STR,
-            new(0.0)
+            0.0
         ),
 
         new(
             TRUE_STR + FLOOR + TRUE_STR,
-            new(1)
+            1
         ),
 
         new(
             FALSE_STR + FLOOR + TRUE_STR,
-            new(0)
+            0
         ),
 
         new(
             TRUE_STR + MOD + TRUE_STR,
-            new(0)
+            0
         ),
 
         new(
             FALSE_STR + MOD + TRUE_STR,
-            new(0)
+            0
         ),
 
         new(
             TRUE_STR + POW + TRUE_STR,
-            new(1)
+            1
         ),
 
         new(
             TRUE_STR + POW + FALSE_STR,
-            new(1)
+            1
         ),
 
         new(
             FALSE_STR + POW + TRUE_STR,
-            new(0)
+            0
         ),
 
         new(
             FALSE_STR + POW + FALSE_STR,
-            new(1)
+            1
         ),
 
         #endregion
@@ -806,32 +806,32 @@ public class LanguageFeatureTests
 
         new(
             "\"ab\"" + TIMES + "3",
-            new SourceValue("ababab")
+            "ababab"
         ),
 
         new(
             "3" + TIMES + "\"ab\"",
-            new SourceValue("ababab")
+            "ababab"
         ),
 
         new(
             "\"ab\"" + TIMES + "0",
-            new SourceValue(string.Empty)
+            string.Empty
         ),
 
         new(
             "[1]" + PLUS + "[2]",
-            List(new SourceValue(1), new SourceValue(2))
+            List(1, 2)
         ),
 
         new(
             "[1]" + TIMES + "3",
-            List(new SourceValue(1), new SourceValue(1), new SourceValue(1))
+            List(1, 1, 1)
         ),
 
         new(
             "3" + TIMES + "[1]",
-            List(new SourceValue(1), new SourceValue(1), new SourceValue(1))
+            List(1, 1, 1)
         ),
 
         #endregion
@@ -840,61 +840,61 @@ public class LanguageFeatureTests
 
         new(
             "-" + TRUE_STR,
-            new SourceValue(-1)
+            -1
         ),
 
         new(
             "-" + FALSE_STR,
-            new SourceValue(0)
+            0
         ),
 
         new(
             "-3.5",
-            new SourceValue(-3.5)
+            -3.5
         ),
 
         #endregion
-        
+
         #region Integer/Double Mixed Operands
 
         new(
             "2.5" + PLUS + "7",
-            new(9.5)
+            9.5
             ),
-        
+
         new(
             "2.5" + MINUS + "7",
-            new(-4.5)
+            -4.5
             ),
-        
+
         new(
             "2.5" + TIMES + "7",
-            new(17.5)
+            17.5
             ),
-        
+
         new(
             "2.5" + DIV + "7",
-            new(0.35714285714285715)
+            0.35714285714285715
             ),
-        
+
         new(
             "14.5" + FLOOR + "7",
-            new(2.0)
+            2.0
         ),
-        
+
         new(
             "14" + FLOOR + "6.5",
-            new(2.0)
+            2.0
         ),
-        
+
         new(
             "8.5" + MOD + "7",
-            new(1.5)
+            1.5
         ),
 
         new(
             "2.5" + POW + "-2",
-            new(0.16)
+            0.16
             ),
         #endregion
 
@@ -904,42 +904,42 @@ public class LanguageFeatureTests
 
         new(
             "5" + PLUS + TRUE_STR,
-            new(6)
+            6
         ),
 
         new(
             "5" + PLUS + FALSE_STR,
-            new(5)
+            5
         ),
 
         new(
             TRUE_STR + PLUS + "5",
-            new(6)
+            6
         ),
 
         new(
             "5" + MINUS + TRUE_STR,
-            new(4)
+            4
         ),
 
         new(
             "5" + MINUS + FALSE_STR,
-            new(5)
+            5
         ),
 
         new(
             TRUE_STR + MINUS + "5",
-            new(-4)
+            -4
         ),
 
         new(
             "5" + TIMES + TRUE_STR,
-            new(5)
+            5
         ),
 
         new(
             "5" + TIMES + FALSE_STR,
-            new(0)
+            0
         ),
 
         // Note: Exclude False as right operand for division, floor, & modulus tests because False
@@ -947,52 +947,52 @@ public class LanguageFeatureTests
 
         new(
             "5" + DIV + TRUE_STR,
-            new(5.0) // Division always converts operands to be Chow floats
+            5.0 // Division always converts operands to be Chow floats
         ),
 
         new(
             FALSE_STR + DIV + "5",
-            new(0.0)
+            0.0
         ),
 
         new(
             "5" + FLOOR + TRUE_STR,
-            new(5)
+            5
         ),
 
         new(
             TRUE_STR + FLOOR + "5",
-            new(0)
+            0
         ),
 
         new(
             "5" + MOD + TRUE_STR,
-            new(0)
+            0
         ),
 
         new(
             TRUE_STR + MOD + "5",
-            new(1)
+            1
         ),
 
         new(
             "5" + POW + TRUE_STR,
-            new(5)
+            5
         ),
 
         new(
             "5" + POW + FALSE_STR,
-            new(1)
+            1
         ),
 
         new(
             TRUE_STR + POW + "5",
-            new(1)
+            1
         ),
 
         new(
             FALSE_STR + POW + "5",
-            new(0)
+            0
         ),
 
         #endregion
@@ -1003,42 +1003,42 @@ public class LanguageFeatureTests
 
         new(
             "2.5" + PLUS + TRUE_STR,
-            new(3.5)
+            3.5
         ),
 
         new(
             "2.5" + PLUS + FALSE_STR,
-            new(2.5)
+            2.5
         ),
 
         new(
             TRUE_STR + PLUS + "2.5",
-            new(3.5)
+            3.5
         ),
 
         new(
             "2.5" + MINUS + TRUE_STR,
-            new(1.5)
+            1.5
         ),
 
         new(
             "2.5" + MINUS + FALSE_STR,
-            new(2.5)
+            2.5
         ),
 
         new(
             TRUE_STR + MINUS + "2.5",
-            new(-1.5)
+            -1.5
         ),
 
         new(
             "2.5" + TIMES + TRUE_STR,
-            new(2.5)
+            2.5
         ),
 
         new(
             "2.5" + TIMES + FALSE_STR,
-            new(0.0)
+            0.0
         ),
 
         // Note: Exclude False as right operand for division, floor, & modulus tests because False
@@ -1046,130 +1046,130 @@ public class LanguageFeatureTests
 
         new(
             "2.5" + DIV + TRUE_STR,
-            new(2.5)
+            2.5
         ),
 
         new(
             FALSE_STR + DIV + "2.5",
-            new(0.0)
+            0.0
         ),
 
         new(
             "2.5" + FLOOR + TRUE_STR,
-            new(2.0)
+            2.0
         ),
 
         new(
             TRUE_STR + FLOOR + "2.5",
-            new(0.0)
+            0.0
         ),
 
         new(
             "2.5" + MOD + TRUE_STR,
-            new(0.5)
+            0.5
         ),
 
         new(
             TRUE_STR + MOD + "2.5",
-            new(1.0)
+            1.0
         ),
 
         new(
             "2.5" + POW + TRUE_STR,
-            new(2.5)
+            2.5
         ),
 
         new(
             "2.5" + POW + FALSE_STR,
-            new(1.0)
+            1.0
         ),
 
         new(
             TRUE_STR + POW + "2.5",
-            new(1.0)
+            1.0
         ),
 
         new(
             FALSE_STR + POW + "2.5",
-            new(0.0)
+            0.0
         ),
 
         #endregion
-        
+
         #region Precedence And Associativity
 
         // Multiplication binds tighter than addition
         new(
             "1" + PLUS + "2" + TIMES + "3",
-            new(7)
+            7
         ),
 
         // Parentheses override precedence
         new(
             "(1" + PLUS + "2)" + TIMES + "3",
-            new(9)
+            9
         ),
 
         // Subtraction is left-associative
         new(
             "10" + MINUS + "3" + MINUS + "2",
-            new(5)
+            5
         ),
 
         // Division is left-associative (and always yields a Chow float)
         new(
             "100" + DIV + "10" + DIV + "2",
-            new(5.0)
+            5.0
         ),
 
         // Exponentiation is right-associative: 2 ** (3 ** 2) = 2 ** 9
         new(
             "2" + POW + "3" + POW + "2",
-            new(512)
+            512
         ),
 
         // Parentheses force left-associative exponentiation: (2 ** 3) ** 2
         new(
             "(2" + POW + "3)" + POW + "2",
-            new(64)
+            64
         ),
 
         // Exponentiation binds tighter than multiplication: 2 * (3 ** 2)
         new(
             "2" + TIMES + "3" + POW + "2",
-            new(18)
+            18
         ),
 
         // Parentheses override precedence: (2 * 3) ** 2
         new(
             "(2" + TIMES + "3)" + POW + "2",
-            new(36)
+            36
         ),
 
         #endregion
-    
+
         //--- Unary Minus ---
-        
+
         #region Integer Unary Minus
 
         new(
             "-3",
-            new(-3)
+            -3
         ),
 
         new(
             "-(3)",
-            new(-3)
+            -3
         ),
 
         new(
             "-(-3)",
-            new(3)
+            3
         ),
 
         new(
             "(-3)",
-            new(-3)
+            -3
         ),
 
         #endregion
@@ -1178,13 +1178,13 @@ public class LanguageFeatureTests
 
         new(
             "--3",
-            new(3)
+            3
         ),
 
         // Behaves the same as (-(-(-3)))
         new(
             "---3",
-            new(-3)
+            -3
         ),
 
         #endregion
@@ -1193,12 +1193,12 @@ public class LanguageFeatureTests
 
         new(
             "-3.25",
-            new(-3.25)
+            -3.25
         ),
 
         new(
             "-(3.25)",
-            new(-3.25)
+            -3.25
         ),
 
         #endregion
@@ -1207,22 +1207,22 @@ public class LanguageFeatureTests
 
         new(
             "-" + TRUE_STR,
-            new(-1)
+            -1
         ),
 
         new(
             "-" + FALSE_STR,
-            new(0)
+            0
         ),
 
         new(
             "-(" + TRUE_STR + ")",
-            new(-1)
+            -1
         ),
 
         new(
             "-(" + FALSE_STR + ")",
-            new(0)
+            0
         ),
 
         #endregion
@@ -1231,12 +1231,12 @@ public class LanguageFeatureTests
 
         new(
             "-0",
-            new(0)
+            0
         ),
 
         new(
             "-0.0",
-            new(-0.0)
+            -0.0
         ),
 
         #endregion
@@ -1245,7 +1245,7 @@ public class LanguageFeatureTests
     static readonly IReadOnlyList<CaseExecute> ExecuteComparisonOperatorCases =
     [
         //--- Numeric Operands ---
-        
+
         #region Integer Operands
 
         new(
@@ -1415,7 +1415,7 @@ public class LanguageFeatureTests
         #endregion
 
         //--- Mixed-Type Operands ---
-        
+
         #region Left Integer Right Double Mixed Operands
 
         // An integer and a float compare equal when they share the same numeric value
@@ -1718,32 +1718,32 @@ public class LanguageFeatureTests
 
         new(
             FALSEY_INT64 + AND + "\"rhs\"",
-            new SourceValue(0)
+            0
         ),
 
         new(
             TRUTHY_INT64 + AND + "\"rhs\"",
-            new SourceValue("rhs")
+            "rhs"
         ),
 
         new(
             FALSEY_STR + AND + "3",
-            new SourceValue(string.Empty)
+            string.Empty
         ),
 
         new(
             TRUTHY_STR + AND + "3",
-            new SourceValue(3)
+            3
         ),
 
         new(
             NONE_STR + AND + "3",
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             TRUTHY_LIST + AND + "\"rhs\"",
-            new SourceValue("rhs")
+            "rhs"
         ),
 
         #endregion
@@ -1752,32 +1752,32 @@ public class LanguageFeatureTests
 
         new(
             FALSEY_INT64 + OR + "\"rhs\"",
-            new SourceValue("rhs")
+            "rhs"
         ),
 
         new(
             TRUTHY_INT64 + OR + "\"rhs\"",
-            new SourceValue(1)
+            1
         ),
 
         new(
             FALSEY_STR + OR + "3",
-            new SourceValue(3)
+            3
         ),
 
         new(
             TRUTHY_STR + OR + "3",
-            new SourceValue("Truthy string")
+            "Truthy string"
         ),
 
         new(
             NONE_STR + OR + "3",
-            new SourceValue(3)
+            3
         ),
 
         new(
             FALSEY_LIST + OR + "\"rhs\"",
-            new SourceValue("rhs")
+            "rhs"
         ),
 
         #endregion
@@ -1786,12 +1786,12 @@ public class LanguageFeatureTests
 
         new(
             FALSEY_INT64 + AND + "(" + "1" + DIV + "0" + ")",
-            new SourceValue(0)
+            0
         ),
 
         new(
             TRUTHY_INT64 + OR + "(" + "1" + DIV + "0" + ")",
-            new SourceValue(1)
+            1
         ),
 
         new(
@@ -1814,7 +1814,7 @@ public class LanguageFeatureTests
             NOT + TRUE_STR,
             FalseChow
             ),
-        
+
         new(
             NOT + FALSE_STR,
             TrueChow
@@ -1842,7 +1842,7 @@ public class LanguageFeatureTests
         ),
 
         #endregion
- 
+
         #region Integer Unary Not
 
         new(
@@ -1882,7 +1882,7 @@ public class LanguageFeatureTests
         #endregion
 
         #region Other Unary Not Operand Types
-        
+
         // None
         new(
             NOT + NONE_STR,
@@ -1932,7 +1932,7 @@ public class LanguageFeatureTests
             NOT + FALSEY_LIST,
             TrueChow
         ),
-        
+
         // Dictionaries
         new(
             NOT + TRUTHY_DICT,
@@ -1943,7 +1943,7 @@ public class LanguageFeatureTests
             NOT + FALSEY_DICT,
             TrueChow
         ),
-        
+
         // Range
         // TODO: Uncomment after making range something other than a built-in function
         /*
@@ -1970,7 +1970,7 @@ public class LanguageFeatureTests
                 return a + b
             add(2, 3)
             """,
-            new SourceValue(5)
+            5
         ),
 
         new(
@@ -1981,7 +1981,7 @@ public class LanguageFeatureTests
                 return x
             read_local() + x
             """,
-            new SourceValue(109)
+            109
         ),
 
         new(
@@ -1993,7 +1993,7 @@ public class LanguageFeatureTests
             set_global()
             x
             """,
-            new SourceValue(9)
+            9
         ),
 
         //--- Closures ---
@@ -2005,11 +2005,11 @@ public class LanguageFeatureTests
                 def closure():
                     return x
                 return closure
-                
+
             test_closure = make_closure()
             test_closure()
             """,
-            new SourceValue(5)
+            5
         ),
 
         new(
@@ -2021,11 +2021,11 @@ public class LanguageFeatureTests
                     x = 100
                     return x
                 return inner
-            
+
             test_closure =  outer()
             test_closure()
             """,
-            new SourceValue(100)
+            100
         ),
 
         // NOTE: Deferred niche function syntax not yet confirmed in Chow:
@@ -2038,7 +2038,7 @@ public class LanguageFeatureTests
 
         new(
             "[10, 20, 30][1]",
-            new SourceValue(20)
+            20
         ),
 
         new(
@@ -2047,7 +2047,7 @@ public class LanguageFeatureTests
             values[1] = 7
             values[1]
             """,
-            new SourceValue(7)
+            7
         ),
 
         //--- List Slices ---
@@ -2072,7 +2072,7 @@ public class LanguageFeatureTests
 
         new(
             "{'a': 1, 'b': 2}['b']",
-            new SourceValue(2)
+            2
         ),
 
         new(
@@ -2081,7 +2081,7 @@ public class LanguageFeatureTests
             values['b'] = 9
             values['b']
             """,
-            new SourceValue(9)
+            9
         ),
 
         // NOTE: Deferred niche collection syntax not yet confirmed in Chow:
@@ -2099,7 +2099,7 @@ public class LanguageFeatureTests
                 total = total + x
             total
             """,
-            new SourceValue(6)
+            6
         ),
 
         new(
@@ -2109,7 +2109,7 @@ public class LanguageFeatureTests
                 result = result + char
             result
             """,
-            new SourceValue("abc")
+            "abc"
         ),
 
         new(
@@ -2120,7 +2120,7 @@ public class LanguageFeatureTests
                     total = total + i + j
             total
             """,
-            new SourceValue(66)
+            66
         ),
 
         //--- Iterable Semantics ---
@@ -2145,42 +2145,42 @@ public class LanguageFeatureTests
 
         new(
             "abs(-5)",
-            new SourceValue(5)
+            5
         ),
 
         new(
             "len([1, 2, 3])",
-            new SourceValue(3)
+            3
         ),
 
         new(
             "round(2.5)",
-            new SourceValue(2)
+            2
         ),
 
         new(
             "min(4, -1, 8)",
-            new SourceValue(-1)
+            -1
         ),
 
         new(
             "max([4, -1, 8])",
-            new SourceValue(8)
+            8
         ),
 
         new(
             "int(\"12\")",
-            new SourceValue(12)
+            12
         ),
 
         new(
             "float(\"2.5\")",
-            new SourceValue(2.5)
+            2.5
         ),
 
         new(
             "str(123)",
-            new SourceValue("123")
+            "123"
         ),
 
         new(
@@ -2203,7 +2203,7 @@ public class LanguageFeatureTests
 
         new(
             "\"hello\" + \" \" + \"world\"",
-            new SourceValue("hello world")
+            "hello world"
         ),
 
         new(
@@ -2211,7 +2211,7 @@ public class LanguageFeatureTests
             prefix = "Chow"
             prefix + " V2"
             """,
-            new SourceValue("Chow V2")
+            "Chow V2"
         ),
 
         //--- f-Strings ---
@@ -2221,12 +2221,12 @@ public class LanguageFeatureTests
             name = "Chow"
             f"Hello, {name}!"
             """,
-            new SourceValue("Hello, Chow!")
+            "Hello, Chow!"
         ),
 
         new(
             "f\"{1 + 2}\"",
-            new SourceValue("3")
+            "3"
         ),
 
         new(
@@ -2234,23 +2234,23 @@ public class LanguageFeatureTests
             n = 2
             f"Value: {n * 5}"
             """,
-            new SourceValue("Value: 10")
+            "Value: 10"
         ),
 
         // NOTE: Deferred niche f-string syntax not yet confirmed in Chow:
         // conversion flags (!r, !s, !a), format spec mini-language, and deeply nested expression forms.
     ];
-    
+
     static readonly IReadOnlyList<CaseExecute> ExecuteEmptyWhitespaceOrNullCases =
     [
         new(
             string.Empty,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             null!,
-            SourceValue.None
+            ChowValue.None
         ),
 
         // The supported sequences of characters that make up a single newline are as follows:
@@ -2262,34 +2262,34 @@ public class LanguageFeatureTests
 
         new(
             NEWLINE_LINUX_MAC,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             NEWLINE_WINDOWS,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             NEWLINE_OLD_MAC,
-            SourceValue.None
+            ChowValue.None
         ),
 
         #region Pure Spaces
 
         new(
             " ",
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             SINGLE_INDENT_SPACES,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             SINGLE_INDENT_SPACES + SINGLE_INDENT_SPACES,
-            SourceValue.None
+            ChowValue.None
         ),
 
         #endregion
@@ -2298,12 +2298,12 @@ public class LanguageFeatureTests
 
         new(
             SINGLE_INDENT_TAB,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             SINGLE_INDENT_TAB + SINGLE_INDENT_TAB,
-            SourceValue.None
+            ChowValue.None
         ),
 
         #endregion
@@ -2312,12 +2312,12 @@ public class LanguageFeatureTests
 
         new(
             SINGLE_INDENT_SPACES + SINGLE_INDENT_TAB,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             SINGLE_INDENT_TAB + SINGLE_INDENT_SPACES,
-            SourceValue.None
+            ChowValue.None
         ),
 
         #endregion
@@ -2326,17 +2326,17 @@ public class LanguageFeatureTests
 
         new(
             NEWLINE_LINUX_MAC + NEWLINE_LINUX_MAC,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             NEWLINE_WINDOWS + NEWLINE_WINDOWS,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             NEWLINE_OLD_MAC + NEWLINE_OLD_MAC,
-            SourceValue.None
+            ChowValue.None
         ),
 
         #endregion
@@ -2345,22 +2345,22 @@ public class LanguageFeatureTests
 
         new(
             NEWLINE_LINUX_MAC + NEWLINE_WINDOWS,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             NEWLINE_WINDOWS + NEWLINE_OLD_MAC,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             NEWLINE_OLD_MAC + NEWLINE_LINUX_MAC,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             NEWLINE_LINUX_MAC + NEWLINE_WINDOWS + NEWLINE_OLD_MAC,
-            SourceValue.None
+            ChowValue.None
         ),
 
         #endregion
@@ -2369,27 +2369,27 @@ public class LanguageFeatureTests
 
         new(
             SINGLE_INDENT_SPACES + NEWLINE_LINUX_MAC,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             NEWLINE_LINUX_MAC + SINGLE_INDENT_SPACES,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             SINGLE_INDENT_TAB + NEWLINE_WINDOWS + SINGLE_INDENT_TAB,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             NEWLINE_LINUX_MAC + SINGLE_INDENT_SPACES + NEWLINE_OLD_MAC,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             SINGLE_INDENT_SPACES + NEWLINE_WINDOWS + SINGLE_INDENT_TAB + NEWLINE_LINUX_MAC,
-            SourceValue.None
+            ChowValue.None
         ),
 
         #endregion
@@ -2400,12 +2400,12 @@ public class LanguageFeatureTests
         // early from SkipToFirstLexeme and is consumed by ScanIndentColumn instead
         new(
             "\f",
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             "\f" + NEWLINE_LINUX_MAC + SINGLE_INDENT_SPACES,
-            SourceValue.None
+            ChowValue.None
         ),
 
         #endregion
@@ -2415,34 +2415,34 @@ public class LanguageFeatureTests
         // Comment with no trailing newline — SkipRemainingLineChars consumes it and reaches EOF
         new(
             CODE_COMMENT,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             CODE_COMMENT + NEWLINE_LINUX_MAC,
-            SourceValue.None
+            ChowValue.None
         ),
 
         // Multiple comment lines separated by different newline styles
         new(
             CODE_COMMENT + NEWLINE_LINUX_MAC + CODE_COMMENT,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             CODE_COMMENT + NEWLINE_WINDOWS + CODE_COMMENT + NEWLINE_OLD_MAC + CODE_COMMENT,
-            SourceValue.None
+            ChowValue.None
         ),
 
         // Leading whitespace before a comment (spaces/tabs are consumed as indent chars first)
         new(
             SINGLE_INDENT_SPACES + CODE_COMMENT,
-            SourceValue.None
+            ChowValue.None
         ),
 
         new(
             SINGLE_INDENT_TAB + CODE_COMMENT + NEWLINE_LINUX_MAC,
-            SourceValue.None
+            ChowValue.None
         ),
 
         #endregion
@@ -2461,17 +2461,17 @@ public class LanguageFeatureTests
             if True:
                True
             """,
-            new SourceValue(true)
+            true
         ),
-        
+
         new(
             """
             if False:
                 False
             """,
-            new SourceValue(SourceValue.None)
+            ChowValue.None
         ),
-        
+
         new(
             """
             if True:
@@ -2479,9 +2479,9 @@ public class LanguageFeatureTests
             else:
                 False
             """,
-            new SourceValue(true)
+            true
         ),
-        
+
         new(
             """
             if False:
@@ -2489,9 +2489,9 @@ public class LanguageFeatureTests
             else:
                 True
             """,
-            new SourceValue(true)
+            true
         ),
-        
+
         new(
             """
             if True:
@@ -2501,9 +2501,9 @@ public class LanguageFeatureTests
             else:
                 False
             """,
-            new SourceValue(true)
+            true
         ),
-        
+
         new(
             """
             if False:
@@ -2513,9 +2513,9 @@ public class LanguageFeatureTests
             else:
                 False
             """,
-            new SourceValue(true)
+            true
         ),
-        
+
         new(
             """
             if False:
@@ -2525,7 +2525,7 @@ public class LanguageFeatureTests
             else:
                 True
             """,
-            new SourceValue(true)
+            true
         ),
 
         // Test case where a block has more than one statement
@@ -2535,9 +2535,9 @@ public class LanguageFeatureTests
                False
                True
             """,
-            new SourceValue(true)
+            true
         ),
-        
+
         #endregion
 
         #region While Loops
@@ -2549,7 +2549,7 @@ public class LanguageFeatureTests
             while False:
                 True
             """,
-            new SourceValue(SourceValue.None)
+            ChowValue.None
         ),
 
         // A counter drives the loop; after it exits, the trailing expression statement
@@ -2561,7 +2561,7 @@ public class LanguageFeatureTests
                 i = i + 1
             i
             """,
-            new SourceValue(3)
+            3
         ),
 
         // A loop that runs exactly once
@@ -2572,7 +2572,7 @@ public class LanguageFeatureTests
                 i = i + 1
             i
             """,
-            new SourceValue(1)
+            1
         ),
 
         // A decrementing counter loops down to zero
@@ -2583,7 +2583,7 @@ public class LanguageFeatureTests
                 i = i - 1
             i
             """,
-            new SourceValue(0)
+            0
         ),
 
         // A boolean flag is cleared inside the body to exit after a single pass
@@ -2594,7 +2594,7 @@ public class LanguageFeatureTests
                 run = False
             run
             """,
-            new SourceValue(false)
+            false
         ),
 
         // The expression statement inside the body returns the last value evaluated
@@ -2606,7 +2606,7 @@ public class LanguageFeatureTests
                 i = i + 1
                 i
             """,
-            new SourceValue(3)
+            3
         ),
 
         // A multi-statement body accumulates a running total across iterations
@@ -2619,7 +2619,7 @@ public class LanguageFeatureTests
                 i = i + 1
             total
             """,
-            new SourceValue(6)
+            6
         ),
 
         #endregion
@@ -2636,7 +2636,7 @@ public class LanguageFeatureTests
                     break
             i
             """,
-            new SourceValue(3)
+            3
         ),
 
         // Statements after break in the same body are skipped on the breaking iteration
@@ -2648,7 +2648,7 @@ public class LanguageFeatureTests
                 reached = True
             reached
             """,
-            new SourceValue(false)
+            false
         ),
 
         // A break under an always-true condition exits after a single pass
@@ -2660,7 +2660,7 @@ public class LanguageFeatureTests
                 break
             ran
             """,
-            new SourceValue(true)
+            true
         ),
 
         //--- Nested Loops ---
@@ -2680,7 +2680,7 @@ public class LanguageFeatureTests
                     total = total + 1
             total
             """,
-            new SourceValue(3)
+            3
         ),
 
         // A break in the outer loop ends both loops once its condition is met
@@ -2698,7 +2698,7 @@ public class LanguageFeatureTests
                     break
             total
             """,
-            new SourceValue(10)
+            10
         ),
 
         #endregion
@@ -2716,7 +2716,7 @@ public class LanguageFeatureTests
                 reached = True
             reached
             """,
-            new SourceValue(false)
+            false
         ),
 
         // continue can skip multiple iterations while the loop still runs to completion
@@ -2731,7 +2731,7 @@ public class LanguageFeatureTests
                 count = count + 1
             count
             """,
-            new SourceValue(3)
+            3
         ),
 
         //--- Nested Loops ---
@@ -2751,16 +2751,16 @@ public class LanguageFeatureTests
                     total = total + j
             total
             """,
-            new SourceValue(8)
+            8
         ),
 
         #endregion
     ];
 
     #endregion
-    
+
     #region Source Code Constants
-    
+
     #region Data Type Literals
 
     const string TRUE_STR = "True";
@@ -2768,9 +2768,9 @@ public class LanguageFeatureTests
     const string NONE_STR = "None";
 
     #endregion
-    
+
     #region Operators
-    
+
     // Binary operator constants make it easier to scan and see where and what operator is being used.
 
     //--- Arithmetic Operators ---
@@ -2781,7 +2781,7 @@ public class LanguageFeatureTests
     const string MOD = " % ";
     const string FLOOR = " // ";
     const string POW = " ** ";
-    
+
     //--- Comparison Operators ---
     const string EQUALS = " == ";
     const string NOT_EQUALS = " != ";
@@ -2835,19 +2835,19 @@ public class LanguageFeatureTests
 
     #region Helper Types
 
-    static SourceValue List(params SourceValue[] values)
+    static ChowValue List(params ChowValue[] values)
     {
         var list = new SourceList();
 
         foreach (var value in values)
         {
-            list.Add(value);
+            list.Add(value.SourceValue);
         }
 
-        return new SourceValue(list);
+        return new ChowValue(new SourceValue(list));
     }
 
-    public record CaseExecute(string SourceCode, SourceValue ExpectedResult);
+    public record CaseExecute(string SourceCode, ChowValue ExpectedResult);
 
     #endregion
 }
