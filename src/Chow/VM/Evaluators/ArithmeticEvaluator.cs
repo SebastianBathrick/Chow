@@ -69,7 +69,7 @@ namespace Chow.VM.Utilities
 
         public static SourceValue EvaluateAddition(SourceValue r, SourceValue l)
         {
-            switch (GetConversionTag(AdditionConversionMap, l.DataType, r.DataType, ExpressionOperator.Add))
+            switch (GetConversionDataType(AdditionConversionMap, l.DataType, r.DataType, ExpressionOperator.Add))
             {
                 case DataType.Long:   return new SourceValue(l.ToLong()   + r.ToLong());
                 case DataType.Double: return new SourceValue(l.ToDouble() + r.ToDouble());
@@ -85,15 +85,15 @@ namespace Chow.VM.Utilities
 
         public static SourceValue EvaluateSubtraction(SourceValue r, SourceValue l)
         {
-            var convTag = GetConversionTag(NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Subtract);
-            return convTag == DataType.Long
+            var convDataType = GetConversionDataType(NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Subtract);
+            return convDataType == DataType.Long
                 ? new SourceValue(l.ToLong()   - r.ToLong())
                 : new SourceValue(l.ToDouble() - r.ToDouble());
         }
 
         public static SourceValue EvaluateMultiplication(SourceValue r, SourceValue l)
         {
-            switch (GetConversionTag(MultiplicationConversionMap, l.DataType, r.DataType, ExpressionOperator.Multiply))
+            switch (GetConversionDataType(MultiplicationConversionMap, l.DataType, r.DataType, ExpressionOperator.Multiply))
             {
                 case DataType.Long:   return new SourceValue(l.ToLong()   * r.ToLong());
                 case DataType.Double: return new SourceValue(l.ToDouble() * r.ToDouble());
@@ -129,7 +129,7 @@ namespace Chow.VM.Utilities
         {
             // Python: `/` always yields float (e.g. 9 / 3 → 3.0), even for int operands.
             // Lookup validates operand types; result type is always double regardless of map value.
-            GetConversionTag(
+            GetConversionDataType(
                 NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Divide);
 
             var rightDbl = r.ToDouble();
@@ -147,10 +147,10 @@ namespace Chow.VM.Utilities
 
         public static SourceValue EvaluateModulus(SourceValue r, SourceValue l)
         {
-            var convTag = GetConversionTag(
+            var convDataType = GetConversionDataType(
                 NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Modulus);
 
-            if (convTag == DataType.Long)
+            if (convDataType == DataType.Long)
             {
                 return new SourceValue(ModLong(l.ToLong(), r.ToLong()));
             }
@@ -187,10 +187,10 @@ namespace Chow.VM.Utilities
 
         public static SourceValue EvaluateFloorDivision(SourceValue r, SourceValue l)
         {
-            var convTag = GetConversionTag(
+            var convDataType = GetConversionDataType(
                 NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.FloorDivide);
 
-            if (convTag == DataType.Long)
+            if (convDataType == DataType.Long)
             {
                 // Integer // stays in longs so large quotients are not rounded via double.
                 return new SourceValue(FloorDivideLong(l.ToLong(), r.ToLong()));
@@ -237,10 +237,10 @@ namespace Chow.VM.Utilities
         // Python: negative integer exponent forces float result.
         public static SourceValue EvaluateExponent(SourceValue r, SourceValue l)
         {
-            var convTag = GetConversionTag(
+            var convDataType = GetConversionDataType(
                 NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Exponentiate);
 
-            if (convTag == DataType.Long)
+            if (convDataType == DataType.Long)
             {
                 var exponentLong = r.ToLong();
 
@@ -309,20 +309,20 @@ namespace Chow.VM.Utilities
 
         #region Helper Methods
 
-        static bool TryGetConversionTag(
+        static bool TryGetConversionDataType(
             IReadOnlyDictionary<(DataType, DataType), DataType> map,
             DataType leftDataType, DataType rightDataType, out DataType convDataType)
         {
             return map.TryGetValue((left: leftDataType, right: rightDataType), out convDataType);
         }
 
-        static DataType GetConversionTag(
+        static DataType GetConversionDataType(
             IReadOnlyDictionary<(DataType, DataType), DataType> map,
             DataType leftDataType, DataType rightDataType, ExpressionOperator op)
         {
-            if (TryGetConversionTag(map, leftDataType, rightDataType, out var convTag))
+            if (TryGetConversionDataType(map, leftDataType, rightDataType, out var convDataType))
             {
-                return convTag;
+                return convDataType;
             }
 
             throw UnsupportedBinary(leftDataType, rightDataType, op);

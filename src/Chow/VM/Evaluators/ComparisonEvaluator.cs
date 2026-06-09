@@ -11,7 +11,7 @@ namespace Chow.VM.Utilities
     static class ComparisonEvaluator
     {
         // Python treats bool as a subtype of int; any float operand promotes the whole comparison to float.
-        static readonly IReadOnlyDictionary<(DataType, DataType), DataType> TagConversionMap =
+        static readonly IReadOnlyDictionary<(DataType, DataType), DataType> DataTypeConversionMap =
             new Dictionary<(DataType left, DataType right), DataType>()
             {
                 { (DataType.Bool, DataType.Bool), DataType.Long },
@@ -68,7 +68,7 @@ namespace Chow.VM.Utilities
 
         static bool EvaluateOrdering(ref SourceValue l, ref SourceValue r, ExpressionOperator op)
         {
-            switch (GetConversionTag(l.DataType, r.DataType, op))
+            switch (GetConversionDataType(l.DataType, r.DataType, op))
             {
                 case DataType.Long:
                     return CompareLong(l.ToLong(), r.ToLong(), op);
@@ -136,10 +136,10 @@ namespace Chow.VM.Utilities
 
         static bool AreEqual(ref SourceValue l, ref SourceValue r)
         {
-            if (TagConversionMap.TryGetValue((l.DataType, r.DataType), out var convTag))
+            if (DataTypeConversionMap.TryGetValue((l.DataType, r.DataType), out var convDataType))
             {
                 // Numeric equality follows Python promotion: True == 1 and 1 == 1.0 are both true.
-                switch (convTag)
+                switch (convDataType)
                 {
                     case DataType.Long:
                         return l.ToLong() == r.ToLong();
@@ -176,13 +176,13 @@ namespace Chow.VM.Utilities
             }
         }
 
-        static DataType GetConversionTag(DataType leftDataType, DataType rightDataType, ExpressionOperator op)
+        static DataType GetConversionDataType(DataType leftDataType, DataType rightDataType, ExpressionOperator op)
         {
             var mapKey = (left: leftDataType, right: rightDataType);
 
-            if (TagConversionMap.TryGetValue(mapKey, out var convTag))
+            if (DataTypeConversionMap.TryGetValue(mapKey, out var convDataType))
             {
-                return convTag;
+                return convDataType;
             }
 
             throw new DataTypeException(
