@@ -289,7 +289,7 @@ namespace Chow.VM.Utilities
 
         #region Unary Operations
 
-        public static SourceValue EvaluateNegation(ref SourceValue operand)
+        public static SourceValue EvaluateNegation(SourceValue operand)
         {
             switch (operand.DataType)
             {

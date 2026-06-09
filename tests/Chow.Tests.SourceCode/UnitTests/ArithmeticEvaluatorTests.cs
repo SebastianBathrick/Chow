@@ -488,8 +488,7 @@ public class ArithmeticEvaluatorTests
 
     static SourceValue Evaluate(EvaluateUnary evaluate, SourceValue operand)
     {
-        var value = operand;
-        return evaluate(ref value);
+        return evaluate(operand);
     }
 
     static void AssertResult(
@@ -585,7 +584,7 @@ public class ArithmeticEvaluatorTests
 
     delegate SourceValue EvaluateBinary(SourceValue r, SourceValue l);
 
-    delegate SourceValue EvaluateUnary(ref SourceValue operand);
+    delegate SourceValue EvaluateUnary(SourceValue operand);
 
     #endregion
 }

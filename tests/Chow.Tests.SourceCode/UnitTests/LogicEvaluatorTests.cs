@@ -271,8 +271,7 @@ public class LogicEvaluatorTests
 
     static SourceValue Evaluate(EvaluateUnary evaluate, SourceValue operand)
     {
-        var value = operand;
-        return evaluate(ref value);
+        return evaluate(operand);
     }
 
     static SourceValue Evaluate(EvaluateBinary evaluate, SourceValue left, SourceValue right)
@@ -305,7 +304,7 @@ public class LogicEvaluatorTests
         Assert.That(LogicEvaluator.IsTruthy(ref value), Is.EqualTo(expectedValue));
     }
 
-    delegate SourceValue EvaluateUnary(ref SourceValue operand);
+    delegate SourceValue EvaluateUnary(SourceValue operand);
 
     delegate SourceValue EvaluateBinary(SourceValue r, SourceValue l);
 

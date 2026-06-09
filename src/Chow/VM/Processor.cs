@@ -16,14 +16,14 @@ namespace Chow.VM
         SourceValue _expressionStatementVal = SourceValue.None;
 
         Instruction CurrentOperation => _callStack.CurrentInstr;
-        
+
         // Chunk is null when the client is exclusively calling a closure
         public Processor(Scope globalScope = null, Chunk chunk = null)
         {
             _callStack = new CallStack(chunk ?? new Chunk(), globalScope);
             _valStack = new Stack<SourceValue>();
         }
-        
+
         public SourceValue Execute()
         {
             while (_callStack.IsInstructionToExecute)
@@ -47,7 +47,7 @@ namespace Chow.VM
                 case OperationCode.PushConstantValue:
                     _valStack.Push(_callStack.CurrentChunk.ReadConstant(CurrentOperation.Operand));
                     break;
-                
+
                 // -- Binary Operations------------------------------------------------------------
                 case OperationCode.BinaryAdd:
                     _valStack.Push(ArithmeticEvaluator.Add(
@@ -115,10 +115,10 @@ namespace Chow.VM
 
                 // -- Unary Operations-------------------------------------------------------------
                 case OperationCode.UnaryNot:
-                    EvaluateNot();
+                    _valStack.Push(LogicEvaluator.EvaluateNot(_valStack.Pop()));
                     break;
                 case OperationCode.UnaryNegate:
-                    EvaluateNegation();
+                    _valStack.Push(ArithmeticEvaluator.EvaluateNegation(_valStack.Pop()));
                     break;
 
                 // -- Control Structure Operations ------------------------------------------------
@@ -197,7 +197,7 @@ namespace Chow.VM
                 case OperationCode.PushNewSourceFunction:
                     ExecutePushNewSourceFunction();
                     break;
-                
+
                 // -- Expression Evaluation Operations --------------------------------------------
                 case OperationCode.CoerceToStr:
                     EvaluateCoerceToStr();
@@ -205,7 +205,7 @@ namespace Chow.VM
                 case OperationCode.PopExpressionStatementResult:
                     _expressionStatementVal = _valStack.Pop();
                     break;
-                    
+
                 default:
                     throw new NotImplementedException($"Execution of {CurrentOperation.Code} is not implemented.");
             }
@@ -213,14 +213,74 @@ namespace Chow.VM
             return GoToNextInstruction;
         }
 
+        /// <summary>Calls a function stored in a global variable with the name provided.</summary>
+        /// <param name="callVarName">The name of a variable declared in the global scope. Caller
+        /// is responsible for verifying the name is defined.</param>
+        /// <param name="args">The arguments to pass to the function. If there aren't any, this
+        /// parameter can be null.</param>
+        /// <returns>The result of the function call.</returns>
+        /// <remarks>Assumes that there is a global scope already set up that was provided to the
+        /// constructor.</remarks>
+        public SourceValue CallGlobalFunction(string callVarName, SourceValue[] args)
+        {
+            _valStack.Push(_callStack.GetVariableValue(callVarName));
+
+            if (args != null)
+            {
+                for (var i = 0; i < args.Length; i++)
+                {
+                    _valStack.Push(args[i]);
+                }
+            }
+
+            if (ExecuteCallFunction(args?.Length ?? 0) == StayAtInstruction)
+            {
+                Execute();
+            }
+
+            return _valStack.Pop();
+        }
+
+        #region Binary Operations
+
         void ExecuteBinaryUnion()
         {
-
             // TODO: Add bitwise ors to the LogicEvaluator
             var r = _valStack.Pop();
             var l = _valStack.Pop();
             _valStack.Push(l.CreateUnion(r));
         }
+
+        void EvaluateIn(bool negate)
+        {
+            var container = _valStack.Pop();
+            var needle = _valStack.Pop();
+            var found = false;
+
+            if (container.DataType == DataType.Dict)
+            {
+                found = ((SourceDictionary)container.ToObject()).ContainsKey(needle);
+            }
+            else if (container.DataType == DataType.List)
+            {
+                var list = (SourceList)container.ToObject();
+
+                for (var i = 0; i < list.Count && !found; i++)
+                {
+                    found = list[i].IsTypeAgnosticEqualTo(needle);
+                }
+            }
+            else
+            {
+                throw new DataTypeException($"argument of type '{container.DataType}' is not iterable");
+            }
+
+            _valStack.Push(new SourceValue(negate ? !found : found));
+        }
+
+        #endregion
+
+        #region Control Structure Operations
 
         bool ExecuteJumpIfFalseOrPop()
         {
@@ -273,60 +333,18 @@ namespace Chow.VM
             return StayAtInstruction;
         }
 
-        bool ExecuteJumpOrIterateFor()
+        #endregion
+
+        #region Variable Operations
+
+        void ExecuteAssignVariable()
         {
+            // Operand -> name via Chunk; CallStack routes the assign to the current frame's scope.
+            var name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            var assignVal = _valStack.Pop();
 
-            // Peek the iterator (kept on stack for the whole loop); push next value or jump to exhaust target.
-            var iter = (IIterator)_valStack.Peek().ToObject();
-
-            if (iter.TryMoveNext(out var current))
-            {
-                _valStack.Push(current);
-                return GoToNextInstruction;
-            }
-
-            _valStack.Pop();
-            _callStack.JumpToInstr(CurrentOperation.Operand);
-            return StayAtInstruction;
+            _callStack.AssignVariableValue(name, assignVal);
         }
-
-        void ExecutePushNewIterator()
-        {
-
-            var source = _valStack.Pop();
-            var iter = IteratorFactory.GetIterator(source);
-            _valStack.Push(new SourceValue(iter));
-        }
-
-        /// <summary>Calls a function stored in a global variable with the name provided.</summary>
-        /// <param name="callVarName">The name of a variable declared in the global scope. Caller
-        /// is responsible for verifying the name is defined.</param>
-        /// <param name="args">The arguments to pass to the function. If there aren't any, this
-        /// parameter can be null.</param>
-        /// <returns>The result of the function call.</returns>
-        /// <remarks>Assumes that there is a global scope already set up that was provided to the
-        /// constructor.</remarks>
-        public SourceValue CallGlobalFunction(string callVarName, SourceValue[] args)
-        {
-            _valStack.Push(_callStack.GetVariableValue(callVarName));
-
-            if (args != null)
-            {
-                for (var i = 0; i < args.Length; i++)
-                {
-                    _valStack.Push(args[i]);
-                }
-            }
-
-            if (ExecuteCallFunction(args?.Length ?? 0) == StayAtInstruction)
-            {
-                Execute();
-            }
-
-            return _valStack.Pop();
-        }
-
-        #region Push/Pop Methods
 
         void ExecutePushVariableValue()
         {
@@ -343,13 +361,12 @@ namespace Chow.VM
             _valStack.Push(varValue);
         }
 
-        void ExecuteAssignVariable()
+        void ExecuteAssignGlobal()
         {
-            // Operand -> name via Chunk; CallStack routes the assign to the current frame's scope.
             var name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
             var assignVal = _valStack.Pop();
 
-            _callStack.AssignVariableValue(name, assignVal);
+            _callStack.AssignToGlobal(name, assignVal);
         }
 
         void ExecutePushGlobalValue()
@@ -364,12 +381,12 @@ namespace Chow.VM
             _valStack.Push(_callStack.GetGlobal(varName));
         }
 
-        void ExecuteAssignGlobal()
+        void ExecuteAssignNonLocal()
         {
             var name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
             var assignVal = _valStack.Pop();
 
-            _callStack.AssignToGlobal(name, assignVal);
+            _callStack.AssignToNonlocal(name, assignVal);
         }
 
         void ExecutePushNonLocalValue()
@@ -380,13 +397,57 @@ namespace Chow.VM
             _valStack.Push(_callStack.GetNonlocal(varName));
         }
 
-        void ExecuteAssignNonLocal()
-        {
-            var name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
-            var assignVal = _valStack.Pop();
+        #endregion
 
-            _callStack.AssignToNonlocal(name, assignVal);
+        #region Attribute Operations
+
+        void ExecuteAssignAttribute()
+        {
+            var attrName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            _valStack.Pop();
+            var target = _valStack.Pop();
+
+            throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
         }
+
+        void ExecutePushAttribute()
+        {
+            var attrName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            var target = _valStack.Pop();
+
+            // TODO: class instances add a branch that consults the instance attribute table, then the class method table.
+            if (target.DataType == DataType.List)
+            {
+                var list = (SourceList)target.ToObject();
+
+                if (!list.HasMethod(attrName))
+                {
+                    throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
+                }
+
+                _valStack.Push(list[attrName]);
+            }
+            else if (target.DataType == DataType.Dict)
+            {
+                // TODO: Create a ToInternalDict and ToInternalList to clean this up
+                var dict = (SourceDictionary)target.ToObject();
+
+                if (!dict.HasMethod(attrName))
+                {
+                    throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
+                }
+
+                _valStack.Push(dict[attrName]);
+            }
+            else
+            {
+                throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
+            }
+        }
+
+        #endregion
+
+        #region Collection Operations
 
         void ExecutePushNewSourceList(int elementCount)
         {
@@ -430,21 +491,116 @@ namespace Chow.VM
             _valStack.Push(new SourceValue(dict));
         }
 
-        void ExecutePushNewSourceFunction()
+        #endregion
+
+        #region Iterator Operations
+
+        void ExecutePushNewIterator()
         {
-            // Type guaranteed to be at top of stack
-            var template = (FunctionDefinition)_valStack.Pop().ToObject();
+            var source = _valStack.Pop();
+            var iter = IteratorFactory.GetIterator(source);
+            _valStack.Push(new SourceValue(iter));
+        }
 
-            var captured = _callStack.CurrentScope;
-            var closure = new SourceFunction(template.Chunk, captured, template.Name, template.ParamCount);
+        bool ExecuteJumpOrIterateFor()
+        {
+            // Peek the iterator (kept on stack for the whole loop); push next value or jump to exhaust target.
+            var iter = (IIterator)_valStack.Peek().ToObject();
 
-            _valStack.Push(new SourceValue(closure));
+            if (iter.TryMoveNext(out var current))
+            {
+                _valStack.Push(current);
+                return GoToNextInstruction;
+            }
+
+            _valStack.Pop();
+            _callStack.JumpToInstr(CurrentOperation.Operand);
+            return StayAtInstruction;
         }
 
         #endregion
 
-        #region Function Call Methods
-        
+        #region Subscript Operations
+
+        void ExecuteAssignSubscript()
+        {
+            var value = _valStack.Pop();
+            var index = _valStack.Pop();
+            var target = _valStack.Pop();
+
+            if (target.DataType == DataType.Dict)
+            {
+                ((SourceDictionary)target.ToObject())[index] = value;
+            }
+            else if (target.DataType == DataType.List)
+            {
+                if (index.DataType != DataType.Long)
+                {
+                    throw new DataTypeException($"list indices must be integers, not {index.DataType}");
+                }
+
+                ((SourceList)target.ToObject())[(int)index.ToLong()] = value;
+            }
+            else
+            {
+                throw new DataTypeException(
+                    $"'{ParseDataTypeName(target.DataType)}' object does not support item assignment");
+            }
+        }
+
+        void ExecutePushSubscriptValue()
+        {
+            var index = _valStack.Pop();
+            var target = _valStack.Pop();
+
+            // TODO: BinaryAdd a branch here for strings.
+            if (target.DataType == DataType.Dict)
+            {
+                try
+                {
+                    _valStack.Push(((SourceDictionary)target.ToObject())[index]);
+                }
+                catch (SubscriptException ex)
+                {
+                    throw new SubscriptException(ex.KeyRepr, GetCurrentLineNumber());
+                }
+            }
+            else if (target.DataType == DataType.List)
+            {
+                if (index.DataType != DataType.Long)
+                {
+                    throw new DataTypeException($"list indices must be integers, not {index.DataType}");
+                }
+
+                _valStack.Push(((SourceList)target.ToObject())[(int)index.ToLong()]);
+            }
+            else
+            {
+                throw new DataTypeException(
+                    $"'{ParseDataTypeName(target.DataType)}' object is not subscriptable");
+            }
+        }
+
+        void ExecutePushSubscriptSliceValue()
+        {
+            var step = _valStack.Pop();
+            var stop = _valStack.Pop();
+            var start = _valStack.Pop();
+            var target = _valStack.Pop();
+
+            // FUTURE: strings add a parallel slice branch.
+            if (target.DataType != DataType.List)
+            {
+                throw new DataTypeException($"'{target.DataType}' object is not subscriptable");
+            }
+
+            _valStack.Push(((SourceList)target.ToObject()).GetSlice(start, stop, step));
+        }
+
+        #endregion
+
+        #region Function Call Operations
+
         bool ExecuteCallFunction(int argCount)
         {
             var args = new SourceValue[argCount];
@@ -498,180 +654,25 @@ namespace Chow.VM
             _callStack.EnterFunctionCall(sourceFunction);
         }
 
+        void ExecutePushNewSourceFunction()
+        {
+            // Type guaranteed to be at top of stack
+            var template = (FunctionDefinition)_valStack.Pop().ToObject();
+
+            var captured = _callStack.CurrentScope;
+            var closure = new SourceFunction(template.Chunk, captured, template.Name, template.ParamCount);
+
+            _valStack.Push(new SourceValue(closure));
+        }
+
         #endregion
 
-        #region Expression Evaluation Methods
-
-        void EvaluateNegation()
-        {
-            var operand = _valStack.Pop();
-            _valStack.Push(ArithmeticEvaluator.EvaluateNegation(ref operand));
-        }
-
-        void EvaluateNot()
-        {
-            var operand = _valStack.Pop();
-            _valStack.Push(LogicEvaluator.EvaluateNot(ref operand));
-        }
+        #region Expression Evaluation Operations
 
         void EvaluateCoerceToStr()
         {
             var operand = _valStack.Pop();
             _valStack.Push(operand.CreateStr());
-        }
-
-        void EvaluateIn(bool negate)
-        {
-            var container = _valStack.Pop();
-            var needle = _valStack.Pop();
-            var found = false;
-
-            if (container.DataType == DataType.Dict)
-            {
-                found = ((SourceDictionary)container.ToObject()).ContainsKey(needle);
-            }
-            else if (container.DataType == DataType.List)
-            {
-                var list = (SourceList)container.ToObject();
-
-                for (var i = 0; i < list.Count && !found; i++)
-                {
-                    found = list[i].IsTypeAgnosticEqualTo(needle);
-                }
-            }
-            else
-            {
-                throw new DataTypeException($"argument of type '{container.DataType}' is not iterable");
-            }
-
-            _valStack.Push(new SourceValue(negate ? !found : found));
-        }
-
-        #endregion
-
-        #region PushSubscriptValue Methods
-
-        void ExecutePushSubscriptValue()
-        {
-            var index = _valStack.Pop();
-            var target = _valStack.Pop();
-
-            // TODO: BinaryAdd a branch here for strings.
-            if (target.DataType == DataType.Dict)
-            {
-                try
-                {
-                    _valStack.Push(((SourceDictionary)target.ToObject())[index]);
-                }
-                catch (SubscriptException ex)
-                {
-                    throw new SubscriptException(ex.KeyRepr, GetCurrentLineNumber());
-                }
-            }
-            else if (target.DataType == DataType.List)
-            {
-                if (index.DataType != DataType.Long)
-                {
-                    throw new DataTypeException($"list indices must be integers, not {index.DataType}");
-                }
-
-                _valStack.Push(((SourceList)target.ToObject())[(int)index.ToLong()]);
-            }
-            else
-            {
-                throw new DataTypeException(
-                    $"'{ParseDataTypeName(target.DataType)}' object is not subscriptable");
-            }
-        }
-
-        void ExecutePushSubscriptSliceValue()
-        {
-            var step = _valStack.Pop();
-            var stop = _valStack.Pop();
-            var start = _valStack.Pop();
-            var target = _valStack.Pop();
-
-            // FUTURE: strings add a parallel slice branch.
-            if (target.DataType != DataType.List)
-            {
-                throw new DataTypeException($"'{target.DataType}' object is not subscriptable");
-            }
-
-            _valStack.Push(((SourceList)target.ToObject()).GetSlice(start, stop, step));
-        }
-
-        void ExecuteAssignSubscript()
-        {
-            var value = _valStack.Pop();
-            var index = _valStack.Pop();
-            var target = _valStack.Pop();
-
-            if (target.DataType == DataType.Dict)
-            {
-                ((SourceDictionary)target.ToObject())[index] = value;
-            }
-            else if (target.DataType == DataType.List)
-            {
-                if (index.DataType != DataType.Long)
-                {
-                    throw new DataTypeException($"list indices must be integers, not {index.DataType}");
-                }
-
-                ((SourceList)target.ToObject())[(int)index.ToLong()] = value;
-            }
-            else
-            {
-                throw new DataTypeException(
-                    $"'{ParseDataTypeName(target.DataType)}' object does not support item assignment");
-            }
-        }
-
-        #endregion
-
-        #region Attributes Methods
-
-        void ExecutePushAttribute()
-        {
-            var attrName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
-            var target = _valStack.Pop();
-
-            // TODO: class instances add a branch that consults the instance attribute table, then the class method table.
-            if (target.DataType == DataType.List)
-            {
-                var list = (SourceList)target.ToObject();
-
-                if (!list.HasMethod(attrName))
-                {
-                    throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
-                }
-
-                _valStack.Push(list[attrName]);
-            }
-            else if (target.DataType == DataType.Dict)
-            {
-                // TODO: Create a ToInternalDict and ToInternalList to clean this up
-                var dict = (SourceDictionary)target.ToObject();
-
-                if (!dict.HasMethod(attrName))
-                {
-                    throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
-                }
-
-                _valStack.Push(dict[attrName]);
-            }
-            else
-            {
-                throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
-            }
-        }
-
-        void ExecuteAssignAttribute()
-        {
-            var attrName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
-            _valStack.Pop();
-            var target = _valStack.Pop();
-
-            throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
         }
 
         #endregion

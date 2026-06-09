@@ -25,7 +25,7 @@ namespace Chow.VM.Utilities
 
         #region Unary Operations
 
-        public static SourceValue EvaluateNot(ref SourceValue operand)
+        public static SourceValue EvaluateNot(SourceValue operand)
         {
             // Unlike `and`/`or`, Python `not` always produces an actual bool.
             return new SourceValue(!IsTruthy(ref operand));
