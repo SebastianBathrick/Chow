@@ -319,58 +319,6 @@ namespace Chow.Objects
             throw UnsupportedBinary(ExpressionOperator.Greater, other);
         }
 
-        internal bool IsLessOrEqualTo(SourceValue other)
-        {
-            switch (LookupBinary(ExpressionOperator.LessEqual, other))
-            {
-                case ConversionCase.ToInt:
-                {
-                    return PromoteToLong() <= other.PromoteToLong();
-                }
-                case ConversionCase.ToFloat:
-                {
-                    return PromoteToDouble() <= other.PromoteToDouble();
-                }
-                case ConversionCase.Nothing:
-                {
-                    if (_dataType == DataType.Str && other._dataType == DataType.Str)
-                    {
-                        return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) <= 0;
-                    }
-
-                    break;
-                }
-            }
-
-            throw UnsupportedBinary(ExpressionOperator.LessEqual, other);
-        }
-
-        internal bool IsGreaterOrEqualTo(SourceValue other)
-        {
-            switch (LookupBinary(ExpressionOperator.GreaterEqual, other))
-            {
-                case ConversionCase.ToInt:
-                {
-                    return PromoteToLong() >= other.PromoteToLong();
-                }
-                case ConversionCase.ToFloat:
-                {
-                    return PromoteToDouble() >= other.PromoteToDouble();
-                }
-                case ConversionCase.Nothing:
-                {
-                    if (_dataType == DataType.Str && other._dataType == DataType.Str)
-                    {
-                        return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) >= 0;
-                    }
-
-                    break;
-                }
-            }
-
-            throw UnsupportedBinary(ExpressionOperator.GreaterEqual, other);
-        }
-
         #endregion
 
         #region Interop
@@ -804,51 +752,7 @@ namespace Chow.Objects
                 }
             }
         }
-
-        static string RepeatString(string source, int count)
-        {
-            if (count <= 0 || source.Length == 0)
-            {
-                return string.Empty;
-            }
-
-            var builder = new StringBuilder(source.Length * count);
-
-            for (var index = 0; index < count; index++)
-            {
-                builder.Append(source);
-            }
-
-            return builder.ToString();
-        }
-
-        // Bool is treated as a subtype of Long for container-repeat dispatch (Python parity).
-        static bool IsIntegerTag(DataType dataType)
-        {
-            return dataType == DataType.Long || dataType == DataType.Bool;
-        }
-
-        // TODO: Make it so an overflow throws an exception instead of wrapping silently.
-        // Exponent-by-squaring. Caller guarantees exponent >= 0 (negative exponents are promoted to
-        // float by CreatePower before this is reached). Overflow wraps silently.
-        static long IntPow(long b, long e)
-        {
-            var result = 1L;
-
-            while (e > 0L)
-            {
-                if ((e & 1L) == 1L)
-                {
-                    result *= b;
-                }
-
-                b *= b;
-                e >>= 1;
-            }
-
-            return result;
-        }
-
+        
         #endregion
 
         #region Constants
