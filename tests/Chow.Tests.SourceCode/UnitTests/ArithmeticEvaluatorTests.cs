@@ -483,9 +483,7 @@ public class ArithmeticEvaluatorTests
 
     static SourceValue Evaluate(EvaluateBinary evaluate, SourceValue left, SourceValue right)
     {
-        var l = left;
-        var r = right;
-        return evaluate(ref l, ref r);
+        return evaluate(right, left);
     }
 
     static SourceValue Evaluate(EvaluateUnary evaluate, SourceValue operand)
@@ -585,7 +583,7 @@ public class ArithmeticEvaluatorTests
         Assert.That(ex.Message, Does.Contain("'" + operandType + "'"));
     }
 
-    delegate SourceValue EvaluateBinary(ref SourceValue left, ref SourceValue right);
+    delegate SourceValue EvaluateBinary(SourceValue r, SourceValue l);
 
     delegate SourceValue EvaluateUnary(ref SourceValue operand);
 

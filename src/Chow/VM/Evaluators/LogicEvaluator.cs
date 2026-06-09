@@ -9,13 +9,13 @@ namespace Chow.VM.Utilities
     {
         #region Binary Operations
 
-        public static SourceValue EvaluateAnd(ref SourceValue l, ref SourceValue r)
+        public static SourceValue EvaluateAnd(SourceValue r, SourceValue l)
         {
             // Python `and` returns an operand value, not a coerced bool.
             return IsTruthy(ref l) ? r : l;
         }
 
-        public static SourceValue EvaluateOr(ref SourceValue l, ref SourceValue r)
+        public static SourceValue EvaluateOr(SourceValue r, SourceValue l)
         {
             // Python `or` returns the first truthy operand, otherwise the right operand.
             return IsTruthy(ref l) ? l : r;

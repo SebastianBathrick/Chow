@@ -277,9 +277,7 @@ public class LogicEvaluatorTests
 
     static SourceValue Evaluate(EvaluateBinary evaluate, SourceValue left, SourceValue right)
     {
-        var l = left;
-        var r = right;
-        return evaluate(ref l, ref r);
+        return evaluate(right, left);
     }
 
     static void AssertBoolResult(EvaluateUnary evaluate, SourceValue operand, bool expectedBool)
@@ -309,7 +307,7 @@ public class LogicEvaluatorTests
 
     delegate SourceValue EvaluateUnary(ref SourceValue operand);
 
-    delegate SourceValue EvaluateBinary(ref SourceValue left, ref SourceValue right);
+    delegate SourceValue EvaluateBinary(SourceValue r, SourceValue l);
 
     #endregion
 }

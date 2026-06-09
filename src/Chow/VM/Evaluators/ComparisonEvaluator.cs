@@ -28,12 +28,12 @@ namespace Chow.VM.Utilities
 
         #region Equality Operations
 
-        public static SourceValue EvaluateEqual(ref SourceValue l, ref SourceValue r)
+        public static SourceValue EvaluateEqual(SourceValue r, SourceValue l)
         {
             return new SourceValue(AreEqual(ref l, ref r));
         }
 
-        public static SourceValue EvaluateNotEqual(ref SourceValue l, ref SourceValue r)
+        public static SourceValue EvaluateNotEqual(SourceValue r, SourceValue l)
         {
             return new SourceValue(!AreEqual(ref l, ref r));
         }
@@ -42,22 +42,22 @@ namespace Chow.VM.Utilities
 
         #region Ordering Operations
 
-        public static SourceValue EvaluateLess(ref SourceValue l, ref SourceValue r)
+        public static SourceValue EvaluateLess(SourceValue r, SourceValue l)
         {
             return new SourceValue(EvaluateOrdering(ref l, ref r, ExpressionOperator.Less));
         }
 
-        public static SourceValue EvaluateGreater(ref SourceValue l, ref SourceValue r)
+        public static SourceValue EvaluateGreater(SourceValue r, SourceValue l)
         {
             return new SourceValue(EvaluateOrdering(ref l, ref r, ExpressionOperator.Greater));
         }
 
-        public static SourceValue EvaluateLessEqual(ref SourceValue l, ref SourceValue r)
+        public static SourceValue EvaluateLessEqual(SourceValue r, SourceValue l)
         {
             return new SourceValue(EvaluateOrdering(ref l, ref r, ExpressionOperator.LessEqual));
         }
 
-        public static SourceValue EvaluateGreaterEqual(ref SourceValue l, ref SourceValue r)
+        public static SourceValue EvaluateGreaterEqual(SourceValue r, SourceValue l)
         {
             return new SourceValue(EvaluateOrdering(ref l, ref r, ExpressionOperator.GreaterEqual));
         }

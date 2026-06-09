@@ -10,28 +10,20 @@ namespace Chow.VM
     {
         const bool GoToNextInstruction = true;
         const bool StayAtInstruction = false;
-        
-        readonly Scope _globalScope;
+
         readonly CallStack _callStack;
         readonly Stack<SourceValue> _valStack;
         SourceValue _expressionStatementVal = SourceValue.None;
 
         Instruction CurrentOperation => _callStack.CurrentInstr;
-
-        #region Constructors
-
+        
         // Chunk is null when the client is exclusively calling a closure
         public Processor(Scope globalScope = null, Chunk chunk = null)
         {
-            // TODO: Update tests so that this does not throw. Processor no longer
-            // instantiates its own global scope; the caller is responsible for that
-            _globalScope = globalScope;
-            _callStack = new CallStack(chunk ?? new Chunk(), _globalScope);
+            _callStack = new CallStack(chunk ?? new Chunk(), globalScope);
             _valStack = new Stack<SourceValue>();
         }
-
-        #endregion
-
+        
         public SourceValue Execute()
         {
             while (_callStack.IsInstructionToExecute)
@@ -59,21 +51,51 @@ namespace Chow.VM
                 //==================================================================================
                 
                 case OperationCode.BinaryAdd:
-                case OperationCode.BinarySubtract:
-                case OperationCode.BinaryMultiply:
-                case OperationCode.BinaryDivide:
-                case OperationCode.BinaryModulus:
-                case OperationCode.BinaryPow:
-                case OperationCode.BinaryFloor:
-                case OperationCode.BinaryEqual:
-                case OperationCode.BinaryNotEqual:
-                case OperationCode.BinaryLess:
-                case OperationCode.BinaryGreater:
-                case OperationCode.BinaryLessEqual:
-                case OperationCode.BinaryGreaterEqual:
-                case OperationCode.BinaryOr:
-                    EvaluateBinaryOperation(CurrentOperation.Code);
+                    _valStack.Push(ArithmeticEvaluator.EvaluateAddition(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
+                case OperationCode.BinarySubtract:
+                    _valStack.Push(ArithmeticEvaluator.EvaluateSubtraction(r: _valStack.Pop(), l: _valStack.Pop()));
+                    break;
+                case OperationCode.BinaryMultiply:
+                    _valStack.Push(ArithmeticEvaluator.EvaluateMultiplication(r: _valStack.Pop(), l: _valStack.Pop()));
+                    break;
+                case OperationCode.BinaryDivide:
+                    _valStack.Push(ArithmeticEvaluator.EvaluateDivision(r: _valStack.Pop(), l: _valStack.Pop()));
+                    break;
+                case OperationCode.BinaryModulus:
+                    _valStack.Push(ArithmeticEvaluator.EvaluateModulus(r: _valStack.Pop(), l: _valStack.Pop()));
+                    break;
+                case OperationCode.BinaryPow:
+                    _valStack.Push(ArithmeticEvaluator.EvaluateExponent(r: _valStack.Pop(), l: _valStack.Pop()));
+                    break;
+                case OperationCode.BinaryFloor:
+                    _valStack.Push(ArithmeticEvaluator.EvaluateFloorDivision(r: _valStack.Pop(), l: _valStack.Pop()));
+                    break;
+                case OperationCode.BinaryEqual:
+                    _valStack.Push(ComparisonEvaluator.EvaluateEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    break;
+                case OperationCode.BinaryNotEqual:
+                    _valStack.Push(ComparisonEvaluator.EvaluateNotEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    break;
+                case OperationCode.BinaryLess:
+                    _valStack.Push(ComparisonEvaluator.EvaluateLess(r: _valStack.Pop(), l: _valStack.Pop()));
+                    break;
+                case OperationCode.BinaryGreater:
+                    _valStack.Push(ComparisonEvaluator.EvaluateGreater(r: _valStack.Pop(), l: _valStack.Pop()));
+                    break;
+                case OperationCode.BinaryLessEqual:
+                    _valStack.Push(ComparisonEvaluator.EvaluateLessEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    break;
+                case OperationCode.BinaryGreaterEqual:
+                    _valStack.Push(ComparisonEvaluator.EvaluateGreaterEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    break;
+                case OperationCode.BinaryOr:
+                {
+                    var r = _valStack.Pop();
+                    var l = _valStack.Pop();
+                    _valStack.Push(l.CreateUnion(r));
+                    break;
+                }
                 case OperationCode.BinaryIn:
                     EvaluateIn(negate: false);
                     break;
@@ -246,7 +268,7 @@ namespace Chow.VM
         /// <summary>Calls a function stored in a global variable with the name provided.</summary>
         /// <param name="callVarName">The name of a variable declared in the global scope. Caller
         /// is responsible for verifying the name is defined.</param>
-        /// <param name="args">The arguments to pass to the function. If there are not any, this
+        /// <param name="args">The arguments to pass to the function. If there aren't any, this
         /// parameter can be null.</param>
         /// <returns>The result of the function call.</returns>
         /// <remarks>Assumes that there is a global scope already set up that was provided to the
@@ -263,7 +285,7 @@ namespace Chow.VM
                 }
             }
 
-            if (ExecuteCallFunction(args != null ? args.Length : 0) == StayAtInstruction)
+            if (ExecuteCallFunction(args?.Length ?? 0) == StayAtInstruction)
             {
                 Execute();
             }
@@ -377,7 +399,7 @@ namespace Chow.VM
 
         void ExecutePushNewSourceFunction()
         {
-            // Type guarenteed to be at top of stack
+            // Type guaranteed to be at top of stack
             var template = (FunctionDefinition)_valStack.Pop().ToObject();
 
             var captured = _callStack.CurrentScope;
@@ -404,7 +426,7 @@ namespace Chow.VM
 
             var calleeValue = _valStack.Pop();
 
-            // If the SourceValue is storing a closure inside (i.e. a function made up of bytecode)
+            // If the SourceValue is storing a closure inside (i.e., a function made up of bytecode)
             if (IsClosure(calleeValue))
             {
                 // Switches to the closure's frame, so Execute will next execute the first
@@ -441,7 +463,7 @@ namespace Chow.VM
                 _valStack.Push(args[i]);
             }
 
-            // Advance caller's IP BEFORE pushing the frame so PushReturnValue lands at the next caller instruction.
+            // Advance caller's IP BEFORE pushing the frame, so PushReturnValue lands at the next caller instruction.
             _callStack.MoveToNextInstruction();
             _callStack.EnterFunctionCall(sourceFunction);
         }
@@ -449,106 +471,6 @@ namespace Chow.VM
         #endregion
 
         #region Expression Evaluation Methods
-
-        // TODO: Split each op into separate methods to avoid evaluating the operation code twice
-        void EvaluateBinaryOperation(OperationCode opCode)
-        {
-            // Double/bool promotion happens inside SourceValue's instance operator methods (CreateSum etc.)
-            var right = _valStack.Pop();
-            var left = _valStack.Pop();
-
-            switch (opCode)
-            {
-                case OperationCode.BinaryAdd:
-                {
-                    _valStack.Push(ArithmeticEvaluator.EvaluateAddition(ref left, ref right));
-                    break;
-                }
-
-                case OperationCode.BinarySubtract:
-                {
-                    _valStack.Push(ArithmeticEvaluator.EvaluateSubtraction(ref left, ref right));
-                    break;
-                }
-
-                case OperationCode.BinaryMultiply:
-                {
-                    _valStack.Push(ArithmeticEvaluator.EvaluateMultiplication(ref left, ref right));
-                    break;
-                }
-
-                case OperationCode.BinaryDivide:
-                {
-                    _valStack.Push(ArithmeticEvaluator.EvaluateDivision(ref left, ref right));
-                    break;
-                }
-
-                case OperationCode.BinaryModulus:
-                {
-                    _valStack.Push(ArithmeticEvaluator.EvaluateModulus(ref left, ref right));
-                    break;
-                }
-
-                case OperationCode.BinaryPow:
-                {
-                    _valStack.Push(ArithmeticEvaluator.EvaluateExponent(ref left, ref right));
-                    break;
-                }
-
-                case OperationCode.BinaryFloor:
-                {
-                    _valStack.Push(ArithmeticEvaluator.EvaluateFloorDivision(ref left, ref right));
-                    break;
-                }
-
-                case OperationCode.BinaryEqual:
-                {
-                    _valStack.Push(ComparisonEvaluator.EvaluateEqual(ref left, ref right));
-                    break;
-                }
-
-                case OperationCode.BinaryNotEqual:
-                {
-                    _valStack.Push(ComparisonEvaluator.EvaluateNotEqual(ref left, ref right));
-                    break;
-                }
-
-                case OperationCode.BinaryLess:
-                {
-                    _valStack.Push(ComparisonEvaluator.EvaluateLess(ref left, ref right));
-                    break;
-                }
-
-                case OperationCode.BinaryGreater:
-                {
-                    _valStack.Push(ComparisonEvaluator.EvaluateGreater(ref left, ref right));
-                    break;
-                }
-
-                case OperationCode.BinaryLessEqual:
-                {
-                    _valStack.Push(ComparisonEvaluator.EvaluateLessEqual(ref left, ref right));
-                    break;
-                }
-
-                case OperationCode.BinaryGreaterEqual:
-                {
-                    _valStack.Push(ComparisonEvaluator.EvaluateGreaterEqual(ref left, ref right));
-                    break;
-                }
-
-                case OperationCode.BinaryOr:
-                {
-                    _valStack.Push(left.CreateUnion(right));
-                    break;
-                }
-
-                default:
-                {
-                    throw new NotImplementedException($"Execution of {opCode} is not implemented.");
-                }
-            }
-        }
 
         void EvaluateNegation()
         {

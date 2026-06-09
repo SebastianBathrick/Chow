@@ -6,7 +6,7 @@ using Chow.Utility;
 namespace Chow.VM.Utilities
 {
     // TODO: Replace with more performant, refactored version
-    class ArithmeticEvaluator : IEvaluator
+    class ArithmeticEvaluator
     {
         // TODO: Update project's const naming conventions from SNAKE_CASE to PascalCase 
         const int IsDoubleEqualInteger = 0; 
@@ -26,12 +26,7 @@ namespace Chow.VM.Utilities
                 { (DataType.Double, DataType.Double), DataType.Double },
             };
         
-        public SourceValue EvaluateBinary(SourceValue right, SourceValue left)
-        {
-            throw new NotImplementedException();
-        }
-        
-        public static SourceValue EvaluateAddition(ref SourceValue l, ref SourceValue r)
+        public static SourceValue EvaluateAddition(SourceValue r, SourceValue l)
         {
             // No float on either side → int result; otherwise both operands promote to float.
             if (TryGetConversionTag(l.DataType, r.DataType, out var convTag))
@@ -57,13 +52,13 @@ namespace Chow.VM.Utilities
 
         }
 
-        public static SourceValue EvaluateSubtraction(ref SourceValue l, ref SourceValue r)
+        public static SourceValue EvaluateSubtraction(SourceValue r, SourceValue l)
         {
             return GetConversionTag(l.DataType, r.DataType, ExpressionOperator.Subtract) == DataType.Long ? new SourceValue(l.ToLong() - r.ToLong()) : new SourceValue(l.ToDouble() - r.ToDouble());
 
         }
 
-        public static SourceValue EvaluateMultiplication(ref SourceValue l, ref SourceValue r)
+        public static SourceValue EvaluateMultiplication(SourceValue r, SourceValue l)
         {
             if (TryGetConversionTag(l.DataType, r.DataType, out var convTag))
             {
@@ -100,7 +95,7 @@ namespace Chow.VM.Utilities
             throw UnsupportedBinary(l.DataType, r.DataType, ExpressionOperator.Multiply);
         }
 
-        public static SourceValue EvaluateDivision(ref SourceValue l, ref SourceValue r)
+        public static SourceValue EvaluateDivision(SourceValue r, SourceValue l)
         {
             // Python: `/` always yields float (e.g. 9 / 3 → 3.0), even for int operands.
             // Lookup validates operand types; result type is always double regardless of map value.
@@ -119,7 +114,7 @@ namespace Chow.VM.Utilities
         
         #region Modulus Methods
 
-        public static SourceValue EvaluateModulus(ref SourceValue l, ref SourceValue r)
+        public static SourceValue EvaluateModulus(SourceValue r, SourceValue l)
         {
             var convTag = GetConversionTag(l.DataType, r.DataType, ExpressionOperator.Modulus);
 
@@ -158,7 +153,7 @@ namespace Chow.VM.Utilities
 
         #region Floor Division Methods
 
-        public static SourceValue EvaluateFloorDivision(ref SourceValue l, ref SourceValue r)
+        public static SourceValue EvaluateFloorDivision(SourceValue r, SourceValue l)
         {
             var convTag = GetConversionTag(l.DataType, r.DataType, ExpressionOperator.FloorDivide);
             
@@ -207,25 +202,25 @@ namespace Chow.VM.Utilities
         #region Exponentiation Methods
 
         // Python: negative integer exponent forces float result.
-        public static SourceValue EvaluateExponent(ref SourceValue baseValue, ref SourceValue exponentValue)
+        public static SourceValue EvaluateExponent(SourceValue r, SourceValue l)
         {
-            var convTag = GetConversionTag(baseValue.DataType, exponentValue.DataType, ExpressionOperator.Exponentiate);
+            var convTag = GetConversionTag(l.DataType, r.DataType, ExpressionOperator.Exponentiate);
 
             if (convTag == DataType.Long)
             {
-                var exponentLong = exponentValue.ToLong();
+                var exponentLong = r.ToLong();
 
                 if (exponentLong >= 0L)
                 {
                     // Exact integer path; avoids double precision loss (e.g. 10 ** 16).
-                    var result = ExponentiateLong(baseValue.ToLong(), exponentLong);
+                    var result = ExponentiateLong(l.ToLong(), exponentLong);
                     return new SourceValue(result);
                 }
                 // Negative int exponent (e.g. 2 ** -3) falls through to float Math.Pow below.
             }
 
-            var baseDbl = baseValue.ToDouble();
-            var exponentDbl = exponentValue.ToDouble();
+            var baseDbl = l.ToDouble();
+            var exponentDbl = r.ToDouble();
 
             // Python: 0 ** -n raises ZeroDivisionError; Math.Pow would return Infinity.
             if (IsDoubleValueZero(baseDbl) && exponentDbl < 0.0)
