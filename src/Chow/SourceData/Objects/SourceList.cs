@@ -14,6 +14,8 @@ namespace Chow.SourceData
         const string METHOD_REMOVE_NAME = "remove";
         const string METHOD_REVERSE_NAME = "reverse";
 
+        const string INDEX_TYPE_ERROR_FORMAT = "list indices must be integers, not {0}";
+
         readonly List<SourceValue> _elements = new List<SourceValue>();
 
         public int Count => _elements.Count;
@@ -37,14 +39,14 @@ namespace Chow.SourceData
                 return GetSlice(slice.Start, slice.Stop, slice.Step);
             }
 
-            throw new DataTypeException($"list indices must be integers, not {key.DataType}");
+            throw new DataTypeException(string.Format(INDEX_TYPE_ERROR_FORMAT, key.DataType));
         }
 
         public override void SetItem(SourceValue key, SourceValue value)
         {
             if (key.DataType != DataType.Long)
             {
-                throw new DataTypeException($"list indices must be integers, not {key.DataType}");
+                throw new DataTypeException(string.Format(INDEX_TYPE_ERROR_FORMAT, key.DataType));
             }
 
             this[(int)key.ToLong()] = value;

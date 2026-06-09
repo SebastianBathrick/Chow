@@ -12,6 +12,8 @@ namespace Chow.SourceData
     /// </remarks>
     sealed class SourceFunction : SourceObject
     {
+        const string REPR_FORMAT = "<function {0}>";
+
         public override DataType Type => DataType.Function;
 
         /// <summary>The compiled bytecode of the function body.</summary>
@@ -37,7 +39,7 @@ namespace Chow.SourceData
 
         public override string ToRepresentation()
         {
-            return $"<function {Name}>";
+            return string.Format(REPR_FORMAT, Name);
         }
     }
 }

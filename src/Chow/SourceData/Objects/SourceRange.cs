@@ -7,6 +7,11 @@ namespace Chow.SourceData
     /// </summary>
     class SourceRange : SourceObject
     {
+        const long DEFAULT_STEP = 1;
+        const string ZERO_STEP_ERROR = "range() arg 3 must not be zero";
+        const string REPR_FORMAT = "range({0}, {1})";
+        const string REPR_WITH_STEP_FORMAT = "range({0}, {1}, {2})";
+
         public long Start { get; }
         public long Stop { get; }
         public long Step { get; }
@@ -15,7 +20,7 @@ namespace Chow.SourceData
         {
             if (step == 0)
             {
-                throw new ArgumentException("range() arg 3 must not be zero");
+                throw new ArgumentException(ZERO_STEP_ERROR);
             }
 
             Start = start;
@@ -61,7 +66,9 @@ namespace Chow.SourceData
 
         public override string ToRepresentation()
         {
-            return Step == 1 ? $"range({Start}, {Stop})" : $"range({Start}, {Stop}, {Step})";
+            return Step == DEFAULT_STEP
+                ? string.Format(REPR_FORMAT, Start, Stop)
+                : string.Format(REPR_WITH_STEP_FORMAT, Start, Stop, Step);
         }
     }
 }
