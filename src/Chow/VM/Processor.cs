@@ -41,75 +41,87 @@ namespace Chow.VM
         {
             switch (CurrentOperation.Code)
             {
-
                 case OperationCode.Pop:
                     _valStack.Pop();
                     break;
+                case OperationCode.PushConstantValue:
+                    _valStack.Push(_callStack.CurrentChunk.ReadConstant(CurrentOperation.Operand));
+                    break;
                 
-                case OperationCode.CallFunction:
-                    return ExecuteCallFunction(CurrentOperation.Operand);
-                //==================================================================================
-                
+                // -- Binary Operations------------------------------------------------------------
                 case OperationCode.BinaryAdd:
-                    _valStack.Push(ArithmeticEvaluator.EvaluateAddition(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(ArithmeticEvaluator.Add(
+                        r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinarySubtract:
-                    _valStack.Push(ArithmeticEvaluator.EvaluateSubtraction(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(ArithmeticEvaluator.Subtract(
+                        r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryMultiply:
-                    _valStack.Push(ArithmeticEvaluator.EvaluateMultiplication(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(ArithmeticEvaluator.Multiply(
+                        r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryDivide:
-                    _valStack.Push(ArithmeticEvaluator.EvaluateDivision(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(ArithmeticEvaluator.Divide(
+                        r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryModulus:
-                    _valStack.Push(ArithmeticEvaluator.EvaluateModulus(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(ArithmeticEvaluator.Pow(
+                        r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryPow:
-                    _valStack.Push(ArithmeticEvaluator.EvaluateExponent(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(ArithmeticEvaluator.EvaluateExponent(
+                        r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryFloor:
-                    _valStack.Push(ArithmeticEvaluator.EvaluateFloorDivision(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(ArithmeticEvaluator.EvaluateFloorDivision(
+                        r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryEqual:
-                    _valStack.Push(ComparisonEvaluator.EvaluateEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(ComparisonEvaluator.EvaluateEqual(
+                        r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryNotEqual:
-                    _valStack.Push(ComparisonEvaluator.EvaluateNotEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(ComparisonEvaluator.EvaluateNotEqual(
+                        r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryLess:
-                    _valStack.Push(ComparisonEvaluator.EvaluateLess(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(ComparisonEvaluator.EvaluateLess(
+                        r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryGreater:
-                    _valStack.Push(ComparisonEvaluator.EvaluateGreater(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(ComparisonEvaluator.EvaluateGreater(
+                        r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryLessEqual:
-                    _valStack.Push(ComparisonEvaluator.EvaluateLessEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(ComparisonEvaluator.EvaluateLessEqual(
+                        r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
                 case OperationCode.BinaryGreaterEqual:
-                    _valStack.Push(ComparisonEvaluator.EvaluateGreaterEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(ComparisonEvaluator.EvaluateGreaterEqual(
+                        r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
-                case OperationCode.BinaryBitwiseOr:
-                {
-                    var r = _valStack.Pop();
-                    var l = _valStack.Pop();
-                    _valStack.Push(l.CreateUnion(r));
+                case OperationCode.BinaryUnion:
+                    ExecuteBinaryUnion();
                     break;
-                }
                 case OperationCode.BinaryIn:
+                    // TODO: Add 'in' to the LogicEvaluator
                     EvaluateIn(negate: false);
                     break;
                 case OperationCode.BinaryNotIn:
+                    // TODO: Add 'not in' to the LogicEvaluator
                     EvaluateIn(negate: true);
                     break;
 
+                // -- Unary Operations-------------------------------------------------------------
                 case OperationCode.UnaryNot:
                     EvaluateNot();
                     break;
                 case OperationCode.UnaryNegate:
                     EvaluateNegation();
                     break;
-                
+
+                // -- Control Structure Operations ------------------------------------------------
                 case OperationCode.JumpIfFalseOrPop:
                     return ExecuteJumpIfFalseOrPop();
                 case OperationCode.JumpIfTrueOrPop:
@@ -118,53 +130,55 @@ namespace Chow.VM
                     return ExecuteJumpIfFalse();
                 case OperationCode.JumpPastElseBranches:
                     return ExecuteJump();
-
                 case OperationCode.JumpToLoopStart:
                     return ExecuteJump();
-                case OperationCode.JumpOrForIteratorNext:
-                    return ExecuteJumpOrIterateFor();
+
+                // -- Variable Operations ---------------------------------------------------------
                 case OperationCode.AssignVariable:
                     ExecuteAssignVariable();
-                    break;
-                case OperationCode.AssignGlobal:
-                    ExecuteAssignGlobal();
-                    break;
-                case OperationCode.AssignNonLocal:
-                    ExecuteAssignNonLocal();
-                    break;
-                case OperationCode.AssignAttribute:
-                    ExecuteAssignAttribute();
-                    break;
-                case OperationCode.AssignSubscript:
-                    ExecuteAssignSubscript();
-                    break;
-                
-                case OperationCode.PushConstantValue:
-                    _valStack.Push(_callStack.CurrentChunk.ReadConstant(CurrentOperation.Operand));
                     break;
                 case OperationCode.PushVariableValue:
                     ExecutePushVariableValue();
                     break;
+                case OperationCode.AssignGlobal:
+                    ExecuteAssignGlobal();
+                    break;
                 case OperationCode.PushGlobalValue:
                     ExecutePushGlobalValue();
+                    break;
+                case OperationCode.AssignNonLocal:
+                    ExecuteAssignNonLocal();
                     break;
                 case OperationCode.PushNonLocalValue:
                     ExecutePushNonLocalValue();
                     break;
+
+                // -- Attribute Operations --------------------------------------------------------
+                case OperationCode.AssignAttribute:
+                    ExecuteAssignAttribute();
+                    break;
                 case OperationCode.PushAttributeValue:
                     ExecutePushAttribute();
                     break;
+
+                // -- Collection Operations -------------------------------------------------------
                 case OperationCode.PushNewSourceList:
                     ExecutePushNewSourceList(CurrentOperation.Operand);
-                    break;
-                case OperationCode.PushNewSourceFunction:
-                    ExecutePushNewSourceFunction();
                     break;
                 case OperationCode.PushNewSourceDictionary:
                     ExecutePushNewSourceDictionary(CurrentOperation.Operand);
                     break;
+
+                // -- Iterator Operations ---------------------------------------------------------
                 case OperationCode.PushNewIteratorWithValue:
                     ExecutePushNewIterator();
+                    break;
+                case OperationCode.JumpOrForIteratorNext:
+                    return ExecuteJumpOrIterateFor();
+
+                // -- Subscript Operations ---------------------------------------------------------
+                case OperationCode.AssignSubscript:
+                    ExecuteAssignSubscript();
                     break;
                 case OperationCode.PushSubscriptValue:
                     ExecutePushSubscriptValue();
@@ -172,21 +186,40 @@ namespace Chow.VM
                 case OperationCode.PushSubscriptSliceValue:
                     ExecutePushSubscriptSliceValue();
                     break;
+
+                // -- Function Call Operations ----------------------------------------------------
+                case OperationCode.CallFunction:
+                    // If false, the chunk will have switched to a SourceFunction's
+                    return ExecuteCallFunction(CurrentOperation.Operand);
                 case OperationCode.PushReturnValue:
                     _callStack.ExitFunctionCall();
                     return StayAtInstruction;
+                case OperationCode.PushNewSourceFunction:
+                    ExecutePushNewSourceFunction();
+                    break;
                 
+                // -- Expression Evaluation Operations --------------------------------------------
                 case OperationCode.CoerceToStr:
                     EvaluateCoerceToStr();
                     break;
                 case OperationCode.PopExpressionStatementResult:
                     _expressionStatementVal = _valStack.Pop();
                     break;
+                    
                 default:
                     throw new NotImplementedException($"Execution of {CurrentOperation.Code} is not implemented.");
             }
 
             return GoToNextInstruction;
+        }
+
+        void ExecuteBinaryUnion()
+        {
+
+            // TODO: Add bitwise ors to the LogicEvaluator
+            var r = _valStack.Pop();
+            var l = _valStack.Pop();
+            _valStack.Push(l.CreateUnion(r));
         }
 
         bool ExecuteJumpIfFalseOrPop()
@@ -411,10 +444,7 @@ namespace Chow.VM
         #endregion
 
         #region Function Call Methods
-
-        /// <returns><see cref="StayAtInstruction"/> when a closure frame was entered (the
-        /// instruction pointer now refers to the closure's chunk), or
-        /// <see cref="GoToNextInstruction"/> after an interop call.</returns>
+        
         bool ExecuteCallFunction(int argCount)
         {
             var args = new SourceValue[argCount];

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Chow.Exceptions;
 using Chow.Objects;
 using Chow.VM;
+using Chow.VM.Utilities;
 namespace Chow.StandardLibrary.BuiltIns
 {
     static class BuiltInFunctions
@@ -278,19 +279,19 @@ namespace Chow.StandardLibrary.BuiltIns
             {
                 case DataType.Str:
                     {
-                        return new SourceValue(value.AsType<string>().Length);
+                        return new SourceValue(value.ToString().Length);
                     }
                 case DataType.List:
                     {
-                        return new SourceValue(value.AsType<SourceList>().Count);
+                        return new SourceValue(((SourceList)value.ToObject()).Count);
                     }
                 case DataType.Dict:
                     {
-                        return new SourceValue(value.AsType<SourceDictionary>().Count);
+                        return new SourceValue(((SourceDictionary)value.ToObject()).Count);
                     }
                 case DataType.Range:
                     {
-                        return new SourceValue(value.AsType<SourceRange>().Count);
+                        return new SourceValue(((SourceRange)value.ToObject()).Count);
                     }
             }
 
@@ -305,15 +306,15 @@ namespace Chow.StandardLibrary.BuiltIns
             {
                 case DataType.Long:
                     {
-                        return new SourceValue(Math.Abs(value.AsType<long>()));
+                        return new SourceValue(Math.Abs(value.ToLong()));
                     }
                 case DataType.Double:
                     {
-                        return new SourceValue(Math.Abs(value.AsType<double>()));
+                        return new SourceValue(Math.Abs(value.ToDouble()));
                     }
                 case DataType.Bool:
                     {
-                        return new SourceValue(value.AsType<bool>() ? 1L : 0L);
+                        return new SourceValue(value.ToBool() ? 1L : 0L);
                     }
             }
 
@@ -371,7 +372,9 @@ namespace Chow.StandardLibrary.BuiltIns
 
             while (iterator.TryMoveNext(out var next))
             {
-                var replace = findLess ? next.IsLessThan(winner) : next.IsGreaterThan(winner);
+                var replace = findLess
+                    ? ComparisonEvaluator.EvaluateLess(r: winner, l: next).ToBool()
+                    : ComparisonEvaluator.EvaluateGreater(r: winner, l: next).ToBool();
                 
                 if (replace)
                 {

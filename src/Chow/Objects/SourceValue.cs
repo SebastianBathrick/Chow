@@ -267,58 +267,6 @@ namespace Chow.Objects
             return false;
         }
 
-        internal bool IsLessThan(SourceValue other)
-        {
-            switch (LookupBinary(ExpressionOperator.Less, other))
-            {
-                case ConversionCase.ToInt:
-                {
-                    return PromoteToLong() < other.PromoteToLong();
-                }
-                case ConversionCase.ToFloat:
-                {
-                    return PromoteToDouble() < other.PromoteToDouble();
-                }
-                case ConversionCase.Nothing:
-                {
-                    if (_dataType == DataType.Str && other._dataType == DataType.Str)
-                    {
-                        return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) < 0;
-                    }
-
-                    break;
-                }
-            }
-
-            throw UnsupportedBinary(ExpressionOperator.Less, other);
-        }
-
-        internal bool IsGreaterThan(SourceValue other)
-        {
-            switch (LookupBinary(ExpressionOperator.Greater, other))
-            {
-                case ConversionCase.ToInt:
-                {
-                    return PromoteToLong() > other.PromoteToLong();
-                }
-                case ConversionCase.ToFloat:
-                {
-                    return PromoteToDouble() > other.PromoteToDouble();
-                }
-                case ConversionCase.Nothing:
-                {
-                    if (_dataType == DataType.Str && other._dataType == DataType.Str)
-                    {
-                        return string.CompareOrdinal(AsType<string>(), other.AsType<string>()) > 0;
-                    }
-
-                    break;
-                }
-            }
-
-            throw UnsupportedBinary(ExpressionOperator.Greater, other);
-        }
-
         #endregion
 
         #region Interop

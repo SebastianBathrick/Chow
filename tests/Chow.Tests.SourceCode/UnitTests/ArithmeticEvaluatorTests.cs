@@ -19,35 +19,35 @@ public class ArithmeticEvaluatorTests
     public void Addition_IntInt_ReturnsInt()
     {
         // Python: 2 + 3 -> 5
-        AssertResult(ArithmeticEvaluator.EvaluateAddition, L(2), L(3), DataType.Long, 5L);
+        AssertResult(ArithmeticEvaluator.Add, L(2), L(3), DataType.Long, 5L);
     }
 
     [Test]
     public void Addition_FloatInt_ReturnsFloat()
     {
         // Python: 2.0 + 3 -> 5.0
-        AssertResult(ArithmeticEvaluator.EvaluateAddition, D(2.0), L(3), DataType.Double, 5.0);
+        AssertResult(ArithmeticEvaluator.Add, D(2.0), L(3), DataType.Double, 5.0);
     }
 
     [Test]
     public void Addition_BoolInt_ReturnsInt()
     {
         // Python: True + 1 -> 2
-        AssertResult(ArithmeticEvaluator.EvaluateAddition, B(true), L(1), DataType.Long, 2L);
+        AssertResult(ArithmeticEvaluator.Add, B(true), L(1), DataType.Long, 2L);
     }
 
     [Test]
     public void Addition_StrStr_ReturnsStr()
     {
         // Python: "a" + "b" -> "ab"
-        AssertResult(ArithmeticEvaluator.EvaluateAddition, S("a"), S("b"), DataType.Str, "ab");
+        AssertResult(ArithmeticEvaluator.Add, S("a"), S("b"), DataType.Str, "ab");
     }
 
     [Test]
     public void Addition_ListList_ReturnsList()
     {
         // Python: [1] + [2] -> [1, 2]
-        AssertValueResult(ArithmeticEvaluator.EvaluateAddition, List(L(1)), List(L(2)), List(L(1), L(2)));
+        AssertValueResult(ArithmeticEvaluator.Add, List(L(1)), List(L(2)), List(L(1), L(2)));
     }
 
     [Test]
@@ -55,7 +55,7 @@ public class ArithmeticEvaluatorTests
     {
         // Python: 2 + None -> TypeError
         AssertTypeError(
-            () => Evaluate(ArithmeticEvaluator.EvaluateAddition, L(2), SourceValue.None),
+            () => Evaluate(ArithmeticEvaluator.Add, L(2), SourceValue.None),
             "+",
             "int",
             "NoneType");
@@ -69,14 +69,14 @@ public class ArithmeticEvaluatorTests
     public void Subtraction_IntInt_ReturnsInt()
     {
         // Python: 5 - 3 -> 2
-        AssertResult(ArithmeticEvaluator.EvaluateSubtraction, L(5), L(3), DataType.Long, 2L);
+        AssertResult(ArithmeticEvaluator.Subtract, L(5), L(3), DataType.Long, 2L);
     }
 
     [Test]
     public void Subtraction_FloatInt_ReturnsFloat()
     {
         // Python: 2.5 - 1 -> 1.5
-        AssertResult(ArithmeticEvaluator.EvaluateSubtraction, D(2.5), L(1), DataType.Double, 1.5);
+        AssertResult(ArithmeticEvaluator.Subtract, D(2.5), L(1), DataType.Double, 1.5);
     }
 
     [Test]
@@ -84,7 +84,7 @@ public class ArithmeticEvaluatorTests
     {
         // Python: "a" - "b" -> TypeError
         AssertTypeError(
-            () => Evaluate(ArithmeticEvaluator.EvaluateSubtraction, S("a"), S("b")),
+            () => Evaluate(ArithmeticEvaluator.Subtract, S("a"), S("b")),
             "-",
             "str",
             "str");
@@ -98,56 +98,56 @@ public class ArithmeticEvaluatorTests
     public void Multiplication_IntInt_ReturnsInt()
     {
         // Python: 7 * 8 -> 56
-        AssertResult(ArithmeticEvaluator.EvaluateMultiplication, L(7), L(8), DataType.Long, 56L);
+        AssertResult(ArithmeticEvaluator.Multiply, L(7), L(8), DataType.Long, 56L);
     }
 
     [Test]
     public void Multiplication_FloatInt_ReturnsFloat()
     {
         // Python: 2.0 * 3 -> 6.0
-        AssertResult(ArithmeticEvaluator.EvaluateMultiplication, D(2.0), L(3), DataType.Double, 6.0);
+        AssertResult(ArithmeticEvaluator.Multiply, D(2.0), L(3), DataType.Double, 6.0);
     }
 
     [Test]
     public void Multiplication_StrInt_ReturnsRepeatedStr()
     {
         // Python: "ab" * 3 -> "ababab"
-        AssertResult(ArithmeticEvaluator.EvaluateMultiplication, S("ab"), L(3), DataType.Str, "ababab");
+        AssertResult(ArithmeticEvaluator.Multiply, S("ab"), L(3), DataType.Str, "ababab");
     }
 
     [Test]
     public void Multiplication_IntStr_ReturnsRepeatedStr()
     {
         // Python: 3 * "ab" -> "ababab"
-        AssertResult(ArithmeticEvaluator.EvaluateMultiplication, L(3), S("ab"), DataType.Str, "ababab");
+        AssertResult(ArithmeticEvaluator.Multiply, L(3), S("ab"), DataType.Str, "ababab");
     }
 
     [Test]
     public void Multiplication_StrZero_ReturnsEmptyStr()
     {
         // Python: "ab" * 0 -> ""
-        AssertResult(ArithmeticEvaluator.EvaluateMultiplication, S("ab"), L(0), DataType.Str, string.Empty);
+        AssertResult(ArithmeticEvaluator.Multiply, S("ab"), L(0), DataType.Str, string.Empty);
     }
 
     [Test]
     public void Multiplication_StrNegative_ReturnsEmptyStr()
     {
         // Python: "ab" * -1 -> ""
-        AssertResult(ArithmeticEvaluator.EvaluateMultiplication, S("ab"), L(-1), DataType.Str, string.Empty);
+        AssertResult(ArithmeticEvaluator.Multiply, S("ab"), L(-1), DataType.Str, string.Empty);
     }
 
     [Test]
     public void Multiplication_BoolStr_ReturnsRepeatedStr()
     {
         // Python: True * "ab" -> "ab"
-        AssertResult(ArithmeticEvaluator.EvaluateMultiplication, B(true), S("ab"), DataType.Str, "ab");
+        AssertResult(ArithmeticEvaluator.Multiply, B(true), S("ab"), DataType.Str, "ab");
     }
 
     [Test]
     public void Multiplication_FalseStr_ReturnsEmptyStr()
     {
         // Python: False * "ab" -> ""
-        AssertResult(ArithmeticEvaluator.EvaluateMultiplication, B(false), S("ab"), DataType.Str, string.Empty);
+        AssertResult(ArithmeticEvaluator.Multiply, B(false), S("ab"), DataType.Str, string.Empty);
     }
 
     [Test]
@@ -155,7 +155,7 @@ public class ArithmeticEvaluatorTests
     {
         // Python: [1] * 3 -> [1, 1, 1]
         AssertValueResult(
-            ArithmeticEvaluator.EvaluateMultiplication,
+            ArithmeticEvaluator.Multiply,
             List(L(1)),
             L(3),
             List(L(1), L(1), L(1)));
@@ -166,7 +166,7 @@ public class ArithmeticEvaluatorTests
     {
         // Python: 3 * [1] -> [1, 1, 1]
         AssertValueResult(
-            ArithmeticEvaluator.EvaluateMultiplication,
+            ArithmeticEvaluator.Multiply,
             L(3),
             List(L(1)),
             List(L(1), L(1), L(1)));
@@ -176,28 +176,28 @@ public class ArithmeticEvaluatorTests
     public void Multiplication_ListZero_ReturnsEmptyList()
     {
         // Python: [1] * 0 -> []
-        AssertValueResult(ArithmeticEvaluator.EvaluateMultiplication, List(L(1)), L(0), List());
+        AssertValueResult(ArithmeticEvaluator.Multiply, List(L(1)), L(0), List());
     }
 
     [Test]
     public void Multiplication_ListNegative_ReturnsEmptyList()
     {
         // Python: [1] * -1 -> []
-        AssertValueResult(ArithmeticEvaluator.EvaluateMultiplication, List(L(1)), L(-1), List());
+        AssertValueResult(ArithmeticEvaluator.Multiply, List(L(1)), L(-1), List());
     }
 
     [Test]
     public void Multiplication_BoolList_ReturnsRepeatedList()
     {
         // Python: True * [1] -> [1]
-        AssertValueResult(ArithmeticEvaluator.EvaluateMultiplication, B(true), List(L(1)), List(L(1)));
+        AssertValueResult(ArithmeticEvaluator.Multiply, B(true), List(L(1)), List(L(1)));
     }
 
     [Test]
     public void Multiplication_FalseList_ReturnsEmptyList()
     {
         // Python: False * [1] -> []
-        AssertValueResult(ArithmeticEvaluator.EvaluateMultiplication, B(false), List(L(1)), List());
+        AssertValueResult(ArithmeticEvaluator.Multiply, B(false), List(L(1)), List());
     }
 
     [Test]
@@ -205,7 +205,7 @@ public class ArithmeticEvaluatorTests
     {
         // Python: "a" * 2.5 -> TypeError
         AssertTypeError(
-            () => Evaluate(ArithmeticEvaluator.EvaluateMultiplication, S("a"), D(2.5)),
+            () => Evaluate(ArithmeticEvaluator.Multiply, S("a"), D(2.5)),
             "*",
             "str",
             "float");
@@ -219,14 +219,14 @@ public class ArithmeticEvaluatorTests
     public void Division_IntInt_ReturnsFloat()
     {
         // Python: 9 / 3 -> 3.0
-        AssertResult(ArithmeticEvaluator.EvaluateDivision, L(9), L(3), DataType.Double, 3.0);
+        AssertResult(ArithmeticEvaluator.Divide, L(9), L(3), DataType.Double, 3.0);
     }
 
     [Test]
     public void Division_IntInt_WithRemainder_ReturnsFloat()
     {
         // Python: 7 / 2 -> 3.5
-        AssertResult(ArithmeticEvaluator.EvaluateDivision, L(7), L(2), DataType.Double, 3.5);
+        AssertResult(ArithmeticEvaluator.Divide, L(7), L(2), DataType.Double, 3.5);
     }
 
     [Test]
@@ -234,7 +234,7 @@ public class ArithmeticEvaluatorTests
     {
         // Python: 1 / 0 -> ZeroDivisionError
         Assert.Throws<ZeroDivisionException>(
-            () => Evaluate(ArithmeticEvaluator.EvaluateDivision, L(1), L(0)));
+            () => Evaluate(ArithmeticEvaluator.Divide, L(1), L(0)));
     }
 
     [Test]
@@ -242,7 +242,7 @@ public class ArithmeticEvaluatorTests
     {
         // Python: 2 / None -> TypeError
         AssertTypeError(
-            () => Evaluate(ArithmeticEvaluator.EvaluateDivision, L(2), SourceValue.None),
+            () => Evaluate(ArithmeticEvaluator.Divide, L(2), SourceValue.None),
             "/",
             "int",
             "NoneType");
@@ -253,7 +253,7 @@ public class ArithmeticEvaluatorTests
     {
         // Python: [] / 2 -> TypeError
         AssertTypeError(
-            () => Evaluate(ArithmeticEvaluator.EvaluateDivision, List(), L(2)),
+            () => Evaluate(ArithmeticEvaluator.Divide, List(), L(2)),
             "/",
             "list",
             "int");
@@ -267,28 +267,28 @@ public class ArithmeticEvaluatorTests
     public void Modulus_PositiveOperands_ReturnsInt()
     {
         // Python: 7 % 3 -> 1
-        AssertResult(ArithmeticEvaluator.EvaluateModulus, L(7), L(3), DataType.Long, 1L);
+        AssertResult(ArithmeticEvaluator.Pow, L(7), L(3), DataType.Long, 1L);
     }
 
     [Test]
     public void Modulus_NegativeDividend_ReturnsInt()
     {
         // Python: -3 % 2 -> 1
-        AssertResult(ArithmeticEvaluator.EvaluateModulus, L(-3), L(2), DataType.Long, 1L);
+        AssertResult(ArithmeticEvaluator.Pow, L(-3), L(2), DataType.Long, 1L);
     }
 
     [Test]
     public void Modulus_NegativeDivisor_ReturnsInt()
     {
         // Python: 3 % -2 -> -1
-        AssertResult(ArithmeticEvaluator.EvaluateModulus, L(3), L(-2), DataType.Long, -1L);
+        AssertResult(ArithmeticEvaluator.Pow, L(3), L(-2), DataType.Long, -1L);
     }
 
     [Test]
     public void Modulus_BothNegative_ReturnsInt()
     {
         // Python: -17 % -4 -> -1
-        AssertResult(ArithmeticEvaluator.EvaluateModulus, L(-17), L(-4), DataType.Long, -1L);
+        AssertResult(ArithmeticEvaluator.Pow, L(-17), L(-4), DataType.Long, -1L);
     }
 
     [Test]
@@ -296,7 +296,7 @@ public class ArithmeticEvaluatorTests
     {
         // Python: 7 % 0 -> ZeroDivisionError
         Assert.Throws<ZeroDivisionException>(
-            () => Evaluate(ArithmeticEvaluator.EvaluateModulus, L(7), L(0)));
+            () => Evaluate(ArithmeticEvaluator.Pow, L(7), L(0)));
     }
 
     #endregion

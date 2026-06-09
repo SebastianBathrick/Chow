@@ -67,7 +67,7 @@ namespace Chow.VM.Utilities
                 { (DataType.Bool,   DataType.List),   DataType.List   },
             };
 
-        public static SourceValue EvaluateAddition(SourceValue r, SourceValue l)
+        public static SourceValue Add(SourceValue r, SourceValue l)
         {
             switch (GetConversionDataType(AdditionConversionMap, l.DataType, r.DataType, ExpressionOperator.Add))
             {
@@ -79,11 +79,11 @@ namespace Chow.VM.Utilities
                 
                 // List concatenation creates a new list; neither operand list is mutated.
                 case DataType.List:   return new SourceValue(SourceList.Concat((SourceList)l.ToObject(), (SourceList)r.ToObject()));
-                default:              throw new UnreachableException(nameof(EvaluateAddition));
+                default:              throw new UnreachableException(nameof(Add));
             }
         }
 
-        public static SourceValue EvaluateSubtraction(SourceValue r, SourceValue l)
+        public static SourceValue Subtract(SourceValue r, SourceValue l)
         {
             var convDataType = GetConversionDataType(NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Subtract);
             return convDataType == DataType.Long
@@ -91,7 +91,7 @@ namespace Chow.VM.Utilities
                 : new SourceValue(l.ToDouble() - r.ToDouble());
         }
 
-        public static SourceValue EvaluateMultiplication(SourceValue r, SourceValue l)
+        public static SourceValue Multiply(SourceValue r, SourceValue l)
         {
             switch (GetConversionDataType(MultiplicationConversionMap, l.DataType, r.DataType, ExpressionOperator.Multiply))
             {
@@ -121,11 +121,11 @@ namespace Chow.VM.Utilities
                         : ToRepeatCount(ref l);
                     return new SourceValue(SourceList.Repeat(list, count));
                 }
-                default: throw new UnreachableException(nameof(EvaluateMultiplication));
+                default: throw new UnreachableException(nameof(Multiply));
             }
         }
 
-        public static SourceValue EvaluateDivision(SourceValue r, SourceValue l)
+        public static SourceValue Divide(SourceValue r, SourceValue l)
         {
             // Python: `/` always yields float (e.g. 9 / 3 → 3.0), even for int operands.
             // Lookup validates operand types; result type is always double regardless of map value.
@@ -145,7 +145,7 @@ namespace Chow.VM.Utilities
 
         #region Modulus Methods
 
-        public static SourceValue EvaluateModulus(SourceValue r, SourceValue l)
+        public static SourceValue Pow(SourceValue r, SourceValue l)
         {
             var convDataType = GetConversionDataType(
                 NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Modulus);
