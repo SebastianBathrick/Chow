@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Chow.Exceptions;
 using Chow.Objects;
 using Chow.Utility;
 namespace Chow.VM.Utilities

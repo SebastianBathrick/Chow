@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Chow.Exceptions;
 using Chow.Objects;
 using Chow.VM;
 using Chow.VM.Utilities;
@@ -278,21 +277,13 @@ namespace Chow.StandardLibrary.BuiltIns
             switch (value.DataType)
             {
                 case DataType.Str:
-                    {
-                        return new SourceValue(value.ToString().Length);
-                    }
+                    return new SourceValue(value.ToString().Length);
                 case DataType.List:
-                    {
-                        return new SourceValue(((SourceList)value.ToObject()).Count);
-                    }
+                    return new SourceValue(((SourceList)value.ToObject()).Count);
                 case DataType.Dict:
-                    {
-                        return new SourceValue(((SourceDictionary)value.ToObject()).Count);
-                    }
+                    return new SourceValue(((SourceDictionary)value.ToObject()).Count);
                 case DataType.Range:
-                    {
-                        return new SourceValue(((SourceRange)value.ToObject()).Count);
-                    }
+                    return new SourceValue(((SourceRange)value.ToObject()).Count);
             }
 
             throw new DataTypeException($"object of type '{value.DataType}' has no len()");
@@ -305,17 +296,11 @@ namespace Chow.StandardLibrary.BuiltIns
             switch (value.DataType)
             {
                 case DataType.Long:
-                    {
-                        return new SourceValue(Math.Abs(value.ToLong()));
-                    }
+                    return new SourceValue(Math.Abs(value.ToLong()));
                 case DataType.Double:
-                    {
-                        return new SourceValue(Math.Abs(value.ToDouble()));
-                    }
+                    return new SourceValue(Math.Abs(value.ToDouble()));
                 case DataType.Bool:
-                    {
-                        return new SourceValue(value.ToBool() ? 1L : 0L);
-                    }
+                    return new SourceValue(value.ToBool() ? 1L : 0L);
             }
 
             throw new DataTypeException($"bad operand type for abs(): '{value.DataType}'");

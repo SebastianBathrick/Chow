@@ -94,109 +94,82 @@ namespace Chow.Semantics
             switch (node)
             {
                 case BlockNode blockNode:
-                {
                     foreach (var stmt in blockNode.Statements)
                     {
                         PreScan(stmt);
                     }
 
                     break;
-                }
 
                 case AssignStatementNode varAssignNode:
-                {
                     PreScan(varAssignNode.Expression);
                     RecordBinding(varAssignNode.Name, varAssignNode.LineNumber);
                     break;
-                }
 
                 case FunctionNode funcNode:
-                {
                     // The def-name binding belongs to the current scope; the body is opaque to this pre-scan.
                     RecordBinding(funcNode.Name, funcNode.LineNumber);
                     break;
-                }
 
                 case NameNode nameNode:
-                {
                     RecordUse(nameNode.Name, nameNode.LineNumber);
                     break;
-                }
 
                 case GlobalDeclarationNode globalNode:
-                {
                     foreach (var name in globalNode.Names)
                     {
                         RecordGlobalDecl(name, globalNode.LineNumber);
                     }
 
                     break;
-                }
 
                 case NonLocalDeclarationNode nonlocalNode:
-                {
                     foreach (var name in nonlocalNode.Names)
                     {
                         RecordNonlocalDecl(name, nonlocalNode.LineNumber);
                     }
 
                     break;
-                }
 
                 case IfStatementNode ifNode:
-                {
                     PreScan(ifNode.Expression);
                     PreScan(ifNode.Block);
                     PreScan(ifNode.Branch);
                     break;
-                }
 
                 case BranchStatementNode branchNode:
-                {
                     PreScan(branchNode.Expression);
                     PreScan(branchNode.Block);
                     PreScan(branchNode.Branch);
                     break;
-                }
 
                 case WhileStatementNode whileNode:
-                {
                     PreScan(whileNode.Expression);
                     PreScan(whileNode.Block);
                     break;
-                }
 
                 case ForStatementNode forNode:
-                {
                     PreScan(forNode.Iterable);
                     // Loop variable is an assignment target; record it as a binding in this scope.
                     RecordBinding(forNode.Target.Name, forNode.Target.LineNumber);
                     PreScan(forNode.Block);
                     PreScan(forNode.ElseBranch);
                     break;
-                }
 
                 case ReturnStatementNode returnNode:
-                {
                     PreScan(returnNode.Expression);
                     break;
-                }
 
                 case ExpressionStatementNode exprStmtNode:
-                {
                     PreScan(exprStmtNode.Expression);
                     break;
-                }
 
                 case ExpressionNode exprNode:
-                {
                     PreScan(exprNode.Left);
                     PreScan(exprNode.Right);
                     break;
-                }
 
                 case CallNode callNode:
-                {
                     PreScan(callNode.CallName);
 
                     foreach (var arg in callNode.Args)
@@ -205,20 +178,16 @@ namespace Chow.Semantics
                     }
 
                     break;
-                }
 
                 case ListNode listNode:
-                {
                     foreach (var element in listNode.Elements)
                     {
                         PreScan(element);
                     }
 
                     break;
-                }
 
                 case DictionaryNode dictNode:
-                {
                     for (var i = 0; i < dictNode.Keys.Count; i++)
                     {
                         PreScan(dictNode.Keys[i]);
@@ -226,50 +195,37 @@ namespace Chow.Semantics
                     }
 
                     break;
-                }
 
                 case SubscriptNode subscriptNode:
-                {
                     PreScan(subscriptNode.Target);
                     PreScan(subscriptNode.Index);
                     break;
-                }
 
                 case SubscriptSliceNode sliceNode:
-                {
                     PreScan(sliceNode.Start);
                     PreScan(sliceNode.Stop);
                     PreScan(sliceNode.Step);
                     break;
-                }
 
                 case AttributeAccessNode attrAccessNode:
-                {
                     PreScan(attrAccessNode.Target);
                     break;
-                }
 
                 case SubscriptAssignNode subscriptAssignNode:
-                {
                     PreScan(subscriptAssignNode.Target);
                     PreScan(subscriptAssignNode.Index);
                     PreScan(subscriptAssignNode.Expression);
                     break;
-                }
 
                 case AttributeAssignNode attrAssignNode:
-                {
                     PreScan(attrAssignNode.Target);
                     PreScan(attrAssignNode.Expression);
                     break;
-                }
 
                 case LiteralNode _:
                 case BreakStatementNode _:
                 case ContinueStatementNode _:
-                {
                     break;
-                }
             }
         }
 
@@ -291,69 +247,49 @@ namespace Chow.Semantics
                 switch (node)
                 {
                     case BlockNode blockNode:
-                    {
                         foreach (var stmt in blockNode.Statements)
                         {
                             Annotate(stmt);
                         }
 
                         break;
-                    }
 
                     case AssignStatementNode varAssignNode:
-                    {
                         Annotate(varAssignNode.Expression);
                         varAssignNode.Resolution = ResolveName(varAssignNode.Name);
                         break;
-                    }
 
                     case FunctionNode funcNode:
-                    {
                         funcNode.Resolution = ResolveName(funcNode.Name);
                         AnalyzeFunction(funcNode);
                         break;
-                    }
 
                     case NameNode nameNode:
-                    {
                         nameNode.Resolution = ResolveName(nameNode.Name);
                         break;
-                    }
 
                     case GlobalDeclarationNode _:
                     case NonLocalDeclarationNode _:
-                    {
                         break;
-                    }
 
                     case IfStatementNode ifNode:
-                    {
                         Annotate(ifNode.Expression);
                         Annotate(ifNode.Block);
                         node = ifNode.Branch;
                         continue;
 
-                    }
-
                     case BranchStatementNode branchNode:
-                    {
                         Annotate(branchNode.Expression);
                         Annotate(branchNode.Block);
                         node = branchNode.Branch;
                         continue;
 
-                    }
-
                     case WhileStatementNode whileNode:
-                    {
                         Annotate(whileNode.Expression);
                         node = whileNode.Block;
                         continue;
 
-                    }
-
                     case ForStatementNode forNode:
-                    {
                         Annotate(forNode.Iterable);
                         forNode.Target.Resolution = ResolveName(forNode.Target.Name);
                         Annotate(forNode.Block);
@@ -361,35 +297,27 @@ namespace Chow.Semantics
                         continue;
 
                         break;
-                    }
 
                     case ReturnStatementNode returnNode:
-                    {
                         node = returnNode.Expression;
                         continue;
 
                         break;
-                    }
 
                     case ExpressionStatementNode exprStmtNode:
-                    {
                         node = exprStmtNode.Expression;
                         continue;
 
                         break;
-                    }
 
                     case ExpressionNode exprNode:
-                    {
                         Annotate(exprNode.Left);
                         node = exprNode.Right;
                         continue;
 
                         break;
-                    }
 
                     case CallNode callNode:
-                    {
                         Annotate(callNode.CallName);
 
                         foreach (var arg in callNode.Args)
@@ -398,20 +326,16 @@ namespace Chow.Semantics
                         }
 
                         break;
-                    }
 
                     case ListNode listNode:
-                    {
                         foreach (var element in listNode.Elements)
                         {
                             Annotate(element);
                         }
 
                         break;
-                    }
 
                     case DictionaryNode dictNode:
-                    {
                         for (var i = 0; i < dictNode.Keys.Count; i++)
                         {
                             Annotate(dictNode.Keys[i]);
@@ -419,60 +343,47 @@ namespace Chow.Semantics
                         }
 
                         break;
-                    }
 
                     case SubscriptNode subscriptNode:
-                    {
                         Annotate(subscriptNode.Target);
                         node = subscriptNode.Index;
                         continue;
 
                         break;
-                    }
 
                     case SubscriptSliceNode sliceNode:
-                    {
                         Annotate(sliceNode.Start);
                         Annotate(sliceNode.Stop);
                         node = sliceNode.Step;
                         continue;
 
                         break;
-                    }
 
                     case AttributeAccessNode attrAccessNode:
-                    {
                         node = attrAccessNode.Target;
                         continue;
 
                         break;
-                    }
 
                     case SubscriptAssignNode subscriptAssignNode:
-                    {
                         Annotate(subscriptAssignNode.Target);
                         Annotate(subscriptAssignNode.Index);
                         node = subscriptAssignNode.Expression;
                         continue;
 
                         break;
-                    }
 
                     case AttributeAssignNode attrAssignNode:
-                    {
                         Annotate(attrAssignNode.Target);
                         node = attrAssignNode.Expression;
                         continue;
 
                         break;
-                    }
 
                     case LiteralNode _:
                     case BreakStatementNode _:
                     case ContinueStatementNode _:
-                    {
                         break;
-                    }
                 }
 
                 break;

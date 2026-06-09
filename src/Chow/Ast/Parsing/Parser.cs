@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Chow.Tokens;
 using Chow.Tokens.Scanning;
 using Chow.Utility;
+
 namespace Chow.Ast.Parsing
 {
     /// <summary>

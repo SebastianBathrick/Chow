@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Chow.Ast;
 using Chow.Ast.Parsing;
-using Chow.Exceptions;
 using Chow.Objects;
 using Chow.Utility;
 
@@ -682,102 +681,64 @@ namespace Chow.Bytecode.Compilation
             switch (expressionNode.Operator)
             {
                 case ExpressionOperator.Add:
-                {
                     return OperationCode.BinaryAdd;
-                }
 
                 case ExpressionOperator.Subtract:
-                {
                     return OperationCode.BinarySubtract;
-                }
 
                 case ExpressionOperator.Multiply:
-                {
                     return OperationCode.BinaryMultiply;
-                }
 
                 case ExpressionOperator.Divide:
-                {
                     return OperationCode.BinaryDivide;
-                }
 
                 case ExpressionOperator.Modulus:
-                {
                     return OperationCode.BinaryModulus;
-                }
 
                 case ExpressionOperator.Exponentiate:
-                {
                     return OperationCode.BinaryPow;
-                }
 
                 case ExpressionOperator.FloorDivide:
-                {
                     return OperationCode.BinaryFloor;
-                }
 
                 case ExpressionOperator.Negate:
-                {
                     return OperationCode.UnaryNegate;
-                }
 
                 case ExpressionOperator.Equal:
-                {
                     return OperationCode.BinaryEqual;
-                }
 
                 case ExpressionOperator.NotEqual:
-                {
                     return OperationCode.BinaryNotEqual;
-                }
 
                 case ExpressionOperator.Less:
-                {
                     return OperationCode.BinaryLess;
-                }
 
                 case ExpressionOperator.Greater:
-                {
                     return OperationCode.BinaryGreater;
-                }
 
                 case ExpressionOperator.LessEqual:
-                {
                     return OperationCode.BinaryLessEqual;
-                }
 
                 case ExpressionOperator.GreaterEqual:
-                {
                     return OperationCode.BinaryGreaterEqual;
-                }
 
                 case ExpressionOperator.Not:
-                {
                     return OperationCode.UnaryNot;
-                }
 
                 case ExpressionOperator.BinaryOr:
-                {
                     return OperationCode.BinaryUnion;
-                }
 
                 case ExpressionOperator.In:
-                {
                     return OperationCode.BinaryIn;
-                }
 
                 case ExpressionOperator.NotIn:
-                {
                     return OperationCode.BinaryNotIn;
-                }
 
                 case ExpressionOperator.And:
                 case ExpressionOperator.Or:
                 case ExpressionOperator.ToStr:
                 default:
-                {
                     throw new NotImplementedException(nameof(expressionNode.Operator));
-                }
             }
         }
 

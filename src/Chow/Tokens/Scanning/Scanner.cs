@@ -260,38 +260,21 @@ namespace Chow.Tokens.Scanning
             switch (CurrentChar)
             {
                 case ',':
-                {
                     tokenType = TokenType.SymbolComma;
                     break;
-                }
-
-
                 case '.':
-                {
                     tokenType = TokenType.SymbolDot;
                     break;
-                }
-
                 case ':':
-                {
                     tokenType = TokenType.SymbolColon;
                     break;
-                }
-
                 case '+':
-                {
                     tokenType = TokenType.SymbolPlus;
                     break;
-                }
-
                 case '-':
-                {
                     tokenType = TokenType.SymbolMinus;
                     break;
-                }
-
                 case '*':
-                {
                     if (TryScanCompoundOp('*', TokenType.SymbolExponent, "**"))
                     {
                         return true;
@@ -299,10 +282,8 @@ namespace Chow.Tokens.Scanning
 
                     tokenType = TokenType.SymbolMultiply;
                     break;
-                }
 
                 case '/':
-                {
                     if (TryScanCompoundOp('/', TokenType.SymbolFloorDivide, "//"))
                     {
                         return true;
@@ -310,27 +291,17 @@ namespace Chow.Tokens.Scanning
 
                     tokenType = TokenType.SymbolDivide;
                     break;
-                }
-
                 case '%':
-                {
                     tokenType = TokenType.SymbolPercent;
                     break;
-                }
 
                 case '|':
-                {
                     tokenType = TokenType.SymbolPipe;
                     break;
-                }
-
                 case '!':
-                {
                     return TryScanCompoundOp('=', TokenType.SymbolNotEqual, "!=");
-                }
 
                 case '=':
-                {
                     if (TryScanCompoundOp('=', TokenType.SymbolEqualTo, "=="))
                     {
                         return true;
@@ -338,10 +309,7 @@ namespace Chow.Tokens.Scanning
 
                     tokenType = TokenType.SymbolAssign;
                     break;
-                }
-
                 case '>':
-                {
                     if (TryScanCompoundOp('=', TokenType.SymbolGreaterEqual, ">="))
                     {
                         return true;
@@ -349,9 +317,7 @@ namespace Chow.Tokens.Scanning
 
                     tokenType = TokenType.SymbolGreater;
                     break;
-                }
                 case '<':
-                {
                     if (TryScanCompoundOp('=', TokenType.SymbolLessEqual, "<="))
                     {
                         return true;
@@ -359,55 +325,34 @@ namespace Chow.Tokens.Scanning
 
                     tokenType = TokenType.SymbolLess;
                     break;
-                }
 
                 // Indentation and line-break rules are not enforced (for lists and dictionary declarations)
                 case '[':
-                {
                     tokenType = TokenType.SymbolLeftBracket;
                     PushOpeningBracket('[');
                     break;
-                }
-
                 case ']':
-                {
                     tokenType = TokenType.SymbolRightBracket;
                     PopClosingBracket(']', '[');
                     break;
-                }
-
                 case '{':
-                {
                     tokenType = TokenType.SymbolLeftCurly;
                     PushOpeningBracket('{');
                     break;
-                }
-
                 case '}':
-                {
                     tokenType = TokenType.SymbolRightCurly;
                     PopClosingBracket('}', '{');
                     break;
-                }
-
                 case '(':
-                {
                     tokenType = TokenType.SymbolLeftParen;
                     PushOpeningBracket('(');
                     break;
-                }
-
                 case ')':
-                {
                     tokenType = TokenType.SymbolRightParen;
                     PopClosingBracket(')', '(');
                     break;
-                }
-
                 default:
-                {
                     return false;
-                }
             }
 
             var lexeme = CurrentChar.ToString();
@@ -843,14 +788,11 @@ namespace Chow.Tokens.Scanning
             switch (CurrentChar)
             {
                 case '\n':
-                {
                     // Unix/Linux/macOS newline
                     MoveToNextChar();
                     break;
-                }
 
                 case '\r':
-                {
                     // Older Mac newline (if not followed by \n)
                     MoveToNextChar();
 
@@ -861,7 +803,6 @@ namespace Chow.Tokens.Scanning
                     }
 
                     break;
-                }
             }
 
             _isLineBegin = true;

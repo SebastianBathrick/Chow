@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
-using Chow.Exceptions;
 using Chow.Utility;
 using Chow.VM;
 namespace Chow.Objects
@@ -175,11 +174,8 @@ namespace Chow.Objects
             switch (targetDataType)
             {
                 case DataType.Bool:
-                {
                     return (TDataType)(object)ToBool();
-                }
                 case DataType.Long:
-                {
                     // The map aliases both typeof(long) and typeof(int) to DataType.Long.
                     // For T == int we truncate; for T == long we return the full 64-bit value.
                     if (typeOf == typeof(int))
@@ -189,26 +185,19 @@ namespace Chow.Objects
                     }
 
                     return (TDataType)(object)ToLong();
-                }
                 case DataType.Double:
-                {
                     return (TDataType)(object)ToDouble();
-                }
                 case DataType.Str:
-                {
                     return (TDataType)(object)ToString();
-                }
                 case DataType.List:
                 case DataType.Dict:
                 case DataType.Range:
-                {
                     if (_obj is TDataType typedObject)
                     {
                         return typedObject;
                     }
 
                     break;
-                }
             }
 
             throw new InvalidOperationException($"Cannot convert {_dataType} to {typeof(TDataType)}");

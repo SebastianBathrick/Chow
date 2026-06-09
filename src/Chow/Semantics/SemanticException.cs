@@ -1,6 +1,5 @@
 using System;
 using Chow.Ast.Parsing;
-using Chow.Exceptions;
 using Chow.VM;
 namespace Chow.Semantics
 {

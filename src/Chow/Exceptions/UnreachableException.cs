@@ -1,6 +1,5 @@
 ﻿using System;
-
-namespace Chow.Exceptions
+namespace Chow
 {
     public class UnreachableException : Exception
     {
