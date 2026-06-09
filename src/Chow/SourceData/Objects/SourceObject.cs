@@ -13,6 +13,8 @@ namespace Chow.SourceData
     {
         // ---------------- Construction ----------------
 
+        
+        
         public void Initialize()
         {
             Initialize(Array.Empty<SourceValue>());

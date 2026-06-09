@@ -403,14 +403,14 @@ namespace Chow.VM
             // TODO: class instances add a branch that consults the instance attribute table, then the class method table.
             if (target.DataType == DataType.List)
             {
-                var list = (SourceList)target.ToObject();
+                var list = target.ToSourceObject();
 
-                if (!list.HasMethod(attrName))
+                if (!list.Directory.Contains(attrName))
                 {
                     throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
                 }
 
-                _valStack.Push(list[attrName]);
+                _valStack.Push(list.GetAttribute(new SourceValue(attrName)));
             }
             else if (target.DataType == DataType.Dict)
             {
@@ -467,11 +467,11 @@ namespace Chow.VM
                 keys[i] = _valStack.Pop();
             }
 
-            var dict = new SourceDictionary();
+            var dict = SourceObjectFactory.GetSourceObject(DataType.Dict);
 
             for (var i = 0; i < pairCount; i++)
             {
-                dict.Add(keys[i], values[i]);
+                dict.SetItem(keys[i], values[i]);
             }
 
             _valStack.Push(new SourceValue(dict));
@@ -516,7 +516,7 @@ namespace Chow.VM
 
             if (target.DataType == DataType.Dict)
             {
-                ((SourceDictionary)target.ToObject())[index] = value;
+                target.ToSourceObject().SetItem(index, value);
             }
             else if (target.DataType == DataType.List)
             {
@@ -525,7 +525,7 @@ namespace Chow.VM
                     throw new DataTypeException($"list indices must be integers, not {index.DataType}");
                 }
 
-                ((SourceList)target.ToObject())[(int)index.ToLong()] = value;
+                target.ToSourceObject().SetItem(index, value);
             }
             else
             {
@@ -544,7 +544,7 @@ namespace Chow.VM
             {
                 try
                 {
-                    _valStack.Push(((SourceDictionary)target.ToObject())[index]);
+                    _valStack.Push(target.ToSourceObject().GetItem(index));
                 }
                 catch (SubscriptException ex)
                 {
