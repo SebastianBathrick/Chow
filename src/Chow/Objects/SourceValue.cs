@@ -18,6 +18,7 @@ namespace Chow.Objects
     {
         // TODO: Major refactor going on currently
         public static readonly SourceValue None = new SourceValue(DataType.None);
+        
         static readonly Dictionary<Type, DataType> DataTypeMap = new Dictionary<Type, DataType>
         {
             { typeof(bool), DataType.Bool },
@@ -29,23 +30,16 @@ namespace Chow.Objects
             { typeof(SourceRange), DataType.Range },
             { typeof(SourceList), DataType.List }
         };
-
-        #region Fields
         
         /// <summary>Represents the SourceValue equivalent to null/nil/none values.</summary>
         [FieldOffset(OBJ_FIELD_OFFSET)] readonly object _obj;
         [FieldOffset(LONG_FIELD_OFFSET)] readonly long _long;
         [FieldOffset(DBL_FIELD_OFFSET)] readonly double _dbl;
         [FieldOffset(TAG_FIELD_OFFSET)] readonly DataType _dataType;
-
-        #endregion
-
-        #region Properties
-
+        
         bool BoolValue => _long == BOOL_T_TO_LONG;
 
         internal DataType DataType => _dataType;
-        #endregion
 
         #region Constructors
 
@@ -152,7 +146,6 @@ namespace Chow.Objects
 
         #endregion
 
-        #region Type API
         // WARNING: THIS METHOD WILL BE REMOVED IN FUTURE REFACTOR!
         // DO NOT USE ANY OF THESE METHODS IN NEW CLASSES OR ADD THEM TO PRE-EXISTING ONES
 
@@ -222,8 +215,6 @@ namespace Chow.Objects
             throw new InvalidOperationException($"Cannot convert {_dataType} to {typeof(TDataType)}");
         }
         
-        #endregion
-
         #region Arithmetic & Logic Operations
         // WARNING: THESE METHODS WILL BE REMOVED IN FUTURE REFACTOR!
         // DO NOT USE ANY OF THESE METHODS OUTSIDE OF THE Processor CLASS
@@ -274,27 +265,6 @@ namespace Chow.Objects
             }
 
             return false;
-        }
-
-        internal bool IsNotEqualTo(SourceValue other)
-        {
-            switch (LookupBinary(ExpressionOperator.NotEqual, other))
-            {
-                case ConversionCase.ToInt:
-                {
-                    return PromoteToLong() != other.PromoteToLong();
-                }
-                case ConversionCase.ToFloat:
-                {
-                    return PromoteToDouble() != other.PromoteToDouble();
-                }
-                case ConversionCase.Nothing:
-                {
-                    return !EqualsNoConversion(other);
-                }
-            }
-
-            return true;
         }
 
         internal bool IsLessThan(SourceValue other)

@@ -45,7 +45,7 @@ namespace Chow.Bytecode
         PushAttributeValue,
         AssignAttribute,
         PushNewSourceDictionary,
-        BinaryOr,
+        BinaryBitwiseOr,
         BinaryIn,
         BinaryNotIn,
         PushNewIteratorWithValue,

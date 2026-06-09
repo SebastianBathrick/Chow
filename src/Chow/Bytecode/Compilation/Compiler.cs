@@ -840,7 +840,7 @@ namespace Chow.Bytecode.Compilation
 
                 case ExpressionOperator.BinaryOr:
                 {
-                    return OperationCode.BinaryOr;
+                    return OperationCode.BinaryBitwiseOr;
                 }
 
                 case ExpressionOperator.In:

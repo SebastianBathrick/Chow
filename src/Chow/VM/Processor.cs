@@ -89,7 +89,7 @@ namespace Chow.VM
                 case OperationCode.BinaryGreaterEqual:
                     _valStack.Push(ComparisonEvaluator.EvaluateGreaterEqual(r: _valStack.Pop(), l: _valStack.Pop()));
                     break;
-                case OperationCode.BinaryOr:
+                case OperationCode.BinaryBitwiseOr:
                 {
                     var r = _valStack.Pop();
                     var l = _valStack.Pop();
