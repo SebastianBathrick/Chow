@@ -26,7 +26,7 @@ namespace Chow
             var tokens = scanner.TokenizeSourceCode();
 
             var parser = new Parser(tokens);
-            var syntaxTreeRoot = parser.BuildTree();
+            var syntaxTreeRoot = parser.BuildAst();
 
             var semanticAnalyzer = new SemanticAnalyzer(syntaxTreeRoot);
             semanticAnalyzer.Analyze();
@@ -54,7 +54,7 @@ namespace Chow
             var tokens = scanner.TokenizeSourceCode();
 
             var parser = new Parser(tokens);
-            var syntaxTreeRoot = parser.BuildTree();
+            var syntaxTreeRoot = parser.BuildAst();
 
             var semanticAnalyzer = new SemanticAnalyzer(syntaxTreeRoot);
             semanticAnalyzer.Analyze();

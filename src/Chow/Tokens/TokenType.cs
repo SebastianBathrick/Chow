@@ -3,7 +3,7 @@ namespace Chow.Tokens
     /// <summary>
     /// Identifies the scanner category for a token.
     /// </summary>
-    enum TokenType
+    enum TokenType : byte
     {
         /// <summary>Opening parenthesis: <c>(</c>.</summary>
         SymbolLeftParen,

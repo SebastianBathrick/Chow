@@ -6,20 +6,11 @@ using Chow.Utility;
 namespace Chow.Ast.Parsing
 {
     /// <summary>
-    /// <para>
-    /// Instances perform syntax analysis on a list of <see cref="Token" />. The client provides
-    /// the list of tokens from the interpreter's scanning phase via an argument passed to the
-    /// Parser instance's constructor.
-    /// </para>
-    /// <para>
-    /// To begin syntax analysis, the client calls <see cref="BuildTree" />, which iterates over
-    /// each token to determine whether the source code's grammar is valid and which constructs it
-    /// is trying to define. While doing so, it builds an abstract syntax tree that outlines the
-    /// constructs and any relevant information from the tokens. Once the tree is complete,
-    /// BuildTree returns a <see cref="Node" /> object representing the root of the abstract syntax
-    /// tree.
-    ///     </para>
+    /// Represents the second step in bytecode compilation, where tokens are analyzed to build an
+    /// abstract syntax tree (AST) based on the Chow scripting language's syntax.
     /// </summary>
+    /// <remarks>Note that an instance should not be used again after a BuildAst call, because its
+    /// internal state only allows for one-time use.</remarks>
     sealed class Parser
     {
         readonly List<Token> _tokens;
@@ -30,13 +21,21 @@ namespace Chow.Ast.Parsing
         Token PreviousToken => _tokens[_tokenIdx - 1];
 
         #region Main Methods
-
+    
+        /// <summary>Initializes a new instance with the tokens it will analyze.</summary>
+        /// <param name="tokens">The tokens used to build an AST upon calling
+        /// <see cref="BuildAst"/>.</param>
         public Parser(List<Token> tokens)
         {
             _tokens = tokens;
         }
         
-        public Node BuildTree()
+        /// <summary>
+        /// Builds an abstract syntax tree (AST) based on the tokens provided to this instance as an
+        /// argument to the constructor.
+        /// </summary>
+        /// <returns>The root <see cref="Node"/> of the AST.</returns>
+        public Node BuildAst()
         {
             var topLevelStatements = new List<Node>();
             var isComplete = IsCurrentTokenType(TokenType.EndOfCode);
@@ -56,32 +55,32 @@ namespace Chow.Ast.Parsing
                 var newStatement = ParseStatement();
                 topLevelStatements.Add(newStatement);
 
-                isComplete = IsCurrentTokenType(TokenType.EndOfCode);
-
                 // The last statement does not need a newline. Block statements (def/if) end with a
                 // Dedent that already terminates them, so a trailing Newline after them is optional.
-                if (isComplete)
+                if (!(isComplete = IsCurrentTokenType(TokenType.EndOfCode)))
                 {
-                    continue;
+                    if (IsCompoundStatement(newStatement))
+                    {
+                        TryConsumeCurrentTokenType(TokenType.Newline);
+                        continue;
+                    }
+                    
+                    ConsumeToken( TokenType.Newline, "Expected newline after statement.");
+                    isComplete = IsCurrentTokenType(TokenType.EndOfCode);
                 }
-
-                var isFuncOrCompound = newStatement is FunctionNode
-                    || newStatement is IfStatementNode
-                    || newStatement is WhileStatementNode
-                    || newStatement is ForStatementNode;
-
-                if (isFuncOrCompound)
-                {
-                    TryConsumeCurrentTokenType(TokenType.Newline);
-                    continue;
-                }
-
-                ConsumeToken(TokenType.Newline, "Expected newline after statement.");
-                isComplete = IsCurrentTokenType(TokenType.EndOfCode);
             }
 
             ConsumeToken(TokenType.EndOfCode, "Expected end of code.");
             return new ModuleNode(new BlockNode(topLevelStatements, 1));
+        }
+
+        static bool IsCompoundStatement(Node newStatement)
+        {
+
+            return newStatement is FunctionNode
+                || newStatement is IfStatementNode
+                || newStatement is WhileStatementNode
+                || newStatement is ForStatementNode;
         }
 
         #endregion

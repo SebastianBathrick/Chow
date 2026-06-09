@@ -81,151 +81,82 @@ namespace Chow.Bytecode.Compilation
             switch (targetNode)
             {
                 case BlockNode blockNode:
-                {
                     CompileBlockNode(blockNode);
                     break;
-                }
-
                 case LiteralNode literalNode:
-                {
                     CompileLiteral(literalNode);
                     break;
-                }
-
                 case FStringNode fStringNode:
-                {
                     CompileFString(fStringNode);
                     break;
-                }
-
                 case ExpressionNode exprNode:
-                {
                     CompileExpression(exprNode);
                     break;
-                }
-
                 case AssignStatementNode varAssignNode:
-                {
                     CompileVariableAssign(varAssignNode);
                     break;
-                }
-
                 case NameNode varFactorNode:
-                {
                     CompileVariableFactor(varFactorNode);
                     break;
-                }
-
                 case ReturnStatementNode returnNode:
-                {
                     // If it returns early, still parse the remaining code in the chunk for debugging (subject to change)
                     CompileReturnStatement(returnNode);
                     break;
-                }
-
                 case ExpressionStatementNode exprStmtNode:
-                {
                     CompileExpressionStatement(exprStmtNode);
                     break;
-                }
-
                 case IfStatementNode ifNode:
-                {
                     CompileIfStatement(ifNode);
                     break;
-                }
-
                 case BranchStatementNode branchNode:
-                {
                     CompileBranchStatement(branchNode);
                     break;
-                }
-
                 case WhileStatementNode whileNode:
-                {
                     CompileWhileStatement(whileNode);
                     break;
-                }
-
                 case ForStatementNode forNode:
-                {
                     CompileForStatement(forNode);
                     break;
-                }
-
                 case BreakStatementNode breakNode:
-                {
                     CompileBreakStatement(breakNode);
                     break;
-                }
-
                 case ContinueStatementNode continueNode:
-                {
                     CompileContinueStatement(continueNode);
                     break;
-                }
-
                 case FunctionNode funcNode:
-                {
                     CompileFunctionDeclaration(funcNode);
                     break;
-                }
-
                 case CallNode callNode:
-                {
                     CompileCall(callNode);
                     break;
-                }
-
                 case ListNode listLiteralNode:
-                {
                     // TODO: Check if CompileListLiteral & CompileDictLiteral should be grouped with all the other literals
                     CompileListLiteral(listLiteralNode);
                     break;
-                }
-
                 case DictionaryNode dictLiteralNode:
-                {
                     CompileDictLiteral(dictLiteralNode);
                     break;
-                }
-
-                case SubscriptNode subscrNode:
-                {
-                    CompileSubscript(subscrNode);
+                case SubscriptNode subscriptNode:
+                    CompileSubscript(subscriptNode);
                     break;
-                }
-
-                case AttributeAccessNode attrAccessNode:
-                {
-                    CompileAttributeAccess(attrAccessNode);
+                case SubscriptAssignNode subscriptAccessNode:
+                    CompileSubscriptAssign(subscriptAccessNode);
                     break;
-                }
-
-                case SubscriptAssignNode subscrAssignNode:
-                {
-                    CompileSubscriptAssign(subscrAssignNode);
+                case AttributeAccessNode attributeAccessNode:
+                    CompileAttributeAccess(attributeAccessNode);
                     break;
-                }
-
                 case AttributeAssignNode attrAssignNode:
-                {
                     CompileAttributeAssign(attrAssignNode);
                     break;
-                }
-
                 case GlobalDeclarationNode _:
                 case NonLocalDeclarationNode _:
-                {
                     // Declarations are compile-time directives consumed by SemanticAnalysis;
                     // they emit no bytecode.
                     break;
-                }
-
                 default:
-                {
-                    throw new InvalidOperationException();
-                }
+                    throw new UnreachableException(
+                        $"{nameof(CompileTargetNode)} encountered an invalid node type: "
+                        + $"{targetNode.GetType()}");
             }
         }
 
@@ -589,54 +520,40 @@ namespace Chow.Bytecode.Compilation
             switch (literalNode.Type)
             {
                 case LiteralDataType.Integer:
-                {
                     if (literalNode.Value is long intVal)
                     {
                         return new SourceValue(intVal);
                     }
 
                     break;
-                }
 
                 case LiteralDataType.Float:
-                {
                     if (literalNode.Value is double floatVal)
                     {
                         return new SourceValue(floatVal);
                     }
 
                     break;
-                }
 
                 case LiteralDataType.Boolean:
-                {
                     if (literalNode.Value is bool boolVal)
                     {
                         return new SourceValue(boolVal);
                     }
 
                     break;
-                }
-
                 case LiteralDataType.None:
-                {
                     return SourceValue.None;
-                }
-
                 case LiteralDataType.String:
-                {
                     if (literalNode.Value is string strVal)
                     {
                         return new SourceValue(strVal);
                     }
 
                     break;
-                }
-
                 default:
-                {
-                    throw new NotImplementedException($"Compilation of literal type {literalNode.Type} is not implemented.");
-                }
+                    throw new NotImplementedException(
+                        $"Compilation of literal type {literalNode.Type} is not implemented.");
             }
 
             // Reached only when the boxed Value's CLR type doesn't match its declared LiteralDataType (parser bug).
@@ -713,6 +630,7 @@ namespace Chow.Bytecode.Compilation
             CompileTargetNode(node.Target);
             CompileTargetNode(node.Index);
             CompileTargetNode(node.Expression);
+            
             _chunk.AddInstruction(OperationCode.AssignSubscript, node.LineNumber);
         }
 
