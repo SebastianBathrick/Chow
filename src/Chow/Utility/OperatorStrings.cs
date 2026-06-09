@@ -26,14 +26,14 @@ namespace Chow.Utility
 
         static readonly IReadOnlyDictionary<OperationCode, string> OperationCodeMap = new Dictionary<OperationCode, string>()
         {
-            { OperationCode.Add, "+" },
-            { OperationCode.Subtract, "-" },
-            { OperationCode.Multiply, "*" },
-            { OperationCode.Divide, "/" },
-            { OperationCode.Modulus, "%" },
-            { OperationCode.Exponentiate, "**" },
-            { OperationCode.FloorDivide, "//" },
-            { OperationCode.Negate, "-" },
+            { OperationCode.BinaryAdd, "+" },
+            { OperationCode.BinarySubtract, "-" },
+            { OperationCode.BinaryMultiply, "*" },
+            { OperationCode.BinaryDivide, "/" },
+            { OperationCode.BinaryModulus, "%" },
+            { OperationCode.BinaryPow, "**" },
+            { OperationCode.BinaryFloor, "//" },
+            { OperationCode.UnaryNegate, "-" },
         };
         
         public static string ToSource(ExpressionOperator op)

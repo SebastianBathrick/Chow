@@ -192,7 +192,7 @@ namespace Chow.Objects
                     // For T == int we truncate; for T == long we return the full 64-bit value.
                     if (typeOf == typeof(int))
                     {
-                        // TODO: Add error checking for overflow scenarios
+                        // TODO: BinaryAdd error checking for overflow scenarios
                         return (TDataType)(object)(int)ToLong();
                     }
 

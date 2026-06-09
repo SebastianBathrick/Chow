@@ -23,7 +23,7 @@ namespace Chow.VM.Utilities
         /// <summary>True while the current frame has instructions remaining.</summary>
         public bool IsInstructionToExecute => CurrFrame.IsInstrToRun;
 
-        /// <summary>The current frame's scope. Captured by <c>PushNewClosureFromTemplate</c> at runtime.</summary>
+        /// <summary>The current frame's scope. Captured by <c>PushNewSourceFunction</c> at runtime.</summary>
         public Objects.Scope CurrentScope => CurrFrame.Scope;
 
         /// <summary>The module-level scope (the bottom of every LEGB chain). Future <c>global</c>-targeted ops route directly here.</summary>

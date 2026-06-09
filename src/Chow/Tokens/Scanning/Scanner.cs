@@ -79,7 +79,7 @@ namespace Chow.Tokens.Scanning
                 throw new ScannerException("Bracket(s) never closed in source code", _lineNum);
             }
 
-            // Add dedent tokens for each block nested within the top-level to mark their end
+            // BinaryAdd dedent tokens for each block nested within the top-level to mark their end
             AddLastDedentsTokens();
             AddNewToken(TokenType.EndOfCode, string.Empty, _lineNum);
 
