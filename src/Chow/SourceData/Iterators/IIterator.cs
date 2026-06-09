@@ -1,4 +1,4 @@
-namespace Chow.Objects
+namespace Chow.SourceData
 {
     /// <summary>
     /// Internal iteration protocol used by the virtual machine to drive Chow-language <c>for</c> loops.

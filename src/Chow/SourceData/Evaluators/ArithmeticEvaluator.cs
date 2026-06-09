@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Chow.Utility;
 using Chow.VM;
-
-namespace Chow.Objects
+namespace Chow.SourceData
 {
     // TODO: Replace with more performant, refactored version
     class ArithmeticEvaluator

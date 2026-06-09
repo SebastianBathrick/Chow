@@ -1,6 +1,5 @@
 using System.Collections.Generic;
-
-namespace Chow.Objects
+namespace Chow.SourceData
 {
     /// <summary>
     /// A flat variable-binding store linked to an optional parent for LEGB chain walking. Used for both module-level

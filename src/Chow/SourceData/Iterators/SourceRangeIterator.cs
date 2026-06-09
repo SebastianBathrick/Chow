@@ -1,4 +1,4 @@
-namespace Chow.Objects
+namespace Chow.SourceData
 {
     sealed class SourceRangeIterator : IIterator
     {

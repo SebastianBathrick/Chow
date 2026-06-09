@@ -1,6 +1,5 @@
 using System;
-
-namespace Chow.Objects
+namespace Chow.SourceData
 {
     /// <summary>
     /// Low-level immutable representation of a Python-style <c>range</c>. Stores the start, stop,

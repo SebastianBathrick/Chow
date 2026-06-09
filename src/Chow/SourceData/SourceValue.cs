@@ -4,8 +4,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using Chow.Utility;
 using Chow.VM;
-
-namespace Chow.Objects
+namespace Chow.SourceData
 {
     /// <summary>
     /// Represents an immutable Chow value of varying Chow data types, with the main types being:

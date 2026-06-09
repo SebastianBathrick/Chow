@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-
-namespace Chow.Objects
+namespace Chow.SourceData
 {
     class SourceList
     {
@@ -351,7 +350,7 @@ namespace Chow.Objects
 
         public override string ToString()
         {
-            // FUTURE: once dicts/class instances exist, Repr below will grow branches for them.
+            // FUTURE: once dicts/class instances exist, ToRepresentation below will grow branches for them.
             var sb = new StringBuilder();
             sb.Append('[');
 

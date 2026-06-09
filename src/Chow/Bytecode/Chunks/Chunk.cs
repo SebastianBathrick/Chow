@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Chow.Objects;
+using Chow.SourceData;
 using Chow.VM;
 
 namespace Chow.Bytecode

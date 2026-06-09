@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using Chow.Utility;
 using Chow.VM;
-
-namespace Chow.Objects
+namespace Chow.SourceData
 {
     /// <summary>
     /// Static service class for <see cref="Processor"/> that performs comparison

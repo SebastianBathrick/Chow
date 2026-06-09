@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using Chow.VM;
-
-namespace Chow.Objects
+namespace Chow.SourceData
 {
     class SourceDictionary
     {

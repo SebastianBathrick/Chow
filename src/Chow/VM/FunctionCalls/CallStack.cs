@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Chow.Bytecode;
-using Chow.Objects;
+using Chow.SourceData;
 
 namespace Chow.VM.FunctionCalls
 {

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Chow.Bytecode;
-using Chow.Objects;
+using Chow.SourceData;
 using Chow.VM.FunctionCalls;
 
 namespace Chow.VM

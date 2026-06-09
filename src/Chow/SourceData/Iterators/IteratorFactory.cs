@@ -1,6 +1,5 @@
 using Chow.VM;
-
-namespace Chow.Objects
+namespace Chow.SourceData
 {
     static class IteratorFactory
     {

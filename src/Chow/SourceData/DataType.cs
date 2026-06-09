@@ -1,4 +1,4 @@
-namespace Chow.Objects
+namespace Chow.SourceData
 {
     // TODO: Change this back to internal after converting SourceValue to internal
     public enum DataType : byte

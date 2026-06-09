@@ -1,4 +1,4 @@
-﻿namespace Chow.Objects
+﻿namespace Chow.SourceData
 {
     public class Attribute
     {
