@@ -29,6 +29,7 @@ namespace Chow.SourceData
         SourceValue GetItem(SourceValue key);
         void SetItem(SourceValue key, SourceValue value);
         void DeleteItem(SourceValue key);
+        void Append(SourceValue value);
 
         // ---------------- Membership & iteration ----------------
 

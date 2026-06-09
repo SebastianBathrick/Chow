@@ -445,11 +445,11 @@ namespace Chow.VM
                 reversed[i] = _valStack.Pop();
             }
 
-            var list = new SourceList();
+            var list = SourceObjectFactory.GetSourceObject(DataType.List);
 
             for (var i = 0; i < elementCount; i++)
             {
-                list.Add(reversed[i]);
+                list.Append(reversed[i]);
             }
 
             _valStack.Push(new SourceValue(list));
@@ -558,7 +558,7 @@ namespace Chow.VM
                     throw new DataTypeException($"list indices must be integers, not {index.DataType}");
                 }
 
-                _valStack.Push(((SourceList)target.ToObject())[(int)index.ToLong()]);
+                _valStack.Push(target.ToSourceObject().GetItem(index));
             }
             else
             {
@@ -580,7 +580,8 @@ namespace Chow.VM
                 throw new DataTypeException($"'{target.DataType}' object is not subscriptable");
             }
 
-            _valStack.Push(((SourceList)target.ToObject()).GetSlice(start, stop, step));
+            var slice = new SourceValue(new SourceSlice(start, stop, step));
+            _valStack.Push(target.ToSourceObject().GetItem(slice));
         }
 
         #endregion

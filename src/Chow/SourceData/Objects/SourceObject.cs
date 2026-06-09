@@ -134,6 +134,12 @@ namespace Chow.SourceData
             throw new NotSupportedException(nameof(DeleteItem));
         }
 
+        /// <summary>(Python: <c>list.append</c> / <c>__iadd__</c> for sequences)</summary>
+        public virtual void Append(SourceValue value)
+        {
+            throw new NotSupportedException(nameof(Append));
+        }
+
         // ---------------- Membership & iteration ----------------
 
         /// <summary>
