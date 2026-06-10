@@ -17,6 +17,10 @@ namespace Chow.VM.FunctionCalls
         readonly StackFrame _moduleLvl;
         readonly Stack<StackFrame> _callFrames;
 
+        // Cached active frame (module frame or top call frame); kept in sync by
+        // EnterFunctionCall/ExitFunctionCall so per-instruction reads avoid Count/Peek.
+        StackFrame _currFrame;
+
         /// <summary>The chunk currently being executed (function chunk if inside a call, module chunk otherwise).</summary>
         public Chunk CurrentChunk => CurrFrame.Chunk;
 
@@ -35,7 +39,7 @@ namespace Chow.VM.FunctionCalls
         /// <summary>Source line number associated with the current frame's pointer.</summary>
         public int CurrentLineNum => CurrFrame.CurrentLineNum;
 
-        StackFrame CurrFrame => _callFrames.Count == 0 ? _moduleLvl : _callFrames.Peek();
+        StackFrame CurrFrame => _currFrame;
 
         /// <summary>Creates a call stack rooted at a single module frame.</summary>
         /// <param name="moduleChunk">The compiled bytecode for the module being executed.</param>
@@ -44,6 +48,7 @@ namespace Chow.VM.FunctionCalls
         {
             _moduleLvl = new StackFrame(moduleChunk, moduleScope);
             _callFrames = new Stack<StackFrame>();
+            _currFrame = _moduleLvl;
         }
 
         /// <summary>
@@ -71,15 +76,9 @@ namespace Chow.VM.FunctionCalls
         /// Reads <paramref name="name"/> directly from the module scope, bypassing any local or
         /// enclosing scopes. Used by the <c>global</c>-targeted read opcode.
         /// </summary>
-        public SourceValue GetGlobal(string name)
+        public bool TryGetGlobal(string name, out SourceValue value)
         {
-            return ModuleScope.GetVariableValue(name);
-        }
-
-        /// <summary>True if <paramref name="name"/> is bound in the module scope.</summary>
-        public bool IsGlobalDefined(string name)
-        {
-            return ModuleScope.ContainsVariable(name);
+            return ModuleScope.TryGetVariableValue(name, out value);
         }
 
         /// <summary>
@@ -101,8 +100,15 @@ namespace Chow.VM.FunctionCalls
         /// </summary>
         public SourceValue GetNonlocal(string name)
         {
-            var scope = FindNonlocalScope(name);
-            return scope.GetVariableValue(name);
+            for (var s = CurrFrame.Scope.Parent; s != null && !ReferenceEquals(s, _moduleLvl.Scope); s = s.Parent)
+            {
+                if (s.TryGetVariableValue(name, out var value))
+                {
+                    return value;
+                }
+            }
+
+            throw new KeyNotFoundException($"No enclosing scope binds nonlocal '{name}'");
         }
 
         // Walks ParentOrNull from CurrFrame.Scope upward, stopping before the module scope
@@ -112,7 +118,7 @@ namespace Chow.VM.FunctionCalls
         {
             for (var s = CurrFrame.Scope.Parent; s != null && !ReferenceEquals(s, _moduleLvl.Scope); s = s.Parent)
             {
-                if (s.ContainsVariable(name))
+                if (s.TryGetVariableValue(name, out _))
                 {
                     return s;
                 }
@@ -122,39 +128,36 @@ namespace Chow.VM.FunctionCalls
         }
 
         /// <summary>
-        /// True if <paramref name="name"/> resolves anywhere along the LEGB chain from the current
-        /// frame upward. At module level this is a single-scope probe.
+        /// Resolves <paramref name="name"/> by walking Local → Enclosing(s) → Module with a single
+        /// dictionary probe per scope. Returns false if the name is unbound along the entire chain.
         /// </summary>
-        public bool IsVariableDefined(string name)
+        public bool TryGetVariableValue(string name, out SourceValue value)
         {
             for (var s = CurrFrame.Scope; s != null; s = s.Parent)
             {
-                if (s.ContainsVariable(name))
+                if (s.TryGetVariableValue(name, out value))
                 {
                     return true;
                 }
             }
 
+            value = SourceValue.None;
             return false;
         }
 
         /// <summary>
         /// Resolves <paramref name="name"/> by walking Local → Enclosing(s) → Module and returns
-        /// the first binding found. Callers must check <see cref="IsVariableDefined"/> first; a
-        /// missing name surfaces as <see cref="KeyNotFoundException"/> (NameError translation is
-        /// the VM's responsibility).
+        /// the first binding found. A missing name surfaces as <see cref="KeyNotFoundException"/>
+        /// (NameError translation is the VM's responsibility).
         /// </summary>
         public SourceValue GetVariableValue(string name)
         {
-            for (var s = CurrFrame.Scope; s != null; s = s.Parent)
+            if (TryGetVariableValue(name, out var value))
             {
-                if (s.ContainsVariable(name))
-                {
-                    return s.GetVariableValue(name);
-                }
+                return value;
             }
 
-            // Contract violation: callers must check IsVariableDefined first.
+            // Contract violation: callers must verify the name is defined first.
             // KeyNotFoundException here surfaces the bug; NameError translation belongs to the VM.
             return CurrFrame.Scope.GetVariableValue(name);
         }
@@ -189,12 +192,14 @@ namespace Chow.VM.FunctionCalls
             var frameScope = new Scope(sourceFunc.Enclosing);
             var newFrame = new StackFrame(sourceFunc.Chunk, frameScope);
             _callFrames.Push(newFrame);
+            _currFrame = newFrame;
         }
 
         /// <summary>Pops the current function frame. Its local scope is dropped (kept alive only if a nested closure captured it).</summary>
         public void ExitFunctionCall()
         {
             _callFrames.Pop();
+            _currFrame = _callFrames.Count == 0 ? _moduleLvl : _callFrames.Peek();
         }
     }
 }

@@ -11,60 +11,74 @@ namespace Chow.SourceData
         // TODO: Update project's const naming conventions from SNAKE_CASE to PascalCase
         const int IsDoubleEqualInteger = 0;
 
+        // Conversion tables are dense 2D arrays indexed by (left, right) DataType so the
+        // per-operation lookup is two array indexes instead of hashing a tuple key.
+        // A null entry means the operand pair is unsupported for that operator.
+
         // Python treats bool as a subtype of int; any float operand promotes the whole op to float.
-        static readonly IReadOnlyDictionary<(DataType, DataType), DataType> NumericConversionMap =
-            new Dictionary<(DataType left, DataType right), DataType>()
-            {
-                { (DataType.Bool,   DataType.Bool),   DataType.Long   },
-                { (DataType.Bool,   DataType.Long),   DataType.Long   },
-                { (DataType.Long,   DataType.Bool),   DataType.Long   },
-                { (DataType.Bool,   DataType.Double), DataType.Double },
-                { (DataType.Double, DataType.Bool),   DataType.Double },
-                { (DataType.Long,   DataType.Long),   DataType.Long   },
-                { (DataType.Long,   DataType.Double), DataType.Double },
-                { (DataType.Double, DataType.Long),   DataType.Double },
-                { (DataType.Double, DataType.Double), DataType.Double },
-            };
+        static readonly DataType?[,] NumericConversionMap = BuildConversionMap(new[]
+        {
+            (DataType.Bool,   DataType.Bool,   DataType.Long  ),
+            (DataType.Bool,   DataType.Long,   DataType.Long  ),
+            (DataType.Long,   DataType.Bool,   DataType.Long  ),
+            (DataType.Bool,   DataType.Double, DataType.Double),
+            (DataType.Double, DataType.Bool,   DataType.Double),
+            (DataType.Long,   DataType.Long,   DataType.Long  ),
+            (DataType.Long,   DataType.Double, DataType.Double),
+            (DataType.Double, DataType.Long,   DataType.Double),
+            (DataType.Double, DataType.Double, DataType.Double),
+        });
 
         // Extends numeric pairs with sequence-concatenation pairs valid for `+`.
-        static readonly IReadOnlyDictionary<(DataType, DataType), DataType> AdditionConversionMap =
-            new Dictionary<(DataType left, DataType right), DataType>()
-            {
-                { (DataType.Bool,   DataType.Bool),   DataType.Long   },
-                { (DataType.Bool,   DataType.Long),   DataType.Long   },
-                { (DataType.Long,   DataType.Bool),   DataType.Long   },
-                { (DataType.Bool,   DataType.Double), DataType.Double },
-                { (DataType.Double, DataType.Bool),   DataType.Double },
-                { (DataType.Long,   DataType.Long),   DataType.Long   },
-                { (DataType.Long,   DataType.Double), DataType.Double },
-                { (DataType.Double, DataType.Long),   DataType.Double },
-                { (DataType.Double, DataType.Double), DataType.Double },
-                { (DataType.Str,    DataType.Str),    DataType.Str    },
-                { (DataType.List,   DataType.List),   DataType.List   },
-            };
+        static readonly DataType?[,] AdditionConversionMap = BuildConversionMap(new[]
+        {
+            (DataType.Bool,   DataType.Bool,   DataType.Long  ),
+            (DataType.Bool,   DataType.Long,   DataType.Long  ),
+            (DataType.Long,   DataType.Bool,   DataType.Long  ),
+            (DataType.Bool,   DataType.Double, DataType.Double),
+            (DataType.Double, DataType.Bool,   DataType.Double),
+            (DataType.Long,   DataType.Long,   DataType.Long  ),
+            (DataType.Long,   DataType.Double, DataType.Double),
+            (DataType.Double, DataType.Long,   DataType.Double),
+            (DataType.Double, DataType.Double, DataType.Double),
+            (DataType.Str,    DataType.Str,    DataType.Str   ),
+            (DataType.List,   DataType.List,   DataType.List  ),
+        });
 
         // Extends numeric pairs with sequence-repetition pairs valid for `*`.
-        static readonly IReadOnlyDictionary<(DataType, DataType), DataType> MultiplicationConversionMap =
-            new Dictionary<(DataType left, DataType right), DataType>()
+        static readonly DataType?[,] MultiplicationConversionMap = BuildConversionMap(new[]
+        {
+            (DataType.Bool,   DataType.Bool,   DataType.Long  ),
+            (DataType.Bool,   DataType.Long,   DataType.Long  ),
+            (DataType.Long,   DataType.Bool,   DataType.Long  ),
+            (DataType.Bool,   DataType.Double, DataType.Double),
+            (DataType.Double, DataType.Bool,   DataType.Double),
+            (DataType.Long,   DataType.Long,   DataType.Long  ),
+            (DataType.Long,   DataType.Double, DataType.Double),
+            (DataType.Double, DataType.Long,   DataType.Double),
+            (DataType.Double, DataType.Double, DataType.Double),
+            (DataType.Str,    DataType.Long,   DataType.Str   ),
+            (DataType.Str,    DataType.Bool,   DataType.Str   ),
+            (DataType.Long,   DataType.Str,    DataType.Str   ),
+            (DataType.Bool,   DataType.Str,    DataType.Str   ),
+            (DataType.List,   DataType.Long,   DataType.List  ),
+            (DataType.List,   DataType.Bool,   DataType.List  ),
+            (DataType.Long,   DataType.List,   DataType.List  ),
+            (DataType.Bool,   DataType.List,   DataType.List  ),
+        });
+
+        static DataType?[,] BuildConversionMap((DataType left, DataType right, DataType result)[] pairs)
+        {
+            var size = Enum.GetValues(typeof(DataType)).Length;
+            var map = new DataType?[size, size];
+
+            foreach (var (left, right, result) in pairs)
             {
-                { (DataType.Bool,   DataType.Bool),   DataType.Long   },
-                { (DataType.Bool,   DataType.Long),   DataType.Long   },
-                { (DataType.Long,   DataType.Bool),   DataType.Long   },
-                { (DataType.Bool,   DataType.Double), DataType.Double },
-                { (DataType.Double, DataType.Bool),   DataType.Double },
-                { (DataType.Long,   DataType.Long),   DataType.Long   },
-                { (DataType.Long,   DataType.Double), DataType.Double },
-                { (DataType.Double, DataType.Long),   DataType.Double },
-                { (DataType.Double, DataType.Double), DataType.Double },
-                { (DataType.Str,    DataType.Long),   DataType.Str    },
-                { (DataType.Str,    DataType.Bool),   DataType.Str    },
-                { (DataType.Long,   DataType.Str),    DataType.Str    },
-                { (DataType.Bool,   DataType.Str),    DataType.Str    },
-                { (DataType.List,   DataType.Long),   DataType.List   },
-                { (DataType.List,   DataType.Bool),   DataType.List   },
-                { (DataType.Long,   DataType.List),   DataType.List   },
-                { (DataType.Bool,   DataType.List),   DataType.List   },
-            };
+                map[(int)left, (int)right] = result;
+            }
+
+            return map;
+        }
 
         public static SourceValue Add(ref SourceValue r, ref SourceValue l)
         {
@@ -308,20 +322,14 @@ namespace Chow.SourceData
 
         #region Helper Methods
 
-        static bool TryGetConversionDataType(
-            IReadOnlyDictionary<(DataType, DataType), DataType> map,
-            DataType leftDataType, DataType rightDataType, out DataType convDataType)
-        {
-            return map.TryGetValue((left: leftDataType, right: rightDataType), out convDataType);
-        }
-
         static DataType GetConversionDataType(
-            IReadOnlyDictionary<(DataType, DataType), DataType> map,
-            DataType leftDataType, DataType rightDataType, ExpressionOperator op)
+            DataType?[,] map, DataType leftDataType, DataType rightDataType, ExpressionOperator op)
         {
-            if (TryGetConversionDataType(map, leftDataType, rightDataType, out var convDataType))
+            var convDataType = map[(int)leftDataType, (int)rightDataType];
+
+            if (convDataType.HasValue)
             {
-                return convDataType;
+                return convDataType.Value;
             }
 
             throw UnsupportedBinary(leftDataType, rightDataType, op);

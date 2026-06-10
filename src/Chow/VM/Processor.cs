@@ -15,8 +15,6 @@ namespace Chow.VM
         readonly Stack<SourceValue> _valStack;
         SourceValue _expressionStatementVal = SourceValue.None;
 
-        Instruction CurrentOperation => _callStack.CurrentInstr;
-
         // Chunk is null when the client is exclusively calling a closure
         public Processor(Scope globalScope = null, Chunk chunk = null)
         {
@@ -39,13 +37,17 @@ namespace Chow.VM
 
         bool ExecuteInstruction()
         {
-            switch (CurrentOperation.Code)
+            // Read the instruction once; the property chain (CallStack -> frame -> chunk indexer)
+            // is hot enough that re-deriving it per Operand access shows up in dispatch cost.
+            var instr = _callStack.CurrentInstr;
+
+            switch (instr.Code)
             {
                 case OperationCode.Pop:
                     _valStack.Pop();
                     break;
                 case OperationCode.PushConstantValue:
-                    _valStack.Push(_callStack.CurrentChunk.ReadConstant(CurrentOperation.Operand));
+                    _valStack.Push(_callStack.CurrentChunk.ReadConstant(instr.Operand));
                     break;
 
                 // -- Binary Operations------------------------------------------------------------
@@ -110,50 +112,50 @@ namespace Chow.VM
 
                 // -- Control Structure Operations ------------------------------------------------
                 case OperationCode.JumpIfFalseOrPop:
-                    return ExecuteJumpIfFalseOrPop();
+                    return ExecuteJumpIfFalseOrPop(instr.Operand);
                 case OperationCode.JumpIfTrueOrPop:
-                    return ExecuteJumpIfTrueOrPop();
+                    return ExecuteJumpIfTrueOrPop(instr.Operand);
                 case OperationCode.JumpIfFalse:
-                    return ExecuteJumpIfFalse();
+                    return ExecuteJumpIfFalse(instr.Operand);
                 case OperationCode.JumpPastElseBranches:
-                    return ExecuteJump();
+                    return ExecuteJump(instr.Operand);
                 case OperationCode.JumpToLoopStart:
-                    return ExecuteJump();
+                    return ExecuteJump(instr.Operand);
 
                 // -- Variable Operations ---------------------------------------------------------
                 case OperationCode.AssignVariable:
-                    ExecuteAssignVariable();
+                    ExecuteAssignVariable(instr.Operand);
                     break;
                 case OperationCode.PushVariableValue:
-                    ExecutePushVariableValue();
+                    ExecutePushVariableValue(instr.Operand);
                     break;
                 case OperationCode.AssignGlobal:
-                    ExecuteAssignGlobal();
+                    ExecuteAssignGlobal(instr.Operand);
                     break;
                 case OperationCode.PushGlobalValue:
-                    ExecutePushGlobalValue();
+                    ExecutePushGlobalValue(instr.Operand);
                     break;
                 case OperationCode.AssignNonLocal:
-                    ExecuteAssignNonLocal();
+                    ExecuteAssignNonLocal(instr.Operand);
                     break;
                 case OperationCode.PushNonLocalValue:
-                    ExecutePushNonLocalValue();
+                    ExecutePushNonLocalValue(instr.Operand);
                     break;
 
                 // -- Attribute Operations --------------------------------------------------------
                 case OperationCode.AssignAttribute:
-                    ExecuteAssignAttribute();
+                    ExecuteAssignAttribute(instr.Operand);
                     break;
                 case OperationCode.PushAttributeValue:
-                    ExecutePushAttribute();
+                    ExecutePushAttribute(instr.Operand);
                     break;
 
                 // -- Collection Operations -------------------------------------------------------
                 case OperationCode.PushNewSourceList:
-                    ExecutePushNewSourceList(CurrentOperation.Operand);
+                    ExecutePushNewSourceList(instr.Operand);
                     break;
                 case OperationCode.PushNewSourceDictionary:
-                    ExecutePushNewSourceDictionary(CurrentOperation.Operand);
+                    ExecutePushNewSourceDictionary(instr.Operand);
                     break;
 
                 // -- Iterator Operations ---------------------------------------------------------
@@ -161,7 +163,7 @@ namespace Chow.VM
                     ExecutePushNewIterator();
                     break;
                 case OperationCode.JumpOrForIteratorNext:
-                    return ExecuteJumpOrIterateFor();
+                    return ExecuteJumpOrIterateFor(instr.Operand);
 
                 // -- Subscript Operations ---------------------------------------------------------
                 case OperationCode.AssignSubscript:
@@ -177,7 +179,7 @@ namespace Chow.VM
                 // -- Function Call Operations ----------------------------------------------------
                 case OperationCode.CallFunction:
                     // If false, the chunk will have switched to the called closure's
-                    return ExecuteCallFunction(CurrentOperation.Operand);
+                    return ExecuteCallFunction(instr.Operand);
                 case OperationCode.PushReturnValue:
                     _callStack.ExitFunctionCall();
                     return StayAtInstruction;
@@ -194,7 +196,7 @@ namespace Chow.VM
                     break;
 
                 default:
-                    throw new NotImplementedException($"Execution of {CurrentOperation.Code} is not implemented.");
+                    throw new NotImplementedException($"Execution of {instr.Code} is not implemented.");
             }
 
             return GoToNextInstruction;
@@ -257,7 +259,7 @@ namespace Chow.VM
 
         #region Control Structure Operations
 
-        bool ExecuteJumpIfFalseOrPop()
+        bool ExecuteJumpIfFalseOrPop(int jumpTarget)
         {
             var operand = _valStack.Peek();
 
@@ -265,7 +267,7 @@ namespace Chow.VM
             if (LogicEvaluator.ShouldShortCircuitAnd(ref operand))
             {
                 // Leave the falsy value on the stack as the result of the short-circuited `and`
-                _callStack.JumpToInstr(CurrentOperation.Operand);
+                _callStack.JumpToInstr(jumpTarget);
                 return StayAtInstruction;
             }
 
@@ -273,14 +275,14 @@ namespace Chow.VM
             return GoToNextInstruction;
         }
 
-        bool ExecuteJumpIfTrueOrPop()
+        bool ExecuteJumpIfTrueOrPop(int jumpTarget)
         {
             var operand = _valStack.Peek();
 
             if (LogicEvaluator.ShouldShortCircuitOr(ref operand))
             {
                 // Leave the truthy value on the stack as the result of the short-circuited `or`
-                _callStack.JumpToInstr(CurrentOperation.Operand);
+                _callStack.JumpToInstr(jumpTarget);
                 return StayAtInstruction;
             }
 
@@ -288,14 +290,14 @@ namespace Chow.VM
             return GoToNextInstruction;
         }
 
-        bool ExecuteJumpIfFalse()
+        bool ExecuteJumpIfFalse(int jumpTarget)
         {
             // Always pops; jumps past the branch body when the condition is false
             var operand = _valStack.Pop();
 
             if (LogicEvaluator.ShouldShortCircuitAnd(ref operand))
             {
-                _callStack.JumpToInstr(CurrentOperation.Operand);
+                _callStack.JumpToInstr(jumpTarget);
                 return StayAtInstruction;
             }
 
@@ -303,9 +305,9 @@ namespace Chow.VM
         }
 
         // Unconditional jump: set the instruction pointer and remain there (don't advance).
-        bool ExecuteJump()
+        bool ExecuteJump(int jumpTarget)
         {
-            _callStack.JumpToInstr(CurrentOperation.Operand);
+            _callStack.JumpToInstr(jumpTarget);
             return StayAtInstruction;
         }
 
@@ -313,63 +315,62 @@ namespace Chow.VM
 
         #region Variable Operations
 
-        void ExecuteAssignVariable()
+        void ExecuteAssignVariable(int operand)
         {
             // Operand -> name via Chunk; CallStack routes the assign to the current frame's scope.
-            var name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            var name = _callStack.CurrentChunk.ReadVariableName(operand);
             var assignVal = _valStack.Pop();
 
             _callStack.AssignVariableValue(name, ref assignVal);
         }
 
-        void ExecutePushVariableValue()
+        void ExecutePushVariableValue(int operand)
         {
             // Operand -> name via Chunk. Semantic analysis is responsible for ensuring the
-            // name exists before this op runs; KeyNotFoundException here is a contract violation.
-            var varName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            // name exists before this op runs.
+            var varName = _callStack.CurrentChunk.ReadVariableName(operand);
 
-            if (!_callStack.IsVariableDefined(varName))
+            if (!_callStack.TryGetVariableValue(varName, out var varValue))
             {
                 throw new UndefinedNameException(varName, GetCurrentLineNumber());
             }
 
-            var varValue = _callStack.GetVariableValue(varName);
             _valStack.Push(varValue);
         }
 
-        void ExecuteAssignGlobal()
+        void ExecuteAssignGlobal(int operand)
         {
-            var name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            var name = _callStack.CurrentChunk.ReadVariableName(operand);
             var assignVal = _valStack.Pop();
 
             _callStack.AssignToGlobal(name, ref assignVal);
         }
 
-        void ExecutePushGlobalValue()
+        void ExecutePushGlobalValue(int operand)
         {
-            var varName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            var varName = _callStack.CurrentChunk.ReadVariableName(operand);
 
-            if (!_callStack.IsGlobalDefined(varName))
+            if (!_callStack.TryGetGlobal(varName, out var varValue))
             {
                 throw new UndefinedNameException(varName, GetCurrentLineNumber());
             }
 
-            _valStack.Push(_callStack.GetGlobal(varName));
+            _valStack.Push(varValue);
         }
 
-        void ExecuteAssignNonLocal()
+        void ExecuteAssignNonLocal(int operand)
         {
-            var name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            var name = _callStack.CurrentChunk.ReadVariableName(operand);
             var assignVal = _valStack.Pop();
 
             _callStack.AssignToNonlocal(name, ref assignVal);
         }
 
-        void ExecutePushNonLocalValue()
+        void ExecutePushNonLocalValue(int operand)
         {
             // Semantic analysis guarantees an enclosing function binding exists; the CallStack
             // helper throws KeyNotFoundException if that invariant is violated.
-            var varName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            var varName = _callStack.CurrentChunk.ReadVariableName(operand);
             _valStack.Push(_callStack.GetNonlocal(varName));
         }
 
@@ -377,18 +378,18 @@ namespace Chow.VM
 
         #region Attribute Operations
 
-        void ExecuteAssignAttribute()
+        void ExecuteAssignAttribute(int operand)
         {
-            var attrName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            var attrName = _callStack.CurrentChunk.ReadVariableName(operand);
             _valStack.Pop();
             var target = _valStack.Pop();
 
             throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
         }
 
-        void ExecutePushAttribute()
+        void ExecutePushAttribute(int operand)
         {
-            var attrName = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
+            var attrName = _callStack.CurrentChunk.ReadVariableName(operand);
             var target = _valStack.Pop();
 
             // TODO: class instances add a branch that consults the instance attribute table, then the class method table.
@@ -479,7 +480,7 @@ namespace Chow.VM
             _valStack.Push(new SourceValue(iter));
         }
 
-        bool ExecuteJumpOrIterateFor()
+        bool ExecuteJumpOrIterateFor(int jumpTarget)
         {
             // Peek the iterator (kept on stack for the whole loop); push next value or jump to exhaust target.
             var iter = (IIterator)_valStack.Peek().ToObject();
@@ -491,7 +492,7 @@ namespace Chow.VM
             }
 
             _valStack.Pop();
-            _callStack.JumpToInstr(CurrentOperation.Operand);
+            _callStack.JumpToInstr(jumpTarget);
             return StayAtInstruction;
         }
 

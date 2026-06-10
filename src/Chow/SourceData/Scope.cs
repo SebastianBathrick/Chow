@@ -50,5 +50,14 @@ namespace Chow.SourceData
         {
             return _varMap[name];
         }
+
+        /// <summary>
+        /// Looks up <paramref name="name"/> in this scope with a single dictionary probe.
+        /// Does not consult <see cref="Parent"/>.
+        /// </summary>
+        public bool TryGetVariableValue(string name, out SourceValue value)
+        {
+            return _varMap.TryGetValue(name, out value);
+        }
     }
 }
