@@ -14,8 +14,20 @@ namespace Chow.SourceData
         const string METHOD_SET_DEFAULT_NAME = "setdefault";
 
 
+        static readonly List<string> MethodNames = new List<string>
+        {
+            METHOD_GET_NAME,
+            METHOD_CLEAR_NAME,
+            METHOD_POP_NAME,
+            METHOD_UPDATE_NAME,
+            METHOD_SET_DEFAULT_NAME
+        };
+
         readonly Dictionary<SourceValue, SourceValue> _entries = new Dictionary<SourceValue, SourceValue>();
         readonly List<SourceValue> _keys = new List<SourceValue>();
+
+        // Lazily created on first attribute access; most dicts never look up a method.
+        Dictionary<string, SourceValue> _methodCache;
 
         public int Count => _keys.Count;
 
@@ -54,17 +66,19 @@ namespace Chow.SourceData
 
         public override SourceValue GetAttribute(SourceValue name)
         {
-            return new SourceValue(GetMethod(name.ToString()));
+            var methodName = name.ToString();
+            _methodCache = _methodCache ?? new Dictionary<string, SourceValue>();
+
+            if (!_methodCache.TryGetValue(methodName, out var method))
+            {
+                method = new SourceValue(GetMethod(methodName));
+                _methodCache[methodName] = method;
+            }
+
+            return method;
         }
 
-        public override List<string> Directory => new List<string>
-        {
-            METHOD_GET_NAME,
-            METHOD_CLEAR_NAME,
-            METHOD_POP_NAME,
-            METHOD_UPDATE_NAME,
-            METHOD_SET_DEFAULT_NAME
-        };
+        public override List<string> Directory => MethodNames;
 
         public override bool EqualsTo(SourceObject other)
         {
@@ -89,12 +103,14 @@ namespace Chow.SourceData
         {
             ValidateHashable(key);
 
-            if (!_entries.ContainsKey(key))
+            var countBefore = _entries.Count;
+            _entries[key] = value;
+
+            // Count grew => the key was new; record insertion order.
+            if (_entries.Count != countBefore)
             {
                 _keys.Add(key);
             }
-
-            _entries[key] = value;
         }
 
         public bool ContainsKey(SourceValue key)

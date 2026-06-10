@@ -599,10 +599,11 @@ namespace Chow.SourceData
         
         public bool Equals(SourceValue other)
         {
-            return Equals(_obj, other._obj) 
-                && _long == other._long 
-                && _dbl.Equals(other._dbl)
-                && _dataType == other._dataType;
+            // Cheapest, most-discriminating check first; _long and _dbl overlap in the
+            // explicit-layout union, so one bitwise compare covers both numeric fields.
+            return _dataType == other._dataType
+                && _long == other._long
+                && Equals(_obj, other._obj);
         }
 
         public override bool Equals(object obj)
@@ -614,10 +615,10 @@ namespace Chow.SourceData
         {
             unchecked
             {
+                // _dbl shares _long's bits in the union, so hashing _long covers both.
                 var hashCode = (_obj != null ? _obj.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ _long.GetHashCode();
-                hashCode = (hashCode * 397) ^ _dbl.GetHashCode();
-                hashCode = (hashCode * 397) ^ (int)_dataType;
+                hashCode = (hashCode * HASH_COMBINE_PRIME) ^ _long.GetHashCode();
+                hashCode = (hashCode * HASH_COMBINE_PRIME) ^ (int)_dataType;
                 return hashCode;
             }
         }

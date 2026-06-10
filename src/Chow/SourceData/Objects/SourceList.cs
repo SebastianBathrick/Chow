@@ -16,7 +16,20 @@ namespace Chow.SourceData
 
         const string INDEX_TYPE_ERROR_FORMAT = "list indices must be integers, not {0}";
 
+        static readonly List<string> MethodNames = new List<string>
+        {
+            METHOD_APPEND_NAME,
+            METHOD_CLEAR_NAME,
+            METHOD_INSERT_NAME,
+            METHOD_POP_NAME,
+            METHOD_REMOVE_NAME,
+            METHOD_REVERSE_NAME
+        };
+
         readonly List<SourceValue> _elements = new List<SourceValue>();
+
+        // Lazily created on first attribute access; most lists never look up a method.
+        Dictionary<string, SourceValue> _methodCache;
 
         public int Count => _elements.Count;
 
@@ -59,18 +72,19 @@ namespace Chow.SourceData
 
         public override SourceValue GetAttribute(SourceValue name)
         {
-            return new SourceValue(GetMethod(name.ToString()));
+            var methodName = name.ToString();
+            _methodCache = _methodCache ?? new Dictionary<string, SourceValue>();
+
+            if (!_methodCache.TryGetValue(methodName, out var method))
+            {
+                method = new SourceValue(GetMethod(methodName));
+                _methodCache[methodName] = method;
+            }
+
+            return method;
         }
 
-        public override List<string> Directory => new List<string>
-        {
-            METHOD_APPEND_NAME,
-            METHOD_CLEAR_NAME,
-            METHOD_INSERT_NAME,
-            METHOD_POP_NAME,
-            METHOD_REMOVE_NAME,
-            METHOD_REVERSE_NAME
-        };
+        public override List<string> Directory => MethodNames;
 
         // Python `in` compares with == semantics, not strict identity/equality.
         public override bool Contains(SourceValue value)
