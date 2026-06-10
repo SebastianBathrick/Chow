@@ -44,11 +44,9 @@ namespace Chow.VM.FunctionCalls
         }
 
         /// <summary>Sets the instruction pointer to <paramref name="instrIdx"/> and returns its previous value.</summary>
-        public int JumpToInstr(int instrIdx)
+        public void JumpToInstr(int instrIdx)
         {
-            var prevInstrIdx = _instrIdx;
             _instrIdx = instrIdx;
-            return prevInstrIdx;
         }
     }
 }

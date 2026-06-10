@@ -35,10 +35,7 @@ namespace Chow.VM.FunctionCalls
         /// <summary>Source line number associated with the current frame's pointer.</summary>
         public int CurrentLineNum => CurrFrame.CurrentLineNum;
 
-        /// <summary>True when no function call is active and execution is in the module frame.</summary>
-        public bool IsModuleLevel => _callFrames.Count == 0;
-
-        protected StackFrame CurrFrame => _callFrames.Count == 0 ? _moduleLvl : _callFrames.Peek();
+        StackFrame CurrFrame => _callFrames.Count == 0 ? _moduleLvl : _callFrames.Peek();
 
         /// <summary>Creates a call stack rooted at a single module frame.</summary>
         /// <param name="moduleChunk">The compiled bytecode for the module being executed.</param>
@@ -56,18 +53,18 @@ namespace Chow.VM.FunctionCalls
         /// targeted variants <see cref="AssignToGlobal"/> and <see cref="AssignToNonlocal"/>
         /// rebind enclosing or module names.
         /// </summary>
-        public void AssignVariableValue(string name, SourceValue value)
+        public void AssignVariableValue(string name, ref SourceValue value)
         {
-            CurrFrame.Scope.AssignVariableValue(name, value);
+            CurrFrame.Scope.AssignVariableValue(name, ref value);
         }
 
         /// <summary>
         /// Binds <paramref name="name"/> to <paramref name="value"/> directly in the module scope,
         /// bypassing the current frame's local scope. Used by the <c>global</c>-targeted opcodes.
         /// </summary>
-        public void AssignToGlobal(string name, SourceValue value)
+        public void AssignToGlobal(string name, ref SourceValue value)
         {
-            ModuleScope.AssignVariableValue(name, value);
+            ModuleScope.AssignVariableValue(name, ref value);
         }
 
         /// <summary>
@@ -91,10 +88,10 @@ namespace Chow.VM.FunctionCalls
         /// excluded from the walk. Throws <see cref="KeyNotFoundException"/> if no such scope
         /// exists; semantic analysis is expected to prevent this at compile time.
         /// </summary>
-        public void AssignToNonlocal(string name, SourceValue value)
+        public void AssignToNonlocal(string name, ref SourceValue value)
         {
             var scope = FindNonlocalScope(name);
-            scope.AssignVariableValue(name, value);
+            scope.AssignVariableValue(name, ref value);
         }
 
         /// <summary>

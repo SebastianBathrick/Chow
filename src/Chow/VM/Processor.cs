@@ -214,9 +214,9 @@ namespace Chow.VM
 
             if (args != null)
             {
-                for (var i = 0; i < args.Length; i++)
+                foreach (var arg in args)
                 {
-                    _valStack.Push(args[i]);
+                    _valStack.Push(arg);
                 }
             }
 
@@ -239,7 +239,7 @@ namespace Chow.VM
         {
             var container = _valStack.Pop();
             var needle = _valStack.Pop();
-            var found = false;
+            bool found;
 
             if (container.DataType == DataType.Dict || container.DataType == DataType.List)
             {
@@ -319,7 +319,7 @@ namespace Chow.VM
             var name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
             var assignVal = _valStack.Pop();
 
-            _callStack.AssignVariableValue(name, assignVal);
+            _callStack.AssignVariableValue(name, ref assignVal);
         }
 
         void ExecutePushVariableValue()
@@ -342,7 +342,7 @@ namespace Chow.VM
             var name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
             var assignVal = _valStack.Pop();
 
-            _callStack.AssignToGlobal(name, assignVal);
+            _callStack.AssignToGlobal(name, ref assignVal);
         }
 
         void ExecutePushGlobalValue()
@@ -362,7 +362,7 @@ namespace Chow.VM
             var name = _callStack.CurrentChunk.ReadVariableName(CurrentOperation.Operand);
             var assignVal = _valStack.Pop();
 
-            _callStack.AssignToNonlocal(name, assignVal);
+            _callStack.AssignToNonlocal(name, ref assignVal);
         }
 
         void ExecutePushNonLocalValue()

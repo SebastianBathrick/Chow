@@ -45,7 +45,7 @@ namespace Chow
             foreach (var namedInvocable in namedInvocableObjects)
             {
                 var chowValue = new SourceValue(namedInvocable.callableObject);
-                globalScope.AssignVariableValue(namedInvocable.name, chowValue);
+                globalScope.AssignVariableValue(namedInvocable.name, ref chowValue);
             }
         }
 

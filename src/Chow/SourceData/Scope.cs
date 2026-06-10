@@ -38,7 +38,7 @@ namespace Chow.SourceData
         /// Binds <paramref name="name"/> to <paramref name="value"/> in this scope. Creates the
         /// binding if it does not exist; otherwise overwrites it in place.
         /// </summary>
-        public void AssignVariableValue(string name, SourceValue value)
+        public void AssignVariableValue(string name, ref SourceValue value)
         {
             _varMap[name] = value;
         }
@@ -49,16 +49,6 @@ namespace Chow.SourceData
         public SourceValue GetVariableValue(string name)
         {
             return _varMap[name];
-        }
-
-        /// <summary>
-        /// Removes the binding for <paramref name="name"/> from this scope. Returns <c>true</c> if
-        /// a binding was removed, <c>false</c> if no such binding existed. Does not consult
-        /// <see cref="Parent"/>.
-        /// </summary>
-        public bool TryRemoveVariable(string name)
-        {
-            return _varMap.Remove(name);
         }
     }
 }
