@@ -9,7 +9,7 @@ public class TokenStreamTests
     public void LineNumber_NewStream_ReturnsSelectedTokenLineNumber()
     {
         var stream = CreateStream(
-            Token(TokenType.Identifier, lineNumber: 12),
+            Token(TokenType.Name, lineNumber: 12),
             Token(TokenType.EndOfCode, lineNumber: 13));
 
         Assert.That(stream.LineNumber, Is.EqualTo(12));
@@ -18,7 +18,7 @@ public class TokenStreamTests
     [Test]
     public void Consume_SelectedToken_ReturnsTokenAndAdvancesStream()
     {
-        var firstToken = Token(TokenType.Identifier, "value", 4);
+        var firstToken = Token(TokenType.Name, "value", 4);
         var secondToken = Token(TokenType.EndOfCode, lineNumber: 5);
         var stream = CreateStream(firstToken, secondToken);
 
@@ -58,7 +58,7 @@ public class TokenStreamTests
     [Test]
     public void ConsumeMatch_SelectedTokenDoesNotMatch_ThrowsSyntaxExceptionWithSelectedLineNumber()
     {
-        var stream = CreateStream(Token(TokenType.Identifier, "name", 7));
+        var stream = CreateStream(Token(TokenType.Name, "name", 7));
 
         var exception = Assert.Throws<SyntaxException>(
             () => stream.ConsumeMatch(TokenType.SymbolLeftParen));
@@ -66,7 +66,7 @@ public class TokenStreamTests
         Assert.That(exception, Is.Not.Null);
         Assert.That(exception!.LineNumber, Is.EqualTo(7));
         Assert.That(exception.Message, Is.EqualTo("SyntaxError: expected 'SymbolLeftParen'"));
-        Assert.That(stream.IsMatch(TokenType.Identifier), Is.True);
+        Assert.That(stream.IsMatch(TokenType.Name), Is.True);
     }
 
     [Test]
@@ -126,19 +126,19 @@ public class TokenStreamTests
     public void IsNextMatch_NextTokenMatchesTarget_ReturnsTrueWithoutAdvancingStream()
     {
         var stream = CreateStream(
-            Token(TokenType.Identifier, "name", 3),
+            Token(TokenType.Name, "name", 3),
             Token(TokenType.SymbolAssign, "=", 3));
 
         var isNextMatch = stream.IsNextMatch(TokenType.SymbolAssign);
 
         Assert.That(isNextMatch, Is.True);
-        Assert.That(stream.IsMatch(TokenType.Identifier), Is.True);
+        Assert.That(stream.IsMatch(TokenType.Name), Is.True);
     }
 
     [Test]
     public void IsNextMatch_NoTokenFollowsSelectedToken_ReturnsFalse()
     {
-        var stream = CreateStream(Token(TokenType.Identifier));
+        var stream = CreateStream(Token(TokenType.Name));
 
         Assert.That(stream.IsNextMatch(TokenType.SymbolAssign), Is.False);
     }

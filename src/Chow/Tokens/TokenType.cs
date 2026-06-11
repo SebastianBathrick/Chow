@@ -81,7 +81,7 @@ namespace Chow.Tokens
         SymbolPipe,
 
         /// <summary>User-defined name or non-keyword identifier.</summary>
-        Identifier,
+        Name,
 
         /// <summary>Keyword: <c>True</c>.</summary>
         KeywordTrue,

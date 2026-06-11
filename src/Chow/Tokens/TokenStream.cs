@@ -60,6 +60,25 @@ namespace Chow.Tokens
             throw new SyntaxException(expectedType.ToString(), exLineNum);
         }
 
+        public Token ConsumeMatches(
+            TokenType expectedType1, TokenType expectedType2, params TokenType[] expectedTypes)
+        {
+            ConsumeMatch(expectedType1);
+            ConsumeMatch(expectedType2);
+
+            if (expectedTypes == null || expectedTypes.Length == 0)
+            {
+                return SelectedToken;
+            }
+
+            foreach (var type in expectedTypes)
+            {
+                ConsumeMatch(type);
+            }
+
+            return SelectedToken;
+        }
+
         /// <summary>
         /// Determines whether the selected token is <paramref name="targetType"/>.
         /// </summary>

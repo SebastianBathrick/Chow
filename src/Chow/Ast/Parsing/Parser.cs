@@ -38,6 +38,7 @@ namespace Chow.Ast.Parsing
 
             // It's assumed the final token always an 'end of code' marker
             _tokens.ConsumeMatch(TokenType.EndOfCode);
+            
             var block = new BlockNode(statementList, ModuleNodeLineNumber);
             return new ModuleNode(block);
         }
@@ -48,22 +49,14 @@ namespace Chow.Ast.Parsing
 
         Node ParseBlock()
         {
-            _tokens.ConsumeMatch(TokenType.SymbolColon);
-            _tokens.ConsumeMatch(TokenType.Newline);
-
+            _tokens.ConsumeMatches(TokenType.SymbolColon, TokenType.Newline);
             var indentToken = _tokens.ConsumeMatch(TokenType.Indent);
+            List<Node> statements = new List<Node>();
             
-            var statements = new List<Node> { ParseStatement() };
-
-            
-            
-            _tokens.TryConsumeMatch(TokenType.Newline);
-
             while (!_tokens.IsMatch(TokenType.Dedent))
             {
-                if (_tokens.IsMatch(TokenType.Newline))
+                if (_tokens.TryConsumeMatch(TokenType.Newline))
                 {
-                    _tokens.Consume();
                     continue;
                 }
 
@@ -77,6 +70,8 @@ namespace Chow.Ast.Parsing
 
         Node ParseStatement()
         {
+            var lineNum = _tokens.LineNumber;
+
             switch (_tokens.Peek())
             {
                 case TokenType.KeywordReturn:
@@ -97,45 +92,59 @@ namespace Chow.Ast.Parsing
                     return ParseGlobalDeclaration();
                 case TokenType.KeywordNonlocal:
                     return ParseNonlocalDeclaration();
-                case TokenType.Identifier:
-                case TokenType.LiteralInt:
-                case TokenType.LiteralFloat:
-                case TokenType.LiteralStr:
-                case TokenType.LiteralFString:
-                case TokenType.KeywordNone:
-                case TokenType.KeywordTrue:
-                case TokenType.KeywordFalse:
-                case TokenType.KeywordNot:
-                case TokenType.SymbolLeftParen:
-                case TokenType.SymbolLeftBracket:
-                case TokenType.SymbolMinus:
-                case TokenType.SymbolLeftCurly:
-                    break;
-                default:
-                    _tokens.ConsumeMatch(TokenType.Identifier);
+                case TokenType.Name:
+                    if (_tokens.IsNextMatch(TokenType.SymbolAssign))
+                    {
+                        return ParseAssignStatement(lineNum);
+                    }
+
                     break;
             }
+            
+            return ParseExpressionStatement(lineNum);
+        }
 
-            // Parse expression first; if an '=' follows, convert the LHS into the appropriate
-            // assignment node. Otherwise, this is a standalone expression statement (result
-            // discarded or routed to hook).
-            var lhs = ParseExpression();
+        Node ParseAssignStatement(int lineNum)
+        {
+            var targetNode = ParseExpression();
+            
+            // Assumes that the caller checked that this token is an assignment symbol.
+            _tokens.Consume();
+            var assignExpr = ParseExpression();
 
-            if (!_tokens.IsMatch(TokenType.SymbolAssign))
+            if (targetNode is NameNode nameNode)
             {
-                return new ExpressionStatementNode(lhs, lhs.LineNumber);
+                return new AssignStatementNode(nameNode.Name, assignExpr, lineNum);
             }
 
-            var eqLine = _tokens.Consume().LineNumber;
-            var rhs = ParseExpression();
-            return MakeAssignFromTarget(lhs, rhs, eqLine);
+            if (targetNode is AttributeAccessNode attrAccessNode)
+            {
+                // TODO: Switch out any strings stored by Nodes with NameNodes
+                    return new AttributeAssignNode(
+                        attrAccessNode.Target , attrAccessNode.AttributeName, assignExpr, lineNum);
+            }
+            
+            if (targetNode is SubscriptNode subscriptNode)
+            {
+
+                return new SubscriptAssignNode(
+                    subscriptNode.Target, subscriptNode.Index, assignExpr, lineNum);
+            }
+
+            throw new SyntaxException("assignment", lineNum);
+        }
+
+        Node ParseExpressionStatement(int lineNumber)
+        {
+            var expr = ParseExpression();
+            return new ExpressionStatementNode(expr, lineNumber);
         }
 
         Node ParseFunctionDefinition()
         {
             var defToken = _tokens.ConsumeMatch(TokenType.KeywordDef);
 
-            var nameToken = _tokens.ConsumeMatch(TokenType.Identifier);
+            var nameToken = _tokens.ConsumeMatch(TokenType.Name);
 
             _tokens.ConsumeMatch(TokenType.SymbolLeftParen);
 
@@ -143,13 +152,13 @@ namespace Chow.Ast.Parsing
 
             if (!_tokens.IsMatch(TokenType.SymbolRightParen))
             {
-                var paramToken = _tokens.ConsumeMatch(TokenType.Identifier);
+                var paramToken = _tokens.ConsumeMatch(TokenType.Name);
                 
                 paramList.Add(new NameNode(paramToken.Lexeme, paramToken.LineNumber));
 
                 while (_tokens.TryConsumeMatch(TokenType.SymbolComma))
                 {
-                    paramToken = _tokens.ConsumeMatch(TokenType.Identifier);
+                    paramToken = _tokens.ConsumeMatch(TokenType.Name);
                     
                     paramList.Add(new NameNode(paramToken.Lexeme, paramToken.LineNumber));
                 }
@@ -196,7 +205,7 @@ namespace Chow.Ast.Parsing
         {
             var forToken = _tokens.ConsumeMatch(TokenType.KeywordFor);
 
-            var targetToken = _tokens.ConsumeMatch(TokenType.Identifier);
+            var targetToken = _tokens.ConsumeMatch(TokenType.Name);
             var target = new NameNode(targetToken.Lexeme, targetToken.LineNumber);
 
             _tokens.ConsumeMatch(TokenType.KeywordIn);
@@ -235,7 +244,7 @@ namespace Chow.Ast.Parsing
             // an error
             return new ReturnStatementNode(
                 _tokens.IsMatch(
-                    TokenType.Identifier,
+                    TokenType.Name,
                     TokenType.LiteralInt,
                     TokenType.LiteralFloat,
                     TokenType.LiteralStr,
@@ -268,13 +277,13 @@ namespace Chow.Ast.Parsing
         List<string> ParseDeclarationNameList(string keyword)
         {
             var names = new List<string>();
-            var firstToken = _tokens.ConsumeMatch(TokenType.Identifier);
+            var firstToken = _tokens.ConsumeMatch(TokenType.Name);
             
             names.Add(firstToken.Lexeme);
 
             while (_tokens.TryConsumeMatch(TokenType.SymbolComma))
             {
-                var nameToken = _tokens.ConsumeMatch(TokenType.Identifier);
+                var nameToken = _tokens.ConsumeMatch(TokenType.Name);
                 
                 names.Add(nameToken.Lexeme);
             }
@@ -491,7 +500,7 @@ namespace Chow.Ast.Parsing
         Node ParseAttributeAccessTail(Node target)
         {
             var dotToken = _tokens.ConsumeMatch(TokenType.SymbolDot);
-            var nameToken = _tokens.ConsumeMatch(TokenType.Identifier);
+            var nameToken = _tokens.ConsumeMatch(TokenType.Name);
 
             return new AttributeAccessNode(target, nameToken.Lexeme, dotToken.LineNumber);
         }
@@ -642,7 +651,7 @@ namespace Chow.Ast.Parsing
             // checks that gate statements and return expressions.
             switch (_tokens.Peek())
             {
-                case TokenType.Identifier:
+                case TokenType.Name:
                     var idToken = _tokens.Consume();
                     return new NameNode(idToken.Lexeme, idToken.LineNumber);
                 case TokenType.LiteralInt:
@@ -672,7 +681,7 @@ namespace Chow.Ast.Parsing
                 case TokenType.SymbolLeftCurly:
                     return ParseDictLiteral();
                 default:
-                    _tokens.ConsumeMatch(TokenType.Identifier);
+                    _tokens.ConsumeMatch(TokenType.Name);
                     return null;
             }
         }
@@ -680,21 +689,6 @@ namespace Chow.Ast.Parsing
         #endregion
 
         #region Helper Methods
-
-        Node MakeAssignFromTarget(Node target, Node value, int line)
-        {
-            switch (target)
-            {
-                case NameNode nameNode:
-                    return new AssignStatementNode(nameNode.Name, value, line);
-                case SubscriptNode subscriptNode:
-                    return new SubscriptAssignNode(subscriptNode.Target, subscriptNode.Index, value, line);
-                case AttributeAccessNode attrNode:
-                    return new AttributeAssignNode(attrNode.Target, attrNode.AttributeName, value, line);
-            }
-
-            throw new SyntaxException("Invalid assignment target.", line);
-        }
 
         static ExpressionOperator MapTokenTypeToBinary(TokenType type)
         {

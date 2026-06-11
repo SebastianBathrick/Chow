@@ -159,7 +159,7 @@ namespace Chow.Tokens.Scanning
             }
             else
             {
-                AddNewToken(TokenType.Identifier, lexeme, _lineNum);
+                AddNewToken(TokenType.Name, lexeme, _lineNum);
             }
         }
 
