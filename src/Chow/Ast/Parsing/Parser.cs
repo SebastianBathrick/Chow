@@ -10,6 +10,37 @@ namespace Chow.Ast.Parsing
     {
         const int ModuleNodeLineNumber = 1;
         
+        static readonly TokenType[] ComparisonOperatorTypes =
+        {
+            TokenType.SymbolEqualTo,
+            TokenType.SymbolNotEqual,
+            TokenType.SymbolLess,
+            TokenType.SymbolGreater,
+            TokenType.SymbolLessEqual,
+            TokenType.SymbolGreaterEqual,
+            TokenType.KeywordIn
+        };
+
+        // Token types that can begin an expression: the primaries handled by ParsePrimary plus
+        // the prefix operators 'not' and '-'.
+        static readonly TokenType[] ExpressionStartTypes =
+        {
+            TokenType.Name,
+            TokenType.LiteralInt,
+            TokenType.LiteralFloat,
+            TokenType.LiteralStr,
+            TokenType.LiteralFString,
+            TokenType.KeywordNone,
+            TokenType.KeywordTrue,
+            TokenType.KeywordFalse,
+            TokenType.KeywordNot,
+            TokenType.SymbolLeftParen,
+            TokenType.SymbolLeftBracket,
+            TokenType.SymbolMinus,
+            TokenType.SymbolLeftCurly
+        };
+
+
         readonly ITokenStream _tokens;
 
         #region Main Methods
@@ -333,38 +364,33 @@ namespace Chow.Ast.Parsing
             return new ExpressionNode(Operator.Not, ParseNot(), opToken.LineNumber);
         }
 
+
+        bool IsNotInOperatorNext()
+        {
+            return _tokens.IsMatch(TokenType.KeywordNot) && _tokens.IsNextMatch(TokenType.KeywordIn);
+        }
+
         Node ParseComparison()
         {
             var leftNode = ParseBitOr();
             Node result = null;
 
-            while (true)
+            while (_tokens.IsMatch(ComparisonOperatorTypes) || IsNotInOperatorNext())
             {
                 Operator @operator;
                 int opLine;
 
-                if (_tokens.IsMatch(
-                    TokenType.SymbolEqualTo,
-                    TokenType.SymbolNotEqual,
-                    TokenType.SymbolLess,
-                    TokenType.SymbolGreater,
-                    TokenType.SymbolLessEqual,
-                    TokenType.SymbolGreaterEqual,
-                    TokenType.KeywordIn))
+                if (_tokens.IsMatch(ComparisonOperatorTypes))
                 {
                     var opToken = _tokens.Consume();
                     @operator = MapTokenTypeToBinary(opToken.Type);
                     opLine = opToken.LineNumber;
                 }
-                else if (_tokens.IsMatch(TokenType.KeywordNot) && _tokens.IsNextMatch(TokenType.KeywordIn))
+                else
                 {
                     opLine = _tokens.Consume().LineNumber;
                     _tokens.ConsumeMatch(TokenType.KeywordIn);
                     @operator = Operator.NotIn;
-                }
-                else
-                {
-                    break;
                 }
 
                 var rightNode = ParseBitOr();
