@@ -5,7 +5,7 @@ using Chow.Utility;
 
 namespace Chow.Tests.SourceCode.UnitTests;
 
-public class SyntaxFactsTests
+public class SyntaxMapsTests
 {
     [Test]
     public void IsExpressionStart_TokenTypeCanBeginExpression_ReturnsTrue()
@@ -31,7 +31,7 @@ public class SyntaxFactsTests
         {
             foreach (var type in startTypes)
             {
-                Assert.That(SyntaxFacts.IsExpressionStart(type), Is.True, type.ToString());
+                Assert.That(SyntaxMaps.IsExpressionStart(type), Is.True, type.ToString());
             }
         });
     }
@@ -54,7 +54,7 @@ public class SyntaxFactsTests
         {
             foreach (var type in nonStartTypes)
             {
-                Assert.That(SyntaxFacts.IsExpressionStart(type), Is.False, type.ToString());
+                Assert.That(SyntaxMaps.IsExpressionStart(type), Is.False, type.ToString());
             }
         });
     }
@@ -77,7 +77,7 @@ public class SyntaxFactsTests
         {
             foreach (var type in comparisonTypes)
             {
-                Assert.That(SyntaxFacts.IsComparisonOperator(type), Is.True, type.ToString());
+                Assert.That(SyntaxMaps.IsComparisonOperator(type), Is.True, type.ToString());
             }
         });
     }
@@ -98,7 +98,7 @@ public class SyntaxFactsTests
         {
             foreach (var type in nonComparisonTypes)
             {
-                Assert.That(SyntaxFacts.IsComparisonOperator(type), Is.False, type.ToString());
+                Assert.That(SyntaxMaps.IsComparisonOperator(type), Is.False, type.ToString());
             }
         });
     }
@@ -132,7 +132,7 @@ public class SyntaxFactsTests
             foreach (var mapping in expectedMappings)
             {
                 Assert.That(
-                    SyntaxFacts.ToBinaryOperator(mapping.Key),
+                    SyntaxMaps.ToBinaryOperator(mapping.Key),
                     Is.EqualTo(mapping.Value),
                     mapping.Key.ToString());
             }
@@ -143,7 +143,7 @@ public class SyntaxFactsTests
     public void ToBinaryOperator_NonOperatorTokenType_ThrowsUnreachableException()
     {
         Assert.That(
-            () => SyntaxFacts.ToBinaryOperator(TokenType.Name),
+            () => SyntaxMaps.ToBinaryOperator(TokenType.Name),
             Throws.TypeOf<UnreachableException>());
     }
 }

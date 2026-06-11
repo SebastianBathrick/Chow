@@ -3,7 +3,7 @@ using Chow.Utility;
 
 namespace Chow.Ast.Parsing
 {
-    static class SyntaxFacts
+    static class SyntaxMaps
     {
         static readonly TokenType[] ComparisonOperatorTypes =
         {

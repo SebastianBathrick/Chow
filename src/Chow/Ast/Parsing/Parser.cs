@@ -9,37 +9,6 @@ namespace Chow.Ast.Parsing
     sealed class Parser
     {
         const int ModuleNodeLineNumber = 1;
-        
-        static readonly TokenType[] ComparisonOperatorTypes =
-        {
-            TokenType.SymbolEqualTo,
-            TokenType.SymbolNotEqual,
-            TokenType.SymbolLess,
-            TokenType.SymbolGreater,
-            TokenType.SymbolLessEqual,
-            TokenType.SymbolGreaterEqual,
-            TokenType.KeywordIn
-        };
-
-        // Token types that can begin an expression: the primaries handled by ParsePrimary plus
-        // the prefix operators 'not' and '-'.
-        static readonly TokenType[] ExpressionStartTypes =
-        {
-            TokenType.Name,
-            TokenType.LiteralInt,
-            TokenType.LiteralFloat,
-            TokenType.LiteralStr,
-            TokenType.LiteralFString,
-            TokenType.KeywordNone,
-            TokenType.KeywordTrue,
-            TokenType.KeywordFalse,
-            TokenType.KeywordNot,
-            TokenType.SymbolLeftParen,
-            TokenType.SymbolLeftBracket,
-            TokenType.SymbolMinus,
-            TokenType.SymbolLeftCurly
-        };
-
 
         readonly ITokenStream _tokens;
 
@@ -267,7 +236,7 @@ namespace Chow.Ast.Parsing
             // Void functions always return None, and their calls inside expressions will not cause
             // an error
             return new ReturnStatementNode(
-                _tokens.IsMatch(ExpressionStartTypes) ? ParseExpression() : null,
+                SyntaxMaps.IsExpressionStart(_tokens.Peek()) ? ParseExpression() : null,
                 returnToken.LineNumber);
         }
 
@@ -315,7 +284,7 @@ namespace Chow.Ast.Parsing
                 var opToken = _tokens.Consume();
                 var rightNode = parseOperand();
                 leftNode = new ExpressionNode(
-                    MapTokenTypeToBinary(opToken.Type), leftNode, rightNode, opToken.LineNumber);
+                    SyntaxMaps.ToBinaryOperator(opToken.Type), leftNode, rightNode, opToken.LineNumber);
             }
 
             return leftNode;
@@ -348,15 +317,15 @@ namespace Chow.Ast.Parsing
             var leftNode = ParseBitOr();
             Node result = null;
 
-            while (_tokens.IsMatch(ComparisonOperatorTypes) || IsNotInOperatorNext())
+            while (SyntaxMaps.IsComparisonOperator(_tokens.Peek()) || IsNotInOperatorNext())
             {
                 Operator @operator;
                 int opLine;
 
-                if (_tokens.IsMatch(ComparisonOperatorTypes))
+                if (SyntaxMaps.IsComparisonOperator(_tokens.Peek()))
                 {
                     var opToken = _tokens.Consume();
-                    @operator = MapTokenTypeToBinary(opToken.Type);
+                    @operator = SyntaxMaps.ToBinaryOperator(opToken.Type);
                     opLine = opToken.LineNumber;
                 }
                 else
@@ -597,7 +566,7 @@ namespace Chow.Ast.Parsing
         Node ParsePrimary()
         {
             // Note: After adding a new primary token type, remember to add it to
-            // ExpressionStartTypes.
+            // SyntaxMaps.ExpressionStartTypes.
             switch (_tokens.Peek())
             {
                 case TokenType.Name:
@@ -651,49 +620,6 @@ namespace Chow.Ast.Parsing
                 && !(closingType.HasValue && _tokens.IsMatch(closingType.Value)))
             {
                 parseElement();
-            }
-        }
-
-        static Operator MapTokenTypeToBinary(TokenType type)
-        {
-            switch (type)
-            {
-                case TokenType.SymbolPlus:
-                    return Operator.Add;
-                case TokenType.SymbolMinus:
-                    return Operator.Subtract;
-                case TokenType.SymbolMultiply:
-                    return Operator.Multiply;
-                case TokenType.SymbolDivide:
-                    return Operator.Divide;
-                case TokenType.SymbolPercent:
-                    return Operator.Modulus;
-                case TokenType.SymbolExponent:
-                    return Operator.Exponentiate;
-                case TokenType.SymbolFloorDivide:
-                    return Operator.FloorDivide;
-                case TokenType.SymbolEqualTo:
-                    return Operator.Equal;
-                case TokenType.SymbolNotEqual:
-                    return Operator.NotEqual;
-                case TokenType.SymbolLess:
-                    return Operator.Less;
-                case TokenType.SymbolGreater:
-                    return Operator.Greater;
-                case TokenType.SymbolLessEqual:
-                    return Operator.LessEqual;
-                case TokenType.SymbolGreaterEqual:
-                    return Operator.GreaterEqual;
-                case TokenType.KeywordAnd:
-                    return Operator.And;
-                case TokenType.KeywordOr:
-                    return Operator.Or;
-                case TokenType.SymbolPipe:
-                    return Operator.BinaryOr;
-                case TokenType.KeywordIn:
-                    return Operator.In;
-                default:
-                    throw new InvalidOperationException();
             }
         }
 
