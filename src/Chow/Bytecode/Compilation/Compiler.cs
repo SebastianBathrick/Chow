@@ -397,7 +397,7 @@ namespace Chow.Bytecode.Compilation
         {
             if (_loopContextStack.Count == 0)
             {
-                throw new ParserException("'break' outside loop", breakStatementNode.LineNumber);
+                throw new SyntaxException("'break' outside loop", breakStatementNode.LineNumber);
             }
 
             var loopContext = _loopContextStack.Peek();
@@ -416,8 +416,8 @@ namespace Chow.Bytecode.Compilation
         {
             if (_loopContextStack.Count == 0)
             {
-                // TODO: Remove ParserException in the compiler and replace with a more appropriate exception type
-                throw new ParserException("'continue' not properly in loop", continueStatementNode.LineNumber);
+                // TODO: Remove SyntaxException in the compiler and replace with a more appropriate exception type
+                throw new SyntaxException("'continue' not properly in loop", continueStatementNode.LineNumber);
             }
 
             var loopContext = _loopContextStack.Peek();

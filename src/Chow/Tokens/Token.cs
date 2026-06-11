@@ -5,26 +5,34 @@ namespace Chow.Tokens
     /// </summary>
     readonly struct Token
     {
+        const int EmptyTokenLineNumber = -1;
+        const string EmptyTokenLexeme = "";
+        const object EmptyTokenLiteral = null;
+        
         public readonly TokenType Type;
 
         public readonly string Lexeme;
 
-        public readonly int LineNum;
+        public readonly int LineNumber;
 
-        // Can  be null
+        // Can be null
         public readonly object Literal;
 
-        public Token(TokenType type, string lexeme, int lineNum, object literal)
+        public Token(
+            TokenType type = TokenType.EmptyToken, 
+            string lexeme = EmptyTokenLexeme, 
+            int lineNumber = EmptyTokenLineNumber, 
+            object literal = EmptyTokenLiteral)
         {
             Type = type;
             Lexeme = lexeme;
-            LineNum = lineNum;
+            LineNumber = lineNumber;
             Literal = literal;
         }
 
         public override string ToString()
         {
-            return $"Token(type={Type}, lexeme=\"{FormatLexeme(Lexeme)}\", literal={FormatLiteral(Literal)}, line={LineNum})";
+            return $"Token(type={Type}, lexeme=\"{FormatLexeme(Lexeme)}\", literal={FormatLiteral(Literal)}, line={LineNumber})";
         }
 
         static string FormatLexeme(string lexeme)
