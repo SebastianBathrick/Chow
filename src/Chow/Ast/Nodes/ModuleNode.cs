@@ -5,6 +5,7 @@ namespace Chow.Ast
     {
         const int ROOT_NODE_LINE = 1;
 
+        /// <summary>Node containing all top-level statement and defined function nodes.</summary>
         public Node Block { get; }
 
         public ModuleNode(Node block) : base(ROOT_NODE_LINE)

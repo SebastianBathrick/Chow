@@ -4,13 +4,13 @@ namespace Chow.Ast
 {
     sealed class CallNode : Node
     {
-        public Node CallName { get; }
+        public Node FunctionName { get; }
 
         public List<Node> Args { get; }
 
-        public CallNode(Node callName, List<Node> args, int line) : base(line)
+        public CallNode(Node funcName, List<Node> args, int line) : base(line)
         {
-            CallName = callName;
+            FunctionName = funcName;
             Args = args;
         }
 

@@ -3,21 +3,18 @@ using Chow.Semantics;
 
 namespace Chow.Ast
 {
-    /// <summary>Represents a node that describes a function's definition and body.</summary>
+    /// <summary>Represents a function definition and body.</summary>
     sealed class FunctionNode : Node
     {
         public string Name { get; }
 
+        /// <summary>List containing each of the function's parameters (empty when none).</summary>
         public List<Node> Params { get; }
 
+        /// <summary>The function's body.</summary>
         public Node Block { get; }
 
-        /// <summary>
-        /// How the binding of <see cref="Name"/> into the enclosing scope resolves at runtime
-        /// (a <c>def foo()</c> in a function that declared <c>global foo</c> binds the module's
-        /// <c>foo</c>). Stamped by <see cref="SemanticAnalyzer"/>; defaults to
-        /// <see cref="ScopeType.Local"/>.
-        /// </summary>
+        /// <summary>The scope where the function was defined in the source code.</summary>
         public ScopeType Resolution { get; set; }
 
         public FunctionNode(string name, List<Node> paramList, Node block, int line) : base(line)

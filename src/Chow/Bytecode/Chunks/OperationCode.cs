@@ -26,7 +26,7 @@ namespace Chow.Bytecode
         JumpIfFalseOrPop,
         JumpIfTrueOrPop,
         PushConstantValue,
-        AssignVariable,
+        AssignLocal,
         PushVariableValue,
         AssignGlobal,
         PushGlobalValue,

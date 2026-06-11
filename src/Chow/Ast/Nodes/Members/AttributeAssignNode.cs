@@ -1,4 +1,4 @@
-namespace Chow.Ast
+ namespace Chow.Ast
 {
     sealed class AttributeAssignNode : Node
     {
@@ -8,10 +8,10 @@ namespace Chow.Ast
 
         public Node Expression { get; }
 
-        public AttributeAssignNode(Node target, string attributeName, Node expr, int line) : base(line)
+        public AttributeAssignNode(Node target, string attrName, Node expr, int line) : base(line)
         {
             Target = target;
-            AttributeName = attributeName;
+            AttributeName = attrName;
             Expression = expr;
         }
 

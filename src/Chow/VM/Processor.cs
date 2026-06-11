@@ -123,7 +123,7 @@ namespace Chow.VM
                     return ExecuteJump(instr.Operand);
 
                 // -- Variable Operations ---------------------------------------------------------
-                case OperationCode.AssignVariable:
+                case OperationCode.AssignLocal:
                     ExecuteAssignVariable(instr.Operand);
                     break;
                 case OperationCode.PushVariableValue:
@@ -619,7 +619,7 @@ namespace Chow.VM
 
         void PushClosureStackFrame(int argCount, ISourceObject function, SourceValue[] args)
         {
-            // Re-push args; function body's first ops are param-bind AssignVariable's, popping right-to-left.
+            // Re-push args; function body's first ops are param-bind AssignLocal's, popping right-to-left.
             for (var i = 0; i < argCount; i++)
             {
                 _valStack.Push(args[i]);

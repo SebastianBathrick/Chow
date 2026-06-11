@@ -6,10 +6,10 @@ namespace Chow.Ast
 
         public string AttributeName { get; }
 
-        public AttributeAccessNode(Node target, string attributeName, int line) : base(line)
+        public AttributeAccessNode(Node target, string attrName, int line) : base(line)
         {
             Target = target;
-            AttributeName = attributeName;
+            AttributeName = attrName;
         }
 
     }

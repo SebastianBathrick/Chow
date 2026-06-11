@@ -8,10 +8,10 @@ namespace Chow.Ast
 
         public Node Expression { get; }
 
-        public SubscriptAssignNode(Node target, Node index, Node expr, int line) : base(line)
+        public SubscriptAssignNode(Node target, Node idx, Node expr, int line) : base(line)
         {
             Target = target;
-            Index = index;
+            Index = idx;
             Expression = expr;
         }
 

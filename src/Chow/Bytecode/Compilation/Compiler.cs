@@ -61,7 +61,7 @@ namespace Chow.Bytecode.Compilation
                 var param = (NameNode)funcNode.Params[i];
                 var paramNameIdx = _chunk.RegisterVariableName(param.Name);
 
-                _chunk.AddInstruction(OperationCode.AssignVariable, param.LineNumber, paramNameIdx);
+                _chunk.AddInstruction(OperationCode.AssignLocal, param.LineNumber, paramNameIdx);
             }
 
             CompileTargetNode(funcNode.Block);
@@ -147,8 +147,8 @@ namespace Chow.Bytecode.Compilation
                 case AttributeAssignNode attrAssignNode:
                     CompileAttributeAssign(attrAssignNode);
                     break;
-                case GlobalDeclarationNode _:
-                case NonLocalDeclarationNode _:
+                case GlobalNode _:
+                case NonLocalNode _:
                     // Declarations are compile-time directives consumed by SemanticAnalysis;
                     // they emit no bytecode.
                     break;
@@ -198,7 +198,7 @@ namespace Chow.Bytecode.Compilation
              *
              * Variable semantics have been verified by SemanticAnalysis between parsing and
              * compilation. The Resolution stamp on this node selects which opcode is emitted:
-             * Local → AssignVariable, Global → AssignGlobal,
+             * Local → AssignLocal, Global → AssignGlobal,
              * NonLocal → AssignNonLocal.
              *
              * [HOW VARIABLE ASSIGNMENTS WORK]
@@ -430,7 +430,7 @@ namespace Chow.Bytecode.Compilation
 
         void CompileCall(CallNode callNode)
         {
-            CompileTargetNode(callNode.CallName);
+            CompileTargetNode(callNode.FunctionName);
 
             foreach (var arg in callNode.Args)
             {
@@ -515,10 +515,10 @@ namespace Chow.Bytecode.Compilation
 
         static SourceValue BuildLiteralValue(LiteralNode literalNode)
         {
-            // Cases for LiteralDataType where the boxed Value is the wrong CLR type should not occur unless the Parser is bugged
+            // Cases for LiteralNodeType where the boxed Value is the wrong CLR type should not occur unless the Parser is bugged
             switch (literalNode.Type)
             {
-                case LiteralDataType.Integer:
+                case LiteralNodeType.Integer:
                     if (literalNode.Value is long intVal)
                     {
                         return new SourceValue(intVal);
@@ -526,7 +526,7 @@ namespace Chow.Bytecode.Compilation
 
                     break;
 
-                case LiteralDataType.Float:
+                case LiteralNodeType.Float:
                     if (literalNode.Value is double floatVal)
                     {
                         return new SourceValue(floatVal);
@@ -534,16 +534,16 @@ namespace Chow.Bytecode.Compilation
 
                     break;
 
-                case LiteralDataType.Boolean:
+                case LiteralNodeType.Boolean:
                     if (literalNode.Value is bool boolVal)
                     {
                         return new SourceValue(boolVal);
                     }
 
                     break;
-                case LiteralDataType.None:
+                case LiteralNodeType.None:
                     return SourceValue.None;
-                case LiteralDataType.String:
+                case LiteralNodeType.String:
                     if (literalNode.Value is string strVal)
                     {
                         return new SourceValue(strVal);
@@ -555,7 +555,7 @@ namespace Chow.Bytecode.Compilation
                         $"Compilation of literal type {literalNode.Type} is not implemented.");
             }
 
-            // Reached only when the boxed Value's CLR type doesn't match its declared LiteralDataType (parser bug).
+            // Reached only when the boxed Value's CLR type doesn't match its declared LiteralNodeType (parser bug).
             throw new InvalidOperationException();
         }
 
@@ -658,7 +658,7 @@ namespace Chow.Bytecode.Compilation
                 return OperationCode.AssignNonLocal;
             }
 
-            return OperationCode.AssignVariable;
+            return OperationCode.AssignLocal;
         }
 
         static OperationCode GetScopeReadOpCode(ScopeType resolution)

@@ -116,16 +116,16 @@ namespace Chow.Semantics
                     RecordUse(nameNode.Name, nameNode.LineNumber);
                     break;
 
-                case GlobalDeclarationNode globalNode:
-                    foreach (var name in globalNode.Names)
+                case GlobalNode globalNode:
+                    foreach (var name in globalNode.VariableNames)
                     {
                         RecordGlobalDecl(name, globalNode.LineNumber);
                     }
 
                     break;
 
-                case NonLocalDeclarationNode nonlocalNode:
-                    foreach (var name in nonlocalNode.Names)
+                case NonLocalNode nonlocalNode:
+                    foreach (var name in nonlocalNode.VariableNames)
                     {
                         RecordNonlocalDecl(name, nonlocalNode.LineNumber);
                     }
@@ -171,7 +171,7 @@ namespace Chow.Semantics
                     break;
 
                 case CallNode callNode:
-                    PreScan(callNode.CallName);
+                    PreScan(callNode.FunctionName);
 
                     foreach (var arg in callNode.Args)
                     {
@@ -269,8 +269,8 @@ namespace Chow.Semantics
                         nameNode.Resolution = ResolveName(nameNode.Name);
                         break;
 
-                    case GlobalDeclarationNode _:
-                    case NonLocalDeclarationNode _:
+                    case GlobalNode _:
+                    case NonLocalNode _:
                         break;
 
                     case IfStatementNode ifNode:
@@ -319,7 +319,7 @@ namespace Chow.Semantics
                         break;
 
                     case CallNode callNode:
-                        Annotate(callNode.CallName);
+                        Annotate(callNode.FunctionName);
 
                         foreach (var arg in callNode.Args)
                         {

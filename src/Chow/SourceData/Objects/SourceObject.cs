@@ -105,7 +105,7 @@ namespace Chow.SourceData
             throw new NotSupportedException(nameof(DeleteAttribute));
         }
 
-        /// <summary>(Python: <c>__dir__</c>) Names only.</summary>
+        /// <summary>(Python: <c>__dir__</c>) VariableNames only.</summary>
         public virtual List<string> Directory
         {
             get;

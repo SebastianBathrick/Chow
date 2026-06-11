@@ -6,10 +6,10 @@ namespace Chow.Ast
 
         public Node Index { get; }
 
-        public SubscriptNode(Node target, Node index, int line) : base(line)
+        public SubscriptNode(Node target, Node idx, int line) : base(line)
         {
             Target = target;
-            Index = index;
+            Index = idx;
         }
 
     }

@@ -284,14 +284,14 @@ namespace Chow.Ast.Parsing
         {
             var line = CurrentToken.LineNum;
             ConsumeToken(TokenType.KeywordGlobal, "Expected 'global' keyword.");
-            return new GlobalDeclarationNode(ParseDeclarationNameList("global"), line);
+            return new GlobalNode(ParseDeclarationNameList("global"), line);
         }
 
         Node ParseNonlocalDeclaration()
         {
             var line = CurrentToken.LineNum;
             ConsumeToken(TokenType.KeywordNonlocal, "Expected 'nonlocal' keyword.");
-            return new NonLocalDeclarationNode(ParseDeclarationNameList("nonlocal"), line);
+            return new NonLocalNode(ParseDeclarationNameList("nonlocal"), line);
         }
 
         List<string> ParseDeclarationNameList(string keyword)

@@ -18,15 +18,16 @@ namespace Chow.Ast
         /// <summary>The right operand of a binary expression or null</summary>
         public Node Right { get; }
 
-        /// <summary> Initializes a node representing a binary expression.</summary>
-        public ExpressionNode(ExpressionOperator operatorType, Node left, Node right, int line) : base(line)
+        /// <summary>Initializes a node representing a binary expression.</summary>
+        public ExpressionNode(ExpressionOperator operatorType, Node left, Node right, int line) 
+            : base(line)
         {
             Operator = operatorType;
             Left = left;
             Right = right;
         }
 
-        /// <summary> Initializes a node representing a unary expression.</summary>
+        /// <summary>Initializes a node representing a unary expression.</summary>
         public ExpressionNode(ExpressionOperator operatorType, Node left, int line) : base(line)
         {
             Operator = operatorType;

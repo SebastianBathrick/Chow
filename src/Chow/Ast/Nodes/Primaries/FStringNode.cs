@@ -2,18 +2,17 @@ using System.Collections.Generic;
 
 namespace Chow.Ast
 {
-    // Format specs (e.g. {x:.2f}) are not supported in v1; a colon inside a slot will raise a ParserException.
+    // TODO: Add colons to fstrings (e.g. {x:.2f}).
     sealed class FStringNode : Node
     {
-        public IReadOnlyList<string> StringParts { get; }
+        public List<string> StringParts { get; }
 
-        public IReadOnlyList<Node> ExpressionParts { get; }
+        public List<Node> ExpressionParts { get; }
 
-        public FStringNode(IReadOnlyList<string> stringParts, IReadOnlyList<Node> expressionParts, int line)
-            : base(line)
+        public FStringNode(List<string> strParts, List<Node> exprParts, int line) : base(line)
         {
-            StringParts = stringParts;
-            ExpressionParts = expressionParts;
+            StringParts = strParts;
+            ExpressionParts = exprParts;
         }
     }
 }
