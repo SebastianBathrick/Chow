@@ -571,32 +571,41 @@ namespace Chow.Ast.Parsing
                 case TokenType.Name:
                     var idToken = _tokens.Consume();
                     return new NameNode(idToken.Lexeme, idToken.LineNumber);
+                
                 case TokenType.LiteralInt:
                 case TokenType.LiteralFloat:
                 case TokenType.LiteralStr:
                     var numToken = _tokens.Consume();
                     return new LiteralNode(numToken.Literal, numToken.LineNumber);
+                
                 case TokenType.LiteralFString:
                     var fstrToken = _tokens.Consume();
                     return ParseFString((FStringTokenPayload)fstrToken.Literal, fstrToken.LineNumber);
+                
                 case TokenType.KeywordNone:
                     var noneToken = _tokens.ConsumeMatch(TokenType.KeywordNone);
                     return new LiteralNode(null, noneToken.LineNumber);
+                
                 case TokenType.KeywordTrue:
                     var trueToken = _tokens.ConsumeMatch(TokenType.KeywordTrue);
                     return new LiteralNode(true, trueToken.LineNumber);
+                
                 case TokenType.KeywordFalse:
                     var falseToken = _tokens.ConsumeMatch(TokenType.KeywordFalse);
                     return new LiteralNode(false, falseToken.LineNumber);
+                
                 case TokenType.SymbolLeftParen:
                     _tokens.Consume();
                     var inner = ParseExpression();
                     _tokens.ConsumeMatch(TokenType.SymbolRightParen);
                     return inner;
+                
                 case TokenType.SymbolLeftBracket:
                     return ParseListLiteral();
+                
                 case TokenType.SymbolLeftCurly:
                     return ParseDictLiteral();
+                
                 default:
                     _tokens.ConsumeMatch(TokenType.Name);
                     return null;
