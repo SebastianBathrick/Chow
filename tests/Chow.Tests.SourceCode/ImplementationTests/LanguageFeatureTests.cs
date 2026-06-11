@@ -24,10 +24,7 @@ public class LanguageFeatureTests
     {
         var returnValue = ChowEngine.Execute(caseExecute.SourceCode);
 
-        Assert.That(
-            Is.EqualTo((ChowValue)returnValue, (ChowValue)caseExecute.ExpectedResult),
-            Is.True,
-            $"Expected {caseExecute.ExpectedResult}, but was {returnValue}");
+        Assert.That(returnValue, Is.EqualTo(caseExecute.ExpectedResult));
     }
 
     #endregion

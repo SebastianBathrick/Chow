@@ -394,7 +394,7 @@ public class ComparisonEvaluatorTests
         var result = Evaluate(evaluate, left, right);
 
         Assert.That(result.DataType, Is.EqualTo(DataType.Bool));
-        Assert.That(result.AsType<bool>(), Is.EqualTo(expectedBool));
+        Assert.That(result.ToBool(), Is.EqualTo(expectedBool));
     }
 
     static void AssertTypeError(TestDelegate action, string op, string leftType, string rightType)

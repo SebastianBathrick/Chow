@@ -373,7 +373,7 @@ public class LogicEvaluatorTests
         var result = Evaluate(evaluate, operand);
 
         Assert.That(result.DataType, Is.EqualTo(DataType.Bool));
-        Assert.That(result.AsType<bool>(), Is.EqualTo(expectedBool));
+        Assert.That(result.ToBool(), Is.EqualTo(expectedBool));
     }
 
     static void AssertValueResult(

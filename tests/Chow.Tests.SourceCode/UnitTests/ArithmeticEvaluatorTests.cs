@@ -499,7 +499,7 @@ public class ArithmeticEvaluatorTests
         var result = Evaluate(evaluate, left, right);
 
         Assert.That(result.DataType, Is.EqualTo(expectedDataType));
-        Assert.That(result.AsType<long>(), Is.EqualTo(expectedLong));
+        Assert.That(result.ToLong(), Is.EqualTo(expectedLong));
     }
 
     static void AssertResult(
@@ -512,7 +512,7 @@ public class ArithmeticEvaluatorTests
         var result = Evaluate(evaluate, left, right);
 
         Assert.That(result.DataType, Is.EqualTo(expectedDataType));
-        Assert.That(result.AsType<double>(), Is.EqualTo(expectedDouble).Within(Tolerance));
+        Assert.That(result.ToDouble(), Is.EqualTo(expectedDouble).Within(Tolerance));
     }
 
     static void AssertResult(
@@ -525,7 +525,7 @@ public class ArithmeticEvaluatorTests
         var result = Evaluate(evaluate, left, right);
 
         Assert.That(result.DataType, Is.EqualTo(expectedDataType));
-        Assert.That(result.AsType<string>(), Is.EqualTo(expectedString));
+        Assert.That(result.ToString(), Is.EqualTo(expectedString));
     }
 
     static void AssertValueResult(
@@ -551,7 +551,7 @@ public class ArithmeticEvaluatorTests
         var result = Evaluate(evaluate, operand);
 
         Assert.That(result.DataType, Is.EqualTo(expectedDataType));
-        Assert.That(result.AsType<long>(), Is.EqualTo(expectedLong));
+        Assert.That(result.ToLong(), Is.EqualTo(expectedLong));
     }
 
     static void AssertUnaryResult(
@@ -563,7 +563,7 @@ public class ArithmeticEvaluatorTests
         var result = Evaluate(evaluate, operand);
 
         Assert.That(result.DataType, Is.EqualTo(expectedDataType));
-        Assert.That(result.AsType<double>(), Is.EqualTo(expectedDouble).Within(Tolerance));
+        Assert.That(result.ToDouble(), Is.EqualTo(expectedDouble).Within(Tolerance));
     }
 
     static void AssertTypeError(TestDelegate action, string op, string leftType, string rightType)
