@@ -281,7 +281,7 @@ namespace Chow.StandardLibrary.BuiltIns
                 case DataType.List:
                 case DataType.Dict:
                 case DataType.Range:
-                    return new SourceValue(value.ToSourceObject().Length);
+                    return new SourceValue(value.ToISourceObject().Length);
             }
 
             throw new DataTypeException($"object of type '{value.DataType}' has no len()");
@@ -410,7 +410,7 @@ namespace Chow.StandardLibrary.BuiltIns
                     $"'{arg.DataType}' object cannot be interpreted as an integer");
             }
 
-            return arg.AsType<long>();
+            return arg;
         }
 
         static bool HasZeroArguments(SourceValue[] args)

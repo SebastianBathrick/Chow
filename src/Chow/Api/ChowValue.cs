@@ -7,6 +7,8 @@ namespace Chow
 {
     public class ChowValue
     {
+        public static ChowValue None { get; }  = new ChowValue(SourceValue.None);
+        
         internal SourceValue SourceValue { get; }
         
         internal ChowValue(SourceValue srcVal)
@@ -14,9 +16,9 @@ namespace Chow
             SourceValue = srcVal;
         }
         
-        public T AsType<T>()
+        public T As<T>()
         {
-            return SourceValue.AsType<T>();
+            return (T)SourceValue.ToObject();
         }
 
         public override bool Equals(object obj)
@@ -43,7 +45,7 @@ namespace Chow
 
         public static implicit operator ChowValue(long value)
         {
-            return new ChowValue(new SourceValue(value));
+            return new ChowValue(value);
         }
 
         public static implicit operator long(ChowValue value)
@@ -53,7 +55,7 @@ namespace Chow
 
         public static implicit operator ChowValue(double value)
         {
-            return new ChowValue(new SourceValue(value));
+            return new ChowValue(value);
         }
 
         public static implicit operator double(ChowValue value)
@@ -63,7 +65,7 @@ namespace Chow
 
         public static implicit operator ChowValue(string value)
         {
-            return new ChowValue(new SourceValue(value));
+            return new ChowValue(value);
         }
 
         public static implicit operator string(ChowValue value)
@@ -71,46 +73,54 @@ namespace Chow
             return value.SourceValue.ToString();
         }
 
-        public static bool operator ==(ChowValue l, ChowValue right)
+        public static bool operator ==(ChowValue l, ChowValue r)
         {
-            if (ReferenceEquals(l, right)) return true;
-            if (l is null || right is null) return false;
-            return l.SourceValue.Equals(right.SourceValue);
+            if (ReferenceEquals(l, r)) 
+            {
+                return true;
+            }
+
+            if ( l is null || r is null) 
+            {
+                return false;
+            }
+
+            return l.SourceValue.Equals(r.SourceValue);
         }
 
-        public static bool operator !=(ChowValue l, ChowValue right)
+        public static bool operator !=(ChowValue l, ChowValue r)
         {
-            return !(l == right);
+            return !(l == r);
         }
 
-        public static bool operator ==(ChowValue l, bool right)
+        public static bool operator ==(ChowValue l, bool r)
         {
-            return l?.SourceValue.ToBool() == right;
+            return l?.SourceValue.ToBool() == r;
         }
 
-        public static bool operator !=(ChowValue l, bool right)
+        public static bool operator !=(ChowValue l, bool r)
         {
-            return !(l == right);
+            return !(l == r);
         }
 
-        public static bool operator ==(ChowValue l, long right)
+        public static bool operator ==(ChowValue l, long r)
         {
-            return l?.SourceValue.ToLong() == right;
+            return l?.SourceValue.ToLong() == r;
         }
 
-        public static bool operator !=(ChowValue l, long right)
+        public static bool operator !=(ChowValue l, long r)
         {
-            return !(l == right);
+            return !(l == r);
         }
 
-        public static bool operator ==(ChowValue l, double right)
+        public static bool operator ==(ChowValue l, double r)
         {
-            return  !(l is null) && l.SourceValue.ToDouble().Equals(right);
+            return  !(l is null) && l.SourceValue.ToDouble().Equals(r);
         }
 
-        public static bool operator !=(ChowValue l, double right)
+        public static bool operator !=(ChowValue l, double r)
         {
-            return !(l == right);
+            return !(l == r);
         }
         
         #endregion

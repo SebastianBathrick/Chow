@@ -7,29 +7,27 @@ namespace Chow.SourceData
 {
     class SourceDictionary : SourceObject
     {
-        const string METHOD_GET_NAME = "get";
-        const string METHOD_CLEAR_NAME = "clear";
-        const string METHOD_POP_NAME = "pop";
-        const string METHOD_UPDATE_NAME = "update";
-        const string METHOD_SET_DEFAULT_NAME = "setdefault";
+        const string GetMethodName = "get";
+        const string ClearMethodName = "clear";
+        const string PopMethodName = "pop";
+        const string UpdateMethodName = "update";
+        const string SetMethodName = "setdefault";
 
 
         static readonly List<string> MethodNames = new List<string>
         {
-            METHOD_GET_NAME,
-            METHOD_CLEAR_NAME,
-            METHOD_POP_NAME,
-            METHOD_UPDATE_NAME,
-            METHOD_SET_DEFAULT_NAME
+            GetMethodName,
+            ClearMethodName,
+            PopMethodName,
+            UpdateMethodName,
+            SetMethodName
         };
 
-        readonly Dictionary<SourceValue, SourceValue> _entries = new Dictionary<SourceValue, SourceValue>();
+        readonly Dictionary<SourceValue, SourceValue> _elements = new Dictionary<SourceValue, SourceValue>();
         readonly List<SourceValue> _keys = new List<SourceValue>();
 
         // Lazily created on first attribute access; most dicts never look up a method.
         Dictionary<string, SourceValue> _methodCache;
-
-        public int Count => _keys.Count;
 
         public override DataType Type => DataType.Dict;
 
@@ -39,7 +37,7 @@ namespace Chow.SourceData
 
         public override SourceValue GetItem(SourceValue key)
         {
-            return this[key];
+            return _elements[key];
         }
 
         public override void SetItem(SourceValue key, SourceValue value)
@@ -51,9 +49,9 @@ namespace Chow.SourceData
         {
             ValidateHashable(key);
 
-            if (!_entries.Remove(key))
+            if (!_elements.Remove(key))
             {
-                throw new SubscriptException(KeyRepr(key));
+                throw new SubscriptException(key);
             }
 
             _keys.Remove(key);
@@ -85,29 +83,15 @@ namespace Chow.SourceData
             return other is SourceDictionary dict && ElementsEqual(this, dict);
         }
 
-        public SourceValue this[SourceValue key]
-        {
-            get
-            {
-                ValidateHashable(key);
-
-                return !_entries.TryGetValue(key, out var value) 
-                    ? throw new SubscriptException(KeyRepr(key)) 
-                    : value;
-
-            }
-            set => Add(key, value);
-        }
-
         public void Add(SourceValue key, SourceValue value)
         {
             ValidateHashable(key);
 
-            var countBefore = _entries.Count;
-            _entries[key] = value;
+            var countBefore = _elements.Count;
+            _elements[key] = value;
 
             // Count grew => the key was new; record insertion order.
-            if (_entries.Count != countBefore)
+            if (_elements.Count != countBefore)
             {
                 _keys.Add(key);
             }
@@ -116,7 +100,7 @@ namespace Chow.SourceData
         public bool ContainsKey(SourceValue key)
         {
             ValidateHashable(key);
-            return _entries.ContainsKey(key);
+            return _elements.ContainsKey(key);
         }
 
         SourceValue Get(SourceValue[] args)
@@ -125,7 +109,7 @@ namespace Chow.SourceData
             var key = args[0];
             ValidateHashable(key);
 
-            if (_entries.TryGetValue(key, out var value))
+            if (_elements.TryGetValue(key, out var value))
             {
                 return value;
             }
@@ -135,8 +119,8 @@ namespace Chow.SourceData
 
         SourceValue Clear(SourceValue[] args)
         {
-            ValidateArgCount(args, 0);
-            _entries.Clear();
+            ValidateArgumentCount(args, 0);
+            _elements.Clear();
             _keys.Clear();
             return SourceValue.None;
         }
@@ -147,9 +131,9 @@ namespace Chow.SourceData
             var key = args[0];
             ValidateHashable(key);
 
-            if (_entries.TryGetValue(key, out var value))
+            if (_elements.TryGetValue(key, out var value))
             {
-                _entries.Remove(key);
+                _elements.Remove(key);
                 _keys.Remove(key);
                 return value;
             }
@@ -159,23 +143,23 @@ namespace Chow.SourceData
                 return args[1];
             }
 
-            throw new SubscriptException(KeyRepr(key));
+            throw new SubscriptException(key);
         }
 
         SourceValue Update(SourceValue[] args)
         {
-            ValidateArgCount(args, 1);
+            ValidateArgumentCount(args, 1);
 
             if (args[0].DataType != DataType.Dict)
             {
                 throw new DataTypeException($"'{args[0].DataType}' object is not a dict");
             }
 
-            var other = args[0].AsType<SourceDictionary>();
+            SourceDictionary other = (SourceDictionary)args[0].ToObject();
 
-            foreach (var key in other._keys)
+            foreach (var key in other._elements.Keys)
             {
-                Add(key, other._entries[key]);
+                Add(key, other._elements[key]);
             }
 
             return SourceValue.None;
@@ -187,7 +171,7 @@ namespace Chow.SourceData
             var key = args[0];
             ValidateHashable(key);
 
-            if (_entries.TryGetValue(key, out var existing))
+            if (_elements.TryGetValue(key, out var existing))
             {
                 return existing;
             }
@@ -201,15 +185,15 @@ namespace Chow.SourceData
         {
             switch (methodName)
             {
-                case METHOD_GET_NAME:
+                case GetMethodName:
                     return Get;
-                case METHOD_CLEAR_NAME:
+                case ClearMethodName:
                     return Clear;
-                case METHOD_POP_NAME:
+                case PopMethodName:
                     return Pop;
-                case METHOD_UPDATE_NAME:
+                case UpdateMethodName:
                     return Update;
-                case METHOD_SET_DEFAULT_NAME:
+                case SetMethodName:
                     return SetDefault;
             }
 
@@ -218,19 +202,19 @@ namespace Chow.SourceData
 
         public static bool ElementsEqual(SourceDictionary a, SourceDictionary b)
         {
-            if (a._entries.Count != b._entries.Count)
+            if (a._elements.Count != b._elements.Count)
             {
                 return false;
             }
 
             foreach (var key in a._keys)
             {
-                if (!b._entries.TryGetValue(key, out var bValue))
+                if (!b._elements.TryGetValue(key, out var bValue))
                 {
                     return false;
                 }
 
-                if (!SourceValue.IsEqual(a._entries[key], bValue).ToBool())
+                if (!SourceValue.IsEqual(a._elements[key], bValue).ToBool())
                 {
                     return false;
                 }
@@ -245,12 +229,12 @@ namespace Chow.SourceData
 
             foreach (var key in a._keys)
             {
-                result.Add(key, a._entries[key]);
+                result.Add(key, a._elements[key]);
             }
 
             foreach (var key in b._keys)
             {
-                result.Add(key, b._entries[key]);
+                result.Add(key, b._elements[key]);
             }
 
             return result;
@@ -288,71 +272,10 @@ namespace Chow.SourceData
                 }
 
                 var key = _keys[i];
-                Repr(sb, key);
-                sb.Append(": ");
-                Repr(sb, _entries[key]);
+                sb.Append($"{key}: {_elements[key]}");
             }
 
             sb.Append('}');
-            return sb.ToString();
-        }
-
-        // Python-faithful repr used inside collection contexts: strings get single quotes here, even though
-        // a standalone string prints without quotes via ChowStr.ToSource.
-        static void Repr(StringBuilder sb, SourceValue value)
-        {
-            switch (value.DataType)
-            {
-                case DataType.None:
-                    sb.Append("None");
-                    return;
-
-                case DataType.Bool:
-                    sb.Append(value.AsType<bool>() ? "True" : "False");
-                    return;
-
-                case DataType.Long:
-                    sb.Append(value.AsType<long>());
-                    return;
-
-                case DataType.Double:
-                    var f = value.AsType<double>();
-                    var fs = f.ToString("R", CultureInfo.InvariantCulture);
-
-                    if (fs.IndexOfAny(new[] { '.', 'e', 'E', 'n', 'N', 'i', 'I' }) < 0)
-                    {
-                        fs += ".0";
-                    }
-
-                    sb.Append(fs);
-                    return;
-
-                case DataType.Str:
-                    sb.Append('\'');
-                    sb.Append(value.AsType<string>());
-                    sb.Append('\'');
-                    return;
-
-                case DataType.List:
-                    sb.Append(value.AsType<SourceList>());
-                    return;
-
-                case DataType.Dict:
-                    sb.Append(value.AsType<SourceDictionary>());
-                    return;
-
-                case DataType.Object:
-                case DataType.Range:
-                default:
-                    sb.Append(value.ToString());
-                    return;
-            }
-        }
-
-        static string KeyRepr(SourceValue key)
-        {
-            var sb = new StringBuilder();
-            Repr(sb, key);
             return sb.ToString();
         }
 
@@ -376,24 +299,32 @@ namespace Chow.SourceData
             }
         }
 
-        static void ValidateArgCount(SourceValue[] args, int expectedCount)
+        static void ValidateArgumentCount(SourceValue[] args, int expectedCount)
         {
             var actualCount = args?.Length ?? 0;
 
-            if (actualCount != expectedCount)
+            if (actualCount == expectedCount)
             {
-                throw new ArgumentException($"Method requires {expectedCount} arguments, but {actualCount} were provided");
+                return;
             }
+            
+            throw new ArgumentException(
+                $"Method requires {expectedCount} arguments, but {actualCount} were provided");
         }
 
         static void ValidateArgRange(SourceValue[] args, int min, int max)
         {
             var actualCount = args?.Length ?? 0;
 
-            if (actualCount < min || actualCount > max)
+            if (actualCount >= min && actualCount <= max)
             {
-                throw new ArgumentException($"Method requires between {min} and {max} arguments, but {actualCount} were provided");
+                return;
             }
+            
+            throw new ArgumentException(
+                $"Method requires between {min} and {max} arguments, but "
+                + $"{actualCount} were provided");
+            
         }
     }
 }

@@ -48,7 +48,7 @@ namespace Chow.SourceData
 
             if (key.DataType == DataType.Slice)
             {
-                var slice = (SourceSlice)key.ToSourceObject();
+                var slice = (SourceSlice)key.ToISourceObject();
                 return GetSlice(slice.Start, slice.Stop, slice.Step);
             }
 
@@ -159,7 +159,7 @@ namespace Chow.SourceData
                 throw new ArgumentException($"Argument 0 must be of type {DataType.Long}, but was {args[0].DataType}");
             }
 
-            var idx = (int)args[0].AsType<long>();
+            var idx = (int)args[0];
 
             if (idx < 0)
             {
@@ -195,7 +195,7 @@ namespace Chow.SourceData
                     throw new ArgumentException($"Argument 0 must be of type {DataType.Long}, but was {args[0].DataType}");
                 }
 
-                index = (int)args[0].AsType<long>();
+                index = (int)args[0];
 
                 if (index < 0)
                 {
@@ -414,7 +414,7 @@ namespace Chow.SourceData
                 throw new ArgumentException($"slice indices must be integers or None, got {value.DataType}");
             }
 
-            return (int)value.AsType<long>();
+            return (int)value;
         }
 
         public override string ToRepresentation()
@@ -430,59 +430,13 @@ namespace Chow.SourceData
                     sb.Append(", ");
                 }
 
-                Repr(sb, _elements[i]);
+                sb.Append(_elements[i].ToString());
             }
 
             sb.Append(']');
             return sb.ToString();
         }
-
-        // Python-faithful repr used inside collection contexts: strings get single quotes here, even though
-        // a standalone string prints without quotes via ChowStr.ToSource.
-        static void Repr(StringBuilder sb, SourceValue value)
-        {
-            switch (value.DataType)
-            {
-                case DataType.None:
-                    sb.Append("None");
-                    return;
-                case DataType.Bool:
-                    sb.Append(value.AsType<bool>() ? "True" : "False");
-                    return;
-                case DataType.Long:
-                    sb.Append(value.AsType<long>());
-                    return;
-                case DataType.Double:
-                    // Python prints `1.0`, not `1`. C#'s default float.ToSource() may drop the trailing zero.
-                    var f = value.AsType<double>();
-                    var fs = f.ToString("R", CultureInfo.InvariantCulture);
-
-                    if (fs.IndexOfAny(new[] { '.', 'e', 'E', 'n', 'N', 'i', 'I' }) < 0)
-                    {
-                        fs += ".0";
-                    }
-
-                    sb.Append(fs);
-                    return;
-                case DataType.Str:
-                    sb.Append('\'');
-                    sb.Append(value.AsType<string>());
-                    sb.Append('\'');
-                    return;
-                case DataType.List:
-                    sb.Append(value.AsType<SourceList>());
-                    return;
-                case DataType.Dict:
-                    sb.Append(value.AsType<SourceDictionary>());
-                    return;
-                case DataType.Object:
-                case DataType.Range:
-                default:
-                    sb.Append(value.ToString());
-                    return;
-            }
-        }
-
+        
         static void ValidateArguments(SourceValue[] args, int reqArgCount = 0, DataType[] reqTypes = null)
         {
             var expectedCount = reqTypes?.Length ?? reqArgCount;

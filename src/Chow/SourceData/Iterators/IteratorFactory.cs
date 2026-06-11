@@ -9,9 +9,9 @@ namespace Chow.SourceData
             {
                 case DataType.List:
                 case DataType.Range:
-                    return source.ToSourceObject().GetIterator();
+                    return source.ToISourceObject().GetIterator();
                 case DataType.Str:
-                    return new SourceStringIterator(source.AsType<string>());
+                    return new SourceStringIterator(source);
                 case DataType.None:
                 case DataType.Bool:
                 case DataType.Object:

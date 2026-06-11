@@ -1,4 +1,5 @@
 <Solution>
     <Project Path="src/Chow/Chow.csproj" />
     <Project Path="tests/Chow.Tests.SourceCode/Chow.Tests.SourceCode.csproj" />
+    <Project Path="tests/Playground/Playground.csproj" />
 </Solution>

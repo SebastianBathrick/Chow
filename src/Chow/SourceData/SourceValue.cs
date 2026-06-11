@@ -11,19 +11,10 @@ namespace Chow.SourceData
     /// <b>int, float, str, bool, None, list, dict, and range</b>.
     /// </summary>
     [StructLayout(LayoutKind.Explicit)]
-    public readonly struct SourceValue : IEquatable<SourceValue>
+    readonly struct SourceValue : IEquatable<SourceValue>
     {
         // TODO: Major refactor going on currently
         public static readonly SourceValue None = new SourceValue(DataType.None);
-        
-        static readonly Dictionary<Type, DataType> DataTypeMap = new Dictionary<Type, DataType>
-        {
-            { typeof(bool), DataType.Bool },
-            { typeof(long), DataType.Long },
-            { typeof(int), DataType.Long },
-            { typeof(double), DataType.Double },
-            { typeof(string), DataType.Str }
-        };
         
         /// <summary>Represents the SourceValue equivalent to null/nil/none values.</summary>
         [FieldOffset(OBJ_FIELD_OFFSET)] readonly object _obj;
@@ -133,65 +124,6 @@ namespace Chow.SourceData
 
         #endregion
 
-        // WARNING: THIS METHOD WILL BE REMOVED IN FUTURE REFACTOR!
-        // DO NOT USE ANY OF THESE METHODS IN NEW CLASSES OR ADD THEM TO PRE-EXISTING ONES
-
-        /// <summary>Casts Chow value to specified host type, boxes, and returns it.</summary>
-        /// <typeparam name="TDataType">The type the value will be casted to.</typeparam>
-        /// <returns>The boxed and converted Chow value.</returns>
-        /// <exception cref="InvalidOperationException">Throws an exception if the value stored 
-        /// in this instance cannot be converted to the target type.</exception>
-        public TDataType AsType<TDataType>()
-        {
-            var typeOf = typeof(TDataType);
-
-            if (typeOf == typeof(object))
-            {
-                return (TDataType)ToObject();
-            }
-
-            if (!DataTypeMap.TryGetValue(typeOf, out var targetDataType))
-            {
-                if (_obj is TDataType typedObject)
-                {
-                    return typedObject;
-                }
-
-                throw new InvalidOperationException($"Cannot convert {_dataType} to {typeOf}");
-            }
-
-            switch (targetDataType)
-            {
-                case DataType.Bool:
-                    return (TDataType)(object)ToBool();
-                case DataType.Long:
-                    // The map aliases both typeof(long) and typeof(int) to DataType.Long.
-                    // For T == int we truncate; for T == long we return the full 64-bit value.
-                    if (typeOf == typeof(int))
-                    {
-                        // TODO: BinaryAdd error checking for overflow scenarios
-                        return (TDataType)(object)(int)ToLong();
-                    }
-
-                    return (TDataType)(object)ToLong();
-                case DataType.Double:
-                    return (TDataType)(object)ToDouble();
-                case DataType.Str:
-                    return (TDataType)(object)ToString();
-                case DataType.List:
-                case DataType.Dict:
-                case DataType.Range:
-                    if (_obj is TDataType typedObject)
-                    {
-                        return typedObject;
-                    }
-
-                    break;
-            }
-
-            throw new InvalidOperationException($"Cannot convert {_dataType} to {typeof(TDataType)}");
-        }
-
         #region Interop
 
         internal SourceValue InvokeHostDelegate(SourceValue[] args)
@@ -236,7 +168,7 @@ namespace Chow.SourceData
                     return Math.Abs(_dbl - DBL_TO_BOOL_F) > TOLERANCE;
 
                 case DataType.Str:
-                    return StrToBool();
+                    return StringToBool();
 
                 case DataType.List:
                 case DataType.Dict:
@@ -265,7 +197,7 @@ namespace Chow.SourceData
                     return (long)_dbl;
                     
                 case DataType.Str:
-                    return StrToLong();
+                    return StringToLong();
                     
                 default:
                     throw new DataTypeException(GetConversionErrorMessage(_dataType, DataType.Long));
@@ -287,7 +219,7 @@ namespace Chow.SourceData
                     return _dbl;
 
                 case DataType.Str:
-                    return StrToDouble();
+                    return StringToDouble();
                     
                 default:
                     throw new DataTypeException(GetConversionErrorMessage(_dataType, DataType.Double));
@@ -315,7 +247,7 @@ namespace Chow.SourceData
             }
         }
 
-        internal ISourceObject ToSourceObject()
+        internal ISourceObject ToISourceObject()
         {
             return (ISourceObject)_obj;
         }
@@ -335,7 +267,7 @@ namespace Chow.SourceData
                     return _long.ToString(CultureInfo.InvariantCulture);
                     
                 case DataType.Double:
-                    return FloatToStr();
+                    return FloatToString();
 
                 default:
                     return _obj.ToString();
@@ -351,7 +283,7 @@ namespace Chow.SourceData
 
         #region Conversion Helpers
 
-        bool StrToBool()
+        bool StringToBool()
         {
             if (_obj is string strValue)
             {
@@ -360,7 +292,7 @@ namespace Chow.SourceData
 
             throw new InvalidOperationException("Expected string value for boolean comparison");
         }
-        long StrToLong()
+        long StringToLong()
         {
             if (!(_obj is string strValue))
             {
@@ -375,7 +307,7 @@ namespace Chow.SourceData
             throw new InvalidOperationException($"Cannot convert string '{strValue}' to long");
         }
 
-        double StrToDouble()
+        double StringToDouble()
         {
             if (!(_obj is string strValue))
             {
@@ -390,7 +322,7 @@ namespace Chow.SourceData
             throw new InvalidOperationException($"Cannot convert string '{strValue}' to double");
         }
 
-        string FloatToStr()
+        string FloatToString()
         {
             var formatted = _dbl.ToString(CultureInfo.InvariantCulture);
 
@@ -504,7 +436,7 @@ namespace Chow.SourceData
         {
             return value.ToString();
         }
-
+        
         #endregion
 
         public static SourceValue Add(SourceValue r, SourceValue l)

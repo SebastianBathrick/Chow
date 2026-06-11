@@ -245,7 +245,7 @@ namespace Chow.VM
 
             if (container.DataType == DataType.Dict || container.DataType == DataType.List)
             {
-                found = container.ToSourceObject().Contains(needle);
+                found = container.ToISourceObject().Contains(needle);
             }
             else
             {
@@ -395,7 +395,7 @@ namespace Chow.VM
             // TODO: class instances add a branch that consults the instance attribute table, then the class method table.
             if (target.DataType == DataType.List)
             {
-                var list = target.ToSourceObject();
+                var list = target.ToISourceObject();
 
                 if (!list.Directory.Contains(attrName))
                 {
@@ -407,7 +407,7 @@ namespace Chow.VM
             else if (target.DataType == DataType.Dict)
             {
                 // TODO: Create a ToInternalDict and ToInternalList to clean this up
-                var dict = target.ToSourceObject();
+                var dict = target.ToISourceObject();
 
                 if (!dict.Directory.Contains(attrName))
                 {
@@ -500,6 +500,7 @@ namespace Chow.VM
 
         #region Subscript Operations
 
+        // TODO: Migrate to SourceObject.SetItem
         void ExecuteAssignSubscript()
         {
             var value = _valStack.Pop();
@@ -508,7 +509,7 @@ namespace Chow.VM
 
             if (target.DataType == DataType.Dict)
             {
-                target.ToSourceObject().SetItem(index, value);
+                target.ToISourceObject().SetItem(index, value);
             }
             else if (target.DataType == DataType.List)
             {
@@ -517,7 +518,7 @@ namespace Chow.VM
                     throw new DataTypeException($"list indices must be integers, not {index.DataType}");
                 }
 
-                target.ToSourceObject().SetItem(index, value);
+                target.ToISourceObject().SetItem(index, value);
             }
             else
             {
@@ -526,6 +527,7 @@ namespace Chow.VM
             }
         }
 
+        // TODO: Migrate to SourceObject.SetItem
         void ExecutePushSubscriptValue()
         {
             var index = _valStack.Pop();
@@ -536,7 +538,7 @@ namespace Chow.VM
             {
                 try
                 {
-                    _valStack.Push(target.ToSourceObject().GetItem(index));
+                    _valStack.Push(target.ToISourceObject().GetItem(index));
                 }
                 catch (SubscriptException ex)
                 {
@@ -550,7 +552,7 @@ namespace Chow.VM
                     throw new DataTypeException($"list indices must be integers, not {index.DataType}");
                 }
 
-                _valStack.Push(target.ToSourceObject().GetItem(index));
+                _valStack.Push(target.ToISourceObject().GetItem(index));
             }
             else
             {
@@ -573,7 +575,7 @@ namespace Chow.VM
             }
 
             var slice = new SourceValue(new SourceSlice(start, stop, step));
-            _valStack.Push(target.ToSourceObject().GetItem(slice));
+            _valStack.Push(target.ToISourceObject().GetItem(slice));
         }
 
         #endregion
@@ -596,7 +598,7 @@ namespace Chow.VM
             {
                 // Switches to the closure's frame, so Execute will next execute the first
                 // instruction of the closure's chunk.
-                PushClosureStackFrame(argCount, calleeValue.ToSourceObject(), args);
+                PushClosureStackFrame(argCount, calleeValue.ToISourceObject(), args);
                 return StayAtInstruction;
             }
 
