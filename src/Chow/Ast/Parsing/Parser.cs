@@ -75,28 +75,28 @@ namespace Chow.Ast.Parsing
             switch (_tokens.Peek())
             {
                 case TokenType.KeywordReturn:
-                    return ParseReturnStatement();
+                    return ParseReturnStatement(lineNum);
                 case TokenType.KeywordIf:
-                    return ParseIfStatement();
+                    return ParseIfStatement(lineNum);
                 case TokenType.KeywordDef:
-                    return ParseFunctionDefinition();
+                    return ParseFunctionDefinition(lineNum);
                 case TokenType.KeywordWhile:
-                    return ParseWhileStatement();
+                    return ParseWhileStatement(lineNum);
                 case TokenType.KeywordFor:
-                    return ParseForStatement();
+                    return ParseForStatement(lineNum);
                 case TokenType.KeywordBreak:
-                    return ParseBreakStatement();
+                    return ParseBreakStatement(lineNum);
                 case TokenType.KeywordContinue:
-                    return ParseContinueStatement();
+                    return ParseContinueStatement(lineNum);
                 case TokenType.KeywordGlobal:
-                    return ParseGlobalDeclaration();
+                    return ParseGlobalDeclaration(lineNum);
                 case TokenType.KeywordNonlocal:
-                    return ParseNonlocalDeclaration();
+                    return ParseNonlocalDeclaration(lineNum);
                 case TokenType.Name:
                     return ParseAssignStatement(lineNum);
+                default:
+                    return ParseExpressionStatement(lineNum);
             }
-            
-            return ParseExpressionStatement(lineNum);
         }
 
         Node ParseAssignStatement(int lineNum)
@@ -112,44 +112,42 @@ namespace Chow.Ast.Parsing
 
             var assignExpr = ParseExpression();
 
-            if (targetNode is NameNode nameNode)
+            switch (targetNode)
             {
-                return new AssignStatementNode(nameNode.Name, assignExpr, lineNum);
-            }
-
-            if (targetNode is AttributeAccessNode attrAccessNode)
-            {
-                // TODO: Switch out any strings stored by Nodes with NameNodes
+                case NameNode nameNode:
+                    return new AssignStatementNode(nameNode.Name, assignExpr, lineNum);
+                
+                case AttributeAccessNode attrAccess:
                     return new AttributeAssignNode(
-                        attrAccessNode.Target , attrAccessNode.AttributeName, assignExpr, lineNum);
+                        attrAccess.Target , attrAccess.AttributeName, assignExpr, lineNum);
+                
+                case SubscriptNode subscript:
+                    return new SubscriptAssignNode(
+                        subscript.Target, subscript.Index, assignExpr, lineNum);
+                
+                default:
+                    throw new SyntaxException("assignment", lineNum);
             }
+
+        }
+
+        Node ParseExpressionStatement(int lineNum)
+        {
+            return new ExpressionStatementNode(ParseExpression(), lineNum);
+        }
+
+        Node ParseFunctionDefinition(int lineNum)
+        {
+            _tokens.Consume();
             
-            if (targetNode is SubscriptNode subscriptNode)
-            {
-                return new SubscriptAssignNode(
-                    subscriptNode.Target, subscriptNode.Index, assignExpr, lineNum);
-            }
-
-            throw new SyntaxException("assignment", lineNum);
-        }
-
-        Node ParseExpressionStatement(int lineNumber)
-        {
-            var expr = ParseExpression();
-            return new ExpressionStatementNode(expr, lineNumber);
-        }
-
-        Node ParseFunctionDefinition()
-        {
-            var defToken = _tokens.ConsumeMatch(TokenType.KeywordDef);
-            var nameToken = _tokens.ConsumeMatch(TokenType.Name);
-
+            var functionName = _tokens.ConsumeMatch(TokenType.Name).Lexeme;
             _tokens.ConsumeMatch(TokenType.SymbolLeftParen);
-
+            
             var paramList = new List<Node>();
 
             if (!_tokens.IsMatch(TokenType.SymbolRightParen))
             {
+                // TODO: Refactor to not use an action
                 ParseCommaSeparatedElements(() =>
                 {
                     var paramToken = _tokens.ConsumeMatch(TokenType.Name);
@@ -158,106 +156,104 @@ namespace Chow.Ast.Parsing
             }
 
             _tokens.ConsumeMatch(TokenType.SymbolRightParen);
-            return new FunctionNode(nameToken.Lexeme, paramList, ParseBlock(), defToken.LineNumber);
+            return new FunctionNode(functionName, paramList, ParseBlock(), lineNum);
         }
 
-        Node ParseIfStatement()
+        Node ParseIfStatement(int lineNum)
         {
-            var ifToken = _tokens.ConsumeMatch(TokenType.KeywordIf);
-            return new IfStatementNode(
-                ParseExpression(), ParseBlock(), ParseBranchStatement(), ifToken.LineNumber);
+            _tokens.Consume();
+            var expr = ParseExpression();
+            var block = ParseBlock();
+            var branch = ParseBranchStatement();
+            return new IfStatementNode(expr, block, branch, lineNum);
         }
 
         Node ParseBranchStatement()
         {
-            if (_tokens.IsMatch(TokenType.KeywordElif))
+            var lineNum = _tokens.LineNumber;
+
+            if (!_tokens.TryConsumeMatch(TokenType.KeywordElif))
             {
-                var elifToken = _tokens.Consume();
-                return new BranchStatementNode(
-                    ParseExpression(), ParseBlock(), ParseBranchStatement(), elifToken.LineNumber);
+                return _tokens.TryConsumeMatch(TokenType.KeywordElse)
+                    ? new BranchStatementNode(null, ParseBlock(), null, lineNum) : null;
             }
 
-            if (!_tokens.IsMatch(TokenType.KeywordElse))
-            {
-                return null;
-            }
-
-            {
-                var elseToken = _tokens.Consume();
-                return new BranchStatementNode(null, ParseBlock(), null, elseToken.LineNumber);
-            }
+            var expr = ParseExpression();
+            var block = ParseBlock();
+            var branch = ParseBranchStatement();
+            return new BranchStatementNode(expr, block, branch, lineNum);
         }
 
-        Node ParseWhileStatement()
+        Node ParseWhileStatement(int lineNum)
         {
-            var whileToken = _tokens.ConsumeMatch(TokenType.KeywordWhile);
-            return new WhileStatementNode(ParseExpression(), ParseBlock(), whileToken.LineNumber);
+            _tokens.Consume();
+            return new WhileStatementNode(ParseExpression(), ParseBlock(), lineNum);
         }
 
-        Node ParseForStatement()
+        Node ParseForStatement(int lineNum)
         {
-            var forToken = _tokens.ConsumeMatch(TokenType.KeywordFor);
-
-            var targetToken = _tokens.ConsumeMatch(TokenType.Name);
-            var target = new NameNode(targetToken.Lexeme, targetToken.LineNumber);
-
+            _tokens.Consume();
+            
+            var targetName = _tokens.ConsumeMatch(TokenType.Name).Lexeme;
+            var target = new NameNode(targetName, lineNum);
+            
             _tokens.ConsumeMatch(TokenType.KeywordIn);
 
             var iterable = ParseExpression();
             var block = ParseBlock();
             
-            if (!_tokens.IsMatch(TokenType.KeywordElse))
+            Node elseBranch = null;
+            
+            if (_tokens.IsMatch(TokenType.KeywordElse))
             {
-                return new ForStatementNode(target, iterable, block, null, forToken.LineNumber);
+                var elseLineNum = _tokens.Consume().LineNumber;
+                elseBranch = new BranchStatementNode(null, ParseBlock(), null, elseLineNum);
             }
-
-            var elseToken = _tokens.Consume();
-            var elseBranch = new BranchStatementNode(null, ParseBlock(), null, elseToken.LineNumber);
-
-            return new ForStatementNode(target, iterable, block, elseBranch, forToken.LineNumber);
+            
+            return new ForStatementNode(target, iterable, block, elseBranch, lineNum);
         }
 
-        Node ParseBreakStatement()
+        Node ParseBreakStatement(int lineNum)
         {
-            var breakToken = _tokens.ConsumeMatch(TokenType.KeywordBreak);
-            return new BreakStatementNode(breakToken.LineNumber);
+            _tokens.Consume();
+            return new BreakStatementNode(lineNum);
         }
 
-        Node ParseContinueStatement()
+        Node ParseContinueStatement(int lineNum)
         {
-            var continueToken = _tokens.ConsumeMatch(TokenType.KeywordContinue);
-            return new ContinueStatementNode(continueToken.LineNumber);
+            _tokens.Consume();
+            return new ContinueStatementNode(lineNum);
         }
 
-        Node ParseReturnStatement()
+        Node ParseReturnStatement(int lineNum)
         {
-            var returnToken = _tokens.ConsumeMatch(TokenType.KeywordReturn);
+            _tokens.Consume();
 
             // Void functions always return None, and their calls inside expressions will not cause
             // an error
-            return new ReturnStatementNode(
-                SyntaxMaps.IsExpressionStart(_tokens.Peek()) ? ParseExpression() : null,
-                returnToken.LineNumber);
+            var expr = SyntaxMaps.IsExpressionStart(_tokens.Peek()) ? ParseExpression() : null;
+            return new ReturnStatementNode(expr, lineNum);
         }
 
-        Node ParseGlobalDeclaration()
+        Node ParseGlobalDeclaration(int lineNum)
         {
-            var globalToken = _tokens.ConsumeMatch(TokenType.KeywordGlobal);
-            return new GlobalNode(ParseDeclarationNameList("global"), globalToken.LineNumber);
+            _tokens.Consume();
+            return new GlobalNode(ParseDeclarationNameList(), lineNum);
         }
 
-        Node ParseNonlocalDeclaration()
+        Node ParseNonlocalDeclaration(int lineNum)
         {
-            var nonlocalToken = _tokens.ConsumeMatch(TokenType.KeywordNonlocal);
-            return new NonLocalNode(ParseDeclarationNameList("nonlocal"), nonlocalToken.LineNumber);
+            _tokens.Consume();
+            return new NonLocalNode(ParseDeclarationNameList(), lineNum);
         }
 
-        List<string> ParseDeclarationNameList(string keyword)
+        List<string> ParseDeclarationNameList()
         {
             var names = new List<string>();
 
-            ParseCommaSeparatedElements(
-                () => names.Add(_tokens.ConsumeMatch(TokenType.Name).Lexeme));
+            // TODO: Refactor to remove Action
+            ParseCommaSeparatedElements(() => 
+                names.Add(_tokens.ConsumeMatch(TokenType.Name).Lexeme));
 
             return names;
         }
@@ -283,8 +279,9 @@ namespace Chow.Ast.Parsing
             {
                 var opToken = _tokens.Consume();
                 var rightNode = parseOperand();
-                leftNode = new ExpressionNode(
-                    SyntaxMaps.ToBinaryOperator(opToken.Type), leftNode, rightNode, opToken.LineNumber);
+                var binaryOp = SyntaxMaps.ToBinaryOperator(opToken.Type);
+                
+                leftNode = new ExpressionNode(binaryOp, leftNode, rightNode, opToken.LineNumber);
             }
 
             return leftNode;
@@ -319,24 +316,24 @@ namespace Chow.Ast.Parsing
 
             while (SyntaxMaps.IsComparisonOperator(_tokens.Peek()) || IsNotInOperatorNext())
             {
-                Operator @operator;
+                Operator op;
                 int opLine;
 
                 if (SyntaxMaps.IsComparisonOperator(_tokens.Peek()))
                 {
                     var opToken = _tokens.Consume();
-                    @operator = SyntaxMaps.ToBinaryOperator(opToken.Type);
+                    op = SyntaxMaps.ToBinaryOperator(opToken.Type);
                     opLine = opToken.LineNumber;
                 }
                 else
                 {
                     opLine = _tokens.Consume().LineNumber;
                     _tokens.ConsumeMatch(TokenType.KeywordIn);
-                    @operator = Operator.NotIn;
+                    op = Operator.NotIn;
                 }
 
                 var rightNode = ParseBitOr();
-                Node comparison = new ExpressionNode(@operator, leftNode, rightNode, opLine);
+                Node comparison = new ExpressionNode(op, leftNode, rightNode, opLine);
 
                 if (result == null)
                 {
@@ -390,9 +387,9 @@ namespace Chow.Ast.Parsing
 
             if (_tokens.IsMatch(TokenType.SymbolExponent))
             {
-                var opToken = _tokens.Consume();
+                var lineNum = _tokens.Consume().LineNumber;
                 var rightNode = ParseFactor();
-                return new ExpressionNode(Operator.Exponentiate, leftNode, rightNode, opToken.LineNumber);
+                return new ExpressionNode(Operator.Exponentiate, leftNode, rightNode, lineNum);
             }
 
             return leftNode;
@@ -400,27 +397,26 @@ namespace Chow.Ast.Parsing
 
         Node ParsePostfix()
         {
-            // Accounts for dot notation, indexers, and function calls (e.g. parenthesis, arguments, etc.)
+            // Accounts for dot notation, indexers, and function calls (e.g., parenthesis, arguments, etc.)
             var node = ParsePrimary();
             var isDone = false;
 
             do
             {
-                if (_tokens.IsMatch(TokenType.SymbolDot))
+                switch (_tokens.Peek())
                 {
-                    node = ParseAttributeAccessTail(node);
-                }
-                else if (_tokens.IsMatch(TokenType.SymbolLeftBracket))
-                {
-                    node = ParseSubscriptTail(node);
-                }
-                else if (_tokens.IsMatch(TokenType.SymbolLeftParen))
-                {
-                    node = ParseInvokeTail(node);
-                }
-                else
-                {
-                    isDone = true;
+                    case TokenType.SymbolDot:
+                        node = ParseAttributeAccessTail(node);
+                        break;
+                    case TokenType.SymbolLeftBracket:
+                        node = ParseSubscriptTail(node);
+                        break;
+                    case TokenType.SymbolLeftParen:
+                        node = ParseInvokeTail(node);
+                        break;
+                    default:
+                        isDone = true;
+                        break;
                 }
             }
             while (!isDone);
@@ -430,20 +426,20 @@ namespace Chow.Ast.Parsing
 
         Node ParseAttributeAccessTail(Node target)
         {
-            var dotToken = _tokens.ConsumeMatch(TokenType.SymbolDot);
+            var lineNum = _tokens.ConsumeMatch(TokenType.SymbolDot).LineNumber;
             var nameToken = _tokens.ConsumeMatch(TokenType.Name);
 
-            return new AttributeAccessNode(target, nameToken.Lexeme, dotToken.LineNumber);
+            return new AttributeAccessNode(target, nameToken.Lexeme, lineNum);
         }
 
         Node ParseSubscriptTail(Node target)
         {
-            var leftBracket = _tokens.ConsumeMatch(TokenType.SymbolLeftBracket);
+            var linNum = _tokens.ConsumeMatch(TokenType.SymbolLeftBracket).LineNumber;
             var index = ParseSubscriptBody();
 
             _tokens.ConsumeMatch(TokenType.SymbolRightBracket);
 
-            return new SubscriptNode(target, index, leftBracket.LineNumber);
+            return new SubscriptNode(target, index, linNum);
         }
 
         Node ParseSubscriptBody()
@@ -483,54 +479,56 @@ namespace Chow.Ast.Parsing
 
         Node ParseInvokeTail(Node callNameNode)
         {
-            var leftParen = _tokens.ConsumeMatch(TokenType.SymbolLeftParen);
+            var lineNum = _tokens.ConsumeMatch(TokenType.SymbolLeftParen).LineNumber;
             var args = new List<Node>();
 
             if (!_tokens.IsMatch(TokenType.SymbolRightParen))
             {
-                ParseCommaSeparatedElements(() => args.Add(ParseExpression()));
+                ParseCommaSeparatedElements(() => 
+                    args.Add(ParseExpression()));
             }
 
             _tokens.ConsumeMatch(TokenType.SymbolRightParen);
-            return new CallNode(callNameNode, args, leftParen.LineNumber);
+            return new CallNode(callNameNode, args, lineNum);
         }
 
         Node ParseListLiteral()
         {
-            var leftBracket = _tokens.ConsumeMatch(TokenType.SymbolLeftBracket);
+            var lineNum = _tokens.ConsumeMatch(TokenType.SymbolLeftBracket).LineNumber;
             var elements = new List<Node>();
 
             if (!_tokens.IsMatch(TokenType.SymbolRightBracket))
             {
                 // Allow trailing comma: `[1, 2,]`
-                ParseCommaSeparatedElements(
-                    () => elements.Add(ParseExpression()), TokenType.SymbolRightBracket);
+                ParseCommaSeparatedElements(() => 
+                    elements.Add(ParseExpression()), TokenType.SymbolRightBracket);
             }
 
             _tokens.ConsumeMatch(TokenType.SymbolRightBracket);
-            return new ListNode(elements, leftBracket.LineNumber);
+            return new ListNode(elements, lineNum);
         }
 
         Node ParseDictLiteral()
         {
-            var leftCurly = _tokens.ConsumeMatch(TokenType.SymbolLeftCurly);
+            var lineNum = _tokens.ConsumeMatch(TokenType.SymbolLeftCurly).LineNumber;
             var keys = new List<Node>();
             var values = new List<Node>();
 
             if (!_tokens.IsMatch(TokenType.SymbolRightCurly))
             {
-                ParseCommaSeparatedElements(
-                    () => ParseDictEntry(keys, values), TokenType.SymbolRightCurly);
+                ParseCommaSeparatedElements(() => 
+                    ParseDictEntry(keys, values), TokenType.SymbolRightCurly);
             }
 
             _tokens.ConsumeMatch(TokenType.SymbolRightCurly);
-            return new DictionaryNode(keys, values, leftCurly.LineNumber);
+            return new DictionaryNode(keys, values, lineNum);
         }
 
         void ParseDictEntry(List<Node> keys, List<Node> values)
         {
             var key = ParseExpression();
             _tokens.ConsumeMatch(TokenType.SymbolColon);
+            
             var value = ParseExpression();
             keys.Add(key);
             values.Add(value);
@@ -545,6 +543,7 @@ namespace Chow.Ast.Parsing
                 var subTokens = new Scanner(exprSource).TokenizeSourceCode();
                 var subParser = new Parser(new TokenStream(subTokens));
                 var exprNode = subParser.ParseSingleExpression();
+                
                 exprParts.Add(exprNode);
             }
 
