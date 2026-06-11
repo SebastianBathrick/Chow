@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Chow.Tokens
 {
@@ -14,11 +15,16 @@ namespace Chow.Tokens
         
         Token SelectedToken => _tokensList[_tokenIdx];
 
-        /// <summary>The line number of the selected token.</summary>
         public int LineNumber => SelectedToken.LineNumber;
         
         /// <summary>Whether there are any more tokens to consume.</summary>
         public bool IsEndOfStream => _tokenIdx == _tokensList.Count;
+
+        /// <summary>Creates an empty token stream to be populated with <see cref="Add"/>.</summary>
+        public TokenStream()
+        {
+            _tokensList = new List<Token>();
+        }
 
         /// <summary>Creates a token stream over the given list of tokens.</summary>
         /// <param name="tokensList">The tokens this stream will select from, in order.</param>
@@ -28,27 +34,32 @@ namespace Chow.Tokens
         {
             _tokensList = tokensList;
         }
+        
+        /// <inheritdoc/>
+        public void Add(Token token)
+        {
+            if (_tokenIdx != 0)
+            {
+                throw new InvalidOperationException(
+                    $"{nameof(TokenStream)} instances become readonly after a token is consumed.");
+            }
+            
+            _tokensList.Add(token);
+        }
 
+        /// <inheritdoc/>
         public TokenType Peek()
         {
             return SelectedToken.Type;
         }
         
-        /// <summary>Selects the next token or reaches the end of this stream.</summary>
+        /// <inheritdoc/>
         public Token Consume()
         {
             return _tokensList[_tokenIdx++];
         }
-
-        /// <summary>
-        /// Selects the next token in the stream if the currently selected token is
-        /// <paramref name="expectedType"/>; otherwise, an exception will be thrown.
-        /// </summary>
-        /// <param name="expectedType">The token type the selected token's type will be compared
-        /// to.</param>
-        /// <returns>The token selected before this method is called.</returns>
-        /// <exception cref="SyntaxException">An exception containing the expected token type and
-        /// the line of the token selected before this method is called.</exception>
+        
+        /// <inheritdoc/>
         public Token ConsumeMatch(TokenType expectedType)
         {
             if (IsMatch(expectedType))
@@ -59,9 +70,12 @@ namespace Chow.Tokens
             var exLineNum = IsEndOfStream ? _tokensList[_tokenIdx - 1].LineNumber : LineNumber;
             throw new SyntaxException(expectedType.ToString(), exLineNum);
         }
-
+        
+        /// <inheritdoc/>
         public Token ConsumeMatches(
-            TokenType expectedType1, TokenType expectedType2, params TokenType[] expectedTypes)
+            TokenType expectedType1, 
+            TokenType expectedType2, 
+            params TokenType[] expectedTypes)
         {
             ConsumeMatch(expectedType1);
             ConsumeMatch(expectedType2);
@@ -79,25 +93,13 @@ namespace Chow.Tokens
             return SelectedToken;
         }
 
-        /// <summary>
-        /// Determines whether the selected token is <paramref name="targetType"/>.
-        /// </summary>
-        /// <param name="targetType">The token type the selected token's type will be compared
-        /// to.</param>
-        /// <returns><c>true</c> if the selected token is <paramref name="targetType"/>;
-        /// <c>false</c> if it is not or the end of this stream has been reached.</returns>
+        /// <inheritdoc/>
         public bool IsMatch(TokenType targetType)
         {
             return !IsEndOfStream && SelectedToken.Type == targetType;
         }
 
-        /// <summary>
-        /// Determines whether the selected token is any of <paramref name="targetTypes"/>.
-        /// </summary>
-        /// <param name="targetTypes">The token types the selected token's type will be compared
-        /// to.</param>
-        /// <returns><c>true</c> if the selected token is any of <paramref name="targetTypes"/>;
-        /// <c>false</c> if it is none of them or the end of this stream has been reached.</returns>
+        /// <inheritdoc/>
         public bool IsMatch(params TokenType[] targetTypes)
         {
             foreach (var type in targetTypes)
@@ -111,42 +113,20 @@ namespace Chow.Tokens
             return false;
         }
 
-        /// <summary>
-        /// Determines whether the token after the selected token is <paramref name="targetType"/>,
-        /// without selecting it.
-        /// </summary>
-        /// <param name="targetType">The token type the next token's type will be compared
-        /// to.</param>
-        /// <returns><c>true</c> if the token after the selected token is
-        /// <paramref name="targetType"/>; <c>false</c> if it is not or no token follows the selected
-        /// token.</returns>
+        /// <inheritdoc/>
         public bool IsNextMatch(TokenType targetType)
         {
             return _tokenIdx + 1 < _tokensList.Count 
                 && _tokensList[_tokenIdx + 1].Type == targetType;
         }
 
-        /// <summary>
-        /// Selects the next token in the stream if the currently selected token is
-        /// <paramref name="targetType"/>; otherwise, this stream is left unchanged.
-        /// </summary>
-        /// <param name="targetType">The token type the selected token's type will be compared
-        /// to.</param>
-        /// <returns><c>true</c> if a token was consumed; otherwise, <c>false</c>.</returns>
+        /// <inheritdoc/>
         public bool TryConsumeMatch(TokenType targetType)
         {
             return TryConsumeMatch(targetType, out _);
         }
 
-        /// <summary>
-        /// Selects the next token in the stream if the currently selected token is
-        /// <paramref name="targetType"/>; otherwise, this stream is left unchanged.
-        /// </summary>
-        /// <param name="targetType">The token type the selected token's type will be compared
-        /// to.</param>
-        /// <param name="token">The consumed token, or <c>default</c> if no token was
-        /// consumed.</param>
-        /// <returns><c>true</c> if a token was consumed; otherwise, <c>false</c>.</returns>
+        /// <inheritdoc/>
         public bool TryConsumeMatch(TokenType targetType, out Token token)
         {
             if (IsEndOfStream || !IsMatch(targetType))
@@ -159,13 +139,7 @@ namespace Chow.Tokens
             return true;
         }
 
-        /// <summary>
-        /// Selects the next token in the stream if the currently selected token is any of
-        /// <paramref name="targetTypes"/>; otherwise, this stream is left unchanged.
-        /// </summary>
-        /// <param name="targetTypes">The token types the selected token's type will be compared
-        /// to.</param>
-        /// <returns><c>true</c> if a token was consumed; otherwise, <c>false</c>.</returns>
+        /// <inheritdoc/>
         public bool TryConsumeMatch(params TokenType[] targetTypes)
         {
             if (IsEndOfStream)
