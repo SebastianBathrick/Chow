@@ -93,12 +93,7 @@ namespace Chow.Ast.Parsing
                 case TokenType.KeywordNonlocal:
                     return ParseNonlocalDeclaration();
                 case TokenType.Name:
-                    if (_tokens.IsNextMatch(TokenType.SymbolAssign))
-                    {
-                        return ParseAssignStatement(lineNum);
-                    }
-
-                    break;
+                    return ParseAssignStatement(lineNum);
             }
             
             return ParseExpressionStatement(lineNum);
@@ -107,9 +102,14 @@ namespace Chow.Ast.Parsing
         Node ParseAssignStatement(int lineNum)
         {
             var targetNode = ParseExpression();
-            
-            // Assumes that the caller checked that this token is an assignment symbol.
-            _tokens.Consume();
+
+            // Targets like subscripts and attribute accesses span an arbitrary number of
+            // tokens, so '=' can only be checked for after parsing the target expression.
+            if (!_tokens.TryConsumeMatch(TokenType.SymbolAssign))
+            {
+                return new ExpressionStatementNode(targetNode, lineNum);
+            }
+
             var assignExpr = ParseExpression();
 
             if (targetNode is NameNode nameNode)
