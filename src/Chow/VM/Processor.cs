@@ -482,7 +482,7 @@ namespace Chow.VM
 
         bool ExecuteJumpOrIterateFor(int jumpTarget)
         {
-            // Peek the iterator (kept on stack for the whole loop); push next value or jump to exhaust target.
+            // PeekType the iterator (kept on stack for the whole loop); push next value or jump to exhaust target.
             var iter = (IIterator)_valStack.Peek().ToObject();
 
             if (iter.TryMoveNext(out var current))

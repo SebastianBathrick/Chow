@@ -615,7 +615,7 @@ namespace Chow.Bytecode.Compilation
         {
             CompileTargetNode(node.Target);
 
-            var varNameIdx = _chunk.RegisterVariableName(node.AttributeName);
+            var varNameIdx = _chunk.RegisterVariableName(node.Name);
             _chunk.AddInstruction(OperationCode.PushAttributeValue, node.LineNumber, varNameIdx);
         }
 

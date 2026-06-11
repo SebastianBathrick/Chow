@@ -19,7 +19,7 @@
 
         /// <summary>Gets the type of the selected token without consuming it.</summary>
         /// <returns>The selected token's type.</returns>
-        TokenType Peek();
+        TokenType PeekType();
         
         /// <summary>Selects the next token or reaches the end of this stream.</summary>
         Token Consume();
