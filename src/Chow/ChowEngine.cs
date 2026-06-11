@@ -3,6 +3,7 @@ using Chow.Bytecode.Compilation;
 using Chow.Semantics;
 using Chow.SourceData;
 using Chow.StandardLibrary.BuiltIns;
+using Chow.Tokens;
 using Chow.Tokens.Scanning;
 using Chow.VM;
 
@@ -26,7 +27,7 @@ namespace Chow
             var scanner = new Scanner(sourceCode);
             var tokens = scanner.TokenizeSourceCode();
 
-            var parser = new Parser(tokens);
+            var parser = new Parser(new TokenStream(tokens));
             var syntaxTreeRoot = parser.BuildAst();
 
             var semanticAnalyzer = new SemanticAnalyzer(syntaxTreeRoot);
@@ -55,7 +56,7 @@ namespace Chow
             var scanner = new Scanner(sourceCode);
             var tokens = scanner.TokenizeSourceCode();
 
-            var parser = new Parser(tokens);
+            var parser = new Parser(new TokenStream(tokens));
             var syntaxTreeRoot = parser.BuildAst();
 
             var semanticAnalyzer = new SemanticAnalyzer(syntaxTreeRoot);

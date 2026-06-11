@@ -10,19 +10,14 @@ namespace Chow.Ast.Parsing
     {
         const int ModuleNodeLineNumber = 1;
         
-        readonly List<Token> _tokens;
-        int _tokenIdx;
-
-        Token CurrentToken => _tokens[_tokenIdx];
-        
-        Token PreviousToken => _tokens[_tokenIdx - 1];
+        readonly ITokenStream _tokens;
 
         #region Main Methods
     
         /// <summary>Initializes a new instance with the tokens it will analyze.</summary>
-        /// <param name="tokens">The tokens used to build an AST upon calling
+        /// <param name="tokens">The stream of tokens used to build an AST upon calling
         /// <see cref="BuildAst"/>.</param>
-        public Parser(List<Token> tokens)
+        public Parser(ITokenStream tokens)
         {
             _tokens = tokens;
         }
@@ -33,16 +28,16 @@ namespace Chow.Ast.Parsing
             var statementList = new List<Node>();
             
             // Iterate until reaching the 'end of code' marker
-            while(!IsType(TokenType.EndOfCode))
+            while(!_tokens.IsMatch(TokenType.EndOfCode))
             {
-                if (!TryNext(TokenType.Newline))
+                if (!_tokens.TryConsumeMatch(TokenType.Newline))
                 {
                     statementList.Add(ParseStatement());
                 }
             }
 
             // It's assumed the final token always an 'end of code' marker
-            Next(TokenType.EndOfCode);
+            _tokens.ConsumeMatch(TokenType.EndOfCode);
             var block = new BlockNode(statementList, ModuleNodeLineNumber);
             return new ModuleNode(block);
         }
@@ -53,36 +48,36 @@ namespace Chow.Ast.Parsing
 
         Node ParseBlock()
         {
-            Next(TokenType.SymbolColon, "Expected ':' after block header.");
-            Next(TokenType.Newline, "Expected newline after ':'.");
+            _tokens.ConsumeMatch(TokenType.SymbolColon);
+            _tokens.ConsumeMatch(TokenType.Newline);
 
-            var indentToken = Next(TokenType.Indent, "Expected indented block body.");
+            var indentToken = _tokens.ConsumeMatch(TokenType.Indent);
             
             var statements = new List<Node> { ParseStatement() };
 
             
             
-            TryNext(TokenType.Newline);
+            _tokens.TryConsumeMatch(TokenType.Newline);
 
-            while (!IsType(TokenType.Dedent))
+            while (!_tokens.IsMatch(TokenType.Dedent))
             {
-                if (IsType(TokenType.Newline))
+                if (_tokens.IsMatch(TokenType.Newline))
                 {
-                    Next();
+                    _tokens.Consume();
                     continue;
                 }
 
                 statements.Add(ParseStatement());
-                TryNext(TokenType.Newline);
+                _tokens.TryConsumeMatch(TokenType.Newline);
             }
 
-            Next(TokenType.Dedent, "Expected dedent to close block.");
+            _tokens.ConsumeMatch(TokenType.Dedent);
             return new BlockNode(statements, indentToken.LineNumber);
         }
 
         Node ParseStatement()
         {
-            switch (CurrentToken.Type)
+            switch (_tokens.Peek())
             {
                 case TokenType.KeywordReturn:
                     return ParseReturnStatement();
@@ -102,175 +97,184 @@ namespace Chow.Ast.Parsing
                     return ParseGlobalDeclaration();
                 case TokenType.KeywordNonlocal:
                     return ParseNonlocalDeclaration();
-            }
-
-            if (!IsPrimaryToken())
-            {
-                throw new SyntaxException("Expected statement.", CurrentToken.LineNumber);
+                case TokenType.Identifier:
+                case TokenType.LiteralInt:
+                case TokenType.LiteralFloat:
+                case TokenType.LiteralStr:
+                case TokenType.LiteralFString:
+                case TokenType.KeywordNone:
+                case TokenType.KeywordTrue:
+                case TokenType.KeywordFalse:
+                case TokenType.KeywordNot:
+                case TokenType.SymbolLeftParen:
+                case TokenType.SymbolLeftBracket:
+                case TokenType.SymbolMinus:
+                case TokenType.SymbolLeftCurly:
+                    break;
+                default:
+                    _tokens.ConsumeMatch(TokenType.Identifier);
+                    break;
             }
 
             // Parse expression first; if an '=' follows, convert the LHS into the appropriate
             // assignment node. Otherwise, this is a standalone expression statement (result
             // discarded or routed to hook).
-            var startLine = CurrentToken.LineNumber;
             var lhs = ParseExpression();
 
-            if (!TryNext(TokenType.SymbolAssign))
+            if (!_tokens.IsMatch(TokenType.SymbolAssign))
             {
-                return new ExpressionStatementNode(lhs, startLine);
+                return new ExpressionStatementNode(lhs, lhs.LineNumber);
             }
 
-            var eqLine = PreviousToken.LineNumber;
+            var eqLine = _tokens.Consume().LineNumber;
             var rhs = ParseExpression();
             return MakeAssignFromTarget(lhs, rhs, eqLine);
         }
 
         Node ParseFunctionDefinition()
         {
-            var line = CurrentToken.LineNumber;
+            var defToken = _tokens.ConsumeMatch(TokenType.KeywordDef);
 
-            Next(TokenType.KeywordDef, "Expected 'def' keyword.");
+            var nameToken = _tokens.ConsumeMatch(TokenType.Identifier);
 
-            var nameToken = Next( TokenType.Identifier, "Expected function name.");
-
-            Next(
-                TokenType.SymbolLeftParen, "Expected '(' after function name.");
+            _tokens.ConsumeMatch(TokenType.SymbolLeftParen);
 
             var paramList = new List<Node>();
 
-            if (!IsType(TokenType.SymbolRightParen))
+            if (!_tokens.IsMatch(TokenType.SymbolRightParen))
             {
-                var paramToken = Next( TokenType.Identifier, "Expected parameter name.");
+                var paramToken = _tokens.ConsumeMatch(TokenType.Identifier);
                 
                 paramList.Add(new NameNode(paramToken.Lexeme, paramToken.LineNumber));
 
-                while (TryNext(TokenType.SymbolComma))
+                while (_tokens.TryConsumeMatch(TokenType.SymbolComma))
                 {
-                    paramToken = Next(
-                        TokenType.Identifier, "Expected parameter name after ','.");
+                    paramToken = _tokens.ConsumeMatch(TokenType.Identifier);
                     
                     paramList.Add(new NameNode(paramToken.Lexeme, paramToken.LineNumber));
                 }
             }
 
-            Next(TokenType.SymbolRightParen, "Expected ')' after parameter list.");
-            return new FunctionNode(nameToken.Lexeme, paramList, ParseBlock(), line);
+            _tokens.ConsumeMatch(TokenType.SymbolRightParen);
+            return new FunctionNode(nameToken.Lexeme, paramList, ParseBlock(), defToken.LineNumber);
         }
 
         Node ParseIfStatement()
         {
-            var line = CurrentToken.LineNumber;
-            Next(TokenType.KeywordIf, "Expected 'if' keyword.");
+            var ifToken = _tokens.ConsumeMatch(TokenType.KeywordIf);
             return new IfStatementNode(
-                ParseExpression(), ParseBlock(), ParseBranchStatement(), line);
+                ParseExpression(), ParseBlock(), ParseBranchStatement(), ifToken.LineNumber);
         }
 
         Node ParseBranchStatement()
         {
-            if (IsType(TokenType.KeywordElif))
+            if (_tokens.IsMatch(TokenType.KeywordElif))
             {
-                var line = CurrentToken.LineNumber;
-                Next();
+                var elifToken = _tokens.Consume();
                 return new BranchStatementNode(
-                    ParseExpression(), ParseBlock(), ParseBranchStatement(), line);
+                    ParseExpression(), ParseBlock(), ParseBranchStatement(), elifToken.LineNumber);
             }
 
-            if (!IsType(TokenType.KeywordElse))
+            if (!_tokens.IsMatch(TokenType.KeywordElse))
             {
                 return null;
             }
 
             {
-                var line = CurrentToken.LineNumber;
-                Next();
-                return new BranchStatementNode(null, ParseBlock(), null, line);
+                var elseToken = _tokens.Consume();
+                return new BranchStatementNode(null, ParseBlock(), null, elseToken.LineNumber);
             }
         }
 
         Node ParseWhileStatement()
         {
-            var line = CurrentToken.LineNumber;
-            Next(TokenType.KeywordWhile, "Expected 'while' keyword.");
-            return new WhileStatementNode(ParseExpression(), ParseBlock(), line);
+            var whileToken = _tokens.ConsumeMatch(TokenType.KeywordWhile);
+            return new WhileStatementNode(ParseExpression(), ParseBlock(), whileToken.LineNumber);
         }
 
         Node ParseForStatement()
         {
-            var line = CurrentToken.LineNumber;
-            Next(TokenType.KeywordFor, "Expected 'for' keyword.");
+            var forToken = _tokens.ConsumeMatch(TokenType.KeywordFor);
 
-            var targetToken = Next(
-                TokenType.Identifier, "Expected loop variable name after 'for'.");
+            var targetToken = _tokens.ConsumeMatch(TokenType.Identifier);
             var target = new NameNode(targetToken.Lexeme, targetToken.LineNumber);
 
-            Next(TokenType.KeywordIn, "Expected 'in' after loop variable.");
+            _tokens.ConsumeMatch(TokenType.KeywordIn);
 
             var iterable = ParseExpression();
             var block = ParseBlock();
             
-            if (!IsType(TokenType.KeywordElse))
+            if (!_tokens.IsMatch(TokenType.KeywordElse))
             {
-                return new ForStatementNode(target, iterable, block, null, line);
+                return new ForStatementNode(target, iterable, block, null, forToken.LineNumber);
             }
 
-            var elseLine = CurrentToken.LineNumber;
-            Next();
-            var elseBranch = new BranchStatementNode(null, ParseBlock(), null, elseLine);
+            var elseToken = _tokens.Consume();
+            var elseBranch = new BranchStatementNode(null, ParseBlock(), null, elseToken.LineNumber);
 
-            return new ForStatementNode(target, iterable, block, elseBranch, line);
+            return new ForStatementNode(target, iterable, block, elseBranch, forToken.LineNumber);
         }
 
         Node ParseBreakStatement()
         {
-            var line = CurrentToken.LineNumber;
-            Next(TokenType.KeywordBreak, "Expected 'break' keyword.");
-            return new BreakStatementNode(line);
+            var breakToken = _tokens.ConsumeMatch(TokenType.KeywordBreak);
+            return new BreakStatementNode(breakToken.LineNumber);
         }
 
         Node ParseContinueStatement()
         {
-            var line = CurrentToken.LineNumber;
-            Next(TokenType.KeywordContinue, "Expected 'continue' keyword.");
-            return new ContinueStatementNode(line);
+            var continueToken = _tokens.ConsumeMatch(TokenType.KeywordContinue);
+            return new ContinueStatementNode(continueToken.LineNumber);
         }
 
         Node ParseReturnStatement()
         {
-            var line = CurrentToken.LineNumber;
-            Next(TokenType.KeywordReturn, "Expected 'return' keyword.");
+            var returnToken = _tokens.ConsumeMatch(TokenType.KeywordReturn);
 
             // Void functions always return None, and their calls inside expressions will not cause
             // an error
-            return new ReturnStatementNode(IsPrimaryToken() ? ParseExpression() : null, line);
+            return new ReturnStatementNode(
+                _tokens.IsMatch(
+                    TokenType.Identifier,
+                    TokenType.LiteralInt,
+                    TokenType.LiteralFloat,
+                    TokenType.LiteralStr,
+                    TokenType.LiteralFString,
+                    TokenType.KeywordNone,
+                    TokenType.KeywordTrue,
+                    TokenType.KeywordFalse,
+                    TokenType.KeywordNot,
+                    TokenType.SymbolLeftParen,
+                    TokenType.SymbolLeftBracket,
+                    TokenType.SymbolMinus,
+                    TokenType.SymbolLeftCurly)
+                    ? ParseExpression()
+                    : null,
+                returnToken.LineNumber);
         }
 
         Node ParseGlobalDeclaration()
         {
-            var line = CurrentToken.LineNumber;
-            Next(TokenType.KeywordGlobal, "Expected 'global' keyword.");
-            return new GlobalNode(ParseDeclarationNameList("global"), line);
+            var globalToken = _tokens.ConsumeMatch(TokenType.KeywordGlobal);
+            return new GlobalNode(ParseDeclarationNameList("global"), globalToken.LineNumber);
         }
 
         Node ParseNonlocalDeclaration()
         {
-            var line = CurrentToken.LineNumber;
-            Next(TokenType.KeywordNonlocal, "Expected 'nonlocal' keyword.");
-            return new NonLocalNode(ParseDeclarationNameList("nonlocal"), line);
+            var nonlocalToken = _tokens.ConsumeMatch(TokenType.KeywordNonlocal);
+            return new NonLocalNode(ParseDeclarationNameList("nonlocal"), nonlocalToken.LineNumber);
         }
 
         List<string> ParseDeclarationNameList(string keyword)
         {
             var names = new List<string>();
-            var firstToken = Next( 
-                TokenType.Identifier, $"Expected identifier after '{keyword}'.");
+            var firstToken = _tokens.ConsumeMatch(TokenType.Identifier);
             
             names.Add(firstToken.Lexeme);
 
-            while (TryNext(TokenType.SymbolComma))
+            while (_tokens.TryConsumeMatch(TokenType.SymbolComma))
             {
-                var nameToken = Next(
-                    TokenType.Identifier,
-                    $"Expected identifier after ',' in '{keyword}' declaration.");
+                var nameToken = _tokens.ConsumeMatch(TokenType.Identifier);
                 
                 names.Add(nameToken.Lexeme);
             }
@@ -291,9 +295,9 @@ namespace Chow.Ast.Parsing
         {
             var leftNode = ParseAnd();
 
-            while (TryNext(TokenType.KeywordOr))
+            while (_tokens.IsMatch(TokenType.KeywordOr))
             {
-                var opToken = PreviousToken;
+                var opToken = _tokens.Consume();
                 var rightNode = ParseAnd();
                 leftNode = new ExpressionNode(
                     ExpressionOperator.Or, leftNode, rightNode, opToken.LineNumber);
@@ -306,9 +310,9 @@ namespace Chow.Ast.Parsing
         {
             var leftNode = ParseNot();
 
-            while (TryNext(TokenType.KeywordAnd))
+            while (_tokens.IsMatch(TokenType.KeywordAnd))
             {
-                var opToken = PreviousToken;
+                var opToken = _tokens.Consume();
                 var rightNode = ParseNot();
                 leftNode = new ExpressionNode(
                     ExpressionOperator.And, leftNode, rightNode, opToken.LineNumber);
@@ -319,12 +323,12 @@ namespace Chow.Ast.Parsing
 
         Node ParseNot()
         {
-            if (!TryNext(TokenType.KeywordNot))
+            if (!_tokens.IsMatch(TokenType.KeywordNot))
             {
                 return ParseComparison();
             }
 
-            var opToken = PreviousToken;
+            var opToken = _tokens.Consume();
             return new ExpressionNode(ExpressionOperator.Not, ParseNot(), opToken.LineNumber);
         }
 
@@ -338,7 +342,7 @@ namespace Chow.Ast.Parsing
                 ExpressionOperator @operator;
                 int opLine;
 
-                if (TryNext(
+                if (_tokens.IsMatch(
                     TokenType.SymbolEqualTo,
                     TokenType.SymbolNotEqual,
                     TokenType.SymbolLess,
@@ -347,14 +351,14 @@ namespace Chow.Ast.Parsing
                     TokenType.SymbolGreaterEqual,
                     TokenType.KeywordIn))
                 {
-                    @operator = MapTokenTypeToBinary(PreviousToken.Type);
-                    opLine = PreviousToken.LineNumber;
+                    var opToken = _tokens.Consume();
+                    @operator = MapTokenTypeToBinary(opToken.Type);
+                    opLine = opToken.LineNumber;
                 }
-                else if (IsType(TokenType.KeywordNot) && PeekAhead(TokenType.KeywordIn))
+                else if (_tokens.IsMatch(TokenType.KeywordNot) && _tokens.IsNextMatch(TokenType.KeywordIn))
                 {
-                    opLine = CurrentToken.LineNumber;
-                    Next();
-                    Next();
+                    opLine = _tokens.Consume().LineNumber;
+                    _tokens.ConsumeMatch(TokenType.KeywordIn);
                     @operator = ExpressionOperator.NotIn;
                 }
                 else
@@ -385,9 +389,9 @@ namespace Chow.Ast.Parsing
         {
             var leftNode = ParseAdd();
 
-            while (TryNext(TokenType.SymbolPipe))
+            while (_tokens.IsMatch(TokenType.SymbolPipe))
             {
-                var opToken = PreviousToken;
+                var opToken = _tokens.Consume();
                 var rightNode = ParseAdd();
                 leftNode = new ExpressionNode(
                     ExpressionOperator.BinaryOr, leftNode, rightNode, opToken.LineNumber);
@@ -400,9 +404,9 @@ namespace Chow.Ast.Parsing
         {
             var leftNode = ParseTerm();
 
-            while (TryNext(TokenType.SymbolPlus, TokenType.SymbolMinus))
+            while (_tokens.IsMatch(TokenType.SymbolPlus, TokenType.SymbolMinus))
             {
-                var opToken = PreviousToken;
+                var opToken = _tokens.Consume();
                 var rightNode = ParseTerm();
                 leftNode = new ExpressionNode(
                     MapTokenTypeToBinary(opToken.Type), leftNode, rightNode, opToken.LineNumber);
@@ -415,13 +419,13 @@ namespace Chow.Ast.Parsing
         {
             var leftNode = ParseFactor();
 
-            while (TryNext(
+            while (_tokens.IsMatch(
                 TokenType.SymbolMultiply, 
                 TokenType.SymbolDivide, 
                 TokenType.SymbolFloorDivide,
                 TokenType.SymbolPercent))
             {
-                var opToken = PreviousToken;
+                var opToken = _tokens.Consume();
                 var rightNode = ParseFactor();
                 leftNode = new ExpressionNode(MapTokenTypeToBinary(opToken.Type), leftNode, rightNode, opToken.LineNumber);
             }
@@ -431,9 +435,9 @@ namespace Chow.Ast.Parsing
 
         Node ParseFactor()
         {
-            if (TryNext(TokenType.SymbolMinus))
+            if (_tokens.IsMatch(TokenType.SymbolMinus))
             {
-                var opToken = PreviousToken;
+                var opToken = _tokens.Consume();
                 return new ExpressionNode(ExpressionOperator.Negate, ParseFactor(), opToken.LineNumber);
             }
 
@@ -444,9 +448,9 @@ namespace Chow.Ast.Parsing
         {
             var leftNode = ParsePostfix();
 
-            if (TryNext(TokenType.SymbolExponent))
+            if (_tokens.IsMatch(TokenType.SymbolExponent))
             {
-                var opToken = PreviousToken;
+                var opToken = _tokens.Consume();
                 var rightNode = ParseFactor();
                 return new ExpressionNode(ExpressionOperator.Exponentiate, leftNode, rightNode, opToken.LineNumber);
             }
@@ -462,20 +466,21 @@ namespace Chow.Ast.Parsing
 
             do
             {
-                switch (CurrentToken.Type)
+                if (_tokens.IsMatch(TokenType.SymbolDot))
                 {
-                    case TokenType.SymbolDot:
-                        node = ParseAttributeAccessTail(node);
-                        break;
-                    case TokenType.SymbolLeftBracket:
-                        node = ParseSubscriptTail(node);
-                        break;
-                    case TokenType.SymbolLeftParen:
-                        node = ParseInvokeTail(node);
-                        break;
-                    default:
-                        isDone = true;
-                        break;
+                    node = ParseAttributeAccessTail(node);
+                }
+                else if (_tokens.IsMatch(TokenType.SymbolLeftBracket))
+                {
+                    node = ParseSubscriptTail(node);
+                }
+                else if (_tokens.IsMatch(TokenType.SymbolLeftParen))
+                {
+                    node = ParseInvokeTail(node);
+                }
+                else
+                {
+                    isDone = true;
                 }
             }
             while (!isDone);
@@ -485,18 +490,18 @@ namespace Chow.Ast.Parsing
 
         Node ParseAttributeAccessTail(Node target)
         {
-            var dotToken = Next(TokenType.SymbolDot, "Expected '.'.");
-            var nameToken = Next(TokenType.Identifier, "Expected attribute name after '.'.");
+            var dotToken = _tokens.ConsumeMatch(TokenType.SymbolDot);
+            var nameToken = _tokens.ConsumeMatch(TokenType.Identifier);
 
             return new AttributeAccessNode(target, nameToken.Lexeme, dotToken.LineNumber);
         }
 
         Node ParseSubscriptTail(Node target)
         {
-            var leftBracket = Next(TokenType.SymbolLeftBracket, "Expected '['.");
+            var leftBracket = _tokens.ConsumeMatch(TokenType.SymbolLeftBracket);
             var index = ParseSubscriptBody();
 
-            Next(TokenType.SymbolRightBracket, "Expected ']' to close subscript.");
+            _tokens.ConsumeMatch(TokenType.SymbolRightBracket);
 
             return new SubscriptNode(target, index, leftBracket.LineNumber);
         }
@@ -507,11 +512,11 @@ namespace Chow.Ast.Parsing
             Node stop = null;
             Node step = null;
 
-            if (!IsType(TokenType.SymbolColon))
+            if (!_tokens.IsMatch(TokenType.SymbolColon))
             {
                 var first = ParseExpression();
 
-                if (!IsType(TokenType.SymbolColon))
+                if (!_tokens.IsMatch(TokenType.SymbolColon))
                 {
                     // Plain index a[i]
                     return first;
@@ -521,15 +526,14 @@ namespace Chow.Ast.Parsing
             }
 
             // Positioned on first ':'
-            var sliceLine = CurrentToken.LineNumber;
-            Next();
+            var sliceLine = _tokens.ConsumeMatch(TokenType.SymbolColon).LineNumber;
 
-            if (!IsType(TokenType.SymbolColon) && !IsType(TokenType.SymbolRightBracket))
+            if (!_tokens.IsMatch(TokenType.SymbolColon) && !_tokens.IsMatch(TokenType.SymbolRightBracket))
             {
                 stop = ParseExpression();
             }
 
-            if (TryNext(TokenType.SymbolColon) && !IsType(TokenType.SymbolRightBracket))
+            if (_tokens.TryConsumeMatch(TokenType.SymbolColon) && !_tokens.IsMatch(TokenType.SymbolRightBracket))
             {
                 step = ParseExpression();
             }
@@ -539,67 +543,67 @@ namespace Chow.Ast.Parsing
 
         Node ParseInvokeTail(Node callNameNode)
         {
-            var leftParen = Next(TokenType.SymbolLeftParen, "Expected '('.");
+            var leftParen = _tokens.ConsumeMatch(TokenType.SymbolLeftParen);
             var args = new List<Node>();
 
-            if (!IsType(TokenType.SymbolRightParen))
+            if (!_tokens.IsMatch(TokenType.SymbolRightParen))
             {
                 args.Add(ParseExpression());
 
-                while (TryNext(TokenType.SymbolComma))
+                while (_tokens.TryConsumeMatch(TokenType.SymbolComma))
                 {
                     args.Add(ParseExpression());
                 }
             }
 
-            Next(TokenType.SymbolRightParen, "Expected ')' after argument list.");
+            _tokens.ConsumeMatch(TokenType.SymbolRightParen);
             return new CallNode(callNameNode, args, leftParen.LineNumber);
         }
 
         Node ParseListLiteral()
         {
-            var leftBracket = Next(TokenType.SymbolLeftBracket, "Expected '['.");
+            var leftBracket = _tokens.ConsumeMatch(TokenType.SymbolLeftBracket);
             var elements = new List<Node>();
 
-            if (!IsType(TokenType.SymbolRightBracket))
+            if (!_tokens.IsMatch(TokenType.SymbolRightBracket))
             {
                 elements.Add(ParseExpression());
 
                 // Allow trailing comma: `[1, 2,]`
-                while (TryNext(TokenType.SymbolComma) && !IsType(TokenType.SymbolRightBracket))
+                while (_tokens.TryConsumeMatch(TokenType.SymbolComma) && !_tokens.IsMatch(TokenType.SymbolRightBracket))
                 {
                     elements.Add(ParseExpression());
                 }
             }
 
-            Next(TokenType.SymbolRightBracket, "Expected ']' to close list literal.");
+            _tokens.ConsumeMatch(TokenType.SymbolRightBracket);
             return new ListNode(elements, leftBracket.LineNumber);
         }
 
         Node ParseDictLiteral()
         {
-            var leftCurly = Next(TokenType.SymbolLeftCurly, "Expected '{'.");
+            var leftCurly = _tokens.ConsumeMatch(TokenType.SymbolLeftCurly);
             var keys = new List<Node>();
             var values = new List<Node>();
 
-            if (!IsType(TokenType.SymbolRightCurly))
+            if (!_tokens.IsMatch(TokenType.SymbolRightCurly))
             {
                 ParseDictEntry(keys, values);
 
-                while (TryNext(TokenType.SymbolComma) && !IsType(TokenType.SymbolRightCurly))
+                while (_tokens.TryConsumeMatch(TokenType.SymbolComma) && !_tokens.IsMatch(TokenType.SymbolRightCurly))
                 {
                     ParseDictEntry(keys, values);
                 }
             }
 
-            Next(TokenType.SymbolRightCurly, "Expected '}' to close dict literal.");
+            _tokens.ConsumeMatch(TokenType.SymbolRightCurly);
             return new DictionaryNode(keys, values, leftCurly.LineNumber);
         }
 
         void ParseDictEntry(List<Node> keys, List<Node> values)
         {
             var key = ParseExpression();
-            Next(TokenType.SymbolColon, "Expected ':' between dict key and value.");
+            _tokens.ConsumeMatch(TokenType.SymbolColon);
             var value = ParseExpression();
             keys.Add(key);
             values.Add(value);
@@ -612,7 +616,7 @@ namespace Chow.Ast.Parsing
             foreach (var exprSource in payload.ExprSourceParts)
             {
                 var subTokens = new Scanner(exprSource).TokenizeSourceCode();
-                var subParser = new Parser(subTokens);
+                var subParser = new Parser(new TokenStream(subTokens));
                 var exprNode = subParser.ParseSingleExpression();
                 exprParts.Add(exprNode);
             }
@@ -624,9 +628,9 @@ namespace Chow.Ast.Parsing
         {
             var node = ParseExpression();
 
-            if (!IsType(TokenType.EndOfCode))
+            if (!_tokens.IsMatch(TokenType.EndOfCode))
             {
-                throw new SyntaxException("f-string: expression must be a single expression.", CurrentToken.LineNumber);
+                _tokens.ConsumeMatch(TokenType.EndOfCode);
             }
 
             return node;
@@ -634,132 +638,43 @@ namespace Chow.Ast.Parsing
 
         Node ParsePrimary()
         {
-            // Note: After adding a new primary token type, remember to update IsPrimaryTokenType() as well. Not doing
-            //       so will cause IsPrimaryTokenType() to return false for the new TokenType, which will break certain
-            //       statements that behaviors rely on knowing whether an expression is present or not (e.g. return statements).
-            switch (CurrentToken.Type)
+            // Note: After adding a new primary token type, remember to update expression-start
+            // checks that gate statements and return expressions.
+            switch (_tokens.Peek())
             {
                 case TokenType.Identifier:
-                    var idToken = CurrentToken;
-                    Next();
+                    var idToken = _tokens.Consume();
                     return new NameNode(idToken.Lexeme, idToken.LineNumber);
                 case TokenType.LiteralInt:
                 case TokenType.LiteralFloat:
                 case TokenType.LiteralStr:
-                    var numToken = CurrentToken;
-                    Next();
+                    var numToken = _tokens.Consume();
                     return new LiteralNode(numToken.Literal, numToken.LineNumber);
                 case TokenType.LiteralFString:
-                    var fstrToken = CurrentToken;
-                    Next();
+                    var fstrToken = _tokens.Consume();
                     return ParseFString((FStringTokenPayload)fstrToken.Literal, fstrToken.LineNumber);
                 case TokenType.KeywordNone:
-                    Next(TokenType.KeywordNone);
-                    return new LiteralNode(null, PreviousToken.LineNumber);
+                    var noneToken = _tokens.ConsumeMatch(TokenType.KeywordNone);
+                    return new LiteralNode(null, noneToken.LineNumber);
                 case TokenType.KeywordTrue:
-                    Next(TokenType.KeywordTrue);
-                    return new LiteralNode(true, PreviousToken.LineNumber);
+                    var trueToken = _tokens.ConsumeMatch(TokenType.KeywordTrue);
+                    return new LiteralNode(true, trueToken.LineNumber);
                 case TokenType.KeywordFalse:
-                    Next(TokenType.KeywordFalse);
-                    return new LiteralNode(false, PreviousToken.LineNumber);
+                    var falseToken = _tokens.ConsumeMatch(TokenType.KeywordFalse);
+                    return new LiteralNode(false, falseToken.LineNumber);
                 case TokenType.SymbolLeftParen:
-                    Next();
+                    _tokens.Consume();
                     var inner = ParseExpression();
-                    Next(TokenType.SymbolRightParen);
+                    _tokens.ConsumeMatch(TokenType.SymbolRightParen);
                     return inner;
                 case TokenType.SymbolLeftBracket:
                     return ParseListLiteral();
                 case TokenType.SymbolLeftCurly:
                     return ParseDictLiteral();
                 default:
-                    throw new SyntaxException("Expected expression.", CurrentToken.LineNumber);
+                    _tokens.ConsumeMatch(TokenType.Identifier);
+                    return null;
             }
-        }
-
-        #endregion
-
-        #region Token Helpers
-
-        bool TryNext(TokenType type)
-        {
-            if (!IsType(type))
-            {
-                return false;
-            }
-
-            Next();
-            return true;
-
-        }
-
-        void Next()
-        {
-            if (CurrentToken.Type != TokenType.EndOfCode)
-            {
-                _tokenIdx++;
-            }
-        }
-
-        bool IsType(TokenType type)
-        {
-            return CurrentToken.Type == type;
-        }
-
-        bool PeekAhead(TokenType type, int offset = 1)
-        {
-            var nextIndex = _tokenIdx + offset;
-
-            // This method will never be called when the current token is EndOfCode, so we don't need to check for out-of-range.
-            return _tokens[nextIndex].Type == type;
-        }
-
-        bool TryNext(params TokenType[] types)
-        {
-            foreach (var compareType in types)
-            {
-                if (IsType(compareType))
-                {
-                    Next();
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        Token Next(TokenType type, string message = "")
-        {
-            if (!IsType(type))
-            {
-                throw new SyntaxException(message, CurrentToken.LineNumber);
-            }
-
-            var token = CurrentToken;
-            Next();
-            return token;
-        }
-
-        bool IsPrimaryToken()
-        {
-            switch (CurrentToken.Type)
-            {
-                case TokenType.Identifier:
-                case TokenType.LiteralInt:
-                case TokenType.LiteralFloat:
-                case TokenType.LiteralStr:
-                case TokenType.LiteralFString:
-                case TokenType.KeywordNone:
-                case TokenType.KeywordTrue:
-                case TokenType.KeywordFalse:
-                case TokenType.KeywordNot:
-                case TokenType.SymbolLeftParen:
-                case TokenType.SymbolLeftBracket:
-                case TokenType.SymbolMinus:
-                case TokenType.SymbolLeftCurly:
-                    return true;
-            }
-
-            return false;
         }
 
         #endregion

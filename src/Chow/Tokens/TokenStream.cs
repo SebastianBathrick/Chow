@@ -28,6 +28,11 @@ namespace Chow.Tokens
         {
             _tokensList = tokensList;
         }
+
+        public TokenType Peek()
+        {
+            return SelectedToken.Type;
+        }
         
         /// <summary>Selects the next token or reaches the end of this stream.</summary>
         public Token Consume()

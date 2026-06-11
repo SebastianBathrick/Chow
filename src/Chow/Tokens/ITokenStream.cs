@@ -2,6 +2,8 @@
 {
     interface ITokenStream
     {
+        TokenType Peek();
+        
         Token Consume();
         
         Token ConsumeMatch(TokenType expectedType);
