@@ -31,7 +31,7 @@ namespace Chow.SourceData
                     SourceDictionary.Merge((SourceDictionary)l.ToObject(), (SourceDictionary)r.ToObject()));
             }
 
-            throw UnsupportedBinary(l.DataType, r.DataType, ExpressionOperator.BinaryOr);
+            throw UnsupportedBinary(l.DataType, r.DataType, Operator.BinaryOr);
         }
 
         #endregion
@@ -70,7 +70,7 @@ namespace Chow.SourceData
 
         #region Error Helpers
 
-        static DataTypeException UnsupportedBinary(DataType leftDataType, DataType rightDataType, ExpressionOperator op)
+        static DataTypeException UnsupportedBinary(DataType leftDataType, DataType rightDataType, Operator op)
         {
             // Message shape mirrors Python's TypeError wording and type names.
             return new DataTypeException(

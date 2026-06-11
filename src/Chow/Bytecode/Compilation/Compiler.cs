@@ -450,7 +450,7 @@ namespace Chow.Bytecode.Compilation
         void CompileExpression(ExpressionNode expressionNode)
         {
             // `and`/`or` short-circuit, so they cannot use the eager postfix layout used by all other binary operators
-            if (expressionNode.Operator == ExpressionOperator.And || expressionNode.Operator == ExpressionOperator.Or)
+            if (expressionNode.Operator == Operator.And || expressionNode.Operator == Operator.Or)
             {
                 CompileShortCircuit(expressionNode);
                 return;
@@ -472,7 +472,7 @@ namespace Chow.Bytecode.Compilation
         {
             CompileTargetNode(expressionNode.Left);
 
-            var jumpCode = expressionNode.Operator == ExpressionOperator.And
+            var jumpCode = expressionNode.Operator == Operator.And
                 ? OperationCode.JumpIfFalseOrPop
                 : OperationCode.JumpIfTrueOrPop;
 
@@ -680,63 +680,63 @@ namespace Chow.Bytecode.Compilation
         {
             switch (expressionNode.Operator)
             {
-                case ExpressionOperator.Add:
+                case Operator.Add:
                     return OperationCode.BinaryAdd;
 
-                case ExpressionOperator.Subtract:
+                case Operator.Subtract:
                     return OperationCode.BinarySubtract;
 
-                case ExpressionOperator.Multiply:
+                case Operator.Multiply:
                     return OperationCode.BinaryMultiply;
 
-                case ExpressionOperator.Divide:
+                case Operator.Divide:
                     return OperationCode.BinaryDivide;
 
-                case ExpressionOperator.Modulus:
+                case Operator.Modulus:
                     return OperationCode.BinaryModulus;
 
-                case ExpressionOperator.Exponentiate:
+                case Operator.Exponentiate:
                     return OperationCode.BinaryPow;
 
-                case ExpressionOperator.FloorDivide:
+                case Operator.FloorDivide:
                     return OperationCode.BinaryFloor;
 
-                case ExpressionOperator.Negate:
+                case Operator.Negate:
                     return OperationCode.UnaryNegate;
 
-                case ExpressionOperator.Equal:
+                case Operator.Equal:
                     return OperationCode.BinaryEqual;
 
-                case ExpressionOperator.NotEqual:
+                case Operator.NotEqual:
                     return OperationCode.BinaryNotEqual;
 
-                case ExpressionOperator.Less:
+                case Operator.Less:
                     return OperationCode.BinaryLess;
 
-                case ExpressionOperator.Greater:
+                case Operator.Greater:
                     return OperationCode.BinaryGreater;
 
-                case ExpressionOperator.LessEqual:
+                case Operator.LessEqual:
                     return OperationCode.BinaryLessEqual;
 
-                case ExpressionOperator.GreaterEqual:
+                case Operator.GreaterEqual:
                     return OperationCode.BinaryGreaterEqual;
 
-                case ExpressionOperator.Not:
+                case Operator.Not:
                     return OperationCode.UnaryNot;
 
-                case ExpressionOperator.BinaryOr:
+                case Operator.BinaryOr:
                     return OperationCode.BinaryUnion;
 
-                case ExpressionOperator.In:
+                case Operator.In:
                     return OperationCode.BinaryIn;
 
-                case ExpressionOperator.NotIn:
+                case Operator.NotIn:
                     return OperationCode.BinaryNotIn;
 
-                case ExpressionOperator.And:
-                case ExpressionOperator.Or:
-                case ExpressionOperator.ToStr:
+                case Operator.And:
+                case Operator.Or:
+                case Operator.ToStr:
                 default:
                     throw new NotImplementedException(nameof(expressionNode.Operator));
             }

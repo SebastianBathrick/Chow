@@ -82,7 +82,7 @@ namespace Chow.SourceData
 
         public static SourceValue Add(ref SourceValue r, ref SourceValue l)
         {
-            switch (GetConversionDataType(AdditionConversionMap, l.DataType, r.DataType, ExpressionOperator.Add))
+            switch (GetConversionDataType(AdditionConversionMap, l.DataType, r.DataType, Operator.Add))
             {
                 case DataType.Long:   return new SourceValue(l.ToLong()   + r.ToLong());
                 case DataType.Double: return new SourceValue(l.ToDouble() + r.ToDouble());
@@ -98,7 +98,7 @@ namespace Chow.SourceData
 
         public static SourceValue Subtract(ref SourceValue r, ref SourceValue l)
         {
-            var convDataType = GetConversionDataType(NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Subtract);
+            var convDataType = GetConversionDataType(NumericConversionMap, l.DataType, r.DataType, Operator.Subtract);
             return convDataType == DataType.Long
                 ? new SourceValue(l.ToLong()   - r.ToLong())
                 : new SourceValue(l.ToDouble() - r.ToDouble());
@@ -106,7 +106,7 @@ namespace Chow.SourceData
 
         public static SourceValue Multiply(ref SourceValue r, ref SourceValue l)
         {
-            switch (GetConversionDataType(MultiplicationConversionMap, l.DataType, r.DataType, ExpressionOperator.Multiply))
+            switch (GetConversionDataType(MultiplicationConversionMap, l.DataType, r.DataType, Operator.Multiply))
             {
                 case DataType.Long:   return new SourceValue(l.ToLong()   * r.ToLong());
                 case DataType.Double: return new SourceValue(l.ToDouble() * r.ToDouble());
@@ -143,7 +143,7 @@ namespace Chow.SourceData
             // Python: `/` always yields float (e.g. 9 / 3 → 3.0), even for int operands.
             // Lookup validates operand types; result type is always double regardless of map value.
             GetConversionDataType(
-                NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Divide);
+                NumericConversionMap, l.DataType, r.DataType, Operator.Divide);
 
             var rightDbl = r.ToDouble();
             var leftDbl = l.ToDouble();
@@ -161,7 +161,7 @@ namespace Chow.SourceData
         public static SourceValue Mod(ref SourceValue r, ref SourceValue l)
         {
             var convDataType = GetConversionDataType(
-                NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Modulus);
+                NumericConversionMap, l.DataType, r.DataType, Operator.Modulus);
 
             if (convDataType == DataType.Long)
             {
@@ -201,7 +201,7 @@ namespace Chow.SourceData
         public static SourceValue EvaluateFloorDivision(ref SourceValue r, ref SourceValue l)
         {
             var convDataType = GetConversionDataType(
-                NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.FloorDivide);
+                NumericConversionMap, l.DataType, r.DataType, Operator.FloorDivide);
 
             if (convDataType == DataType.Long)
             {
@@ -251,7 +251,7 @@ namespace Chow.SourceData
         public static SourceValue Pow(ref SourceValue r, ref SourceValue l)
         {
             var convDataType = GetConversionDataType(
-                NumericConversionMap, l.DataType, r.DataType, ExpressionOperator.Exponentiate);
+                NumericConversionMap, l.DataType, r.DataType, Operator.Exponentiate);
 
             if (convDataType == DataType.Long)
             {
@@ -313,7 +313,7 @@ namespace Chow.SourceData
                 case DataType.Double:
                     return new SourceValue(-operand.ToDouble());
                 default:
-                    throw UnsupportedUnary(operand.DataType, ExpressionOperator.Negate);
+                    throw UnsupportedUnary(operand.DataType, Operator.Negate);
             }
 
         }
@@ -323,7 +323,7 @@ namespace Chow.SourceData
         #region Helper Methods
 
         static DataType GetConversionDataType(
-            DataType?[,] map, DataType leftDataType, DataType rightDataType, ExpressionOperator op)
+            DataType?[,] map, DataType leftDataType, DataType rightDataType, Operator op)
         {
             var convDataType = map[(int)leftDataType, (int)rightDataType];
 
@@ -335,7 +335,7 @@ namespace Chow.SourceData
             throw UnsupportedBinary(leftDataType, rightDataType, op);
         }
 
-        static DataTypeException UnsupportedBinary(DataType leftDataType, DataType rightDataType, ExpressionOperator op)
+        static DataTypeException UnsupportedBinary(DataType leftDataType, DataType rightDataType, Operator op)
         {
             // Message shape mirrors Python's TypeError wording and type names.
             return new DataTypeException(
@@ -343,7 +343,7 @@ namespace Chow.SourceData
                 + $"'{DataTypeNames.GetTypeName(leftDataType)}' and '{DataTypeNames.GetTypeName(rightDataType)}'");
         }
 
-        static DataTypeException UnsupportedUnary(DataType operandDataType, ExpressionOperator op)
+        static DataTypeException UnsupportedUnary(DataType operandDataType, Operator op)
         {
             return new DataTypeException(
                 $"TypeError: bad operand type for unary {OperatorStrings.ToSource(op)}: "

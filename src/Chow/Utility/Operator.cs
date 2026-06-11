@@ -1,6 +1,6 @@
 namespace Chow.Utility
 {
-    enum ExpressionOperator
+    enum Operator
     {
         Add,
         Subtract,

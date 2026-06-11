@@ -8,7 +8,7 @@ namespace Chow.Ast
     /// </summary>
     sealed class ExpressionNode : Node
     {
-        public ExpressionOperator Operator { get; }
+        public Operator Operator { get; }
 
         /// <summary>
         /// The left operand of a binary expression or the operand of a unary expression.
@@ -19,7 +19,7 @@ namespace Chow.Ast
         public Node Right { get; }
 
         /// <summary>Initializes a node representing a binary expression.</summary>
-        public ExpressionNode(ExpressionOperator operatorType, Node left, Node right, int line) 
+        public ExpressionNode(Operator operatorType, Node left, Node right, int line) 
             : base(line)
         {
             Operator = operatorType;
@@ -28,7 +28,7 @@ namespace Chow.Ast
         }
 
         /// <summary>Initializes a node representing a unary expression.</summary>
-        public ExpressionNode(ExpressionOperator operatorType, Node left, int line) : base(line)
+        public ExpressionNode(Operator operatorType, Node left, int line) : base(line)
         {
             Operator = operatorType;
             Left = left;

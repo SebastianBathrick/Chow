@@ -6,23 +6,23 @@ namespace Chow.Utility
     static class OperatorStrings
     {
 
-        static readonly IReadOnlyDictionary<ExpressionOperator, string> ExpressionOperatorMap = new Dictionary<ExpressionOperator, string>()
+        static readonly IReadOnlyDictionary<Operator, string> ExpressionOperatorMap = new Dictionary<Operator, string>()
         {
-            { ExpressionOperator.Add, "+" },
-            { ExpressionOperator.Subtract, "-" },
-            { ExpressionOperator.Multiply, "*" },
-            { ExpressionOperator.Divide, "/" },
-            { ExpressionOperator.Modulus, "%" },
-            { ExpressionOperator.Exponentiate, "**" },
-            { ExpressionOperator.FloorDivide, "//" },
-            { ExpressionOperator.Negate, "-" },
-            { ExpressionOperator.Equal, "==" },
-            { ExpressionOperator.NotEqual, "!=" },
-            { ExpressionOperator.Less, "<" },
-            { ExpressionOperator.Greater, ">" },
-            { ExpressionOperator.LessEqual, "<=" },
-            { ExpressionOperator.GreaterEqual, ">=" },
-            { ExpressionOperator.BinaryOr, "|" },
+            { Operator.Add, "+" },
+            { Operator.Subtract, "-" },
+            { Operator.Multiply, "*" },
+            { Operator.Divide, "/" },
+            { Operator.Modulus, "%" },
+            { Operator.Exponentiate, "**" },
+            { Operator.FloorDivide, "//" },
+            { Operator.Negate, "-" },
+            { Operator.Equal, "==" },
+            { Operator.NotEqual, "!=" },
+            { Operator.Less, "<" },
+            { Operator.Greater, ">" },
+            { Operator.LessEqual, "<=" },
+            { Operator.GreaterEqual, ">=" },
+            { Operator.BinaryOr, "|" },
         };
 
 
@@ -38,7 +38,7 @@ namespace Chow.Utility
             { OperationCode.UnaryNegate, "-" },
         };
         
-        public static string ToSource(ExpressionOperator op)
+        public static string ToSource(Operator op)
         {
             return ExpressionOperatorMap[op];
         }

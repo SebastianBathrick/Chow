@@ -44,29 +44,29 @@ namespace Chow.SourceData
 
         public static SourceValue EvaluateLess(ref SourceValue r, ref SourceValue l)
         {
-            return new SourceValue(EvaluateOrdering(ref l, ref r, ExpressionOperator.Less));
+            return new SourceValue(EvaluateOrdering(ref l, ref r, Operator.Less));
         }
 
         public static SourceValue EvaluateGreater(ref SourceValue r, ref SourceValue l)
         {
-            return new SourceValue(EvaluateOrdering(ref l, ref r, ExpressionOperator.Greater));
+            return new SourceValue(EvaluateOrdering(ref l, ref r, Operator.Greater));
         }
 
         public static SourceValue EvaluateLessEqual(ref SourceValue r, ref SourceValue l)
         {
-            return new SourceValue(EvaluateOrdering(ref l, ref r, ExpressionOperator.LessEqual));
+            return new SourceValue(EvaluateOrdering(ref l, ref r, Operator.LessEqual));
         }
 
         public static SourceValue EvaluateGreaterEqual(ref SourceValue r, ref SourceValue l)
         {
-            return new SourceValue(EvaluateOrdering(ref l, ref r, ExpressionOperator.GreaterEqual));
+            return new SourceValue(EvaluateOrdering(ref l, ref r, Operator.GreaterEqual));
         }
 
         #endregion
 
         #region Helper Methods
 
-        static bool EvaluateOrdering(ref SourceValue l, ref SourceValue r, ExpressionOperator op)
+        static bool EvaluateOrdering(ref SourceValue l, ref SourceValue r, Operator op)
         {
             switch (GetConversionDataType(l.DataType, r.DataType, op))
             {
@@ -83,51 +83,51 @@ namespace Chow.SourceData
             }
         }
 
-        static bool CompareLong(long left, long right, ExpressionOperator op)
+        static bool CompareLong(long left, long right, Operator op)
         {
             switch (op)
             {
-                case ExpressionOperator.Less:
+                case Operator.Less:
                     return left < right;
-                case ExpressionOperator.Greater:
+                case Operator.Greater:
                     return left > right;
-                case ExpressionOperator.LessEqual:
+                case Operator.LessEqual:
                     return left <= right;
-                case ExpressionOperator.GreaterEqual:
+                case Operator.GreaterEqual:
                     return left >= right;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(op), op, null);
             }
         }
 
-        static bool CompareDouble(double left, double right, ExpressionOperator op)
+        static bool CompareDouble(double left, double right, Operator op)
         {
             switch (op)
             {
-                case ExpressionOperator.Less:
+                case Operator.Less:
                     return left < right;
-                case ExpressionOperator.Greater:
+                case Operator.Greater:
                     return left > right;
-                case ExpressionOperator.LessEqual:
+                case Operator.LessEqual:
                     return left <= right;
-                case ExpressionOperator.GreaterEqual:
+                case Operator.GreaterEqual:
                     return left >= right;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(op), op, null);
             }
         }
 
-        static bool CompareResult(int comparison, ExpressionOperator op)
+        static bool CompareResult(int comparison, Operator op)
         {
             switch (op)
             {
-                case ExpressionOperator.Less:
+                case Operator.Less:
                     return comparison < 0;
-                case ExpressionOperator.Greater:
+                case Operator.Greater:
                     return comparison > 0;
-                case ExpressionOperator.LessEqual:
+                case Operator.LessEqual:
                     return comparison <= 0;
-                case ExpressionOperator.GreaterEqual:
+                case Operator.GreaterEqual:
                     return comparison >= 0;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(op), op, null);
@@ -176,7 +176,7 @@ namespace Chow.SourceData
             }
         }
 
-        static DataType GetConversionDataType(DataType leftDataType, DataType rightDataType, ExpressionOperator op)
+        static DataType GetConversionDataType(DataType leftDataType, DataType rightDataType, Operator op)
         {
             var mapKey = (left: leftDataType, right: rightDataType);
 
