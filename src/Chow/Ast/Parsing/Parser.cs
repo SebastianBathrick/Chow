@@ -181,16 +181,11 @@ namespace Chow.Ast.Parsing
 
             if (!_tokens.IsMatch(TokenType.SymbolRightParen))
             {
-                var paramToken = _tokens.ConsumeMatch(TokenType.Name);
-                
-                paramList.Add(new NameNode(paramToken.Lexeme, paramToken.LineNumber));
-
-                while (_tokens.TryConsumeMatch(TokenType.SymbolComma))
+                ParseCommaSeparatedElements(() =>
                 {
-                    paramToken = _tokens.ConsumeMatch(TokenType.Name);
-                    
+                    var paramToken = _tokens.ConsumeMatch(TokenType.Name);
                     paramList.Add(new NameNode(paramToken.Lexeme, paramToken.LineNumber));
-                }
+                });
             }
 
             _tokens.ConsumeMatch(TokenType.SymbolRightParen);
@@ -272,22 +267,7 @@ namespace Chow.Ast.Parsing
             // Void functions always return None, and their calls inside expressions will not cause
             // an error
             return new ReturnStatementNode(
-                _tokens.IsMatch(
-                    TokenType.Name,
-                    TokenType.LiteralInt,
-                    TokenType.LiteralFloat,
-                    TokenType.LiteralStr,
-                    TokenType.LiteralFString,
-                    TokenType.KeywordNone,
-                    TokenType.KeywordTrue,
-                    TokenType.KeywordFalse,
-                    TokenType.KeywordNot,
-                    TokenType.SymbolLeftParen,
-                    TokenType.SymbolLeftBracket,
-                    TokenType.SymbolMinus,
-                    TokenType.SymbolLeftCurly)
-                    ? ParseExpression()
-                    : null,
+                _tokens.IsMatch(ExpressionStartTypes) ? ParseExpression() : null,
                 returnToken.LineNumber);
         }
 
@@ -306,16 +286,9 @@ namespace Chow.Ast.Parsing
         List<string> ParseDeclarationNameList(string keyword)
         {
             var names = new List<string>();
-            var firstToken = _tokens.ConsumeMatch(TokenType.Name);
-            
-            names.Add(firstToken.Lexeme);
 
-            while (_tokens.TryConsumeMatch(TokenType.SymbolComma))
-            {
-                var nameToken = _tokens.ConsumeMatch(TokenType.Name);
-                
-                names.Add(nameToken.Lexeme);
-            }
+            ParseCommaSeparatedElements(
+                () => names.Add(_tokens.ConsumeMatch(TokenType.Name).Lexeme));
 
             return names;
         }
@@ -546,12 +519,7 @@ namespace Chow.Ast.Parsing
 
             if (!_tokens.IsMatch(TokenType.SymbolRightParen))
             {
-                args.Add(ParseExpression());
-
-                while (_tokens.TryConsumeMatch(TokenType.SymbolComma))
-                {
-                    args.Add(ParseExpression());
-                }
+                ParseCommaSeparatedElements(() => args.Add(ParseExpression()));
             }
 
             _tokens.ConsumeMatch(TokenType.SymbolRightParen);
@@ -565,13 +533,9 @@ namespace Chow.Ast.Parsing
 
             if (!_tokens.IsMatch(TokenType.SymbolRightBracket))
             {
-                elements.Add(ParseExpression());
-
                 // Allow trailing comma: `[1, 2,]`
-                while (_tokens.TryConsumeMatch(TokenType.SymbolComma) && !_tokens.IsMatch(TokenType.SymbolRightBracket))
-                {
-                    elements.Add(ParseExpression());
-                }
+                ParseCommaSeparatedElements(
+                    () => elements.Add(ParseExpression()), TokenType.SymbolRightBracket);
             }
 
             _tokens.ConsumeMatch(TokenType.SymbolRightBracket);
@@ -586,12 +550,8 @@ namespace Chow.Ast.Parsing
 
             if (!_tokens.IsMatch(TokenType.SymbolRightCurly))
             {
-                ParseDictEntry(keys, values);
-
-                while (_tokens.TryConsumeMatch(TokenType.SymbolComma) && !_tokens.IsMatch(TokenType.SymbolRightCurly))
-                {
-                    ParseDictEntry(keys, values);
-                }
+                ParseCommaSeparatedElements(
+                    () => ParseDictEntry(keys, values), TokenType.SymbolRightCurly);
             }
 
             _tokens.ConsumeMatch(TokenType.SymbolRightCurly);
@@ -636,8 +596,8 @@ namespace Chow.Ast.Parsing
 
         Node ParsePrimary()
         {
-            // Note: After adding a new primary token type, remember to update expression-start
-            // checks that gate statements and return expressions.
+            // Note: After adding a new primary token type, remember to add it to
+            // ExpressionStartTypes.
             switch (_tokens.Peek())
             {
                 case TokenType.Name:
@@ -678,6 +638,21 @@ namespace Chow.Ast.Parsing
         #endregion
 
         #region Helper Methods
+
+        /// <summary>Parses one or more comma-separated elements.</summary>
+        /// <param name="parseElement">Parses a single element and stores it.</param>
+        /// <param name="closingType">The token type that may follow a trailing comma to end the
+        /// list, or <c>null</c> if a trailing comma is not allowed.</param>
+        void ParseCommaSeparatedElements(Action parseElement, TokenType? closingType = null)
+        {
+            parseElement();
+
+            while (_tokens.TryConsumeMatch(TokenType.SymbolComma)
+                && !(closingType.HasValue && _tokens.IsMatch(closingType.Value)))
+            {
+                parseElement();
+            }
+        }
 
         static Operator MapTokenTypeToBinary(TokenType type)
         {
