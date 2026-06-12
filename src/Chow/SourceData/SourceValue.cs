@@ -17,12 +17,12 @@ namespace Chow.SourceData
         public static readonly SourceValue None = new SourceValue(DataType.None);
         
         /// <summary>Represents the SourceValue equivalent to null/nil/none values.</summary>
-        [FieldOffset(OBJ_FIELD_OFFSET)] readonly object _obj;
-        [FieldOffset(LONG_FIELD_OFFSET)] readonly long _long;
-        [FieldOffset(DBL_FIELD_OFFSET)] readonly double _dbl;
-        [FieldOffset(TAG_FIELD_OFFSET)] readonly DataType _dataType;
+        [FieldOffset(ObjectFieldOffset)] readonly object _obj;
+        [FieldOffset(LongFieldOffset)] readonly long _long;
+        [FieldOffset(DoubleFieldOffset)] readonly double _dbl;
+        [FieldOffset(TagFieldOffset)] readonly DataType _dataType;
         
-        bool BoolValue => _long == BOOL_T_TO_LONG;
+        bool BoolValue => _long == BoolTrueToLong;
 
         internal DataType DataType => _dataType;
 
@@ -30,10 +30,10 @@ namespace Chow.SourceData
 
         SourceValue(
             DataType dataType = DataType.None,
-            bool boolValue = NOT_BOOL_INIT,
-            object objVal = NOT_OBJ_INIT,
-            long longVal = NOT_LONG_INIT,
-            double doubleVal = NOT_DBL_INIT)
+            bool boolValue = NotBoolInitialValue,
+            object objVal = NotObjectInitialValue,
+            long longVal = NotLongInitialValue,
+            double doubleVal = NotDoubleInitialValue)
         {
             _dataType = dataType;
             _obj = objVal;
@@ -44,11 +44,11 @@ namespace Chow.SourceData
             switch (dataType)
             {
                 case DataType.Bool:
-                    _dbl = NOT_DBL_INIT;
-                    _long = boolValue ? BOOL_T_TO_LONG : BOOL_F_TO_LONG;
+                    _dbl = NotDoubleInitialValue;
+                    _long = boolValue ? BoolTrueToLong : BoolFalseToLong;
                     break;
                 case DataType.Double:
-                    _long = NOT_LONG_INIT;
+                    _long = NotLongInitialValue;
                     _dbl = doubleVal;
                     break;
                 case DataType.Object:
@@ -60,7 +60,7 @@ namespace Chow.SourceData
                 case DataType.Str:
                 case DataType.None:
                 case DataType.Long:
-                    _dbl = NOT_DBL_INIT;
+                    _dbl = NotDoubleInitialValue;
                     _long = longVal;
                     break;
 
@@ -116,8 +116,8 @@ namespace Chow.SourceData
                 default:
                     _dataType = DataType.Object;
                     _obj = obj;
-                    _long = NOT_LONG_INIT;
-                    _dbl = NOT_DBL_INIT;
+                    _long = NotLongInitialValue;
+                    _dbl = NotDoubleInitialValue;
                     break;
             }
         }
@@ -153,19 +153,19 @@ namespace Chow.SourceData
             switch (_dataType)
             {
                 case DataType.None:
-                    return NONE_TO_BOOL_T_AND_F;
+                    return NoneToBool;
 
                 case DataType.Bool:
                     return BoolValue;
 
                 case DataType.Object:
-                    return OBJ_TO_BOOL_T_AND_F;
+                    return ObjectToBool;
 
                 case DataType.Long:
-                    return _long != LONG_TO_BOOL_F;
+                    return _long != LongToBoolFalse;
 
                 case DataType.Double:
-                    return Math.Abs(_dbl - DBL_TO_BOOL_F) > TOLERANCE;
+                    return Math.Abs(_dbl - DoubleToBoolFalse) > TOLERANCE;
 
                 case DataType.Str:
                     return StringToBool();
@@ -188,7 +188,7 @@ namespace Chow.SourceData
             switch (_dataType)
             {
                 case DataType.Bool:
-                    return BoolValue ? BOOL_T_TO_LONG : BOOL_F_TO_LONG;
+                    return BoolValue ? BoolTrueToLong : BoolFalseToLong;
                     
                 case DataType.Long:
                     return _long;
@@ -210,7 +210,7 @@ namespace Chow.SourceData
             switch (_dataType)
             {
                 case DataType.Bool:
-                    return BoolValue ? BOOL_T_TO_DBL : BOOL_F_TO_DBL;
+                    return BoolValue ? BoolTrueToDouble : BoolFalseToDouble;
 
                 case DataType.Long:
                     return _long;
@@ -287,7 +287,7 @@ namespace Chow.SourceData
         {
             if (_obj is string strValue)
             {
-                return strValue.Length != STR_LEN_TO_BOOL_F;
+                return strValue.Length != StringLengthToBool;
             }
 
             throw new InvalidOperationException("Expected string value for boolean comparison");
@@ -346,33 +346,30 @@ namespace Chow.SourceData
         #region Constants
 
         // GetHashCode mixing multiplier (standard small prime for combining hashes)
-        const int HASH_COMBINE_PRIME = 397;
+        const int HashCombinePrime = 397;
 
         // Constructor defaults
-        const bool NOT_BOOL_INIT = false;
-        const object NOT_OBJ_INIT = null;
-        const long NOT_LONG_INIT = 0L;
-        const double NOT_DBL_INIT = 0.0;
+        const bool NotBoolInitialValue = false;
+        const object NotObjectInitialValue = null;
+        const long NotLongInitialValue = 0L;
+        const double NotDoubleInitialValue = 0.0;
 
         // ToBool source representations (numeric "false" values)
-        const long LONG_TO_BOOL_F = 0L;
-        const double DBL_TO_BOOL_F = 0.0;
+        const long LongToBoolFalse = 0L;
+        const double DoubleToBoolFalse = 0.0;
 
         // ToBool source representations (container/string "false" lengths, plus None/Object fixed reps)
-        const int STR_LEN_TO_BOOL_F = 0;
-        const int LIST_COUNT_TO_BOOL_F = 0;
-        const int DICT_LEN_TO_BOOL_F = 0;
-        const int RNG_LEN_TO_BOOL_F = 0;
-        const bool NONE_TO_BOOL_T_AND_F = false;
-        const bool OBJ_TO_BOOL_T_AND_F = true;
+        const int StringLengthToBool = 0;
+        const bool NoneToBool = false;
+        const bool ObjectToBool = true;
 
         // ToLong source representations (bool -> long)
-        const long BOOL_F_TO_LONG = 0L;
-        const long BOOL_T_TO_LONG = 1L;
+        const long BoolFalseToLong = 0L;
+        const long BoolTrueToLong = 1L;
 
         // ToDouble source representations (bool -> double)
-        const double BOOL_F_TO_DBL = 0.0;
-        const double BOOL_T_TO_DBL = 1.0;
+        const double BoolFalseToDouble = 0.0;
+        const double BoolTrueToDouble = 1.0;
 
         // ToSource source representations (None/bool -> str)
         const string NONE_TO_STR = "None";
@@ -388,10 +385,10 @@ namespace Chow.SourceData
         // String.IndexOf "not found" sentinel (used by ToSource float formatting check)
         const int CHAR_NOT_FOUND_INX = -1;
 
-        const int OBJ_FIELD_OFFSET = 0;
-        const int LONG_FIELD_OFFSET = 8;
-        const int DBL_FIELD_OFFSET = 8;
-        const int TAG_FIELD_OFFSET = 16;
+        const int ObjectFieldOffset = 0;
+        const int LongFieldOffset = 8;
+        const int DoubleFieldOffset = 8;
+        const int TagFieldOffset = 16;
 
         #endregion
 
@@ -533,9 +530,7 @@ namespace Chow.SourceData
         {
             // Cheapest, most-discriminating check first; _long and _dbl overlap in the
             // explicit-layout union, so one bitwise compare covers both numeric fields.
-            return _dataType == other._dataType
-                && _long == other._long
-                && Equals(_obj, other._obj);
+            return _dataType == other._dataType && _long == other._long && Equals(_obj, other._obj);
         }
 
         public override bool Equals(object obj)
@@ -549,8 +544,8 @@ namespace Chow.SourceData
             {
                 // _dbl shares _long's bits in the union, so hashing _long covers both.
                 var hashCode = (_obj != null ? _obj.GetHashCode() : 0);
-                hashCode = (hashCode * HASH_COMBINE_PRIME) ^ _long.GetHashCode();
-                hashCode = (hashCode * HASH_COMBINE_PRIME) ^ (int)_dataType;
+                hashCode = hashCode * HashCombinePrime ^ _long.GetHashCode();
+                hashCode = hashCode * HashCombinePrime ^ (int)_dataType;
                 return hashCode;
             }
         }

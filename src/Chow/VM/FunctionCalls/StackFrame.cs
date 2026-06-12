@@ -27,7 +27,7 @@ namespace Chow.VM.FunctionCalls
         public bool IsInstrToRun => _instrIdx < Chunk.InstructionCount;
 
         /// <summary>Source line number associated with the current instruction.</summary>
-        public int CurrentLineNum => Chunk.GetInstructionLineIndex(_instrIdx);
+        public int CurrentLineNum => Chunk.GetLineIndex(_instrIdx);
 
         /// <summary>Creates a frame positioned at the first instruction.</summary>
         public StackFrame(Chunk chunk, Scope scope)

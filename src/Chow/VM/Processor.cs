@@ -318,7 +318,7 @@ namespace Chow.VM
         void ExecuteAssignVariable(int operand)
         {
             // Operand -> name via Chunk; CallStack routes the assign to the current frame's scope.
-            var name = _callStack.CurrentChunk.ReadVariableName(operand);
+            var name = _callStack.CurrentChunk.GetVariableName(operand);
             var assignVal = _valStack.Pop();
 
             _callStack.AssignVariableValue(name, ref assignVal);
@@ -328,7 +328,7 @@ namespace Chow.VM
         {
             // Operand -> name via Chunk. Semantic analysis is responsible for ensuring the
             // name exists before this op runs.
-            var varName = _callStack.CurrentChunk.ReadVariableName(operand);
+            var varName = _callStack.CurrentChunk.GetVariableName(operand);
 
             if (!_callStack.TryGetVariableValue(varName, out var varValue))
             {
@@ -340,7 +340,7 @@ namespace Chow.VM
 
         void ExecuteAssignGlobal(int operand)
         {
-            var name = _callStack.CurrentChunk.ReadVariableName(operand);
+            var name = _callStack.CurrentChunk.GetVariableName(operand);
             var assignVal = _valStack.Pop();
 
             _callStack.AssignToGlobal(name, ref assignVal);
@@ -348,7 +348,7 @@ namespace Chow.VM
 
         void ExecutePushGlobalValue(int operand)
         {
-            var varName = _callStack.CurrentChunk.ReadVariableName(operand);
+            var varName = _callStack.CurrentChunk.GetVariableName(operand);
 
             if (!_callStack.TryGetGlobal(varName, out var varValue))
             {
@@ -360,7 +360,7 @@ namespace Chow.VM
 
         void ExecuteAssignNonLocal(int operand)
         {
-            var name = _callStack.CurrentChunk.ReadVariableName(operand);
+            var name = _callStack.CurrentChunk.GetVariableName(operand);
             var assignVal = _valStack.Pop();
 
             _callStack.AssignToNonlocal(name, ref assignVal);
@@ -370,7 +370,7 @@ namespace Chow.VM
         {
             // Semantic analysis guarantees an enclosing function binding exists; the CallStack
             // helper throws KeyNotFoundException if that invariant is violated.
-            var varName = _callStack.CurrentChunk.ReadVariableName(operand);
+            var varName = _callStack.CurrentChunk.GetVariableName(operand);
             _valStack.Push(_callStack.GetNonlocal(varName));
         }
 
@@ -380,7 +380,7 @@ namespace Chow.VM
 
         void ExecuteAssignAttribute(int operand)
         {
-            var attrName = _callStack.CurrentChunk.ReadVariableName(operand);
+            var attrName = _callStack.CurrentChunk.GetVariableName(operand);
             _valStack.Pop();
             var target = _valStack.Pop();
 
@@ -389,7 +389,7 @@ namespace Chow.VM
 
         void ExecutePushAttribute(int operand)
         {
-            var attrName = _callStack.CurrentChunk.ReadVariableName(operand);
+            var attrName = _callStack.CurrentChunk.GetVariableName(operand);
             var target = _valStack.Pop();
 
             // TODO: class instances add a branch that consults the instance attribute table, then the class method table.
