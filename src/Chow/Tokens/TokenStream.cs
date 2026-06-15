@@ -48,7 +48,7 @@ namespace Chow.Tokens
         }
 
         /// <inheritdoc/>
-        public TokenType Peek()
+        public TokenType PeekType()
         {
             return SelectedToken.Type;
         }

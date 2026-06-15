@@ -3,6 +3,7 @@ using Chow.Utility;
 
 namespace Chow.Ast.Parsing
 {
+    /// <summary>Classifies token types by their syntactic role.</summary>
     static class SyntaxMaps
     {
         static readonly TokenType[] ComparisonOperatorTypes =
@@ -33,6 +34,12 @@ namespace Chow.Ast.Parsing
             TokenType.SymbolLeftCurly
         };
 
+        /// <summary>
+        /// Determines whether <paramref name="checkType"/> can begin an expression.
+        /// </summary>
+        /// <param name="checkType">The token type to classify.</param>
+        /// <returns><c>true</c> if a token of <paramref name="checkType"/> can begin an
+        /// expression; otherwise, <c>false</c>.</returns>
         public static bool IsExpressionStart(TokenType checkType)
         {
             foreach (var type in ExpressionStartTypes)
@@ -46,6 +53,12 @@ namespace Chow.Ast.Parsing
             return false;
         }
 
+        /// <summary>
+        /// Determines whether <paramref name="checkType"/> is a comparison operator.
+        /// </summary>
+        /// <param name="checkType">The token type to classify.</param>
+        /// <returns><c>true</c> if <paramref name="checkType"/> is a comparison operator;
+        /// otherwise, <c>false</c>.</returns>
         public static bool IsComparisonOperator(TokenType checkType)
         {
             foreach (var type in ComparisonOperatorTypes)
@@ -59,6 +72,13 @@ namespace Chow.Ast.Parsing
             return false;
         }
 
+        /// <summary>
+        /// Maps <paramref name="operatorType"/> to the binary operator it represents.
+        /// </summary>
+        /// <param name="operatorType">The token type to map.</param>
+        /// <returns>The binary operator represented by <paramref name="operatorType"/>.</returns>
+        /// <exception cref="UnreachableException"><paramref name="operatorType"/> does not
+        /// represent a binary operator.</exception>
         public static Operator ToBinaryOperator(TokenType operatorType)
         {
             switch (operatorType)

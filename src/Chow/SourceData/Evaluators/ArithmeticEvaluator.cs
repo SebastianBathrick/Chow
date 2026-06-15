@@ -5,16 +5,16 @@ using Chow.Utility;
 using Chow.VM;
 namespace Chow.SourceData
 {
-    // TODO: Replace with more performant, refactored version
     class ArithmeticEvaluator
     {
-        // TODO: Update project's const naming conventions from SNAKE_CASE to PascalCase
         const int IsDoubleEqualInteger = 0;
 
         // Conversion tables are dense 2D arrays indexed by (left, right) DataType so the
         // per-operation lookup is two array indexes instead of hashing a tuple key.
         // A null entry means the operand pair is unsupported for that operator.
 
+        // TODO: Create seperate classes to map conversion rules
+        
         // Python treats bool as a subtype of int; any float operand promotes the whole op to float.
         static readonly DataType?[,] NumericConversionMap = BuildConversionMap(new[]
         {

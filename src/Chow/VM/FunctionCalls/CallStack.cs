@@ -18,7 +18,7 @@ namespace Chow.VM.FunctionCalls
         readonly Stack<StackFrame> _callFrames;
 
         // Cached active frame (module frame or top call frame); kept in sync by
-        // EnterFunctionCall/ExitFunctionCall so per-instruction reads avoid Count/Peek.
+        // EnterFunctionCall/ExitFunctionCall so per-instruction reads avoid Count/PeekType.
         StackFrame _currFrame;
 
         /// <summary>The chunk currently being executed (function chunk if inside a call, module chunk otherwise).</summary>
