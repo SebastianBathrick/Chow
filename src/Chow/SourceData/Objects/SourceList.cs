@@ -65,7 +65,7 @@ namespace Chow.SourceData
             this[(int)key.ToLong()] = value;
         }
 
-        public override void Append(SourceValue value)
+        public override void AppendItem(SourceValue value)
         {
             _elements.Add(value);
         }

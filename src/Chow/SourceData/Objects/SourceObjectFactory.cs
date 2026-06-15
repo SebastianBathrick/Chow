@@ -4,7 +4,7 @@ namespace Chow.SourceData
 {
     static class SourceObjectFactory
     {
-        public static ISourceObject GetSourceObject(DataType srcObjType)
+        public static ISourceObject CreateNewObject(DataType srcObjType)
         {
             switch (srcObjType)
             {

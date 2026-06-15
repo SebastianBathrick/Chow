@@ -242,7 +242,7 @@ namespace Chow.StandardLibrary.BuiltIns
                 var iterator = IteratorFactory.GetIterator(args[0]);
                 while (iterator.TryMoveNext(out var current))
                 {
-                    result.Append(current);
+                    result.AppendItem(current);
                 }
             }
 
@@ -341,7 +341,7 @@ namespace Chow.StandardLibrary.BuiltIns
 
                 foreach (var arg in args)
                 {
-                    packed.Append(arg);
+                    packed.AppendItem(arg);
                 }
 
                 iterator = packed.GetIterator();

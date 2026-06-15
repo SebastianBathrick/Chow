@@ -176,7 +176,7 @@ namespace Chow.VM
                     ExecutePushSubscriptSliceValue();
                     break;
 
-                // -- Function Call Operations ----------------------------------------------------
+                // -- Function CallMethod Operations ----------------------------------------------------
                 case OperationCode.CallFunction:
                     // If false, the chunk will have switched to the called closure's
                     return ExecuteCallFunction(instr.Operand);
@@ -437,11 +437,11 @@ namespace Chow.VM
                 reversed[i] = _valStack.Pop();
             }
 
-            var list = SourceObjectFactory.GetSourceObject(DataType.List);
+            var list = SourceObjectFactory.CreateNewObject(DataType.List);
 
             for (var i = 0; i < elementCount; i++)
             {
-                list.Append(reversed[i]);
+                list.AppendItem(reversed[i]);
             }
 
             _valStack.Push(new SourceValue(list));
@@ -459,7 +459,7 @@ namespace Chow.VM
                 keys[i] = _valStack.Pop();
             }
 
-            var dict = SourceObjectFactory.GetSourceObject(DataType.Dict);
+            var dict = SourceObjectFactory.CreateNewObject(DataType.Dict);
 
             for (var i = 0; i < pairCount; i++)
             {
@@ -580,7 +580,7 @@ namespace Chow.VM
 
         #endregion
 
-        #region Function Call Operations
+        #region Function CallMethod Operations
 
         bool ExecuteCallFunction(int argCount)
         {

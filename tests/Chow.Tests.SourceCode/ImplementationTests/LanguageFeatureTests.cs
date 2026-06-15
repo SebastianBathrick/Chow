@@ -2835,11 +2835,11 @@ public class LanguageFeatureTests
 
     static ChowValue List(params SourceValue[] values)
     {
-        var list = SourceObjectFactory.GetSourceObject(DataType.List);
+        var list = SourceObjectFactory.CreateNewObject(DataType.List);
 
         foreach (var value in values)
         {
-            list.Append(value);
+            list.AppendItem(value);
         }
 
         return new ChowValue(new SourceValue(list));

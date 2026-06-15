@@ -12,12 +12,7 @@ namespace Chow.SourceData
     abstract class SourceObject : ISourceObject
     {
         // ---------------- Construction ----------------
-
-        public void Initialize()
-        {
-            Initialize(Array.Empty<SourceValue>());
-        }
-
+        
         /// <summary>(Python: <c>__init__</c>) Default accepts no state; constructor-initialized types need not override.</summary>
         public virtual void Initialize(params SourceValue[] args)
         {
@@ -135,9 +130,9 @@ namespace Chow.SourceData
         }
 
         /// <summary>(Python: <c>list.append</c> / <c>__iadd__</c> for sequences)</summary>
-        public virtual void Append(SourceValue value)
+        public virtual void AppendItem(SourceValue value)
         {
-            throw new NotSupportedException(nameof(Append));
+            throw new NotSupportedException(nameof(AppendItem));
         }
 
         // ---------------- Membership & iteration ----------------
@@ -210,6 +205,11 @@ namespace Chow.SourceData
         /// callable.
         /// </summary>
         public virtual SourceValue Call(params SourceValue[] args)
+        {
+            throw new NotSupportedException(nameof(Call));
+        }
+        
+        public virtual SourceValue Call(SourceValue arg1, SourceValue arg2, params SourceValue[] args)
         {
             throw new NotSupportedException(nameof(Call));
         }
