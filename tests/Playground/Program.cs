@@ -1,11 +1,14 @@
 ﻿using Chow;
 
-ChowValue value = ChowValue.CreateList();
+ChowValue value = ChowEngine.Execute(@"
+employees = []
+is_running = True
 
-ChowList list = value;
+while is_running:
+    employees.append(input(""Enter employee name: ""))
+    is_running = input(""Continue? (y/n): "") != ""n""
 
-list.Append(0);
-list.Append(2);
-list[0] = -1;
+employees
+");
 
-Console.WriteLine(list);
+Console.WriteLine(value.ToString());
