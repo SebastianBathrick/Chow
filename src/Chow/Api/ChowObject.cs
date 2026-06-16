@@ -3,12 +3,12 @@ using Chow.SourceData;
 
 namespace Chow
 {
-    public sealed class ChowValue : IChowValue
+    public sealed class ChowObject : IChowObject
     {
         #region Properties
 
-        public static ChowValue None { get; }
-            = (ChowValue)ApiConverter.Convert(SourceValue.None);
+        public static ChowObject None { get; }
+            = (ChowObject)ApiConverter.Convert(SourceValue.None);
 
         internal SourceValue SourceValue { get; }
 
@@ -16,14 +16,14 @@ namespace Chow
 
         public int Length => SourceObject.Length;
 
-        public ChowValue this[ChowValue key]
+        public ChowObject this[ChowObject key]
         {
-            get => new ChowValue(SourceObject.GetItem(key.SourceValue));
+            get => new ChowObject(SourceObject.GetItem(key.SourceValue));
             set => SourceObject.SetItem(key.SourceValue, value.SourceValue);
         }
 
         // This is primarily for testing. Avoid using internally if possible
-        internal ChowValue(SourceValue srcVal)
+        internal ChowObject(SourceValue srcVal)
         {
             SourceValue = srcVal;
         }
@@ -32,7 +32,7 @@ namespace Chow
 
         ISourceObject _srcObj;
 
-        internal ChowValue(ref SourceValue srcVal)
+        internal ChowObject(ref SourceValue srcVal)
         {
             SourceValue = srcVal;
         }
@@ -44,32 +44,32 @@ namespace Chow
 
         #region Factory Methods
 
-        public static ChowValue CreateList()
+        public static ChowObject CreateList()
         {
-            // Cast, because IChowValue has no public API or implicit operators for the client
-            return (ChowValue)ChowValueFactory.CreateList();
+            // Cast, because IChowObject has no public API or implicit operators for the client
+            return (ChowObject)ChowObjectFactory.CreateList();
         }
 
-        public static ChowValue CreateDictionary()
+        public static ChowObject CreateDictionary()
         {
-            // Cast, because IChowValue has no public API or implicit operators for the client
-            return (ChowValue)ChowValueFactory.CreateDictionary();
+            // Cast, because IChowObject has no public API or implicit operators for the client
+            return (ChowObject)ChowObjectFactory.CreateDictionary();
         }
 
-        public static ChowValue CreateScope()
+        public static ChowObject CreateScope()
         {
-            // Cast, because IChowValue has no public API or implicit operators for the client
-            return (ChowValue)ChowValueFactory.CreateScope();
+            // Cast, because IChowObject has no public API or implicit operators for the client
+            return (ChowObject)ChowObjectFactory.CreateScope();
         }
 
         #endregion
 
         #region Attribute Methods
 
-        public ChowValue GetAttribute(ChowValue name)
+        public ChowObject GetAttribute(ChowObject name)
         {
             var attr = SourceObject.GetAttribute(name.SourceValue);
-            var chowVal = new ChowValue(attr);
+            var chowVal = new ChowObject(attr);
             return chowVal;
         }
 
@@ -77,58 +77,59 @@ namespace Chow
 
         #region Call Self Method Methods
 
-        public ChowValue Call(string methodName, params ChowValue[] args)
+        public ChowObject Call(string methodName, params ChowObject[] args)
         {
             var methodAttr = SourceObject.GetAttribute(methodName);
-
-            return new ChowValue(ChowEngine.Call(methodAttr, ApiConverter.Convert(args)));
+            var convertedArgs = ApiConverter.ConvertToInterface(args);
+            
+            return (ChowObject)ChowEngine.Call(ref methodAttr, convertedArgs);
         }
 
         #endregion
 
         #region Implicit Operators
 
-        public static implicit operator ChowValue(bool value)
+        public static implicit operator ChowObject(bool value)
         {
-            return new ChowValue(new SourceValue(value));
+            return new ChowObject(new SourceValue(value));
         }
 
-        public static implicit operator bool(ChowValue value)
+        public static implicit operator bool(ChowObject @object)
         {
-            return value.SourceValue.ToBool();
+            return @object.SourceValue.ToBool();
         }
 
-        public static implicit operator ChowValue(long value)
+        public static implicit operator ChowObject(long value)
         {
-            return new ChowValue(value);
+            return new ChowObject(value);
         }
 
-        public static implicit operator long(ChowValue value)
+        public static implicit operator long(ChowObject @object)
         {
-            return value.SourceValue.ToLong();
+            return @object.SourceValue.ToLong();
         }
 
-        public static implicit operator ChowValue(double value)
+        public static implicit operator ChowObject(double value)
         {
-            return new ChowValue(value);
+            return new ChowObject(value);
         }
 
-        public static implicit operator double(ChowValue value)
+        public static implicit operator double(ChowObject @object)
         {
-            return value.SourceValue.ToDouble();
+            return @object.SourceValue.ToDouble();
         }
 
-        public static implicit operator ChowValue(string value)
+        public static implicit operator ChowObject(string value)
         {
-            return new ChowValue(value);
+            return new ChowObject(value);
         }
 
-        public static implicit operator string(ChowValue value)
+        public static implicit operator string(ChowObject @object)
         {
-            return value.SourceValue.ToString();
+            return @object.SourceValue.ToString();
         }
 
-        public static implicit operator ChowValue(Func<object> value)
+        public static implicit operator ChowObject(Func<object> value)
         {
             Func<SourceValue[], SourceValue> wrapper = _ =>
             {
@@ -136,10 +137,10 @@ namespace Chow
                 return result is null ? SourceValue.None : new SourceValue(result);
             };
 
-            return new ChowValue(new SourceValue(wrapper));
+            return new ChowObject(new SourceValue(wrapper));
         }
 
-        public static implicit operator ChowValue(Action<object> value)
+        public static implicit operator ChowObject(Action<object> value)
         {
             Func<SourceValue[], SourceValue> wrapper = args =>
             {
@@ -147,10 +148,10 @@ namespace Chow
                 return SourceValue.None;
             };
 
-            return new ChowValue(new SourceValue(wrapper));
+            return new ChowObject(new SourceValue(wrapper));
         }
 
-        public static implicit operator ChowValue(Action<object[]> value)
+        public static implicit operator ChowObject(Action<object[]> value)
         {
             Func<SourceValue[], SourceValue> wrapper = args =>
             {
@@ -158,10 +159,10 @@ namespace Chow
                 return SourceValue.None;
             };
 
-            return new ChowValue(new SourceValue(wrapper));
+            return new ChowObject(new SourceValue(wrapper));
         }
 
-        public static implicit operator ChowValue(Func<object[], object> value)
+        public static implicit operator ChowObject(Func<object[], object> value)
         {
             Func<SourceValue[], SourceValue> wrapper = args =>
             {
@@ -169,10 +170,10 @@ namespace Chow
                 return result is null ? SourceValue.None : new SourceValue(result);
             };
 
-            return new ChowValue(new SourceValue(wrapper));
+            return new ChowObject(new SourceValue(wrapper));
         }
 
-        public static bool operator ==(ChowValue l, ChowValue r)
+        public static bool operator ==(ChowObject l, ChowObject r)
         {
             if (ReferenceEquals(l, r))
             {
@@ -187,37 +188,37 @@ namespace Chow
             return l.SourceValue.Equals(r.SourceValue);
         }
 
-        public static bool operator !=(ChowValue l, ChowValue r)
+        public static bool operator !=(ChowObject l, ChowObject r)
         {
             return !(l == r);
         }
 
-        public static bool operator ==(ChowValue l, bool r)
+        public static bool operator ==(ChowObject l, bool r)
         {
             return l?.SourceValue.ToBool() == r;
         }
 
-        public static bool operator !=(ChowValue l, bool r)
+        public static bool operator !=(ChowObject l, bool r)
         {
             return !(l == r);
         }
 
-        public static bool operator ==(ChowValue l, long r)
+        public static bool operator ==(ChowObject l, long r)
         {
             return l?.SourceValue.ToLong() == r;
         }
 
-        public static bool operator !=(ChowValue l, long r)
+        public static bool operator !=(ChowObject l, long r)
         {
             return !(l == r);
         }
 
-        public static bool operator ==(ChowValue l, double r)
+        public static bool operator ==(ChowObject l, double r)
         {
             return !(l is null) && l.SourceValue.ToDouble().Equals(r);
         }
 
-        public static bool operator !=(ChowValue l, double r)
+        public static bool operator !=(ChowObject l, double r)
         {
             return !(l == r);
         }
@@ -228,7 +229,7 @@ namespace Chow
 
         public override bool Equals(object obj)
         {
-            return obj is ChowValue other && SourceValue.Equals(other.SourceValue);
+            return obj is ChowObject other && SourceValue.Equals(other.SourceValue);
         }
 
         public override int GetHashCode()

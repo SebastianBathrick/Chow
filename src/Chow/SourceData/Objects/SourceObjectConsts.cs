@@ -20,7 +20,7 @@
         public const string DictionaryUpdateMethodName = "update";
         public const string DictionarySetMethodName = "setdefault";
 
-        public const string ScopeExpressionResultAttribute = "expr_stmt_result";
+        public const string Scope = "expr_stmt_result";
         public const string ScopeWrappedScopeAttribute = "wrapped_scope";
     }
 }

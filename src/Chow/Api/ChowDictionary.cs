@@ -2,82 +2,86 @@ using Chow.SourceData;
 
 namespace Chow
 {
-    public class ChowDictionary : IChowValue
+    public class ChowDictionary : IChowObject
     {
         // Temporary solution
-        readonly ChowValue _wrappedObject;
 
-        public int Length => _wrappedObject.Length;
-
-        public ChowValue this[ChowValue key]
+        internal ChowObject WrappedObject
         {
-            get => _wrappedObject[key];
-            set => _wrappedObject[key] = value;
+            get;
+        }
+
+        public int Length => WrappedObject.Length;
+
+        public ChowObject this[ChowObject key]
+        {
+            get => WrappedObject[key];
+            set => WrappedObject[key] = value;
         }
 
         public ChowDictionary()
         {
-            _wrappedObject = (ChowValue)ChowValueFactory.CreateDictionary();
+            WrappedObject = (ChowObject)ChowObjectFactory.CreateDictionary();
         }
 
-        internal ChowDictionary(ChowValue wrappedObject)
+        internal ChowDictionary(ChowObject wrappedObject)
         {
-            _wrappedObject = wrappedObject;
+            WrappedObject = wrappedObject;
         }
 
-        public ChowValue Get(ChowValue key)
+        public ChowObject Get(ChowObject key)
         {
-            return _wrappedObject.Call(SourceObjectConsts.DictionaryGetMethodName, key);
+            return WrappedObject.Call(SourceObjectConsts.DictionaryGetMethodName, key);
         }
 
-        public ChowValue Get(ChowValue key, ChowValue defaultValue)
+        public ChowObject Get(ChowObject key, ChowObject defaultObject)
         {
-            return _wrappedObject.Call(SourceObjectConsts.DictionaryGetMethodName, key, defaultValue);
+            return WrappedObject.Call(SourceObjectConsts.DictionaryGetMethodName, key, defaultObject);
         }
 
-        public ChowValue Pop(ChowValue key)
+        public ChowObject Pop(ChowObject key)
         {
-            return _wrappedObject.Call(SourceObjectConsts.DictionaryPopMethodName, key);
+            return WrappedObject.Call(SourceObjectConsts.DictionaryPopMethodName, key);
         }
 
-        public ChowValue Pop(ChowValue key, ChowValue defaultValue)
+        public ChowObject Pop(ChowObject key, ChowObject defaultObject)
         {
-            return _wrappedObject.Call(SourceObjectConsts.DictionaryPopMethodName, key, defaultValue);
+            return WrappedObject.Call(SourceObjectConsts.DictionaryPopMethodName, key, defaultObject);
         }
 
-        public void Update(ChowValue other)
+        public void Update(ChowObject other)
         {
-            _wrappedObject.Call(SourceObjectConsts.DictionaryUpdateMethodName, other);
+            WrappedObject.Call(SourceObjectConsts.DictionaryUpdateMethodName, other);
         }
 
-        public ChowValue SetDefault(ChowValue key)
+        public ChowObject SetDefault(ChowObject key)
         {
-            return _wrappedObject.Call(SourceObjectConsts.DictionarySetMethodName, key);
+            return WrappedObject.Call(SourceObjectConsts.DictionarySetMethodName, key);
         }
 
-        public ChowValue SetDefault(ChowValue key, ChowValue defaultValue)
+        public ChowObject SetDefault(ChowObject key, ChowObject defaultObject)
         {
-            return _wrappedObject.Call(SourceObjectConsts.DictionarySetMethodName, key, defaultValue);
+            return WrappedObject.Call(SourceObjectConsts.DictionarySetMethodName, key, defaultObject);
         }
 
         public void Clear()
         {
-            _wrappedObject.Call(SourceObjectConsts.DictionaryClearMethodName);
+            WrappedObject.Call(SourceObjectConsts.DictionaryClearMethodName);
         }
 
-        public static implicit operator ChowValue(ChowDictionary value)
+        public static implicit operator ChowObject(ChowDictionary value)
         {
-            return value._wrappedObject;
+            return value.WrappedObject;
         }
 
-        public static implicit operator ChowDictionary(ChowValue value)
+        public static implicit operator ChowDictionary(ChowObject @object)
         {
-            return new ChowDictionary(value);
+            return new ChowDictionary(@object);
         }
 
         public override string ToString()
         {
-            return _wrappedObject.ToString();
+            return WrappedObject.ToString();
         }
     }
 }

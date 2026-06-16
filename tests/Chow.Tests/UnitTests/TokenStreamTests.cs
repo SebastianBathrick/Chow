@@ -18,7 +18,7 @@ public class TokenStreamTests
     [Test]
     public void Consume_SelectedToken_ReturnsTokenAndAdvancesStream()
     {
-        var firstToken = Token(TokenType.Name, "value", 4);
+        var firstToken = Token(TokenType.Name, "@object", 4);
         var secondToken = Token(TokenType.EndOfCode, lineNumber: 5);
         var stream = CreateStream(firstToken, secondToken);
 

@@ -1,6 +1,6 @@
 ﻿namespace Chow
 {
-    public interface IChowValue
+    public interface IChowObject
     {
         string ToString();
     }

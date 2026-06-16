@@ -172,15 +172,15 @@ public class ChowProgramTests
 
     #region Expected Results
 
-    static readonly ChowValue CollatzExpectedResult = 8L;
-    static readonly ChowValue FizzBuzzExpectedResult = "1,2,Fizz,4,Buzz,Fizz,7,8,Fizz,Buzz,11,Fizz,13,14,FizzBuzz,";
-    static readonly ChowValue CaesarCipherExpectedResult = "hello";
-    static readonly ChowValue SieveExpectedResult = "[2, 3, 5, 7, 11, 13, 17, 19, 23, 29]";
-    static readonly ChowValue BankAccountFinalBalanceExpectedResult = 120L;
-    static readonly ChowValue WordFrequencyExpectedResult = 3L;
-    static readonly ChowValue BinarySearchHitExpectedResult = 6L;
-    static readonly ChowValue BinarySearchMissExpectedResult = -1L;
-    static readonly ChowValue ClosureCounterExpectedResult = 1L;
+    static readonly ChowObject CollatzExpectedResult = 8L;
+    static readonly ChowObject FizzBuzzExpectedResult = "1,2,Fizz,4,Buzz,Fizz,7,8,Fizz,Buzz,11,Fizz,13,14,FizzBuzz,";
+    static readonly ChowObject CaesarCipherExpectedResult = "hello";
+    static readonly ChowObject SieveExpectedResult = "[2, 3, 5, 7, 11, 13, 17, 19, 23, 29]";
+    static readonly ChowObject BankAccountFinalBalanceExpectedResult = 120L;
+    static readonly ChowObject WordFrequencyExpectedResult = 3L;
+    static readonly ChowObject BinarySearchHitExpectedResult = 6L;
+    static readonly ChowObject BinarySearchMissExpectedResult = -1L;
+    static readonly ChowObject ClosureCounterExpectedResult = 1L;
 
     #endregion
 
@@ -189,7 +189,7 @@ public class ChowProgramTests
     [Test]
     public void Execute_CollatzConjecture_CorrectStepCount()
     {
-        var returnValue = ChowEngine.Execute(CollatzSourceCode);
+        var returnValue = ChowEngine.Run(CollatzSourceCode);
 
         Assert.That(returnValue, Is.EqualTo(CollatzExpectedResult));
     }
@@ -197,7 +197,7 @@ public class ChowProgramTests
     [Test]
     public void Execute_FizzBuzz_CorrectOutputString()
     {
-        var returnValue = ChowEngine.Execute(FizzBuzzSourceCode);
+        var returnValue = ChowEngine.Run(FizzBuzzSourceCode);
 
         Assert.That(returnValue, Is.EqualTo(FizzBuzzExpectedResult));
     }
@@ -205,7 +205,7 @@ public class ChowProgramTests
     [Test]
     public void Execute_CaesarCipher_RoundTripRestoresOriginal()
     {
-        var returnValue = ChowEngine.Execute(CaesarCipherSourceCode);
+        var returnValue = ChowEngine.Run(CaesarCipherSourceCode);
 
         Assert.That(returnValue, Is.EqualTo(CaesarCipherExpectedResult));
     }
@@ -213,7 +213,7 @@ public class ChowProgramTests
     [Test]
     public void Execute_Sieve_CorrectPrimeList()
     {
-        var returnValue = ChowEngine.Execute(SieveSourceCode);
+        var returnValue = ChowEngine.Run(SieveSourceCode);
 
         Assert.That(returnValue, Is.EqualTo(SieveExpectedResult));
     }
@@ -221,7 +221,7 @@ public class ChowProgramTests
     [Test]
     public void Execute_BankAccount_CorrectFinalBalance()
     {
-        var returnValue = ChowEngine.Execute(BankAccountSourceCode);
+        var returnValue = ChowEngine.Run(BankAccountSourceCode);
 
         Assert.That(returnValue, Is.EqualTo(BankAccountFinalBalanceExpectedResult));
     }
@@ -229,7 +229,7 @@ public class ChowProgramTests
     [Test]
     public void Execute_WordFrequency_CorrectCountForRepeatedWord()
     {
-        var returnValue = ChowEngine.Execute(WordFrequencySourceCode);
+        var returnValue = ChowEngine.Run(WordFrequencySourceCode);
 
         Assert.That(returnValue, Is.EqualTo(WordFrequencyExpectedResult));
     }
@@ -237,7 +237,7 @@ public class ChowProgramTests
     [Test]
     public void Execute_BinarySearch_ReturnsCorrectIndexForHit()
     {
-        var returnValue = ChowEngine.Execute(BinarySearchHitSourceCode);
+        var returnValue = ChowEngine.Run(BinarySearchHitSourceCode);
 
         Assert.That(returnValue, Is.EqualTo(BinarySearchHitExpectedResult));
     }
@@ -245,7 +245,7 @@ public class ChowProgramTests
     [Test]
     public void Execute_BinarySearch_ReturnsNegativeOneForMiss()
     {
-        var returnValue = ChowEngine.Execute(BinarySearchMissSourceCode);
+        var returnValue = ChowEngine.Run(BinarySearchMissSourceCode);
 
         Assert.That(returnValue, Is.EqualTo(BinarySearchMissExpectedResult));
     }
@@ -253,7 +253,7 @@ public class ChowProgramTests
     [Test]
     public void Execute_ClosureCounter_IndependentCountersDoNotShareState()
     {
-        var returnValue = ChowEngine.Execute(ClosureCounterSourceCode);
+        var returnValue = ChowEngine.Run(ClosureCounterSourceCode);
 
         Assert.That(returnValue, Is.EqualTo(ClosureCounterExpectedResult));
     }

@@ -4,7 +4,7 @@ using Chow.VM;
 namespace Chow.SourceData
 {
     /// <summary>
-    /// Static service class for <see cref="InstructionProcessor"/> that performs logical
+    /// Static service class for <see cref="Processor"/> that performs logical
     /// operations that behave the same as Python's logical operators.
     /// </summary>
     static class LogicEvaluator

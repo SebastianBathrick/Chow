@@ -22,7 +22,7 @@ public class LanguageFeatureTests
     [TestCaseSource(nameof(ExecuteArithmeticOperatorCases))]
     public void Execute_ValidSourceCode_ReturnExpectedResult(CaseExecute caseExecute)
     {
-        var returnValue = ChowEngine.Execute(caseExecute.SourceCode);
+        var returnValue = ChowEngine.Run(caseExecute.SourceCode);
 
         Assert.That(returnValue, Is.EqualTo(caseExecute.ExpectedResult));
     }
@@ -31,8 +31,8 @@ public class LanguageFeatureTests
 
     #region Static Readonly Fields
     
-    static readonly ChowValue TrueChow = new(true);
-    static readonly ChowValue FalseChow = new(false);
+    static readonly ChowObject TrueChow = new(true);
+    static readonly ChowObject FalseChow = new(false);
     
     #endregion
 
@@ -1416,7 +1416,7 @@ public class LanguageFeatureTests
         
         #region Left Integer Right Double Mixed Operands
 
-        // An integer and a float compare equal when they share the same numeric value
+        // An integer and a float compare equal when they share the same numeric @object
         new(
             "1" + EQUALS + "1.0",
             TrueChow
@@ -1502,7 +1502,7 @@ public class LanguageFeatureTests
 
         #region Right Integer Left Double Mixed Operands
 
-        // A float and an integer compare equal when they share the same numeric value
+        // A float and an integer compare equal when they share the same numeric @object
         new(
             "1.0" + EQUALS + "1",
             TrueChow
@@ -1736,7 +1736,7 @@ public class LanguageFeatureTests
 
         new(
             NONE_STR + AND + "3",
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
@@ -2243,12 +2243,12 @@ public class LanguageFeatureTests
     [
         new(
             string.Empty,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             null!,
-            ChowValue.None
+            ChowObject.None
         ),
 
         // The supported sequences of characters that make up a single newline are as follows:
@@ -2260,34 +2260,34 @@ public class LanguageFeatureTests
 
         new(
             NEWLINE_LINUX_MAC,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             NEWLINE_WINDOWS,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             NEWLINE_OLD_MAC,
-            ChowValue.None
+            ChowObject.None
         ),
 
         #region Pure Spaces
 
         new(
             " ",
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             SINGLE_INDENT_SPACES,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             SINGLE_INDENT_SPACES + SINGLE_INDENT_SPACES,
-            ChowValue.None
+            ChowObject.None
         ),
 
         #endregion
@@ -2296,12 +2296,12 @@ public class LanguageFeatureTests
 
         new(
             SINGLE_INDENT_TAB,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             SINGLE_INDENT_TAB + SINGLE_INDENT_TAB,
-            ChowValue.None
+            ChowObject.None
         ),
 
         #endregion
@@ -2310,12 +2310,12 @@ public class LanguageFeatureTests
 
         new(
             SINGLE_INDENT_SPACES + SINGLE_INDENT_TAB,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             SINGLE_INDENT_TAB + SINGLE_INDENT_SPACES,
-            ChowValue.None
+            ChowObject.None
         ),
 
         #endregion
@@ -2324,17 +2324,17 @@ public class LanguageFeatureTests
 
         new(
             NEWLINE_LINUX_MAC + NEWLINE_LINUX_MAC,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             NEWLINE_WINDOWS + NEWLINE_WINDOWS,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             NEWLINE_OLD_MAC + NEWLINE_OLD_MAC,
-            ChowValue.None
+            ChowObject.None
         ),
 
         #endregion
@@ -2343,22 +2343,22 @@ public class LanguageFeatureTests
 
         new(
             NEWLINE_LINUX_MAC + NEWLINE_WINDOWS,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             NEWLINE_WINDOWS + NEWLINE_OLD_MAC,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             NEWLINE_OLD_MAC + NEWLINE_LINUX_MAC,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             NEWLINE_LINUX_MAC + NEWLINE_WINDOWS + NEWLINE_OLD_MAC,
-            ChowValue.None
+            ChowObject.None
         ),
 
         #endregion
@@ -2367,27 +2367,27 @@ public class LanguageFeatureTests
 
         new(
             SINGLE_INDENT_SPACES + NEWLINE_LINUX_MAC,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             NEWLINE_LINUX_MAC + SINGLE_INDENT_SPACES,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             SINGLE_INDENT_TAB + NEWLINE_WINDOWS + SINGLE_INDENT_TAB,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             NEWLINE_LINUX_MAC + SINGLE_INDENT_SPACES + NEWLINE_OLD_MAC,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             SINGLE_INDENT_SPACES + NEWLINE_WINDOWS + SINGLE_INDENT_TAB + NEWLINE_LINUX_MAC,
-            ChowValue.None
+            ChowObject.None
         ),
 
         #endregion
@@ -2398,12 +2398,12 @@ public class LanguageFeatureTests
         // early from SkipToFirstLexeme and is consumed by ScanIndentColumn instead
         new(
             "\f",
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             "\f" + NEWLINE_LINUX_MAC + SINGLE_INDENT_SPACES,
-            ChowValue.None
+            ChowObject.None
         ),
 
         #endregion
@@ -2413,34 +2413,34 @@ public class LanguageFeatureTests
         // Comment with no trailing newline — SkipRemainingLineChars consumes it and reaches EOF
         new(
             CODE_COMMENT,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             CODE_COMMENT + NEWLINE_LINUX_MAC,
-            ChowValue.None
+            ChowObject.None
         ),
 
         // Multiple comment lines separated by different newline styles
         new(
             CODE_COMMENT + NEWLINE_LINUX_MAC + CODE_COMMENT,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             CODE_COMMENT + NEWLINE_WINDOWS + CODE_COMMENT + NEWLINE_OLD_MAC + CODE_COMMENT,
-            ChowValue.None
+            ChowObject.None
         ),
 
         // Leading whitespace before a comment (spaces/tabs are consumed as indent chars first)
         new(
             SINGLE_INDENT_SPACES + CODE_COMMENT,
-            ChowValue.None
+            ChowObject.None
         ),
 
         new(
             SINGLE_INDENT_TAB + CODE_COMMENT + NEWLINE_LINUX_MAC,
-            ChowValue.None
+            ChowObject.None
         ),
 
         #endregion
@@ -2467,7 +2467,7 @@ public class LanguageFeatureTests
             if False:
                 False
             """,
-            ChowValue.None
+            ChowObject.None
         ),
         
         new(
@@ -2547,11 +2547,11 @@ public class LanguageFeatureTests
             while False:
                 True
             """,
-            ChowValue.None
+            ChowObject.None
         ),
 
         // A counter drives the loop; after it exits, the trailing expression statement
-        // reports the final value of the counter
+        // reports the final @object of the counter
         new(
             """
             i = 0
@@ -2595,7 +2595,7 @@ public class LanguageFeatureTests
             false
         ),
 
-        // The expression statement inside the body returns the last value evaluated
+        // The expression statement inside the body returns the last @object evaluated
         // before the condition became false
         new(
             """
@@ -2624,7 +2624,7 @@ public class LanguageFeatureTests
 
         #region Break Statements
 
-        // break exits the loop immediately, freezing the counter at its current value
+        // break exits the loop immediately, freezing the counter at its current @object
         new(
             """
             i = 0
@@ -2833,7 +2833,7 @@ public class LanguageFeatureTests
 
     #region Helper Types
 
-    static ChowValue List(params SourceValue[] values)
+    static ChowObject List(params SourceValue[] values)
     {
         var list = SourceObjectFactory.CreateNewObject(DataType.List);
 
@@ -2842,10 +2842,10 @@ public class LanguageFeatureTests
             list.AppendItem(value);
         }
 
-        return new ChowValue(new SourceValue(list));
+        return new ChowObject(new SourceValue(list));
     }
 
-    public record CaseExecute(string SourceCode, ChowValue ExpectedResult);
+    public record CaseExecute(string SourceCode, ChowObject ExpectedResult);
 
     #endregion
 }

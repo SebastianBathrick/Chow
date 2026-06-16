@@ -13,7 +13,7 @@ namespace Chow.SourceData
 
         public override int Length => _scope.Count;
 
-        internal Scope WrappedScope => _scope;
+        internal Scope InternalScope => _scope;
 
 
         public SourceScope(Scope scope, SourceValue expressionStatementResult)
@@ -45,7 +45,7 @@ namespace Chow.SourceData
 
         public override SourceValue GetAttribute(SourceValue name)
         {
-            if (name == SourceObjectConsts.ScopeExpressionResultAttribute)
+            if (name == SourceObjectConsts.Scope)
             {
                 return _expressionStatementResult;
             }
@@ -60,7 +60,7 @@ namespace Chow.SourceData
 
         public override void SetAttribute(SourceValue name, SourceValue value)
         {
-            if (name == SourceObjectConsts.ScopeExpressionResultAttribute)
+            if (name == SourceObjectConsts.Scope)
             {
                 _expressionStatementResult = value;
                 return;

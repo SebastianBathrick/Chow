@@ -7,7 +7,7 @@ using Chow.VM.FunctionCalls;
 
 namespace Chow.VM
 {
-    sealed class InstructionProcessor
+    sealed class Processor
     {
         const bool GoToNextInstruction = true;
         const bool StayAtInstruction = false;
@@ -17,7 +17,7 @@ namespace Chow.VM
         SourceValue _expressionStatementVal = SourceValue.None;
 
         // BytecodeChunk is null when the client is exclusively calling a closure
-        public InstructionProcessor(Scope globalScope = null, BytecodeChunk bytecodeChunk = null)
+        public Processor(Scope globalScope = null, BytecodeChunk bytecodeChunk = null)
         {
             _callStack = new CallStack(bytecodeChunk ?? new BytecodeChunk(), globalScope);
             _valStack = new Stack<SourceValue>();
@@ -619,7 +619,7 @@ namespace Chow.VM
             // If the SourceValue is storing a closure inside (i.e., a function made up of bytecode)
             if (IsClosure(calleeValue))
             {
-                // Switches to the closure's frame, so Execute will next execute the first
+                // Switches to the closure's frame, so Run will next execute the first
                 // instruction of the closure's bytecodeChunk.
                 PushClosureStackFrame(argCount, calleeValue.ToISourceObject(), args);
                 return StayAtInstruction;

@@ -4,25 +4,68 @@ namespace Chow
 {
     static class ApiConverter
     {
-        public static IChowValue Convert(SourceValue srcVal)
+        public static IChowObject Convert(SourceValue srcVal)
         {
-            return new ChowValue(ref srcVal);
+            return new ChowObject(ref srcVal);
+        }
+        
+        public static IChowObject Convert(ref SourceValue srcVal)
+        {
+            return new ChowObject(ref srcVal);
         }
 
-        public static SourceValue[] Convert(ChowValue[] values)
+        public static SourceValue[] Convert(IChowObject[] apiVals)
         {
-            var srcValValues = new SourceValue[values.Length];
-            for (var i = 0; i < values.Length; i++)
+            var srcValValues = new SourceValue[apiVals.Length];
+            
+            for (var i = 0; i < apiVals.Length; i++)
             {
-                srcValValues[i] = values[i].SourceValue;
+                srcValValues[i] = Convert(apiVals[i]);
             }
 
             return srcValValues;
         }
 
-        public static SourceValue Convert(IChowValue apiObj)
+        public static IChowObject[] ConvertToInterface(ChowObject[] classObjVals)
         {
-            return ((ChowValue)apiObj).SourceValue;
+            if (classObjVals == null)
+            {
+                return null;
+            }
+            
+            var interfaceVals = new IChowObject[classObjVals.Length];
+
+            for (var i = 0; i < classObjVals.Length; i++)
+            {
+                interfaceVals[i] = classObjVals[i];
+            }
+            
+            return interfaceVals;
+        }
+
+        public static SourceValue Convert(IChowObject apiObj)
+        {
+            if (apiObj is ChowObject chowObj)
+            {
+                return chowObj.SourceValue;
+            }
+
+            return GetWrappedChowObject(apiObj).SourceValue;
+        }
+
+        public static ChowObject GetWrappedChowObject(IChowObject obj)
+        {
+            switch (obj)
+            {
+                case ChowDictionary dict:
+                    return dict.WrappedObject;
+                case ChowList list:
+                    return list.WrappedObject;
+                case ChowScope scope:
+                    return scope.WrappedObject;
+                default:
+                    throw new UnreachableException(nameof(GetWrappedChowObject));
+            }
         }
     }
 }

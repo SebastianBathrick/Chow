@@ -204,7 +204,7 @@ namespace Chow.Bytecode.Compilation
              * [HOW VARIABLE ASSIGNMENTS WORK]
              *
              * Assignments and declarations share syntax because the virtual machine handles them similarly due to
-             * dynamic typing. Here is how the InstructionProcessor runs an assignment operation:
+             * dynamic typing. Here is how the Processor runs an assignment operation:
              *
              * 1. Pop a value off the stack representing the new/initial value for the variable. The new/initial value
              *    is stored in a SourceValue and represents an expression evaluated at runtime. This can be of any type.

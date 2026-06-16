@@ -19,7 +19,7 @@ namespace Chow.Bytecode
 
         /// <summary>
         /// The code mapped to the logic of this instruction found inside the
-        /// <see cref="InstructionProcessor"/>.
+        /// <see cref="Processor"/>.
         /// </summary>
         public OperationCode Code { get; }
 

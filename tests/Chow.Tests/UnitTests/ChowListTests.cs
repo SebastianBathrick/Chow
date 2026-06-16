@@ -140,7 +140,7 @@ public class ChowListTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(result == ChowValue.None, Is.True);
+            Assert.That(result == ChowObject.None, Is.True);
             Assert.That(list[0] == "b", Is.True);
             Assert.That(list[1] == "a", Is.True);
         });
@@ -187,8 +187,8 @@ public class ChowListTests
     {
         var list = new ChowList();
 
-        ChowValue value = list;
-        value.Call("append", "item");
+        ChowObject @object = list;
+        @object.Call("append", "item");
 
         Assert.That(list[0] == "item", Is.True);
     }
@@ -196,10 +196,10 @@ public class ChowListTests
     [Test]
     public void ImplicitFromChowValue_WrapsExistingList()
     {
-        ChowValue value = ChowValue.CreateList();
-        value.Call("append", "item");
+        ChowObject @object = ChowObject.CreateList();
+        @object.Call("append", "item");
 
-        ChowList list = value;
+        ChowList list = @object;
 
         Assert.That(list[0] == "item", Is.True);
     }
@@ -209,7 +209,7 @@ public class ChowListTests
     {
         var list = new ChowList();
 
-        Assert.That(list.ToString(), Is.EqualTo(ChowValue.CreateList().ToString()));
+        Assert.That(list.ToString(), Is.EqualTo(ChowObject.CreateList().ToString()));
     }
 
     #endregion

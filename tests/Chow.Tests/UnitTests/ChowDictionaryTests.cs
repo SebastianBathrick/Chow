@@ -31,7 +31,7 @@ public class ChowDictionaryTests
     {
         var dictionary = new ChowDictionary();
 
-        dictionary["key"] = "value";
+        dictionary["key"] = "@object";
 
         Assert.That(dictionary.Length, Is.EqualTo(1));
     }
@@ -43,9 +43,9 @@ public class ChowDictionaryTests
     [Test]
     public void IndexerGet_ExistingKey_ReturnsStoredValue()
     {
-        var dictionary = CreateDictionaryWithEntry("key", "value");
+        var dictionary = CreateDictionaryWithEntry("key", "@object");
 
-        Assert.That(dictionary["key"] == "value", Is.True);
+        Assert.That(dictionary["key"] == "@object", Is.True);
     }
 
     [Test]
@@ -53,11 +53,11 @@ public class ChowDictionaryTests
     {
         var dictionary = new ChowDictionary();
 
-        dictionary["key"] = "value";
+        dictionary["key"] = "@object";
 
         Assert.Multiple(() =>
         {
-            Assert.That(dictionary["key"] == "value", Is.True);
+            Assert.That(dictionary["key"] == "@object", Is.True);
             Assert.That(dictionary.Length, Is.EqualTo(1));
         });
     }
@@ -69,10 +69,10 @@ public class ChowDictionaryTests
     [Test]
     public void Get_ExistingKey_ReturnsValue()
     {
-        // Python: {"key": "value"}.get("key") -> "value"
-        var dictionary = CreateDictionaryWithEntry("key", "value");
+        // Python: {"key": "@object"}.get("key") -> "@object"
+        var dictionary = CreateDictionaryWithEntry("key", "@object");
 
-        Assert.That(dictionary.Get("key") == "value", Is.True);
+        Assert.That(dictionary.Get("key") == "@object", Is.True);
     }
 
     [Test]
@@ -81,7 +81,7 @@ public class ChowDictionaryTests
         // Python: {}.get("missing") -> None
         var dictionary = new ChowDictionary();
 
-        Assert.That(dictionary.Get("missing") == ChowValue.None, Is.True);
+        Assert.That(dictionary.Get("missing") == ChowObject.None, Is.True);
     }
 
     [Test]
@@ -100,14 +100,14 @@ public class ChowDictionaryTests
     [Test]
     public void Pop_ExistingKey_RemovesEntryAndReturnsValue()
     {
-        // Python: {"key": "value"}.pop("key") -> "value"
-        var dictionary = CreateDictionaryWithEntry("key", "value");
+        // Python: {"key": "@object"}.pop("key") -> "@object"
+        var dictionary = CreateDictionaryWithEntry("key", "@object");
 
         var popped = dictionary.Pop("key");
 
         Assert.Multiple(() =>
         {
-            Assert.That(popped == "value", Is.True);
+            Assert.That(popped == "@object", Is.True);
             Assert.That(dictionary.Length, Is.Zero);
         });
     }
@@ -171,8 +171,8 @@ public class ChowDictionaryTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(result == ChowValue.None, Is.True);
-            Assert.That(dictionary["key"] == ChowValue.None, Is.True);
+            Assert.That(result == ChowObject.None, Is.True);
+            Assert.That(dictionary["key"] == ChowObject.None, Is.True);
             Assert.That(dictionary.Length, Is.EqualTo(1));
         });
     }
@@ -200,7 +200,7 @@ public class ChowDictionaryTests
     [Test]
     public void Clear_PopulatedDictionary_EmptiesDictionary()
     {
-        var dictionary = CreateDictionaryWithEntry("key", "value");
+        var dictionary = CreateDictionaryWithEntry("key", "@object");
 
         dictionary.Clear();
 
@@ -216,21 +216,21 @@ public class ChowDictionaryTests
     {
         var dictionary = new ChowDictionary();
 
-        ChowValue value = dictionary;
-        value["key"] = "value";
+        ChowObject @object = dictionary;
+        @object["key"] = "@object";
 
-        Assert.That(dictionary["key"] == "value", Is.True);
+        Assert.That(dictionary["key"] == "@object", Is.True);
     }
 
     [Test]
     public void ImplicitFromChowValue_WrapsExistingDictionary()
     {
-        ChowValue value = ChowValue.CreateDictionary();
-        value["key"] = "value";
+        ChowObject @object = ChowObject.CreateDictionary();
+        @object["key"] = "@object";
 
-        ChowDictionary dictionary = value;
+        ChowDictionary dictionary = @object;
 
-        Assert.That(dictionary["key"] == "value", Is.True);
+        Assert.That(dictionary["key"] == "@object", Is.True);
     }
 
     [Test]
@@ -238,7 +238,7 @@ public class ChowDictionaryTests
     {
         var dictionary = new ChowDictionary();
 
-        Assert.That(dictionary.ToString(), Is.EqualTo(ChowValue.CreateDictionary().ToString()));
+        Assert.That(dictionary.ToString(), Is.EqualTo(ChowObject.CreateDictionary().ToString()));
     }
 
     #endregion

@@ -2,72 +2,76 @@
 
 namespace Chow
 {
-    public class ChowList : IChowValue
+    public class ChowList : IChowObject
     {
         // Temporary solution
-        readonly ChowValue _wrappedObject;
 
-        public int Length => _wrappedObject.Length;
-
-        public ChowValue this[int index]
+        internal ChowObject WrappedObject
         {
-            get => _wrappedObject[index];
-            set => _wrappedObject[index] = value;
+            get;
+        }
+
+        public int Length => WrappedObject.Length;
+
+        public ChowObject this[int index]
+        {
+            get => WrappedObject[index];
+            set => WrappedObject[index] = value;
         }
 
         public ChowList()
         {
-            _wrappedObject = (ChowValue)ChowValueFactory.CreateList();
+            WrappedObject = (ChowObject)ChowObjectFactory.CreateList();
         }
 
-        internal ChowList(ChowValue wrappedObject)
+        internal ChowList(ChowObject wrappedObject)
         {
-            _wrappedObject = wrappedObject;
+            WrappedObject = wrappedObject;
         }
 
-        public void Append(ChowValue value)
+        public void Append(ChowObject @object)
         {
-            _wrappedObject.Call(SourceObjectConsts.ListAppendMethodName, value);
+            WrappedObject.Call(SourceObjectConsts.ListAppendMethodName, @object);
         }
 
-        public void Insert(ChowValue index, ChowValue value)
+        public void Insert(ChowObject index, ChowObject @object)
         {
-            _wrappedObject.Call(SourceObjectConsts.ListInsertMethodName, index, value);
+            WrappedObject.Call(SourceObjectConsts.ListInsertMethodName, index, @object);
         }
 
-        public ChowValue Pop(ChowValue index)
+        public ChowObject Pop(ChowObject index)
         {
-            return _wrappedObject.Call(SourceObjectConsts.ListPopMethodName, index);
+            return WrappedObject.Call(SourceObjectConsts.ListPopMethodName, index);
         }
 
-        public void Remove(ChowValue index)
+        public void Remove(ChowObject index)
         {
-            _wrappedObject.Call(SourceObjectConsts.ListRemoveMethodName, index);
+            WrappedObject.Call(SourceObjectConsts.ListRemoveMethodName, index);
         }
 
-        public ChowValue Reverse()
+        public ChowObject Reverse()
         {
-            return _wrappedObject.Call(SourceObjectConsts.ListReverseMethodName);
+            return WrappedObject.Call(SourceObjectConsts.ListReverseMethodName);
         }
 
         public void Clear()
         {
-            _wrappedObject.Call(SourceObjectConsts.ListClearMethodName);
+            WrappedObject.Call(SourceObjectConsts.ListClearMethodName);
         }
 
-        public static implicit operator ChowValue(ChowList value)
+        public static implicit operator ChowObject(ChowList value)
         {
-            return value._wrappedObject;
+            return value.WrappedObject;
         }
 
-        public static implicit operator ChowList(ChowValue value)
+        public static implicit operator ChowList(ChowObject @object)
         {
-            return new ChowList(value);
+            return new ChowList(@object);
         }
 
         public override string ToString()
         {
-            return _wrappedObject.ToString();
+            return WrappedObject.ToString();
         }
     }
 }

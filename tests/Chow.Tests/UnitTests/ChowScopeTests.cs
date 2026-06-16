@@ -21,17 +21,17 @@ public class ChowScopeTests
         var scope = new ChowScope();
         scope["x"] = 5L;
 
-        ChowScope result = ChowEngine.Execute("x + 1", scope);
+        ChowObject result = ChowEngine.Run("x + 1", scope);
 
-        Assert.That(result.ExpressionResult == 6L, Is.True);
+        Assert.That(result == 6L, Is.True);
     }
 
     [Test]
     public void ExpressionResult_AfterExecute_HoldsLastExpressionValue()
     {
-        ChowScope result = ChowEngine.Execute("40 + 2", new ChowScope());
+        ChowObject result = ChowEngine.Run("40 + 2", new ChowScope());
 
-        Assert.That(result.ExpressionResult == 42L, Is.True);
+        Assert.That(result == 42L, Is.True);
     }
 
     [Test]
@@ -59,8 +59,8 @@ public class ChowScopeTests
         var scope = new ChowScope();
         scope["x"] = 7L;
 
-        ChowValue asValue = scope;
-        ChowScope backToScope = asValue;
+        ChowObject asObject = scope;
+        ChowScope backToScope = asObject;
 
         Assert.That(backToScope["x"] == 7L, Is.True);
     }

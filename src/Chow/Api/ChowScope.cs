@@ -2,45 +2,44 @@ using Chow.SourceData;
 
 namespace Chow
 {
-    public class ChowScope : IChowValue
+    public class ChowScope : IChowObject
     {
-        // Temporary solution
-        readonly ChowValue _wrappedObject;
+        public int Length => WrappedObject.Length;
 
-        public int Length => _wrappedObject.Length;
-
-        public ChowValue ExpressionResult =>
-            _wrappedObject.GetAttribute(SourceObjectConsts.ScopeExpressionResultAttribute);
-
-        public ChowValue this[ChowValue key]
+        internal ChowObject WrappedObject
         {
-            get => _wrappedObject[key];
-            set => _wrappedObject[key] = value;
+            get;
+        }
+
+        public ChowObject this[ChowObject key]
+        {
+            get => WrappedObject[key];
+            set => WrappedObject[key] = value;
         }
 
         public ChowScope()
         {
-            _wrappedObject = (ChowValue)ChowValueFactory.CreateScope();
+            WrappedObject = (ChowObject)ChowObjectFactory.CreateScope();
         }
 
-        internal ChowScope(ChowValue wrappedObject)
+        internal ChowScope(ChowObject wrappedObject)
         {
-            _wrappedObject = wrappedObject;
+            WrappedObject = wrappedObject;
         }
 
-        public static implicit operator ChowValue(ChowScope value)
+        public static implicit operator ChowObject(ChowScope scope)
         {
-            return value._wrappedObject;
+            return scope.WrappedObject;
         }
 
-        public static implicit operator ChowScope(ChowValue value)
+        public static implicit operator ChowScope(ChowObject obj)
         {
-            return new ChowScope(value);
+            return new ChowScope(obj);
         }
 
         public override string ToString()
         {
-            return _wrappedObject.ToString();
+            return WrappedObject.ToString();
         }
     }
 }
