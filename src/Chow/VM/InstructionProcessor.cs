@@ -7,7 +7,7 @@ using Chow.VM.FunctionCalls;
 
 namespace Chow.VM
 {
-    sealed class Processor
+    sealed class InstructionProcessor
     {
         const bool GoToNextInstruction = true;
         const bool StayAtInstruction = false;
@@ -16,10 +16,10 @@ namespace Chow.VM
         readonly Stack<SourceValue> _valStack;
         SourceValue _expressionStatementVal = SourceValue.None;
 
-        // Chunk is null when the client is exclusively calling a closure
-        public Processor(Scope globalScope = null, Chunk chunk = null)
+        // BytecodeChunk is null when the client is exclusively calling a closure
+        public InstructionProcessor(Scope globalScope = null, BytecodeChunk bytecodeChunk = null)
         {
-            _callStack = new CallStack(chunk ?? new Chunk(), globalScope);
+            _callStack = new CallStack(bytecodeChunk ?? new BytecodeChunk(), globalScope);
             _valStack = new Stack<SourceValue>();
         }
 
@@ -38,7 +38,7 @@ namespace Chow.VM
 
         bool ExecuteInstruction()
         {
-            // Read the instruction once; the property chain (CallStack -> frame -> chunk indexer)
+            // Read the instruction once; the property chain (CallStack -> frame -> bytecodeChunk indexer)
             // is hot enough that re-deriving it per Operand access shows up in dispatch cost.
             var instr = _callStack.CurrentInstr;
 
@@ -48,7 +48,7 @@ namespace Chow.VM
                     _valStack.Pop();
                     break;
                 case OperationCode.PushConstantValue:
-                    _valStack.Push(_callStack.CurrentChunk.ReadConstant(instr.Operand));
+                    _valStack.Push(_callStack.CurrentBytecodeChunk.ReadConstant(instr.Operand));
                     break;
 
                 // -- Binary Operations------------------------------------------------------------
@@ -179,7 +179,7 @@ namespace Chow.VM
 
                 // -- Function Call Operations ----------------------------------------------------
                 case OperationCode.CallFunction:
-                    // If false, the chunk will have switched to the called closure's
+                    // If false, the bytecodeChunk will have switched to the called closure's
                     return ExecuteCallFunction(instr.Operand);
                 case OperationCode.PushReturnValue:
                     _callStack.ExitFunctionCall();
@@ -318,8 +318,8 @@ namespace Chow.VM
 
         void ExecuteAssignVariable(int operand)
         {
-            // Operand -> name via Chunk; CallStack routes the assign to the current frame's scope.
-            var name = _callStack.CurrentChunk.GetVariableName(operand);
+            // Operand -> name via BytecodeChunk; CallStack routes the assign to the current frame's scope.
+            var name = _callStack.CurrentBytecodeChunk.GetVariableName(operand);
             var assignVal = _valStack.Pop();
 
             _callStack.AssignVariableValue(name, ref assignVal);
@@ -327,9 +327,9 @@ namespace Chow.VM
 
         void ExecutePushVariableValue(int operand)
         {
-            // Operand -> name via Chunk. Semantic analysis is responsible for ensuring the
+            // Operand -> name via BytecodeChunk. Semantic analysis is responsible for ensuring the
             // name exists before this op runs.
-            var varName = _callStack.CurrentChunk.GetVariableName(operand);
+            var varName = _callStack.CurrentBytecodeChunk.GetVariableName(operand);
 
             if (!_callStack.TryGetVariableValue(varName, out var varValue))
             {
@@ -341,7 +341,7 @@ namespace Chow.VM
 
         void ExecuteAssignGlobal(int operand)
         {
-            var name = _callStack.CurrentChunk.GetVariableName(operand);
+            var name = _callStack.CurrentBytecodeChunk.GetVariableName(operand);
             var assignVal = _valStack.Pop();
 
             _callStack.AssignToGlobal(name, ref assignVal);
@@ -349,7 +349,7 @@ namespace Chow.VM
 
         void ExecutePushGlobalValue(int operand)
         {
-            var varName = _callStack.CurrentChunk.GetVariableName(operand);
+            var varName = _callStack.CurrentBytecodeChunk.GetVariableName(operand);
 
             if (!_callStack.TryGetGlobal(varName, out var varValue))
             {
@@ -361,7 +361,7 @@ namespace Chow.VM
 
         void ExecuteAssignNonLocal(int operand)
         {
-            var name = _callStack.CurrentChunk.GetVariableName(operand);
+            var name = _callStack.CurrentBytecodeChunk.GetVariableName(operand);
             var assignVal = _valStack.Pop();
 
             _callStack.AssignToNonlocal(name, ref assignVal);
@@ -371,7 +371,7 @@ namespace Chow.VM
         {
             // Semantic analysis guarantees an enclosing function binding exists; the CallStack
             // helper throws KeyNotFoundException if that invariant is violated.
-            var varName = _callStack.CurrentChunk.GetVariableName(operand);
+            var varName = _callStack.CurrentBytecodeChunk.GetVariableName(operand);
             _valStack.Push(_callStack.GetNonlocal(varName));
         }
 
@@ -381,7 +381,7 @@ namespace Chow.VM
 
         void ExecuteAssignAttribute(int operand)
         {
-            var attrName = _callStack.CurrentChunk.GetVariableName(operand);
+            var attrName = _callStack.CurrentBytecodeChunk.GetVariableName(operand);
             _valStack.Pop();
             var target = _valStack.Pop();
 
@@ -391,7 +391,7 @@ namespace Chow.VM
 
         void ExecutePushAttribute(int operand)
         {
-            var attrName = _callStack.CurrentChunk.GetVariableName(operand);
+            var attrName = _callStack.CurrentBytecodeChunk.GetVariableName(operand);
             var target = _valStack.Pop();
 
             // TODO: class instances add a branch that consults the instance attribute table, then the class method table.
@@ -606,7 +606,7 @@ namespace Chow.VM
             if (IsClosure(calleeValue))
             {
                 // Switches to the closure's frame, so Execute will next execute the first
-                // instruction of the closure's chunk.
+                // instruction of the closure's bytecodeChunk.
                 PushClosureStackFrame(argCount, calleeValue.ToISourceObject(), args);
                 return StayAtInstruction;
             }
@@ -647,8 +647,9 @@ namespace Chow.VM
                     _valStack.Push(new SourceValue(funcParams.Invoke(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>()))));
                     break;
                 default:
-                    throw new DataTypeException($"'{calleeValue}' object is not a valid delegate");
-                            
+                    // TODO: After built-ins refactor, remove this
+                    _valStack.Push(calleeValue.InvokeHostDelegate(args));
+                    break;
             }
         }
 

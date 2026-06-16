@@ -21,8 +21,8 @@ namespace Chow.VM.FunctionCalls
         // EnterFunctionCall/ExitFunctionCall so per-instruction reads avoid Count/PeekType.
         StackFrame _currFrame;
 
-        /// <summary>The chunk currently being executed (function chunk if inside a call, module chunk otherwise).</summary>
-        public Chunk CurrentChunk => CurrFrame.Chunk;
+        /// <summary>The bytecodeChunk currently being executed (function bytecodeChunk if inside a call, module bytecodeChunk otherwise).</summary>
+        public BytecodeChunk CurrentBytecodeChunk => CurrFrame.BytecodeChunk;
 
         /// <summary>The instruction at the current frame's pointer.</summary>
         public Instruction CurrentInstr => CurrFrame.CurrentInstr;
@@ -42,11 +42,11 @@ namespace Chow.VM.FunctionCalls
         StackFrame CurrFrame => _currFrame;
 
         /// <summary>Creates a call stack rooted at a single module frame.</summary>
-        /// <param name="moduleChunk">The compiled bytecode for the module being executed.</param>
-        /// <param name="moduleScope">The module scope to operate against; persists across <c>ChowState.Execute</c> calls.</param>
-        public CallStack(Chunk moduleChunk, Scope moduleScope)
+        /// <param name="moduleBytecodeChunk">The compiled bytecode for the module being executed.</param>
+        /// <param name="moduleScope">The module scope to operate against; persists across <c>ChowState.ProcessInstructions</c> calls.</param>
+        public CallStack(BytecodeChunk moduleBytecodeChunk, Scope moduleScope)
         {
-            _moduleLvl = new StackFrame(moduleChunk, moduleScope);
+            _moduleLvl = new StackFrame(moduleBytecodeChunk, moduleScope);
             _callFrames = new Stack<StackFrame>();
             _currFrame = _moduleLvl;
         }
@@ -190,7 +190,7 @@ namespace Chow.VM.FunctionCalls
             }
 
             var frameScope = new Scope(sourceFunc.Enclosing);
-            var newFrame = new StackFrame(sourceFunc.Chunk, frameScope);
+            var newFrame = new StackFrame(sourceFunc.BytecodeChunk, frameScope);
             _callFrames.Push(newFrame);
             _currFrame = newFrame;
         }

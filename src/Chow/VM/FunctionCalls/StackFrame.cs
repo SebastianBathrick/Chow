@@ -4,7 +4,7 @@ using Chow.SourceData;
 namespace Chow.VM.FunctionCalls
 {
     /// <summary>
-    /// One slot on the <see cref="CallStack"/>. Pairs a <see cref="Chunk"/> being executed with its associated
+    /// One slot on the <see cref="CallStack"/>. Pairs a <see cref="BytecodeChunk"/> being executed with its associated
     /// <see cref="Scope"/> and tracks the current instruction pointer.
     /// </summary>
     class StackFrame
@@ -14,25 +14,25 @@ namespace Chow.VM.FunctionCalls
         // TODO: Start using "instr" to abbreviate "instruction"
         int _instrIdx;
 
-        /// <summary>The bytecode chunk this frame is executing.</summary>
-        public Chunk Chunk { get; }
+        /// <summary>The bytecode bytecodeChunk this frame is executing.</summary>
+        public BytecodeChunk BytecodeChunk { get; }
 
         /// <summary>The frame's scope: parentless for the module frame, parented to the closure's enclosing scope for any function frame.</summary>
         public Scope Scope { get; }
 
         /// <summary>The instruction at the current pointer.</summary>
-        public Instruction CurrentInstr => Chunk[_instrIdx];
+        public Instruction CurrentInstr => BytecodeChunk[_instrIdx];
 
-        /// <summary>True while the instruction pointer has not reached the end of the chunk.</summary>
-        public bool IsInstrToRun => _instrIdx < Chunk.InstructionCount;
+        /// <summary>True while the instruction pointer has not reached the end of the bytecodeChunk.</summary>
+        public bool IsInstrToRun => _instrIdx < BytecodeChunk.InstructionCount;
 
         /// <summary>Source line number associated with the current instruction.</summary>
-        public int CurrentLineNum => Chunk.GetLineIndex(_instrIdx);
+        public int CurrentLineNum => BytecodeChunk.GetLineIndex(_instrIdx);
 
         /// <summary>Creates a frame positioned at the first instruction.</summary>
-        public StackFrame(Chunk chunk, Scope scope)
+        public StackFrame(BytecodeChunk bytecodeChunk, Scope scope)
         {
-            Chunk = chunk;
+            BytecodeChunk = bytecodeChunk;
             Scope = scope;
             _instrIdx = INIT_INSTR_IDX;
         }

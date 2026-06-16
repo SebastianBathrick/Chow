@@ -5,7 +5,7 @@ using Chow.VM;
 namespace Chow.SourceData
 {
     /// <summary>
-    /// Static service class for <see cref="Processor"/> that performs comparison
+    /// Static service class for <see cref="InstructionProcessor"/> that performs comparison
     /// operations that behave the same as Python's comparisons for Chow's supported types.
     /// </summary>
     static class ComparisonEvaluator

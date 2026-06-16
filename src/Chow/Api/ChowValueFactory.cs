@@ -11,22 +11,25 @@ namespace Chow
     {
         public static IChowValue CreateDictionary()
         {
-            var srcObj = SourceObjectFactory.CreateNewObject(DataType.Dict);
-            return new ChowValue(new SourceValue(srcObj));
+            var srcVal = SourceObjectFactory.CreateNewObject(DataType.Dict).ToSourceValue();
+            return new ChowValue(ref srcVal);
         }
         
         public static IChowValue CreateList()
         {
-            var srcObj = SourceObjectFactory.CreateNewObject(DataType.List);
-            return new ChowValue(new SourceValue(srcObj));
+            var srcVal = SourceObjectFactory.CreateNewObject(DataType.List).ToSourceValue();
+            return new ChowValue(ref srcVal);
         }
 
         // Use interface IChowValue to avoid ChowValue dependencies
-        internal static IChowValue Create(SourceValue srcObj)
+        internal static IChowValue Create(ref SourceValue srcVal)
         {
-            return new ChowValue(srcObj);
+            return new ChowValue(ref srcVal);
+        }
 
-            
+        internal static IChowValue Create(SourceValue srcVal)
+        {
+            return new ChowValue(ref srcVal);
         }
     }
 }

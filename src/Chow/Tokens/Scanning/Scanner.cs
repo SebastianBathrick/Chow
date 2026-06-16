@@ -24,11 +24,12 @@ namespace Chow.Tokens.Scanning
 
         const int SINGLE_INDENT_SIZE = 4;
 
-        readonly List<Token> _tokenList;
+        readonly string _sourceCode;
+        readonly ITokenStream _tokenStream;
+        
         readonly Stack<int> _indentLevels;
         readonly Stack<char> _openingBrackets;
-        readonly string _sourceCode;
-
+        
         int _charIdx;
         int _lineNum;
         bool _isLineBegin;
@@ -41,10 +42,10 @@ namespace Chow.Tokens.Scanning
         /// Initializes a new Scanner instance using Chow source code.
         /// </summary>
         /// <param name="sourceCode">Null or string containing raw Chow source code or whitespace.</param>
-        public Scanner(string sourceCode)
+        public Scanner(string sourceCode, ITokenStream tokenStream)
         {
             _sourceCode = sourceCode;
-            _tokenList = new List<Token>();
+            _tokenStream = tokenStream;
             _charIdx = 0;
             _lineNum = 1;
             _indentLevels = new Stack<int>();
@@ -58,13 +59,13 @@ namespace Chow.Tokens.Scanning
         /// generates a list of tokens.
         /// </summary>
         /// <returns>A list of tokens representing the scanned source code in the order they appear.</returns>
-        public List<Token> TokenizeSourceCode()
+        public ITokenStream TokenizeSourceCode()
         {
             // If source code is null, emit end-of-code token, so it can be treated as if it were an empty string or whitespace
             if (_sourceCode == null)
             {
                 AddNewToken(TokenType.EndOfCode, string.Empty, _lineNum);
-                return _tokenList;
+                return _tokenStream;
             }
 
             // Skip to the first line that does not start with whitespace, a comment, or newline character
@@ -84,7 +85,7 @@ namespace Chow.Tokens.Scanning
             AddLastDedentsTokens();
             AddNewToken(TokenType.EndOfCode, string.Empty, _lineNum);
 
-            return _tokenList;
+            return _tokenStream;
         }
 
         void RunScanIteration()
@@ -862,7 +863,7 @@ namespace Chow.Tokens.Scanning
         void AddNewToken(TokenType type, string lexeme, int lineNum, object literal = null)
         {
             // Refactor to use ITokenStream instead
-            _tokenList.Add(new Token(type, lexeme, lineNum, literal));
+            _tokenStream.Add(new Token(type, lexeme, lineNum, literal));
         }
 
         #endregion

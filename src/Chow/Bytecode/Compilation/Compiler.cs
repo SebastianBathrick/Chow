@@ -8,7 +8,7 @@ namespace Chow.Bytecode.Compilation
 {
     sealed class Compiler
     {
-        readonly Chunk _chunk;
+        readonly BytecodeChunk _bytecodeChunk;
         readonly Stack<LoopContext> _loopContextStack;
         readonly Node _root;
 
@@ -26,13 +26,13 @@ namespace Chow.Bytecode.Compilation
 
         public Compiler(Node root)
         {
-            _chunk = new Chunk();
+            _bytecodeChunk = new BytecodeChunk();
             _root = root;
             _pendingEndJumps = new List<int>();
             _loopContextStack = new Stack<LoopContext>();
         }
 
-        public Chunk CompileRoot()
+        public BytecodeChunk CompileRoot()
         {
             if (!(_root is ModuleNode treeRoot))
             {
@@ -44,10 +44,10 @@ namespace Chow.Bytecode.Compilation
                 CompileTargetNode(statement);
             }
 
-            return _chunk;
+            return _bytecodeChunk;
         }
 
-        Chunk CompileFunctionBody()
+        BytecodeChunk CompileFunctionBody()
         {
             if (!(_root is FunctionNode funcNode))
             {
@@ -58,20 +58,20 @@ namespace Chow.Bytecode.Compilation
             for (var i = funcNode.Params.Count - 1; i >= 0; i--)
             {
                 var param = (NameNode)funcNode.Params[i];
-                var paramNameIdx = _chunk.RegisterVariableName(param.Name);
+                var paramNameIdx = _bytecodeChunk.RegisterVariableName(param.Name);
 
-                _chunk.Add(OperationCode.AssignLocal, param.LineNumber, paramNameIdx);
+                _bytecodeChunk.Add(OperationCode.AssignLocal, param.LineNumber, paramNameIdx);
             }
 
             CompileTargetNode(funcNode.Block);
 
             // Implicit `return None` for funcs that fall off the end of the body
-            var noneIdx = _chunk.RegisterConstant(SourceValue.None);
+            var noneIdx = _bytecodeChunk.RegisterConstant(SourceValue.None);
 
-            _chunk.Add(OperationCode.PushConstantValue, funcNode.LineNumber, noneIdx);
-            _chunk.Add(OperationCode.PushReturnValue, funcNode.LineNumber);
+            _bytecodeChunk.Add(OperationCode.PushConstantValue, funcNode.LineNumber, noneIdx);
+            _bytecodeChunk.Add(OperationCode.PushReturnValue, funcNode.LineNumber);
 
-            return _chunk;
+            return _bytecodeChunk;
         }
 
         void CompileTargetNode(Node targetNode)
@@ -97,7 +97,7 @@ namespace Chow.Bytecode.Compilation
                     CompileVariableFactor(varFactorNode);
                     break;
                 case ReturnStatementNode returnNode:
-                    // If it returns early, still parse the remaining code in the chunk for debugging (subject to change)
+                    // If it returns early, still parse the remaining code in the bytecodeChunk for debugging (subject to change)
                     CompileReturnStatement(returnNode);
                     break;
                 case ExpressionStatementNode exprStmtNode:
@@ -177,19 +177,19 @@ namespace Chow.Bytecode.Compilation
             var funcChunk = funcCompiler.CompileFunctionBody();
 
             var def = new FunctionDefinition(funcChunk, funcNode.Name, funcNode.Params.Count);
-            var defConstIdx = _chunk.RegisterConstant(new SourceValue(def));
+            var defConstIdx = _bytecodeChunk.RegisterConstant(new SourceValue(def));
 
             // Push the funciton definition to act as a blueprint for a function object.
-            _chunk.Add(OperationCode.PushConstantValue, funcNode.LineNumber, defConstIdx);
+            _bytecodeChunk.Add(OperationCode.PushConstantValue, funcNode.LineNumber, defConstIdx);
             
             // Use the function definition to create a first-class function object.
-            _chunk.Add(OperationCode.PushNewSourceFunction, funcNode.LineNumber);
+            _bytecodeChunk.Add(OperationCode.PushNewSourceFunction, funcNode.LineNumber);
             
             // Create a variable with the function's name and initialize it to the function object.
-            var varNameIdx = _chunk.RegisterVariableName(funcNode.Name);
+            var varNameIdx = _bytecodeChunk.RegisterVariableName(funcNode.Name);
             
             // The global/nonlocal resolution is determined during semantic analysis.
-            _chunk.Add(GetScopeAssignOpCode(funcNode.Resolution), funcNode.LineNumber, varNameIdx);
+            _bytecodeChunk.Add(GetScopeAssignOpCode(funcNode.Resolution), funcNode.LineNumber, varNameIdx);
         }
 
         void CompileVariableAssign(AssignStatementNode assignStatementNode)
@@ -204,12 +204,12 @@ namespace Chow.Bytecode.Compilation
              * [HOW VARIABLE ASSIGNMENTS WORK]
              *
              * Assignments and declarations share syntax because the virtual machine handles them similarly due to
-             * dynamic typing. Here is how the Processor runs an assignment operation:
+             * dynamic typing. Here is how the InstructionProcessor runs an assignment operation:
              *
              * 1. Pop a value off the stack representing the new/initial value for the variable. The new/initial value
              *    is stored in a SourceValue and represents an expression evaluated at runtime. This can be of any type.
              *
-             * 2. Use the current Operation.Operand to get the variable's name stored as a string inside Chunk during
+             * 2. Use the current Operation.Operand to get the variable's name stored as a string inside BytecodeChunk during
              *    compile-time (i.e., the compilation logic code below). It's stored this way so Operations don't have
              *    to store the identifiers themselves.
              *
@@ -219,10 +219,10 @@ namespace Chow.Bytecode.Compilation
 
             CompileTargetNode(assignStatementNode.Expression);
 
-            // If a variable with the same name already exists in the chunk, the index of the existing variable will be returned.
-            // Otherwise, the new variable will be added to the chunk and its new index will be returned.
-            var varNameIdx = _chunk.RegisterVariableName(assignStatementNode.Name);
-            _chunk.Add(GetScopeAssignOpCode(assignStatementNode.Resolution), assignStatementNode.LineNumber,
+            // If a variable with the same name already exists in the bytecodeChunk, the index of the existing variable will be returned.
+            // Otherwise, the new variable will be added to the bytecodeChunk and its new index will be returned.
+            var varNameIdx = _bytecodeChunk.RegisterVariableName(assignStatementNode.Name);
+            _bytecodeChunk.Add(GetScopeAssignOpCode(assignStatementNode.Resolution), assignStatementNode.LineNumber,
                 varNameIdx);
         }
 
@@ -235,17 +235,17 @@ namespace Chow.Bytecode.Compilation
             else
             {
                 // Bare `return` returns None; PushReturnValue always pops exactly one value off the stack.
-                var noneIdx = _chunk.RegisterConstant(SourceValue.None);
-                _chunk.Add(OperationCode.PushConstantValue, returnStatementNode.LineNumber, noneIdx);
+                var noneIdx = _bytecodeChunk.RegisterConstant(SourceValue.None);
+                _bytecodeChunk.Add(OperationCode.PushConstantValue, returnStatementNode.LineNumber, noneIdx);
             }
 
-            _chunk.Add(OperationCode.PushReturnValue, returnStatementNode.LineNumber);
+            _bytecodeChunk.Add(OperationCode.PushReturnValue, returnStatementNode.LineNumber);
         }
 
         void CompileExpressionStatement(ExpressionStatementNode expressionStmtNode)
         {
             CompileTargetNode(expressionStmtNode.Expression);
-            _chunk.Add(OperationCode.PopExpressionStatementResult, expressionStmtNode.LineNumber);
+            _bytecodeChunk.Add(OperationCode.PopExpressionStatementResult, expressionStmtNode.LineNumber);
         }
 
         void CompileIfStatement(IfStatementNode ifStatementNode)
@@ -257,20 +257,20 @@ namespace Chow.Bytecode.Compilation
             _pendingEndJumps = new List<int>();
             CompileTargetNode(ifStatementNode.Expression);
 
-            _chunk.Add(OperationCode.JumpIfFalse, ifStatementNode.LineNumber);
-            var jumpFalseIdx = _chunk.InstructionCount - 1;
+            _bytecodeChunk.Add(OperationCode.JumpIfFalse, ifStatementNode.LineNumber);
+            var jumpFalseIdx = _bytecodeChunk.InstructionCount - 1;
 
             CompileTargetNode(ifStatementNode.Block);
 
             // Only emit a jump-past-branches if there's actually a branch to skip
             if (ifStatementNode.Branch != null)
             {
-                _chunk.Add(OperationCode.JumpPastElseBranches, ifStatementNode.LineNumber);
-                _pendingEndJumps.Add(_chunk.InstructionCount - 1);
+                _bytecodeChunk.Add(OperationCode.JumpPastElseBranches, ifStatementNode.LineNumber);
+                _pendingEndJumps.Add(_bytecodeChunk.InstructionCount - 1);
             }
 
             // JumpIfFalse lands at the start of the next branch (or END if no branch)
-            _chunk.PatchOperand(jumpFalseIdx, _chunk.InstructionCount);
+            _bytecodeChunk.PatchOperand(jumpFalseIdx, _bytecodeChunk.InstructionCount);
 
             if (ifStatementNode.Branch != null)
             {
@@ -280,7 +280,7 @@ namespace Chow.Bytecode.Compilation
             // Patch every JumpPastElseBranches in this chain to land at END (current count)
             foreach (var jumpIdx in _pendingEndJumps)
             {
-                _chunk.PatchOperand(jumpIdx, _chunk.InstructionCount);
+                _bytecodeChunk.PatchOperand(jumpIdx, _bytecodeChunk.InstructionCount);
             }
 
             _pendingEndJumps = saved;
@@ -295,18 +295,18 @@ namespace Chow.Bytecode.Compilation
             }
 
             CompileTargetNode(node.Expression);
-            _chunk.Add(OperationCode.JumpIfFalse, node.LineNumber);
+            _bytecodeChunk.Add(OperationCode.JumpIfFalse, node.LineNumber);
 
-            var jumpFalseIdx = _chunk.InstructionCount - 1;
+            var jumpFalseIdx = _bytecodeChunk.InstructionCount - 1;
             CompileTargetNode(node.Block);
 
             if (node.Branch != null)
             {
-                _chunk.Add(OperationCode.JumpPastElseBranches, node.LineNumber);
-                _pendingEndJumps.Add(_chunk.InstructionCount - 1);
+                _bytecodeChunk.Add(OperationCode.JumpPastElseBranches, node.LineNumber);
+                _pendingEndJumps.Add(_bytecodeChunk.InstructionCount - 1);
             }
 
-            _chunk.PatchOperand(jumpFalseIdx, _chunk.InstructionCount);
+            _bytecodeChunk.PatchOperand(jumpFalseIdx, _bytecodeChunk.InstructionCount);
 
             if (node.Branch != null)
             {
@@ -317,12 +317,12 @@ namespace Chow.Bytecode.Compilation
         void CompileWhileStatement(WhileStatementNode whileStatementNode)
         {
             // loopStart marks the start of the condition; both `continue` and the bottom-of-body JumpToLoopStart op target it.
-            var loopStartIdx = _chunk.InstructionCount;
+            var loopStartIdx = _bytecodeChunk.InstructionCount;
 
             CompileTargetNode(whileStatementNode.Expression);
 
-            _chunk.Add(OperationCode.JumpIfFalse, whileStatementNode.LineNumber);
-            var exitJumpIdx = _chunk.InstructionCount - 1;
+            _bytecodeChunk.Add(OperationCode.JumpIfFalse, whileStatementNode.LineNumber);
+            var exitJumpIdx = _bytecodeChunk.InstructionCount - 1;
 
             var loopContext = new LoopContext
             {
@@ -335,15 +335,15 @@ namespace Chow.Bytecode.Compilation
 
             _loopContextStack.Pop();
 
-            _chunk.Add(OperationCode.JumpToLoopStart, whileStatementNode.LineNumber, loopStartIdx);
+            _bytecodeChunk.Add(OperationCode.JumpToLoopStart, whileStatementNode.LineNumber, loopStartIdx);
 
             // Condition-false exit and any `break` jumps land here, after the backward JumpToLoopStart.
-            var exitIdx = _chunk.InstructionCount;
-            _chunk.PatchOperand(exitJumpIdx, exitIdx);
+            var exitIdx = _bytecodeChunk.InstructionCount;
+            _bytecodeChunk.PatchOperand(exitJumpIdx, exitIdx);
 
             foreach (var jumpIdx in loopContext.PendingBreaks)
             {
-                _chunk.PatchOperand(jumpIdx, exitIdx);
+                _bytecodeChunk.PatchOperand(jumpIdx, exitIdx);
             }
         }
 
@@ -351,16 +351,16 @@ namespace Chow.Bytecode.Compilation
         {
             // 1. Push iterable, convert to iterator. Iterator stays on the stack for the loop's lifetime.
             CompileTargetNode(forNode.Iterable);
-            _chunk.Add(OperationCode.PushNewIteratorWithValue, forNode.LineNumber);
+            _bytecodeChunk.Add(OperationCode.PushNewIteratorWithValue, forNode.LineNumber);
 
             // 2. Loop head: JumpOrForIteratorNext peeks the iterator; on success pushes the next value, on exhaustion pops + jumps.
-            var loopStartIdx = _chunk.InstructionCount;
-            _chunk.Add(OperationCode.JumpOrForIteratorNext, forNode.LineNumber);
-            var exitJumpIdx = _chunk.InstructionCount - 1;
+            var loopStartIdx = _bytecodeChunk.InstructionCount;
+            _bytecodeChunk.Add(OperationCode.JumpOrForIteratorNext, forNode.LineNumber);
+            var exitJumpIdx = _bytecodeChunk.InstructionCount - 1;
 
             // 3. Bind the freshly pushed value to the loop variable.
-            var targetNameIdx = _chunk.RegisterVariableName(forNode.Target.Name);
-            _chunk.Add(GetScopeAssignOpCode(forNode.Target.Resolution), forNode.Target.LineNumber, targetNameIdx);
+            var targetNameIdx = _bytecodeChunk.RegisterVariableName(forNode.Target.Name);
+            _bytecodeChunk.Add(GetScopeAssignOpCode(forNode.Target.Resolution), forNode.Target.LineNumber, targetNameIdx);
 
             var loopContext = new LoopContext
             {
@@ -373,11 +373,11 @@ namespace Chow.Bytecode.Compilation
             _loopContextStack.Pop();
 
             // 4. The bottom of the body jumps back to JumpOrForIteratorNext. Iterator is still on the stack.
-            _chunk.Add(OperationCode.JumpToLoopStart, forNode.LineNumber, loopStartIdx);
+            _bytecodeChunk.Add(OperationCode.JumpToLoopStart, forNode.LineNumber, loopStartIdx);
 
             // 5. Natural exhaustion lands here (JumpOrForIteratorNext already popped the iterator before jumping).
             //    The optional else-block runs only on natural exhaustion; `break` skips it.
-            _chunk.PatchOperand(exitJumpIdx, _chunk.InstructionCount);
+            _bytecodeChunk.PatchOperand(exitJumpIdx, _bytecodeChunk.InstructionCount);
 
             if (forNode.ElseBranch != null)
             {
@@ -385,11 +385,11 @@ namespace Chow.Bytecode.Compilation
             }
 
             // 6. `break` jumps land here, past the else-block.
-            var exitIdx = _chunk.InstructionCount;
+            var exitIdx = _bytecodeChunk.InstructionCount;
 
             foreach (var jumpIdx in loopContext.PendingBreaks)
             {
-                _chunk.PatchOperand(jumpIdx, exitIdx);
+                _bytecodeChunk.PatchOperand(jumpIdx, exitIdx);
             }
         }
 
@@ -405,11 +405,11 @@ namespace Chow.Bytecode.Compilation
             // For-loops keep the iterator on the stack across iterations; `break` must discard it before jumping.
             if (loopContext.HasIteratorOnStack)
             {
-                _chunk.Add(OperationCode.Pop, breakStatementNode.LineNumber);
+                _bytecodeChunk.Add(OperationCode.Pop, breakStatementNode.LineNumber);
             }
 
-            _chunk.Add(OperationCode.JumpPastElseBranches, breakStatementNode.LineNumber);
-            loopContext.PendingBreaks.Add(_chunk.InstructionCount - 1);
+            _bytecodeChunk.Add(OperationCode.JumpPastElseBranches, breakStatementNode.LineNumber);
+            loopContext.PendingBreaks.Add(_bytecodeChunk.InstructionCount - 1);
         }
 
         void CompileContinueStatement(ContinueStatementNode continueStatementNode)
@@ -421,7 +421,7 @@ namespace Chow.Bytecode.Compilation
             }
 
             var loopContext = _loopContextStack.Peek();
-            _chunk.Add(OperationCode.JumpToLoopStart, continueStatementNode.LineNumber, loopContext.LoopStartIdx);
+            _bytecodeChunk.Add(OperationCode.JumpToLoopStart, continueStatementNode.LineNumber, loopContext.LoopStartIdx);
         }
 
         #endregion
@@ -437,14 +437,14 @@ namespace Chow.Bytecode.Compilation
                 CompileTargetNode(arg);
             }
 
-            _chunk.Add(OperationCode.CallFunction, callNode.LineNumber, callNode.Args.Count);
+            _bytecodeChunk.Add(OperationCode.CallFunction, callNode.LineNumber, callNode.Args.Count);
         }
 
         void CompileVariableFactor(NameNode varFactorNode)
         {
             // Register to have its own constant in case the variable with this name is declared in a previous environment
-            var varNameIdx = _chunk.RegisterVariableName(varFactorNode.Name);
-            _chunk.Add(GetScopeReadOpCode(varFactorNode.Resolution), varFactorNode.LineNumber, varNameIdx);
+            var varNameIdx = _bytecodeChunk.RegisterVariableName(varFactorNode.Name);
+            _bytecodeChunk.Add(GetScopeReadOpCode(varFactorNode.Resolution), varFactorNode.LineNumber, varNameIdx);
         }
 
         void CompileExpression(ExpressionNode expressionNode)
@@ -465,7 +465,7 @@ namespace Chow.Bytecode.Compilation
             }
 
             var opCode = GetExpressionOpCode(expressionNode);
-            _chunk.Add(opCode, expressionNode.LineNumber);
+            _bytecodeChunk.Add(opCode, expressionNode.LineNumber);
         }
 
         void CompileShortCircuit(ExpressionNode expressionNode)
@@ -477,39 +477,39 @@ namespace Chow.Bytecode.Compilation
                 : OperationCode.JumpIfTrueOrPop;
 
             // Emit jump with placeholder operand; the real target is unknown until the right side is compiled
-            _chunk.Add(jumpCode, expressionNode.LineNumber);
-            var patchIdx = _chunk.InstructionCount - 1;
+            _bytecodeChunk.Add(jumpCode, expressionNode.LineNumber);
+            var patchIdx = _bytecodeChunk.InstructionCount - 1;
 
             CompileTargetNode(expressionNode.Right);
 
             // Land just past the right-hand bytecode
-            _chunk.PatchOperand(patchIdx, _chunk.InstructionCount);
+            _bytecodeChunk.PatchOperand(patchIdx, _bytecodeChunk.InstructionCount);
         }
 
         void CompileLiteral(LiteralNode literalNode)
         {
             var constValue = BuildLiteralValue(literalNode);
 
-            // If a constant of the same value already exists in the chunk, the operand of the existing constant will be returned.
-            // Otherwise, the new constant will be added to the chunk and its new operand will be returned.
-            var constIdx = _chunk.RegisterConstant(constValue);
-            _chunk.Add(OperationCode.PushConstantValue, literalNode.LineNumber, constIdx);
+            // If a constant of the same value already exists in the bytecodeChunk, the operand of the existing constant will be returned.
+            // Otherwise, the new constant will be added to the bytecodeChunk and its new operand will be returned.
+            var constIdx = _bytecodeChunk.RegisterConstant(constValue);
+            _bytecodeChunk.Add(OperationCode.PushConstantValue, literalNode.LineNumber, constIdx);
         }
 
         void CompileFString(FStringNode node)
         {
-            var firstPartIdx = _chunk.RegisterConstant(new SourceValue(node.StringParts[0]));
-            _chunk.Add(OperationCode.PushConstantValue, node.LineNumber, firstPartIdx);
+            var firstPartIdx = _bytecodeChunk.RegisterConstant(new SourceValue(node.StringParts[0]));
+            _bytecodeChunk.Add(OperationCode.PushConstantValue, node.LineNumber, firstPartIdx);
 
             for (var i = 0; i < node.ExpressionParts.Count; i++)
             {
                 CompileTargetNode(node.ExpressionParts[i]);
-                _chunk.Add(OperationCode.CoerceToStr, node.LineNumber);
-                _chunk.Add(OperationCode.BinaryAdd, node.LineNumber);
+                _bytecodeChunk.Add(OperationCode.CoerceToStr, node.LineNumber);
+                _bytecodeChunk.Add(OperationCode.BinaryAdd, node.LineNumber);
 
-                var tailPartIdx = _chunk.RegisterConstant(new SourceValue(node.StringParts[i + 1]));
-                _chunk.Add(OperationCode.PushConstantValue, node.LineNumber, tailPartIdx);
-                _chunk.Add(OperationCode.BinaryAdd, node.LineNumber);
+                var tailPartIdx = _bytecodeChunk.RegisterConstant(new SourceValue(node.StringParts[i + 1]));
+                _bytecodeChunk.Add(OperationCode.PushConstantValue, node.LineNumber, tailPartIdx);
+                _bytecodeChunk.Add(OperationCode.BinaryAdd, node.LineNumber);
             }
         }
 
@@ -566,7 +566,7 @@ namespace Chow.Bytecode.Compilation
                 CompileTargetNode(element);
             }
 
-            _chunk.Add(OperationCode.PushNewSourceList, node.LineNumber, node.Elements.Count);
+            _bytecodeChunk.Add(OperationCode.PushNewSourceList, node.LineNumber, node.Elements.Count);
         }
 
         void CompileDictLiteral(DictionaryNode node)
@@ -577,7 +577,7 @@ namespace Chow.Bytecode.Compilation
                 CompileTargetNode(node.Values[i]);
             }
 
-            _chunk.Add(OperationCode.PushNewSourceDictionary, node.LineNumber, node.Keys.Count);
+            _bytecodeChunk.Add(OperationCode.PushNewSourceDictionary, node.LineNumber, node.Keys.Count);
         }
 
         void CompileSubscript(SubscriptNode node)
@@ -589,12 +589,12 @@ namespace Chow.Bytecode.Compilation
                 CompileSliceArgument(sliceNode.Start, sliceNode.LineNumber);
                 CompileSliceArgument(sliceNode.Stop, sliceNode.LineNumber);
                 CompileSliceArgument(sliceNode.Step, sliceNode.LineNumber);
-                _chunk.Add(OperationCode.PushSubscriptSliceValue, node.LineNumber);
+                _bytecodeChunk.Add(OperationCode.PushSubscriptSliceValue, node.LineNumber);
             }
             else
             {
                 CompileTargetNode(node.Index);
-                _chunk.Add(OperationCode.PushSubscriptValue, node.LineNumber);
+                _bytecodeChunk.Add(OperationCode.PushSubscriptValue, node.LineNumber);
             }
         }
 
@@ -602,8 +602,8 @@ namespace Chow.Bytecode.Compilation
         {
             if (argOrNull == null)
             {
-                var noneIdx = _chunk.RegisterConstant(SourceValue.None);
-                _chunk.Add(OperationCode.PushConstantValue, sliceLineNum, noneIdx);
+                var noneIdx = _bytecodeChunk.RegisterConstant(SourceValue.None);
+                _bytecodeChunk.Add(OperationCode.PushConstantValue, sliceLineNum, noneIdx);
             }
             else
             {
@@ -615,8 +615,8 @@ namespace Chow.Bytecode.Compilation
         {
             CompileTargetNode(node.Target);
 
-            var varNameIdx = _chunk.RegisterVariableName(node.Name);
-            _chunk.Add(OperationCode.PushAttributeValue, node.LineNumber, varNameIdx);
+            var varNameIdx = _bytecodeChunk.RegisterVariableName(node.Name);
+            _bytecodeChunk.Add(OperationCode.PushAttributeValue, node.LineNumber, varNameIdx);
         }
 
         void CompileSubscriptAssign(SubscriptAssignNode node)
@@ -630,7 +630,7 @@ namespace Chow.Bytecode.Compilation
             CompileTargetNode(node.Index);
             CompileTargetNode(node.Expression);
             
-            _chunk.Add(OperationCode.AssignSubscript, node.LineNumber);
+            _bytecodeChunk.Add(OperationCode.AssignSubscript, node.LineNumber);
         }
 
         void CompileAttributeAssign(AttributeAssignNode node)
@@ -638,8 +638,8 @@ namespace Chow.Bytecode.Compilation
             CompileTargetNode(node.Target);
             CompileTargetNode(node.Expression);
 
-            var varNameIdx = _chunk.RegisterVariableName(node.AttributeName);
-            _chunk.Add(OperationCode.AssignAttribute, node.LineNumber, varNameIdx);
+            var varNameIdx = _bytecodeChunk.RegisterVariableName(node.AttributeName);
+            _bytecodeChunk.Add(OperationCode.AssignAttribute, node.LineNumber, varNameIdx);
         }
 
         #endregion

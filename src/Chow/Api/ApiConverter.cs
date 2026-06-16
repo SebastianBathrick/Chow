@@ -15,6 +15,11 @@ namespace Chow
             return chowValues;
         }
 
+        public static IChowValue Convert(SourceValue srcVal)
+        {
+            return new ChowValue(ref srcVal);   
+        }
+
         public static SourceValue[] Convert(ChowValue[] values)
         {
             var srcValValues = new SourceValue[values.Length];

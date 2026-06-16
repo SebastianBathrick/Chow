@@ -35,9 +35,9 @@ Before a piece of Chow source code can be evaluated, it must be compiled into by
 ### Bytecode Execution
 Once Chow's source code is converted into bytecode chunks, its actual logic will be executed by the virtual machine.
 
-- #### Processor
+- #### InstructionProcessor
     *Path:* [..\src\Chow\VM\Processor.cs](../src/Chow/VM/Processor.cs)
-  
-    Processor executes the primary business logic for the interpreter’s virtual machine. The ChowEngine creates a new Processor instance and passes its constructor a scope (existing or new instance) and the chunk of bytecode produced by the Compiler. Then ChowEngine will call the Processor instances' "execute" method, which runs the bytecode provided to its constructor. 
 
-    During execution, the Processor will sequentially invoke instruction operations, store and retrieve data, and manage function calls. Upon completion, the execute method will return the result of the last evaluated expression statement, which ChowEngine then returns to the caller.
+    InstructionProcessor executes the primary business logic for the interpreter’s virtual machine. The ChowEngine creates a new InstructionProcessor instance and passes its constructor a scope (existing or new instance) and the chunk of bytecode produced by the Compiler. Then ChowEngine will call the InstructionProcessor instances' "execute" method, which runs the bytecode provided to its constructor. 
+
+    During execution, the InstructionProcessor will sequentially invoke instruction operations, store and retrieve data, and manage function calls. Upon completion, the execute method will return the result of the last evaluated expression statement, which ChowEngine then returns to the caller.

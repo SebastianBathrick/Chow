@@ -9,8 +9,9 @@ namespace Chow
     public sealed class ChowValue : IChowValue
     {
         #region Properties
-        
-        public static ChowValue None { get; }  = new ChowValue(SourceValue.None);
+
+        public static ChowValue None { get; } 
+            = (ChowValue)ApiConverter.Convert(SourceData.SourceValue.None);
         
         internal SourceValue SourceValue { get; }
 
@@ -24,11 +25,17 @@ namespace Chow
             set => SourceObject.SetItem(key.SourceValue, value.SourceValue);
         }
 
+        // This is primarily for testing. Avoid using internally if possible
+        internal ChowValue(SourceValue srcVal)
+        {
+            SourceValue = srcVal;
+        }
+
         #endregion
         
         ISourceObject _srcObj = null;
 
-        internal ChowValue(SourceValue srcVal)
+        internal ChowValue(ref SourceValue srcVal)
         {
             SourceValue = srcVal;
         }
@@ -39,7 +46,7 @@ namespace Chow
         }
 
         #region Factory Methods
-
+        
         public static ChowValue CreateList()
         {
             // Cast, because IChowValue has no public API or implicit operators for the client

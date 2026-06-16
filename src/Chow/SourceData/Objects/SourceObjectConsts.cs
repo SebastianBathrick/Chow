@@ -2,7 +2,7 @@
 {
     public class SourceObjectConsts
     {
-        public const string ChunkAttribute = "chunk";
+        public const string ChunkAttribute = "bytecodeChunk";
         public const string EnclosingScopeAttribute = "enclosing_scope";
 
         // List constants
@@ -19,5 +19,7 @@
         public const string DictionaryPopMethodName = "pop";
         public const string DictionaryUpdateMethodName = "update";
         public const string DictionarySetMethodName = "setdefault";
+
+        public const string ExpressionResultAttribute = "expr_stmt_result";
     }
 }

@@ -4,7 +4,7 @@ namespace Chow.Bytecode
 {
     /// <summary>
     /// Represents an <see cref="Instruction"/>'s operation code, which is mapped to the logic inside the
-    /// <see cref="Processor"/> class.
+    /// <see cref="InstructionProcessor"/> class.
     /// </summary>
     enum OperationCode : byte
     {

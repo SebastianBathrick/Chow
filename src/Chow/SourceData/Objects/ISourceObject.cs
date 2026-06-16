@@ -47,5 +47,9 @@ namespace Chow.SourceData
         SourceValue Call(params SourceValue[] args);
 
         SourceValue Call(SourceValue arg1, SourceValue arg2, params SourceValue[] args);
+        
+        // ----------------- Type Conversion --------------------
+
+        SourceValue ToSourceValue();
     }
 }

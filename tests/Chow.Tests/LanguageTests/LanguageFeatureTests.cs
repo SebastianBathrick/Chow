@@ -36,7 +36,7 @@ public class LanguageFeatureTests
     
     #endregion
 
-    #region Execute: Expression Statements
+    #region ProcessInstructions: Expression Statements
     
     static readonly IReadOnlyList<CaseExecute> LiteralValueCases =
     [
@@ -2448,7 +2448,7 @@ public class LanguageFeatureTests
 
     #endregion
 
-    #region Execute: Control Flow Statements
+    #region Process Instructions: Control Flow Statements
 
     static readonly IReadOnlyList<CaseExecute> ControlFlowCases =
     [

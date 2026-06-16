@@ -558,8 +558,11 @@ namespace Chow.Syntax.Parsing
 
             foreach (var exprSource in payload.ExprSourceParts)
             {
-                var subTokens = new Scanner(exprSource).TokenizeSourceCode();
-                var subParser = new Parser(new TokenStream(subTokens));
+                var subTokens = new Scanner(
+                    exprSource, TokenStreamFactory.Create())
+                    .TokenizeSourceCode();
+                
+                var subParser = new Parser(subTokens);
                 var exprNode = subParser.ParseSingleExpression();
                 
                 exprParts.Add(exprNode);

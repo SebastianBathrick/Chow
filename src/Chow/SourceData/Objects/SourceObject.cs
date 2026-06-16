@@ -214,6 +214,9 @@ namespace Chow.SourceData
             throw new NotSupportedException(nameof(Call));
         }
 
-
+        public SourceValue ToSourceValue()
+        {
+            return new SourceValue(this);
+        }
     }
 }

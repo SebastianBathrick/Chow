@@ -123,6 +123,25 @@ namespace Chow.SourceData
         }
 
         #endregion
+
+        #region Interop
+
+        internal SourceValue InvokeHostDelegate(SourceValue[] args)
+        {
+            if (_dataType != DataType.Object)
+            {
+                throw new DataTypeException($"'{_dataType}' object is not callable");
+            }
+
+            if (_obj is Func<SourceValue[], SourceValue> methodDelegate)
+            {
+                return methodDelegate(args ?? Array.Empty<SourceValue>());
+            }
+
+            throw new InvalidOperationException($"Object of type '{_obj.GetType().Name}' is not callable");
+        }
+
+        #endregion
         
         #region Conversion Methods
 
@@ -245,9 +264,9 @@ namespace Chow.SourceData
             {
                 objArgs[i] = args[i].ToObject();
             }
-
             return objArgs;
         }
+
 
         internal ISourceObject ToISourceObject()
         {

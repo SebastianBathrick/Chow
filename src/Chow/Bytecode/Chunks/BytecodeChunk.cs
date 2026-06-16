@@ -3,7 +3,7 @@ using Chow.SourceData;
 
 namespace Chow.Bytecode
 {
-    class Chunk
+    class BytecodeChunk
     {
         const int NoOperand = -1;
 
@@ -17,7 +17,7 @@ namespace Chow.Bytecode
 
         public Instruction this[int index] => _instructions[index];
 
-        public Chunk()
+        public BytecodeChunk()
         {
             _instructions = new List<Instruction>();
             _constantPool = new List<SourceValue>();

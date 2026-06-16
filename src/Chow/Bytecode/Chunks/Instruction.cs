@@ -11,7 +11,7 @@ namespace Chow.Bytecode
         /// variable name. Default value is <see cref="NO_OPERAND"/>, indicating no operand.</summary>
         public int Operand { get; }
         
-        /// <summary>The code mapped to the logic of this instruction found inside the <see cref="Processor"/>.</summary>
+        /// <summary>The code mapped to the logic of this instruction found inside the <see cref="InstructionProcessor"/>.</summary>
         public OperationCode Code { get; }
 
         /// <summary>Initializes a new instance of the Instruction class with the specified operation code and optional operand.</summary>
