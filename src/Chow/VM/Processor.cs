@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Chow.Bytecode;
 using Chow.SourceData;
+using Chow.Utility;
 using Chow.VM.FunctionCalls;
 
 namespace Chow.VM
@@ -332,7 +333,7 @@ namespace Chow.VM
 
             if (!_callStack.TryGetVariableValue(varName, out var varValue))
             {
-                throw new UndefinedNameException(varName, GetCurrentLineNumber());
+                throw new UndefinedNameException(varName, _callStack.CurrentLineNum);
             }
 
             _valStack.Push(varValue);
@@ -352,7 +353,7 @@ namespace Chow.VM
 
             if (!_callStack.TryGetGlobal(varName, out var varValue))
             {
-                throw new UndefinedNameException(varName, GetCurrentLineNumber());
+                throw new UndefinedNameException(varName, _callStack.CurrentLineNum);
             }
 
             _valStack.Push(varValue);
@@ -384,7 +385,8 @@ namespace Chow.VM
             _valStack.Pop();
             var target = _valStack.Pop();
 
-            throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
+            throw new AttributeException(
+                DataTypeNames.GetTypeName(target.DataType), attrName, _callStack.CurrentLineNum);
         }
 
         void ExecutePushAttribute(int operand)
@@ -399,7 +401,8 @@ namespace Chow.VM
 
                 if (!list.Directory.Contains(attrName))
                 {
-                    throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
+                    throw new AttributeException(
+                        DataTypeNames.GetTypeName(target.DataType), attrName, _callStack.CurrentLineNum);
                 }
 
                 _valStack.Push(list.GetAttribute(new SourceValue(attrName)));
@@ -411,7 +414,8 @@ namespace Chow.VM
 
                 if (!dict.Directory.Contains(attrName))
                 {
-                    throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
+                    throw new AttributeException(
+                        DataTypeNames.GetTypeName(target.DataType), attrName, _callStack.CurrentLineNum);
                 }
 
                 // TODO: Add implicit overloads to convert strings/longs/ints/doubles/etc to SourceValues
@@ -419,7 +423,8 @@ namespace Chow.VM
             }
             else
             {
-                throw new AttributeException(ParseDataTypeName(target.DataType), attrName, GetCurrentLineNumber());
+                throw new AttributeException(
+                    DataTypeNames.GetTypeName(target.DataType), attrName, _callStack.CurrentLineNum);
             }
         }
 
@@ -482,7 +487,8 @@ namespace Chow.VM
 
         bool ExecuteJumpOrIterateFor(int jumpTarget)
         {
-            // PeekType the iterator (kept on stack for the whole loop); push next value or jump to exhaust target.
+            // PeekType the iterator (kept on stack for the whole loop); push next value or jump to
+            // exhaust target.
             var iter = (IIterator)_valStack.Peek().ToObject();
 
             if (iter.TryMoveNext(out var current))
@@ -515,7 +521,8 @@ namespace Chow.VM
             {
                 if (index.DataType != DataType.Long)
                 {
-                    throw new DataTypeException($"list indices must be integers, not {index.DataType}");
+                    throw new DataTypeException(
+                        $"list indices must be integers, not {index.DataType}");
                 }
 
                 target.ToISourceObject().SetItem(index, value);
@@ -523,7 +530,8 @@ namespace Chow.VM
             else
             {
                 throw new DataTypeException(
-                    $"'{ParseDataTypeName(target.DataType)}' object does not support item assignment");
+                    $"'{DataTypeNames.GetTypeName(target.DataType)}'"
+                    + " object does not support item assignment");
             }
         }
 
@@ -542,14 +550,15 @@ namespace Chow.VM
                 }
                 catch (SubscriptException ex)
                 {
-                    throw new SubscriptException(ex.KeyRepr, GetCurrentLineNumber());
+                    throw new SubscriptException(ex.KeyRepr, _callStack.CurrentLineNum);
                 }
             }
             else if (target.DataType == DataType.List)
             {
                 if (index.DataType != DataType.Long)
                 {
-                    throw new DataTypeException($"list indices must be integers, not {index.DataType}");
+                    throw new DataTypeException(
+                        $"list indices must be integers, not {index.DataType}");
                 }
 
                 _valStack.Push(target.ToISourceObject().GetItem(index));
@@ -557,7 +566,7 @@ namespace Chow.VM
             else
             {
                 throw new DataTypeException(
-                    $"'{ParseDataTypeName(target.DataType)}' object is not subscriptable");
+                    $"'{DataTypeNames.GetTypeName(target.DataType)}' object is not subscriptable");
             }
         }
 
@@ -625,7 +634,8 @@ namespace Chow.VM
                 _valStack.Push(args[i]);
             }
 
-            // Advance caller's IP BEFORE pushing the frame, so PushReturnValue lands at the next caller instruction.
+            // Advance caller's IP BEFORE pushing the frame, so PushReturnValue lands at the next
+            // caller instruction.
             _callStack.MoveToNextInstruction();
             _callStack.EnterFunctionCall(function, argCount);
         }
@@ -641,21 +651,5 @@ namespace Chow.VM
 
         #endregion
         
-        #region Helper Methods
-
-        static string ParseDataTypeName(DataType dataType)
-        {
-            // TODO: Refactor so there's a single source of truth for datatype names used in error messages
-            return dataType.ToString().ToLowerInvariant();
-        }
-
-        // TODO: Refactor to get rid of this method, as Processor no longer indexes the instruction stream directly (CallStack does)
-        int GetCurrentLineNumber()
-        {
-            return _callStack.CurrentLineNum;
-        }
-
-        #endregion
-
     }
 }
