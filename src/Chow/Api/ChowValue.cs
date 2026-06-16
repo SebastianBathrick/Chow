@@ -56,6 +56,12 @@ namespace Chow
             return (ChowValue)ChowValueFactory.CreateDictionary();
         }
 
+        public static ChowValue CreateScope()
+        {
+            // Cast, because IChowValue has no public API or implicit operators for the client
+            return (ChowValue)ChowValueFactory.CreateScope();
+        }
+
         #endregion
 
         #region Attribute Methods

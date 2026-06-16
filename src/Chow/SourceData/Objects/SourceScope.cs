@@ -9,6 +9,10 @@ namespace Chow.SourceData
 
         public override DataType Type => DataType.Scope;
 
+        public override bool HasLength => true;
+
+        public override int Length => _scope.Count;
+
         internal Scope WrappedScope => _scope;
 
 

@@ -14,6 +14,9 @@ namespace Chow.SourceData
         readonly Dictionary<string, SourceValue> _varMap;
 
         public bool HasBuiltIns {get; set;}
+
+        /// <summary>The number of variables bound in this scope. Does not consult <see cref="Parent"/>.</summary>
+        public int Count => _varMap.Count;
         
         /// <summary>
         /// The enclosing scope used for LEGB chain walking, or <c>null</c> at the top of the chain.
