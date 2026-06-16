@@ -246,6 +246,16 @@ namespace Chow.SourceData
                     return _obj;
             }
         }
+        
+        public static SourceValue[] ToSourceValues(object[] args)
+        {
+            var srcValArgs = new SourceValue[args.Length];
+            for (var i = 0; i < args.Length; i++)
+            {
+                srcValArgs[i] = new SourceValue(args[i]);
+            }
+            return srcValArgs;
+        }
 
         internal ISourceObject ToISourceObject()
         {
@@ -258,10 +268,10 @@ namespace Chow.SourceData
             {
                 case DataType.None:
                     // TODO: Update this class to use DataTypeNames where literals or consts are used
-                    return NONE_TO_STR;
+                    return NoneToString;
                     
                 case DataType.Bool:
-                    return BoolValue ? BOOL_T_TO_STR : BOOL_F_TO_STR;
+                    return BoolValue ? BoolTrueToString : BoolFalseToString;
                     
                 case DataType.Long:
                     return _long.ToString(CultureInfo.InvariantCulture);
@@ -372,9 +382,10 @@ namespace Chow.SourceData
         const double BoolTrueToDouble = 1.0;
 
         // ToSource source representations (None/bool -> str)
-        const string NONE_TO_STR = "None";
-        const string BOOL_F_TO_STR = "False";
-        const string BOOL_T_TO_STR = "True";
+        // TODO: Replace with Utility.DataTypeNames
+        const string NoneToString = "None";
+        const string BoolFalseToString = "False";
+        const string BoolTrueToString = "True";
 
         // ToSource float formatting (append ".0" when ToSource output has no decimal point or pow)
         const string DBL_LONG_FRACTION_SUFFIX = ".0";

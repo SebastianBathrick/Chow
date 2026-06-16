@@ -1,4 +1,8 @@
+using System;
 using Chow.Bytecode;
+using Chow.Utility;
+using Chow.VM;
+
 namespace Chow.SourceData
 {
     /// <summary>
@@ -12,7 +16,7 @@ namespace Chow.SourceData
     /// </remarks>
     sealed class SourceFunction : SourceObject
     {
-        const string REPR_FORMAT = "<function {0}>";
+        const string RepresentationFormat = "<function {0}>";
 
         public override DataType Type => DataType.Function;
 
@@ -37,9 +41,32 @@ namespace Chow.SourceData
             ParamCount = paramCount;
         }
 
+        public override SourceValue GetAttribute(SourceValue name)
+        {
+            if (name.DataType != DataType.Str)
+            {
+                throw new InvalidOperationException(
+                    $"{nameof(SourceFunction.GetAttribute)} cannot be called with anything other "
+                    + $"than a {nameof(SourceValue.DataType)} of {nameof(DataType.Str)}.");
+            }
+
+            if (name == SourceObjectConsts.ChunkAttribute)
+            {
+                return new SourceValue(Chunk);
+            }
+
+            if (name == SourceObjectConsts.EnclosingScopeAttribute)
+            {
+                return new SourceValue(Enclosing);
+            }
+
+            throw new AttributeException(
+                DataTypeNames.GetTypeName(DataType.Str), name, -1);
+        }
+
         public override string ToRepresentation()
         {
-            return string.Format(REPR_FORMAT, Name);
+            return string.Format(RepresentationFormat, Name);
         }
     }
 }

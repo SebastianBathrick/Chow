@@ -258,8 +258,7 @@ public class TokenStreamTests
         return new TokenStream(tokens.ToList());
     }
 
-    static Token Token(
-        TokenType type,
+    static Token Token(TokenType type,
         string lexeme = "",
         int lineNumber = 1,
         object? literal = null)

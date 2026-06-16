@@ -176,7 +176,7 @@ namespace Chow.VM
                     ExecutePushSubscriptSliceValue();
                     break;
 
-                // -- Function CallMethod Operations ----------------------------------------------------
+                // -- Function Call Operations ----------------------------------------------------
                 case OperationCode.CallFunction:
                     // If false, the chunk will have switched to the called closure's
                     return ExecuteCallFunction(instr.Operand);
@@ -580,7 +580,7 @@ namespace Chow.VM
 
         #endregion
 
-        #region Function CallMethod Operations
+        #region Function Call Operations
 
         bool ExecuteCallFunction(int argCount)
         {

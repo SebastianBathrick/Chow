@@ -1,3 +1,4 @@
+using System;
 using Chow.Ast.Parsing;
 using Chow.Bytecode.Compilation;
 using Chow.Semantics;
@@ -9,7 +10,7 @@ using Chow.VM;
 
 namespace Chow
 {
-    public sealed class ChowEngine
+    public static class ChowEngine
     {
         /// <summary>Compiles and interprets Chow source code contained in a <see langword="string"/>.</summary>
         /// <param name="sourceCode">String containing Chow source code, whitespace, or null.</param>
@@ -41,6 +42,25 @@ namespace Chow
             return new ChowValue(result);
         }
 
+        public static IChowValue Call(IChowValue func, params object[] args)
+        {
+            return ChowValueFactory.Create(
+                Call(ApiConverter.Convert(func), SourceValue.ToSourceValues(args)));
+        }
+
+        internal static SourceValue Call(SourceValue func, params SourceValue[] args)
+        {
+            if (func.DataType != DataType.Object)
+            {
+                throw new UnreachableException(
+                    $"{nameof(Call)} call with invalid data type '{func.DataType}'");
+            }
+
+            var delegateFunc = (Func<SourceValue[], SourceValue>)func.ToObject();
+
+            return delegateFunc.Invoke(args);
+        }
+
         static void ImportBuiltIns(Scope globalScope)
         {
             var namedInvocableObjects = BuiltInFunctions.NamedInvocableObjects;
@@ -49,30 +69,6 @@ namespace Chow
                 var chowValue = new SourceValue(namedInvocable.callableObject);
                 globalScope.AssignVariableValue(namedInvocable.name, ref chowValue);
             }
-        }
-
-        internal static SourceValue ExecuteModuleCode(string sourceCode, Scope moduleGlobalScope)
-        {
-            var scanner = new Scanner(sourceCode);
-            var tokens = scanner.TokenizeSourceCode();
-
-            var parser = new Parser(new TokenStream(tokens));
-            var syntaxTreeRoot = parser.BuildAst();
-
-            var semanticAnalyzer = new SemanticAnalyzer(syntaxTreeRoot);
-            semanticAnalyzer.Analyze();
-
-            var compiler = new Compiler(syntaxTreeRoot);
-            var chunk = compiler.CompileRoot();
-
-            var vm = new Processor(moduleGlobalScope, chunk);
-            return vm.Execute();
-        }
-
-        internal static SourceValue InvokeChowFunction(Scope moduleGlobalScope, string functionName, SourceValue[] args)
-        {
-            var vm = new Processor(moduleGlobalScope);
-            return vm.CallGlobalFunction(functionName, args);
         }
     }
 }

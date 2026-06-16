@@ -239,7 +239,8 @@ namespace Chow.SourceData
             return SourceValue.None;
         }
 
-        Func<SourceValue[], SourceValue> GetMethod(string methodName)
+        // Internal access level for testing purposes
+        internal Func<SourceValue[], SourceValue> GetMethod(string methodName)
         {
             switch (methodName)
             {

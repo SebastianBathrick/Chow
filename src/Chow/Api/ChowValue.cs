@@ -2,10 +2,11 @@
 using System;
 using Chow.SourceData;
 using Chow.Utility;
+using Chow.VM;
 
 namespace Chow
 {
-    public sealed class ChowValue
+    public sealed class ChowValue : IChowValue
     {
         #region Properties
         
@@ -27,7 +28,6 @@ namespace Chow
         
         ISourceObject _srcObj = null;
 
-
         internal ChowValue(SourceValue srcVal)
         {
             SourceValue = srcVal;
@@ -38,67 +38,40 @@ namespace Chow
             return (T)SourceValue.ToObject();
         }
 
-        #region Create Methods
+        #region Factory Methods
+
+        public static ChowValue CreateList()
+        {
+            // Cast, because IChowValue has no public API or implicit operators for the client
+            return (ChowValue)ChowValueFactory.CreateList();
+        }
 
         public static ChowValue CreateDictionary()
         {
-            var srcObj = SourceObjectFactory.CreateNewObject(DataType.Dict);
-            return new ChowValue(new SourceValue(srcObj));
-        }
-        
-        public static ChowValue CreateList()
-        {
-            var srcObj = SourceObjectFactory.CreateNewObject(DataType.List);
-            return new ChowValue(new SourceValue(srcObj));
+            // Cast, because IChowValue has no public API or implicit operators for the client
+            return (ChowValue)ChowValueFactory.CreateDictionary();
         }
         
         #endregion
-        
-        #region Data List Methods
 
-        public void Add(ChowValue value)
+        #region Attribute Methods
+
+        public ChowValue GetAttribute(ChowValue name)
         {
-            SourceObject.AppendItem(value.SourceValue);
-        }
-        
-        public void Remove(ChowValue key)
-        {
-            SourceObject.DeleteItem(key.SourceValue);
+            var attr = SourceObject.GetAttribute(name.SourceValue);
+            var chowVal = new ChowValue(attr);
+            return chowVal;
         }
 
         #endregion
         
-        #region Call Method Methods
+        #region Call Self Method Methods
         
-        public ChowValue Call()
+        public void Call(string methodName, params object[] args)
         {
-            return new ChowValue(SourceObject.Call());
+            ChowEngine.Call(SourceObject.GetAttribute(methodName), SourceValue.ToSourceValues(args));
         }
 
-        public ChowValue Call(object arg)
-        {
-            return new ChowValue(SourceObject.Call(new SourceValue(arg)));
-        }
-        
-        public ChowValue Call(object arg1, object arg2, params object[] args)
-        {
-            if (args == null || args.Length == 0)
-            {
-                return new ChowValue( 
-                    SourceObject.Call(new SourceValue(arg1), new SourceValue(arg2)));
-            }
-            
-            var srcValArgs = new SourceValue[args.Length];
-
-            for (var i = 0; i < args.Length; i++)
-            {
-                srcValArgs[i] = new SourceValue(args[i]);
-            }
-
-            return new ChowValue( 
-                SourceObject.Call(new SourceValue(arg1), new SourceValue(arg2), srcValArgs));
-        }
-        
         #endregion
         
         #region Implicit Operators
