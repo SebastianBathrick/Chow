@@ -67,9 +67,9 @@ namespace Chow
         
         #region Call Self Method Methods
         
-        public void Call(string methodName, params object[] args)
+        public ChowValue Call(string methodName, params object[] args)
         {
-            ChowEngine.Call(SourceObject.GetAttribute(methodName), SourceValue.ToSourceValues(args));
+            return new ChowValue(ChowEngine.Call(SourceObject.GetAttribute(methodName), SourceValue.ToSourceValues(args)));
         }
 
         #endregion

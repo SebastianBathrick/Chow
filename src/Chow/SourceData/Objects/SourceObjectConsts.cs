@@ -4,11 +4,20 @@
     {
         public const string ChunkAttribute = "chunk";
         public const string EnclosingScopeAttribute = "enclosing_scope";
-        const string AppendMethodName = "append";
-        const string ClearMethodName = "clear";
-        const string InsertMethodName = "insert";
-        const string PopMethodName = "pop";
-        const string RemoveMethodName = "remove";
-        const string ReverseMethodName = "reverse";
+
+        // List constants
+        public const string ListAppendMethodName = "append";
+        public const string ListClearMethodName = "clear";
+        public const string ListInsertMethodName = "insert";
+        public const string ListPopMethodName = "pop";
+        public const string ListRemoveMethodName = "remove";
+        public const string ListReverseMethodName = "reverse";
+        
+        // Dictionary constants
+        const string DictionaryGetMethodName = "get";
+        const string DictionaryClearMethodName = "clear";
+        const string DictionaryPopMethodName = "pop";
+        const string DictionaryUpdateMethodName = "update";
+        const string DictionarySetMethodName = "setdefault";
     }
 }

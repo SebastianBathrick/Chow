@@ -2,5 +2,10 @@
 
 ChowValue value = ChowValue.CreateList();
 
+ChowList list = value;
 
-Console.WriteLine(value.ToString());
+list.Append(0);
+list.Append(2);
+list[0] = -1;
+
+Console.WriteLine(list);
