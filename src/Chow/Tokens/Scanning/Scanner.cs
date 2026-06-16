@@ -529,6 +529,7 @@ namespace Chow.Tokens.Scanning
             }
         }
 
+        // **THIS IS A TEMPORARY SOLUTION! DO NOT ADD ANY ADDITIONAL LOGIC!**
         void ScanFStringToken()
         {
             var startIdx = _charIdx - 1; // position of f/F
@@ -860,6 +861,7 @@ namespace Chow.Tokens.Scanning
 
         void AddNewToken(TokenType type, string lexeme, int lineNum, object literal = null)
         {
+            // Refactor to use ITokenStream instead
             _tokenList.Add(new Token(type, lexeme, lineNum, literal));
         }
 
