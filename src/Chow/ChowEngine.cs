@@ -24,7 +24,7 @@ namespace Chow
         /// </returns>
         public static ChowValue Execute(string sourceCode, bool useBuiltIns = true)
         {
-            return (ChowValue)RunPipeline(sourceCode, useBuiltIns, false);
+            return (ChowValue)RunPipeline(sourceCode, scope: null, useBuiltIns, doesReturnScope: false);
         }
 
         public static ChowValue Execute(string sourceCode, ChowValue scope, bool useBuiltIns = true)
@@ -34,14 +34,19 @@ namespace Chow
                 throw new ArgumentNullException(nameof(scope));
             }
 
-            // Calls run pipeline, imports build-ins (if the Scope.HasBuiltIns is false and useBuiltIns is true), compiles, and runs the source code with the global scope being what's provided
+            if (!(scope.SourceValue.ToISourceObject() is SourceScope sourceScope))
+            {
+                throw new ArgumentException("Value is not a scope", nameof(scope));
+            }
+
+            return (ChowValue)RunPipeline(sourceCode, sourceScope.WrappedScope, useBuiltIns, doesReturnScope: true);
         }
 
         #endregion
 
         static IChowValue RunPipeline(string sourceCode, Scope scope, bool useBuiltIns, bool doesReturnScope)
         {
-            var globalScope = CreateInitialScope(useBuiltIns);
+            var globalScope = CreateInitialScope(scope, useBuiltIns);
 
             var chunk = CompileFromSourceCode(sourceCode);
 
@@ -50,10 +55,10 @@ namespace Chow
 
         #region Scope Methods
 
-        static Scope CreateInitialScope(bool useBuiltIns)
+        static Scope CreateInitialScope(Scope scope, bool useBuiltIns)
         {
-            var globalScope = new Scope();
-            return useBuiltIns ? ImportBuiltIns(globalScope) : globalScope;
+            var globalScope = scope ?? new Scope();
+            return useBuiltIns && !globalScope.HasBuiltIns ? ImportBuiltIns(globalScope) : globalScope;
         }
 
         static Scope ImportBuiltIns(Scope globalScope)
@@ -65,6 +70,8 @@ namespace Chow
                 var chowValue = new SourceValue(namedInvocable.callableObject);
                 globalScope.AssignVariableValue(namedInvocable.name, ref chowValue);
             }
+
+            globalScope.HasBuiltIns = true;
 
             return globalScope;
         }
@@ -126,7 +133,7 @@ namespace Chow
             // Returns the result of the last expression statement to execute or SourceValue.None
             var result = ProcessBytecodeChunk(globalScope, chunk);
 
-            return CreateVirtualMachineOutput(ref result, doesReturnScope);
+            return CreateVirtualMachineOutput(ref result, globalScope, doesReturnScope);
         }
 
         static SourceValue ProcessBytecodeChunk(Scope globalScope, BytecodeChunk bytecodeChunk)
@@ -139,11 +146,15 @@ namespace Chow
 
         static IChowValue CreateVirtualMachineOutput(ref SourceValue result, Scope globalScope, bool doesReturnScope)
         {
-            // If doesReturnScope is true then do the following (use factories as much as possible):
-            // 1. Create a SourceScope (ISourceObject) containing globalScope
-            // 2. Assign the result parameter to SourceScope's expression statement result attribute
-            // 3. Wrap the ISourceObject in a SourceValue instance.
-            // 4. Wrap the SourceValue in a ChowValue instance
+            if (!doesReturnScope)
+            {
+                return ApiConverter.Convert(result);
+            }
+
+            var sourceScope = new SourceScope(globalScope, result);
+            var sourceValue = sourceScope.ToSourceValue();
+
+            return ApiConverter.Convert(sourceValue);
         }
 
         internal static SourceValue Call(SourceValue func, params SourceValue[] args)

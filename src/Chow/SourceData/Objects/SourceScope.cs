@@ -8,8 +8,10 @@ namespace Chow.SourceData
         SourceValue _expressionStatementResult;
 
         public override DataType Type => DataType.Scope;
-        
-        
+
+        internal Scope WrappedScope => _scope;
+
+
         public SourceScope(Scope scope, SourceValue expressionStatementResult)
         {
             _scope = scope;
@@ -48,6 +50,8 @@ namespace Chow.SourceData
             {
                 return new SourceValue(_scope);
             }
+
+            return base.GetAttribute(name);
         }
 
         public override void SetAttribute(SourceValue name, SourceValue value)
@@ -55,8 +59,9 @@ namespace Chow.SourceData
             if (name == SourceObjectConsts.ScopeExpressionResultAttribute)
             {
                 _expressionStatementResult = value;
+                return;
             }
-            
+
             throw new UnreachableException(nameof(SetAttribute));
         }
     }

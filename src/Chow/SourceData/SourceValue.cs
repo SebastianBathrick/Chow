@@ -60,6 +60,7 @@ namespace Chow.SourceData
                 case DataType.Range:
                 case DataType.Function:
                 case DataType.Slice:
+                case DataType.Scope:
                 case DataType.Str:
                 case DataType.None:
                 case DataType.Long:

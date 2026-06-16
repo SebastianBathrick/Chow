@@ -13,7 +13,7 @@ namespace Chow.SourceData
     {
         readonly Dictionary<string, SourceValue> _varMap;
 
-        public bool HasBuiltIns {get; private set;}
+        public bool HasBuiltIns {get; set;}
         
         /// <summary>
         /// The enclosing scope used for LEGB chain walking, or <c>null</c> at the top of the chain.
