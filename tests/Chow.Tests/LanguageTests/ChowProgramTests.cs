@@ -1,4 +1,4 @@
-﻿namespace Chow.Tests.SourceCode;
+﻿namespace Chow.Tests;
 
 [TestFixture]
 public class ChowProgramTests

@@ -3,7 +3,7 @@ using Chow.Ast.Parsing;
 using Chow.Tokens;
 using Chow.Utility;
 
-namespace Chow.Tests.SourceCode.UnitTests;
+namespace Chow.Tests.UnitTests;
 
 public class SyntaxMapsTests
 {

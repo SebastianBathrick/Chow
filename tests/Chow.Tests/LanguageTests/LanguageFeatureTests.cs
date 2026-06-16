@@ -2,7 +2,7 @@
 using Chow.SourceData;
 using Chow.VM;
 
-namespace Chow.Tests.SourceCode;
+namespace Chow.Tests;
 
 [TestFixture]
 public class LanguageFeatureTests

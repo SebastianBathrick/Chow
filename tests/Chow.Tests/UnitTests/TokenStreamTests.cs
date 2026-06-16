@@ -1,7 +1,7 @@
 using Chow;
 using Chow.Tokens;
 
-namespace Chow.Tests.SourceCode.UnitTests;
+namespace Chow.Tests.UnitTests;
 
 public class TokenStreamTests
 {

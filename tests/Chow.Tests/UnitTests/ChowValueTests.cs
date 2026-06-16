@@ -1,7 +1,7 @@
 ﻿using Chow;
 using Chow.SourceData;
 
-namespace Chow.Tests.SourceCode.UnitTests;
+namespace Chow.Tests.UnitTests;
 
 [TestFixture]
 public class ChowValueTests

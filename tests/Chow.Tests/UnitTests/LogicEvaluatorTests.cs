@@ -2,7 +2,7 @@ using Chow;
 using Chow.SourceData;
 using Chow.VM;
 
-namespace Chow.Tests.SourceCode.UnitTests;
+namespace Chow.Tests.UnitTests;
 
 /// <summary>
 /// Expected values verified against Python 3.11.0 subprocess (2026-06-05).
