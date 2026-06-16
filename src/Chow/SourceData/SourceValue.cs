@@ -357,9 +357,9 @@ namespace Chow.SourceData
 
         static bool IsFractionalSuffix(string formatted)
         {
-            return formatted.IndexOf(DoublePointChar) == CHAR_NOT_FOUND_INX
-                && formatted.IndexOf(DoubleExponentLowercaseChar) == CHAR_NOT_FOUND_INX
-                && formatted.IndexOf(DoubleExponentUppercaseChar) == CHAR_NOT_FOUND_INX;
+            return formatted.IndexOf(DoublePointChar) == IndexOfCharNotFound
+                && formatted.IndexOf(DoubleExponentLowercaseChar) == IndexOfCharNotFound
+                && formatted.IndexOf(DoubleExponentUppercaseChar) == IndexOfCharNotFound;
         }
 
         #endregion
@@ -405,7 +405,7 @@ namespace Chow.SourceData
         const char DoubleExponentUppercaseChar = 'E';
 
         // String.IndexOf "not found" sentinel (used by ToSource float formatting check)
-        const int CHAR_NOT_FOUND_INX = -1;
+        const int IndexOfCharNotFound = -1;
 
         const int ObjectFieldOffset = 0;
         const int LongFieldOffset = 8;
