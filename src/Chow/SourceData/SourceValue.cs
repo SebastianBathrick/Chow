@@ -338,7 +338,7 @@ namespace Chow.SourceData
 
             if (IsFractionalSuffix(formatted))
             {
-                formatted += DBL_LONG_FRACTION_SUFFIX;
+                formatted += DoubleFractionSuffix;
             }
 
             return formatted;
@@ -346,9 +346,9 @@ namespace Chow.SourceData
 
         static bool IsFractionalSuffix(string formatted)
         {
-            return formatted.IndexOf(DBL_POINT_CHAR) == CHAR_NOT_FOUND_INX
-                && formatted.IndexOf(DBL_POW_LOWER_CHAR) == CHAR_NOT_FOUND_INX
-                && formatted.IndexOf(DBL_POW_UPPER_CHAR) == CHAR_NOT_FOUND_INX;
+            return formatted.IndexOf(DoublePointChar) == CHAR_NOT_FOUND_INX
+                && formatted.IndexOf(DoubleExponentLowercaseChar) == CHAR_NOT_FOUND_INX
+                && formatted.IndexOf(DoubleExponentUppercaseChar) == CHAR_NOT_FOUND_INX;
         }
 
         #endregion
@@ -388,10 +388,10 @@ namespace Chow.SourceData
         const string BoolTrueToString = "True";
 
         // ToSource float formatting (append ".0" when ToSource output has no decimal point or pow)
-        const string DBL_LONG_FRACTION_SUFFIX = ".0";
-        const char DBL_POINT_CHAR = '.';
-        const char DBL_POW_LOWER_CHAR = 'e';
-        const char DBL_POW_UPPER_CHAR = 'E';
+        const string DoubleFractionSuffix = ".0";
+        const char DoublePointChar = '.';
+        const char DoubleExponentLowercaseChar = 'e';
+        const char DoubleExponentUppercaseChar = 'E';
 
         // String.IndexOf "not found" sentinel (used by ToSource float formatting check)
         const int CHAR_NOT_FOUND_INX = -1;
@@ -515,16 +515,6 @@ namespace Chow.SourceData
         public static SourceValue IsGreaterOrEqual(SourceValue r, SourceValue l)
         {
             return ComparisonEvaluator.EvaluateGreaterEqual(ref r, ref l);
-        }
-
-        public static SourceValue And(SourceValue r, SourceValue l)
-        {
-            return LogicEvaluator.EvaluateAnd(ref r, ref l);
-        }
-
-        public static SourceValue Or(SourceValue r, SourceValue l)
-        {
-            return LogicEvaluator.EvaluateOr(ref r, ref l);
         }
 
         public static SourceValue Unite(SourceValue r, SourceValue l)

@@ -39,13 +39,8 @@ namespace Chow
 
             var vm = new Processor(globalScope, chunk);
             var result = vm.Execute();
+            
             return new ChowValue(result);
-        }
-
-        public static IChowValue Call(IChowValue func, params object[] args)
-        {
-            return ChowValueFactory.Create(
-                Call(ApiConverter.Convert(func), SourceValue.ToSourceValues(args)));
         }
 
         internal static SourceValue Call(SourceValue func, params SourceValue[] args)

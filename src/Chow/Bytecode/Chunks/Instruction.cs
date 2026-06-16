@@ -7,12 +7,12 @@ namespace Chow.Bytecode
     {
         const int NO_OPERAND = -1;
 
-        /// <summary>The code mapped to the logic of this instruction found inside the <see cref="Processor"/>.</summary>
-        public OperationCode Code { get; }
-
         /// <summary>Additional information that may be required for specific instructions, such as the index of a constant or
         /// variable name. Default value is <see cref="NO_OPERAND"/>, indicating no operand.</summary>
         public int Operand { get; }
+        
+        /// <summary>The code mapped to the logic of this instruction found inside the <see cref="Processor"/>.</summary>
+        public OperationCode Code { get; }
 
         /// <summary>Initializes a new instance of the Instruction class with the specified operation code and optional operand.</summary>
         /// <param name="type">The operation code that defines the type of instruction to create.</param>

@@ -14,10 +14,10 @@
         public const string ListReverseMethodName = "reverse";
         
         // Dictionary constants
-        const string DictionaryGetMethodName = "get";
-        const string DictionaryClearMethodName = "clear";
-        const string DictionaryPopMethodName = "pop";
-        const string DictionaryUpdateMethodName = "update";
-        const string DictionarySetMethodName = "setdefault";
+        public const string DictionaryGetMethodName = "get";
+        public const string DictionaryClearMethodName = "clear";
+        public const string DictionaryPopMethodName = "pop";
+        public const string DictionaryUpdateMethodName = "update";
+        public const string DictionarySetMethodName = "setdefault";
     }
 }
