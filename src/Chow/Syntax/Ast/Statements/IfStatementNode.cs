@@ -14,6 +14,5 @@ namespace Chow.Syntax
             Block = block;
             Branch = branch;
         }
-
     }
 }

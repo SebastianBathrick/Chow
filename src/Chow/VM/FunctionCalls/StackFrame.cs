@@ -4,7 +4,8 @@ using Chow.SourceData;
 namespace Chow.VM.FunctionCalls
 {
     /// <summary>
-    /// One slot on the <see cref="CallStack"/>. Pairs a <see cref="BytecodeChunk"/> being executed with its associated
+    /// One slot on the <see cref="CallStack"/>. Pairs a <see cref="BytecodeChunk"/> being executed with
+    /// its associated
     /// <see cref="Scope"/> and tracks the current instruction pointer.
     /// </summary>
     class StackFrame
@@ -17,7 +18,10 @@ namespace Chow.VM.FunctionCalls
         /// <summary>The bytecode bytecodeChunk this frame is executing.</summary>
         public BytecodeChunk BytecodeChunk { get; }
 
-        /// <summary>The frame's scope: parentless for the module frame, parented to the closure's enclosing scope for any function frame.</summary>
+        /// <summary>
+        /// The frame's scope: parentless for the module frame, parented to the closure's enclosing
+        /// scope for any function frame.
+        /// </summary>
         public Scope Scope { get; }
 
         /// <summary>The instruction at the current pointer.</summary>
@@ -43,7 +47,10 @@ namespace Chow.VM.FunctionCalls
             _instrIdx++;
         }
 
-        /// <summary>Sets the instruction pointer to <paramref name="instrIdx"/> and returns its previous value.</summary>
+        /// <summary>
+        /// Sets the instruction pointer to <paramref name="instrIdx"/> and returns its previous
+        /// value.
+        /// </summary>
         public void JumpToInstr(int instrIdx)
         {
             _instrIdx = instrIdx;

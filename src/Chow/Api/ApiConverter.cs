@@ -6,7 +6,7 @@ namespace Chow
     {
         public static IChowValue Convert(SourceValue srcVal)
         {
-            return new ChowValue(ref srcVal);   
+            return new ChowValue(ref srcVal);
         }
 
         public static SourceValue[] Convert(ChowValue[] values)
@@ -16,9 +16,10 @@ namespace Chow
             {
                 srcValValues[i] = values[i].SourceValue;
             }
+
             return srcValValues;
         }
-        
+
         public static SourceValue Convert(IChowValue apiObj)
         {
             return ((ChowValue)apiObj).SourceValue;

@@ -8,28 +8,30 @@ namespace Chow.Tokens.Scanning
 {
     /// <summary>
     /// <para>
-    /// Instances facilitate the first phase of the interpreter, lexical analysis/scanning. The client provides source
+    /// Instances facilitate the first phase of the interpreter, lexical analysis/scanning. The client
+    /// provides source
     /// code via an argument passed to an instance's constructor.
     /// </para>
     /// <para>
-    /// To begin lexical analysis, the client must call the <see cref="TokenizeSourceCode"/> method, which tokenizes the source
-    /// code and returns a list of <see cref="Token"/>s. After <see cref="TokenizeSourceCode"/>, the Scanner instance will be
+    /// To begin lexical analysis, the client must call the <see cref="TokenizeSourceCode"/> method, which
+    /// tokenizes the source
+    /// code and returns a list of <see cref="Token"/>s. After <see cref="TokenizeSourceCode"/>, the
+    /// Scanner instance will be
     /// considered dirty, and cannot be used again.
     /// </para>
     /// </summary>
     sealed class Scanner
     {
-
         #region Fields & Consts
 
         const int SINGLE_INDENT_SIZE = 4;
 
         readonly string _sourceCode;
         readonly ITokenStream _tokenStream;
-        
+
         readonly Stack<int> _indentLevels;
         readonly Stack<char> _openingBrackets;
-        
+
         int _charIdx;
         int _lineNum;
         bool _isLineBegin;
@@ -435,7 +437,8 @@ namespace Chow.Tokens.Scanning
             }
             catch (OverflowException)
             {
-                throw new OverflowException($"{numTokenType} literal value out of range & parsing failed. Literal Value: {lexeme}");
+                throw new OverflowException(
+                    $"{numTokenType} literal value out of range & parsing failed. Literal Value: {lexeme}");
             }
             catch (FormatException)
             {
@@ -731,7 +734,7 @@ namespace Chow.Tokens.Scanning
         {
             return CurrentChar >= '0' && CurrentChar <= '9';
         }
-        
+
         bool IsDigitChar(char checkChar)
         {
             return checkChar >= '0' && checkChar <= '9';
@@ -867,6 +870,5 @@ namespace Chow.Tokens.Scanning
         }
 
         #endregion
-
     }
 }

@@ -529,7 +529,9 @@ namespace Chow.Semantics
                     continue;
                 }
 
-                if (scope.Parameters.Contains(name) || scope.Bindings.ContainsKey(name) || scope.NonlocalDeclarations.ContainsKey(name))
+                if (scope.Parameters.Contains(name)
+                    || scope.Bindings.ContainsKey(name)
+                    || scope.NonlocalDeclarations.ContainsKey(name))
                 {
                     return true;
                 }
@@ -551,7 +553,7 @@ namespace Chow.Semantics
                 return ScopeType.Global;
             }
 
-            return frame.NonlocalDeclarations.ContainsKey(name) 
+            return frame.NonlocalDeclarations.ContainsKey(name)
                 ? ScopeType.NonLocal : ScopeType.Local;
 
         }

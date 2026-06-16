@@ -26,7 +26,7 @@ namespace Chow.Bytecode
         }
 
         #region Instruction Methods
-        
+
         public void Add(OperationCode code, int line, int operand = NoOperand)
         {
             _instructions.Add(new Instruction(code, operand));
@@ -46,12 +46,12 @@ namespace Chow.Bytecode
         #endregion
 
         #region Constant Methods
-        
+
         public SourceValue ReadConstant(int operand)
         {
             return _constantPool[operand];
         }
-        
+
         public int RegisterConstant(SourceValue newConst)
         {
             var constIndex = _constantPool.IndexOf(newConst);
@@ -79,7 +79,7 @@ namespace Chow.Bytecode
         {
             return _varNames.IndexOf(name);
         }
-        
+
         public int RegisterVariableName(string varName)
         {
             var existing = FindVariableName(varName);
@@ -95,6 +95,5 @@ namespace Chow.Bytecode
         }
 
         #endregion
-
     }
 }

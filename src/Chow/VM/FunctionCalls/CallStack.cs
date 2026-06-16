@@ -19,9 +19,11 @@ namespace Chow.VM.FunctionCalls
 
         // Cached active frame (module frame or top call frame); kept in sync by
         // EnterFunctionCall/ExitFunctionCall so per-instruction reads avoid Count/PeekType.
-        StackFrame _currFrame;
 
-        /// <summary>The bytecodeChunk currently being executed (function bytecodeChunk if inside a call, module bytecodeChunk otherwise).</summary>
+        /// <summary>
+        /// The bytecodeChunk currently being executed (function bytecodeChunk if inside a call,
+        /// module bytecodeChunk otherwise).
+        /// </summary>
         public BytecodeChunk CurrentBytecodeChunk => CurrFrame.BytecodeChunk;
 
         /// <summary>The instruction at the current frame's pointer.</summary>
@@ -33,22 +35,32 @@ namespace Chow.VM.FunctionCalls
         /// <summary>The current frame's scope. Captured by <c>PushNewSourceFunction</c> at runtime.</summary>
         public Scope CurrentScope => CurrFrame.Scope;
 
-        /// <summary>The module-level scope (the bottom of every LEGB chain). Future <c>global</c>-targeted ops route directly here.</summary>
+        /// <summary>
+        /// The module-level scope (the bottom of every LEGB chain). Future <c>global</c>-targeted ops
+        /// route directly here.
+        /// </summary>
         public Scope ModuleScope => _moduleLvl.Scope;
 
         /// <summary>Source line number associated with the current frame's pointer.</summary>
         public int CurrentLineNum => CurrFrame.CurrentLineNum;
 
-        StackFrame CurrFrame => _currFrame;
+        StackFrame CurrFrame
+        {
+            get;
+            set;
+        }
 
         /// <summary>Creates a call stack rooted at a single module frame.</summary>
         /// <param name="moduleBytecodeChunk">The compiled bytecode for the module being executed.</param>
-        /// <param name="moduleScope">The module scope to operate against; persists across <c>ChowState.ProcessInstructions</c> calls.</param>
+        /// <param name="moduleScope">
+        /// The module scope to operate against; persists across
+        /// <c>ChowState.ProcessInstructions</c> calls.
+        /// </param>
         public CallStack(BytecodeChunk moduleBytecodeChunk, Scope moduleScope)
         {
             _moduleLvl = new StackFrame(moduleBytecodeChunk, moduleScope);
             _callFrames = new Stack<StackFrame>();
-            _currFrame = _moduleLvl;
+            CurrFrame = _moduleLvl;
         }
 
         /// <summary>
@@ -192,14 +204,17 @@ namespace Chow.VM.FunctionCalls
             var frameScope = new Scope(sourceFunc.Enclosing);
             var newFrame = new StackFrame(sourceFunc.BytecodeChunk, frameScope);
             _callFrames.Push(newFrame);
-            _currFrame = newFrame;
+            CurrFrame = newFrame;
         }
 
-        /// <summary>Pops the current function frame. Its local scope is dropped (kept alive only if a nested closure captured it).</summary>
+        /// <summary>
+        /// Pops the current function frame. Its local scope is dropped (kept alive only if a nested
+        /// closure captured it).
+        /// </summary>
         public void ExitFunctionCall()
         {
             _callFrames.Pop();
-            _currFrame = _callFrames.Count == 0 ? _moduleLvl : _callFrames.Peek();
+            CurrFrame = _callFrames.Count == 0 ? _moduleLvl : _callFrames.Peek();
         }
     }
 }

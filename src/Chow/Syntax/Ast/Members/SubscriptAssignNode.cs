@@ -14,6 +14,5 @@ namespace Chow.Syntax
             Index = idx;
             Expression = expr;
         }
-
     }
 }

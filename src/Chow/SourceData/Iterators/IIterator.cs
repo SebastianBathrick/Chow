@@ -11,8 +11,14 @@ namespace Chow.SourceData
     interface IIterator
     {
         /// <summary>Advances and produces the next element.</summary>
-        /// <param name="current">The next element when the call returns <see langword="true"/>; otherwise undefined.</param>
-        /// <returns><see langword="true"/> if an element was produced; <see langword="false"/> when the iterator is exhausted.</returns>
+        /// <param name="current">
+        /// The next element when the call returns <see langword="true"/>; otherwise
+        /// undefined.
+        /// </param>
+        /// <returns>
+        /// <see langword="true"/> if an element was produced; <see langword="false"/> when the
+        /// iterator is exhausted.
+        /// </returns>
         bool TryMoveNext(out SourceValue current);
     }
 }

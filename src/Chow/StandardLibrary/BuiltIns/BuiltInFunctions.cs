@@ -23,10 +23,10 @@ namespace Chow.StandardLibrary.BuiltIns
                 {
                     return _namedInvocableObjects;
                 }
-                
+
                 // Lazily initialize in case the library client never imports built-ins
                 _namedInvocableObjects = CreateBuiltInsMap();
-                
+
                 // Return a copy to avoid accidentally mutating the built-in functions field
                 return new List<(string name, object callableObject)>(_namedInvocableObjects);
             }
@@ -41,7 +41,7 @@ namespace Chow.StandardLibrary.BuiltIns
                 {
                     _namedInvocableObjects = CreateBuiltInsMap();
                 }
-                
+
                 var names = new string[_namedInvocableObjects.Count];
 
                 for (var i = 0; i < _namedInvocableObjects.Count; i++)
@@ -91,10 +91,10 @@ namespace Chow.StandardLibrary.BuiltIns
                 (roundDef.Name, BuildGuardedBuiltIn(roundDef)),
                 (minDef.Name, BuildGuardedBuiltIn(minDef)),
                 (maxDef.Name, BuildGuardedBuiltIn(maxDef)),
-                (rangeDef.Name, BuildGuardedBuiltIn(rangeDef)),
+                (rangeDef.Name, BuildGuardedBuiltIn(rangeDef))
             };
         }
-        
+
         static Func<SourceValue[], SourceValue> BuildGuardedBuiltIn(BuiltInDefinition builtInDef)
         {
             SourceValue GuardedDelegateInvocation(SourceValue[] args)
@@ -123,7 +123,7 @@ namespace Chow.StandardLibrary.BuiltIns
 
             return GuardedDelegateInvocation;
         }
-        
+
         static void ValidateArgumentCount(BuiltInDefinition builtInDef, SourceValue[] args)
         {
             if (args != null)
@@ -261,10 +261,11 @@ namespace Chow.StandardLibrary.BuiltIns
                     throw new DataTypeException($"'{args[0].DataType}' object is not iterable");
                 }
 
-                result.GetMethod("update")(new[]
-                {
-                    args[0],
-                });
+                result.GetMethod("update")(
+                    new[]
+                    {
+                        args[0]
+                    });
             }
 
             return new SourceValue(result);
@@ -356,9 +357,9 @@ namespace Chow.StandardLibrary.BuiltIns
             while (iterator.TryMoveNext(out var next))
             {
                 var replace = findLess
-                    ? SourceValue.IsLess(r: winner, l: next).ToBool()
-                    : SourceValue.IsGreater(r: winner, l: next).ToBool();
-                
+                    ? SourceValue.IsLess(winner, next).ToBool()
+                    : SourceValue.IsGreater(winner, next).ToBool();
+
                 if (replace)
                 {
                     winner = next;
@@ -421,7 +422,7 @@ namespace Chow.StandardLibrary.BuiltIns
         #endregion
 
         #region Constants
-        
+
         const string BUILT_IN_NAME_PRINT = "print";
         const string BUILT_IN_NAME_INPUT = "input";
         const string BUILT_IN_NAME_CLEAR = "clear";

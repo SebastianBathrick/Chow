@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Chow.Utility;
 using Chow.VM;
+
 namespace Chow.SourceData
 {
     /// <summary>
@@ -12,18 +13,38 @@ namespace Chow.SourceData
     {
         // Python treats bool as a subtype of int; any float operand promotes the whole comparison to float.
         static readonly IReadOnlyDictionary<(DataType, DataType), DataType> DataTypeConversionMap =
-            new Dictionary<(DataType left, DataType right), DataType>()
+            new Dictionary<(DataType left, DataType right), DataType>
             {
-                { (DataType.Bool, DataType.Bool), DataType.Long },
-                { (DataType.Bool, DataType.Long), DataType.Long },
-                { (DataType.Long, DataType.Bool), DataType.Long },
-                { (DataType.Bool, DataType.Double), DataType.Double },
-                { (DataType.Double, DataType.Bool), DataType.Double },
-                { (DataType.Long, DataType.Long), DataType.Long },
-                { (DataType.Long, DataType.Double), DataType.Double },
-                { (DataType.Double, DataType.Long), DataType.Double },
-                { (DataType.Double, DataType.Double), DataType.Double },
-                { (DataType.Str, DataType.Str), DataType.Str },
+                {
+                    (DataType.Bool, DataType.Bool), DataType.Long
+                },
+                {
+                    (DataType.Bool, DataType.Long), DataType.Long
+                },
+                {
+                    (DataType.Long, DataType.Bool), DataType.Long
+                },
+                {
+                    (DataType.Bool, DataType.Double), DataType.Double
+                },
+                {
+                    (DataType.Double, DataType.Bool), DataType.Double
+                },
+                {
+                    (DataType.Long, DataType.Long), DataType.Long
+                },
+                {
+                    (DataType.Long, DataType.Double), DataType.Double
+                },
+                {
+                    (DataType.Double, DataType.Long), DataType.Double
+                },
+                {
+                    (DataType.Double, DataType.Double), DataType.Double
+                },
+                {
+                    (DataType.Str, DataType.Str), DataType.Str
+                }
             };
 
         #region Equality Operations
@@ -166,7 +187,9 @@ namespace Chow.SourceData
                     return SourceList.ElementsEqual((SourceList)l.ToObject(), (SourceList)r.ToObject());
                 case DataType.Dict:
                     // Dict equality is structural; key insertion order does not decide equality.
-                    return SourceDictionary.ElementsEqual((SourceDictionary)l.ToObject(), (SourceDictionary)r.ToObject());
+                    return SourceDictionary.ElementsEqual(
+                        (SourceDictionary)l.ToObject(),
+                        (SourceDictionary)r.ToObject());
                 case DataType.Range:
                 case DataType.Object:
                     // Chow ranges/objects do not have Python structural equality yet; preserve identity behavior.

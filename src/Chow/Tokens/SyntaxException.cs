@@ -6,7 +6,7 @@ namespace Chow
     {
         public int LineNumber { get; }
 
-        public SyntaxException(string expected, int line) 
+        public SyntaxException(string expected, int line)
             : base($"SyntaxError: expected '{expected}'")
         {
             LineNumber = line;

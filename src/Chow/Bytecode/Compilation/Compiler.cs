@@ -181,13 +181,13 @@ namespace Chow.Bytecode.Compilation
 
             // Push the funciton definition to act as a blueprint for a function object.
             _bytecodeChunk.Add(OperationCode.PushConstantValue, funcNode.LineNumber, defConstIdx);
-            
+
             // Use the function definition to create a first-class function object.
             _bytecodeChunk.Add(OperationCode.PushNewSourceFunction, funcNode.LineNumber);
-            
+
             // Create a variable with the function's name and initialize it to the function object.
             var varNameIdx = _bytecodeChunk.RegisterVariableName(funcNode.Name);
-            
+
             // The global/nonlocal resolution is determined during semantic analysis.
             _bytecodeChunk.Add(GetScopeAssignOpCode(funcNode.Resolution), funcNode.LineNumber, varNameIdx);
         }
@@ -222,7 +222,9 @@ namespace Chow.Bytecode.Compilation
             // If a variable with the same name already exists in the bytecodeChunk, the index of the existing variable will be returned.
             // Otherwise, the new variable will be added to the bytecodeChunk and its new index will be returned.
             var varNameIdx = _bytecodeChunk.RegisterVariableName(assignStatementNode.Name);
-            _bytecodeChunk.Add(GetScopeAssignOpCode(assignStatementNode.Resolution), assignStatementNode.LineNumber,
+            _bytecodeChunk.Add(
+                GetScopeAssignOpCode(assignStatementNode.Resolution),
+                assignStatementNode.LineNumber,
                 varNameIdx);
         }
 
@@ -360,7 +362,10 @@ namespace Chow.Bytecode.Compilation
 
             // 3. Bind the freshly pushed value to the loop variable.
             var targetNameIdx = _bytecodeChunk.RegisterVariableName(forNode.Target.Name);
-            _bytecodeChunk.Add(GetScopeAssignOpCode(forNode.Target.Resolution), forNode.Target.LineNumber, targetNameIdx);
+            _bytecodeChunk.Add(
+                GetScopeAssignOpCode(forNode.Target.Resolution),
+                forNode.Target.LineNumber,
+                targetNameIdx);
 
             var loopContext = new LoopContext
             {
@@ -421,7 +426,10 @@ namespace Chow.Bytecode.Compilation
             }
 
             var loopContext = _loopContextStack.Peek();
-            _bytecodeChunk.Add(OperationCode.JumpToLoopStart, continueStatementNode.LineNumber, loopContext.LoopStartIdx);
+            _bytecodeChunk.Add(
+                OperationCode.JumpToLoopStart,
+                continueStatementNode.LineNumber,
+                loopContext.LoopStartIdx);
         }
 
         #endregion
@@ -525,7 +533,6 @@ namespace Chow.Bytecode.Compilation
                     }
 
                     break;
-
                 case LiteralNodeType.Float:
                     if (literalNode.Value is double floatVal)
                     {
@@ -629,7 +636,7 @@ namespace Chow.Bytecode.Compilation
             CompileTargetNode(node.Target);
             CompileTargetNode(node.Index);
             CompileTargetNode(node.Expression);
-            
+
             _bytecodeChunk.Add(OperationCode.AssignSubscript, node.LineNumber);
         }
 
@@ -743,6 +750,5 @@ namespace Chow.Bytecode.Compilation
         }
 
         #endregion
-
     }
 }

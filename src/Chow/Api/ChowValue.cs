@@ -1,8 +1,5 @@
-﻿using System.Collections.Generic;
-using System;
+﻿using System;
 using Chow.SourceData;
-using Chow.Utility;
-using Chow.VM;
 
 namespace Chow
 {
@@ -10,15 +7,15 @@ namespace Chow
     {
         #region Properties
 
-        public static ChowValue None { get; } 
-            = (ChowValue)ApiConverter.Convert(SourceData.SourceValue.None);
-        
+        public static ChowValue None { get; }
+            = (ChowValue)ApiConverter.Convert(SourceValue.None);
+
         internal SourceValue SourceValue { get; }
 
-        ISourceObject SourceObject  => _srcObj ?? (_srcObj = SourceValue.ToISourceObject());
+        ISourceObject SourceObject => _srcObj ?? (_srcObj = SourceValue.ToISourceObject());
 
         public int Length => SourceObject.Length;
-        
+
         public ChowValue this[ChowValue key]
         {
             get => new ChowValue(SourceObject.GetItem(key.SourceValue));
@@ -32,21 +29,21 @@ namespace Chow
         }
 
         #endregion
-        
-        ISourceObject _srcObj = null;
+
+        ISourceObject _srcObj;
 
         internal ChowValue(ref SourceValue srcVal)
         {
             SourceValue = srcVal;
         }
-        
+
         public T As<T>()
         {
             return (T)SourceValue.ToObject();
         }
 
         #region Factory Methods
-        
+
         public static ChowValue CreateList()
         {
             // Cast, because IChowValue has no public API or implicit operators for the client
@@ -58,7 +55,7 @@ namespace Chow
             // Cast, because IChowValue has no public API or implicit operators for the client
             return (ChowValue)ChowValueFactory.CreateDictionary();
         }
-        
+
         #endregion
 
         #region Attribute Methods
@@ -71,20 +68,20 @@ namespace Chow
         }
 
         #endregion
-        
+
         #region Call Self Method Methods
-        
+
         public ChowValue Call(string methodName, params ChowValue[] args)
         {
             var methodAttr = SourceObject.GetAttribute(methodName);
-            
+
             return new ChowValue(ChowEngine.Call(methodAttr, ApiConverter.Convert(args)));
         }
 
         #endregion
-        
+
         #region Implicit Operators
-        
+
         public static implicit operator ChowValue(bool value)
         {
             return new ChowValue(new SourceValue(value));
@@ -132,6 +129,7 @@ namespace Chow
                 var result = value();
                 return result is null ? SourceValue.None : new SourceValue(result);
             };
+
             return new ChowValue(new SourceValue(wrapper));
         }
 
@@ -142,6 +140,7 @@ namespace Chow
                 value(args != null && args.Length > 0 ? args[0].ToObject() : null);
                 return SourceValue.None;
             };
+
             return new ChowValue(new SourceValue(wrapper));
         }
 
@@ -152,6 +151,7 @@ namespace Chow
                 value(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>()));
                 return SourceValue.None;
             };
+
             return new ChowValue(new SourceValue(wrapper));
         }
 
@@ -162,17 +162,18 @@ namespace Chow
                 var result = value(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>()));
                 return result is null ? SourceValue.None : new SourceValue(result);
             };
+
             return new ChowValue(new SourceValue(wrapper));
         }
 
         public static bool operator ==(ChowValue l, ChowValue r)
         {
-            if (ReferenceEquals(l, r)) 
+            if (ReferenceEquals(l, r))
             {
                 return true;
             }
 
-            if (l is null || r is null) 
+            if (l is null || r is null)
             {
                 return false;
             }
@@ -207,18 +208,18 @@ namespace Chow
 
         public static bool operator ==(ChowValue l, double r)
         {
-            return  !(l is null) && l.SourceValue.ToDouble().Equals(r);
+            return !(l is null) && l.SourceValue.ToDouble().Equals(r);
         }
 
         public static bool operator !=(ChowValue l, double r)
         {
             return !(l == r);
         }
-        
+
         #endregion
 
         #region Equality Methods
-        
+
         public override bool Equals(object obj)
         {
             return obj is ChowValue other && SourceValue.Equals(other.SourceValue);

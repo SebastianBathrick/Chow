@@ -1,4 +1,3 @@
-
 namespace Chow.Syntax
 {
     sealed class AssignStatementNode : Node
@@ -6,7 +5,7 @@ namespace Chow.Syntax
         public string Name { get; }
 
         public Node Expression { get; }
-        
+
         public ScopeType Resolution { get; set; }
 
         public AssignStatementNode(string name, Node expr, int line) : base(line)
@@ -14,6 +13,5 @@ namespace Chow.Syntax
             Name = name;
             Expression = expr;
         }
-
     }
 }

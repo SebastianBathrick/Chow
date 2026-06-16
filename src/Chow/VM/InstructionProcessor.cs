@@ -53,43 +53,43 @@ namespace Chow.VM
 
                 // -- Binary Operations------------------------------------------------------------
                 case OperationCode.BinaryAdd:
-                    _valStack.Push(SourceValue.Add(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.Add(_valStack.Pop(), _valStack.Pop()));
                     break;
                 case OperationCode.BinarySubtract:
-                    _valStack.Push(SourceValue.Subtract(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.Subtract(_valStack.Pop(), _valStack.Pop()));
                     break;
                 case OperationCode.BinaryMultiply:
-                    _valStack.Push(SourceValue.Multiply(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.Multiply(_valStack.Pop(), _valStack.Pop()));
                     break;
                 case OperationCode.BinaryDivide:
-                    _valStack.Push(SourceValue.Divide(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.Divide(_valStack.Pop(), _valStack.Pop()));
                     break;
                 case OperationCode.BinaryModulus:
-                    _valStack.Push(SourceValue.Mod(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.Mod(_valStack.Pop(), _valStack.Pop()));
                     break;
                 case OperationCode.BinaryPow:
-                    _valStack.Push(SourceValue.Pow(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.Pow(_valStack.Pop(), _valStack.Pop()));
                     break;
                 case OperationCode.BinaryFloor:
-                    _valStack.Push(SourceValue.Floor(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.Floor(_valStack.Pop(), _valStack.Pop()));
                     break;
                 case OperationCode.BinaryEqual:
-                    _valStack.Push(SourceValue.IsEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.IsEqual(_valStack.Pop(), _valStack.Pop()));
                     break;
                 case OperationCode.BinaryNotEqual:
-                    _valStack.Push(SourceValue.IsNotEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.IsNotEqual(_valStack.Pop(), _valStack.Pop()));
                     break;
                 case OperationCode.BinaryLess:
-                    _valStack.Push(SourceValue.IsLess(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.IsLess(_valStack.Pop(), _valStack.Pop()));
                     break;
                 case OperationCode.BinaryGreater:
-                    _valStack.Push(SourceValue.IsGreater(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.IsGreater(_valStack.Pop(), _valStack.Pop()));
                     break;
                 case OperationCode.BinaryLessEqual:
-                    _valStack.Push(SourceValue.IsLessOrEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.IsLessOrEqual(_valStack.Pop(), _valStack.Pop()));
                     break;
                 case OperationCode.BinaryGreaterEqual:
-                    _valStack.Push(SourceValue.IsGreaterOrEqual(r: _valStack.Pop(), l: _valStack.Pop()));
+                    _valStack.Push(SourceValue.IsGreaterOrEqual(_valStack.Pop(), _valStack.Pop()));
                     break;
                 case OperationCode.BinaryUnion:
                     ExecuteBinaryUnion();
@@ -204,13 +204,19 @@ namespace Chow.VM
         }
 
         /// <summary>Calls a function stored in a global variable with the name provided.</summary>
-        /// <param name="callVarName">The name of a variable declared in the global scope. Caller
-        /// is responsible for verifying the name is defined.</param>
-        /// <param name="args">The arguments to pass to the function. If there aren't any, this
-        /// parameter can be null.</param>
+        /// <param name="callVarName">
+        /// The name of a variable declared in the global scope. Caller
+        /// is responsible for verifying the name is defined.
+        /// </param>
+        /// <param name="args">
+        /// The arguments to pass to the function. If there aren't any, this
+        /// parameter can be null.
+        /// </param>
         /// <returns>The result of the function call.</returns>
-        /// <remarks>Assumes that there is a global scope already set up that was provided to the
-        /// constructor.</remarks>
+        /// <remarks>
+        /// Assumes that there is a global scope already set up that was provided to the
+        /// constructor.
+        /// </remarks>
         public SourceValue CallGlobalFunction(string callVarName, SourceValue[] args)
         {
             _valStack.Push(_callStack.GetVariableValue(callVarName));
@@ -235,7 +241,7 @@ namespace Chow.VM
 
         void ExecuteBinaryUnion()
         {
-            _valStack.Push(SourceValue.Unite(r: _valStack.Pop(), l: _valStack.Pop()));
+            _valStack.Push(SourceValue.Unite(_valStack.Pop(), _valStack.Pop()));
         }
 
         void EvaluateIn(bool negate)
@@ -386,7 +392,9 @@ namespace Chow.VM
             var target = _valStack.Pop();
 
             throw new AttributeException(
-                DataTypeNames.GetTypeName(target.DataType), attrName, _callStack.CurrentLineNum);
+                DataTypeNames.GetTypeName(target.DataType),
+                attrName,
+                _callStack.CurrentLineNum);
         }
 
         void ExecutePushAttribute(int operand)
@@ -402,7 +410,9 @@ namespace Chow.VM
                 if (!list.Directory.Contains(attrName))
                 {
                     throw new AttributeException(
-                        DataTypeNames.GetTypeName(target.DataType), attrName, _callStack.CurrentLineNum);
+                        DataTypeNames.GetTypeName(target.DataType),
+                        attrName,
+                        _callStack.CurrentLineNum);
                 }
 
                 _valStack.Push(list.GetAttribute(new SourceValue(attrName)));
@@ -415,7 +425,9 @@ namespace Chow.VM
                 if (!dict.Directory.Contains(attrName))
                 {
                     throw new AttributeException(
-                        DataTypeNames.GetTypeName(target.DataType), attrName, _callStack.CurrentLineNum);
+                        DataTypeNames.GetTypeName(target.DataType),
+                        attrName,
+                        _callStack.CurrentLineNum);
                 }
 
                 // TODO: Add implicit overloads to convert strings/longs/ints/doubles/etc to SourceValues
@@ -424,7 +436,9 @@ namespace Chow.VM
             else
             {
                 throw new AttributeException(
-                    DataTypeNames.GetTypeName(target.DataType), attrName, _callStack.CurrentLineNum);
+                    DataTypeNames.GetTypeName(target.DataType),
+                    attrName,
+                    _callStack.CurrentLineNum);
             }
         }
 
@@ -644,7 +658,9 @@ namespace Chow.VM
                     actionObjectArrayParam.Invoke(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>()));
                     break;
                 case Func<object[], object> funcParams:
-                    _valStack.Push(new SourceValue(funcParams.Invoke(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>()))));
+                    _valStack.Push(
+                        new SourceValue(funcParams.Invoke(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>()))));
+
                     break;
                 default:
                     // TODO: After built-ins refactor, remove this
@@ -696,6 +712,5 @@ namespace Chow.VM
         }
 
         #endregion
-        
     }
 }

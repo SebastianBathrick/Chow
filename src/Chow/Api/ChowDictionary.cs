@@ -5,7 +5,7 @@ namespace Chow
     public class ChowDictionary : IChowValue
     {
         // Temporary solution
-        ChowValue _wrappedObject;
+        readonly ChowValue _wrappedObject;
 
         public int Length => _wrappedObject.Length;
 

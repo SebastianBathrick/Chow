@@ -11,6 +11,5 @@ namespace Chow.Syntax
             Target = target;
             Index = idx;
         }
-
     }
 }

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
 using Chow.VM;
+
 namespace Chow.SourceData
 {
     class SourceDictionary : SourceObject
@@ -155,7 +155,7 @@ namespace Chow.SourceData
                 throw new DataTypeException($"'{args[0].DataType}' object is not a dict");
             }
 
-            SourceDictionary other = (SourceDictionary)args[0].ToObject();
+            var other = (SourceDictionary)args[0].ToObject();
 
             foreach (var key in other._elements.Keys)
             {
@@ -307,7 +307,7 @@ namespace Chow.SourceData
             {
                 return;
             }
-            
+
             throw new ArgumentException(
                 $"Method requires {expectedCount} arguments, but {actualCount} were provided");
         }
@@ -320,11 +320,11 @@ namespace Chow.SourceData
             {
                 return;
             }
-            
+
             throw new ArgumentException(
                 $"Method requires between {min} and {max} arguments, but "
                 + $"{actualCount} were provided");
-            
+
         }
     }
 }

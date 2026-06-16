@@ -19,7 +19,7 @@ namespace Chow.Syntax
         public Node Right { get; }
 
         /// <summary>Initializes a node representing a binary expression.</summary>
-        public ExpressionNode(Operator operatorType, Node left, Node right, int line) 
+        public ExpressionNode(Operator operatorType, Node left, Node right, int line)
             : base(line)
         {
             Operator = operatorType;
@@ -34,6 +34,5 @@ namespace Chow.Syntax
             Left = left;
             Right = null;
         }
-
     }
 }

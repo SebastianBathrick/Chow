@@ -13,6 +13,5 @@ namespace Chow.Syntax
             Keys = keys;
             Values = values;
         }
-
     }
 }

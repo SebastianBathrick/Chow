@@ -33,6 +33,5 @@ namespace Chow.Syntax
 
             Value = value;
         }
-
     }
 }

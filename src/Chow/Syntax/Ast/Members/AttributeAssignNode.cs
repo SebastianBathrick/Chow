@@ -1,4 +1,4 @@
- namespace Chow.Syntax
+namespace Chow.Syntax
 {
     sealed class AttributeAssignNode : Node
     {
@@ -14,6 +14,5 @@
             AttributeName = attrName;
             Expression = expr;
         }
-
     }
 }

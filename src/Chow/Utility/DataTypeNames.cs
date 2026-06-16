@@ -5,17 +5,35 @@ namespace Chow.Utility
 {
     public class DataTypeNames
     {
-        static readonly IReadOnlyDictionary<DataType, string> DataTypeNameMap = new Dictionary<DataType, string>()
+        static readonly IReadOnlyDictionary<DataType, string> DataTypeNameMap = new Dictionary<DataType, string>
         {
-            { DataType.None, "NoneType" },
-            { DataType.Bool, "bool" },
-            { DataType.Object, "object" },
-            { DataType.Long, "int" },
-            { DataType.Double, "float" },
-            { DataType.Str, "str" },
-            { DataType.List, "list" },
-            { DataType.Dict, "dict" },
-            { DataType.Range, "range" }
+            {
+                DataType.None, "NoneType"
+            },
+            {
+                DataType.Bool, "bool"
+            },
+            {
+                DataType.Object, "object"
+            },
+            {
+                DataType.Long, "int"
+            },
+            {
+                DataType.Double, "float"
+            },
+            {
+                DataType.Str, "str"
+            },
+            {
+                DataType.List, "list"
+            },
+            {
+                DataType.Dict, "dict"
+            },
+            {
+                DataType.Range, "range"
+            }
         };
 
         public static string GetTypeName(DataType dataType)

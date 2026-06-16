@@ -14,6 +14,5 @@ namespace Chow.Syntax
             Stop = stop;
             Step = step;
         }
-
     }
 }

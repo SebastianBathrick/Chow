@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
 using Chow.VM;
+
 namespace Chow.SourceData
 {
     class SourceList : SourceObject
@@ -91,7 +91,7 @@ namespace Chow.SourceData
         {
             for (var i = 0; i < _elements.Count; i++)
             {
-                if (SourceValue.IsEqual(r: value, l: _elements[i]).ToBool())
+                if (SourceValue.IsEqual(value, _elements[i]).ToBool())
                 {
                     return true;
                 }
@@ -192,7 +192,8 @@ namespace Chow.SourceData
             {
                 if (args[0].DataType != DataType.Long)
                 {
-                    throw new ArgumentException($"Argument 0 must be of type {DataType.Long}, but was {args[0].DataType}");
+                    throw new ArgumentException(
+                        $"Argument 0 must be of type {DataType.Long}, but was {args[0].DataType}");
                 }
 
                 index = (int)args[0];
@@ -437,22 +438,23 @@ namespace Chow.SourceData
             sb.Append(']');
             return sb.ToString();
         }
-        
+
         static void ValidateArguments(SourceValue[] args, int reqArgCount = 0, DataType[] reqTypes = null)
         {
             var expectedCount = reqTypes?.Length ?? reqArgCount;
-            var actualCount = args?.Length ?? 0;
+            var actualCount = args?.Length       ?? 0;
 
             if (actualCount != expectedCount)
             {
-                throw new ArgumentException($"Method requires {expectedCount} arguments, but {actualCount} were provided");
+                throw new ArgumentException(
+                    $"Method requires {expectedCount} arguments, but {actualCount} were provided");
             }
 
             if (reqTypes == null)
             {
                 return;
             }
-            
+
             for (var i = 0; i < reqTypes.Length; i++)
             {
                 if (args[i].DataType == reqTypes[i])

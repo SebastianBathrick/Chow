@@ -8,7 +8,7 @@ namespace Chow.Tokens
         const int EmptyTokenLineNumber = -1;
         const string EmptyTokenLexeme = "";
         const object EmptyTokenLiteral = null;
-        
+
         public readonly TokenType Type;
 
         public readonly string Lexeme;
@@ -19,9 +19,9 @@ namespace Chow.Tokens
         public readonly object Literal;
 
         public Token(
-            TokenType type = TokenType.EmptyToken, 
-            string lexeme = EmptyTokenLexeme, 
-            int lineNumber = EmptyTokenLineNumber, 
+            TokenType type = TokenType.EmptyToken,
+            string lexeme = EmptyTokenLexeme,
+            int lineNumber = EmptyTokenLineNumber,
             object literal = EmptyTokenLiteral)
         {
             Type = type;
@@ -32,7 +32,8 @@ namespace Chow.Tokens
 
         public override string ToString()
         {
-            return $"Token(type={Type}, lexeme=\"{FormatLexeme(Lexeme)}\", literal={FormatLiteral(Literal)}, line={LineNumber})";
+            return
+                $"Token(type={Type}, lexeme=\"{FormatLexeme(Lexeme)}\", literal={FormatLiteral(Literal)}, line={LineNumber})";
         }
 
         static string FormatLexeme(string lexeme)

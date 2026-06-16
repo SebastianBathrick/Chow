@@ -17,34 +17,38 @@ namespace Chow.Syntax.Parsing
         readonly ITokenStream _tokens;
 
         /// <summary>Initializes a new instance with the tokens it will analyze.</summary>
-        /// <param name="tokens">The stream of tokens used to build an AST upon calling
-        /// <see cref="BuildAst"/>.</param>
+        /// <param name="tokens">
+        /// The stream of tokens used to build an AST upon calling
+        /// <see cref="BuildAst"/>.
+        /// </param>
         public Parser(ITokenStream tokens)
         {
             _tokens = tokens;
         }
-        
+
         /// <summary>
         /// Builds an abstract syntax tree by parsing top-level statements until the end of the
         /// token stream is reached.
         /// </summary>
         /// <returns>A module node whose block contains the parsed top-level statements.</returns>
-        /// <exception cref="SyntaxException">An exception containing the expected token type and
-        /// the line of the token that did not match it.</exception>
+        /// <exception cref="SyntaxException">
+        /// An exception containing the expected token type and
+        /// the line of the token that did not match it.
+        /// </exception>
         public Node BuildAst()
         {
             // Elements represent top-level statements
             var statementList = new List<Node>();
-            
+
             // Parse until reaching the 'end of code' token, which is assumed to be the final token
-            while(!_tokens.TryConsumeMatch(TokenType.EndOfCode))
+            while (!_tokens.TryConsumeMatch(TokenType.EndOfCode))
             {
                 if (!_tokens.TryConsumeMatch(TokenType.Newline))
                 {
                     statementList.Add(ParseStatement());
                 }
             }
-            
+
             var block = new BlockNode(statementList, ModuleNodeLineNumber);
             return new ModuleNode(block);
         }
@@ -53,9 +57,9 @@ namespace Chow.Syntax.Parsing
         {
             _tokens.ConsumeMatches(TokenType.SymbolColon, TokenType.Newline);
             var lineNum = _tokens.ConsumeMatch(TokenType.Indent).LineNumber;
-            
-            List<Node> statements = new List<Node>();
-            
+
+            var statements = new List<Node>();
+
             while (!_tokens.TryConsumeMatch(TokenType.Dedent))
             {
                 if (!_tokens.TryConsumeMatch(TokenType.Newline))
@@ -68,7 +72,7 @@ namespace Chow.Syntax.Parsing
         }
 
         #region Statement Methods
-        
+
         Node ParseStatement()
         {
             var lineNum = _tokens.LineNumber;
@@ -117,13 +121,13 @@ namespace Chow.Syntax.Parsing
             {
                 case NameNode nameNode:
                     return new AssignStatementNode(nameNode.Name, expr, lineNum);
-                
+
                 case AttributeAccessNode attrAccess:
-                    return new AttributeAssignNode(attrAccess.Target , attrAccess.Name, expr, lineNum);
-                
+                    return new AttributeAssignNode(attrAccess.Target, attrAccess.Name, expr, lineNum);
+
                 case SubscriptNode subscript:
                     return new SubscriptAssignNode(subscript.Target, subscript.Index, expr, lineNum);
-                
+
                 default:
                     throw new SyntaxException("assignment", lineNum);
             }
@@ -138,10 +142,10 @@ namespace Chow.Syntax.Parsing
         Node ParseFunctionDefinition(int lineNum)
         {
             _tokens.Consume();
-            
+
             var functionName = _tokens.ConsumeMatch(TokenType.Name).Lexeme;
             _tokens.ConsumeMatch(TokenType.SymbolLeftParen);
-            
+
             var paramList = new List<Node>();
 
             if (!_tokens.IsMatch(TokenType.SymbolRightParen))
@@ -161,7 +165,7 @@ namespace Chow.Syntax.Parsing
         Node ParseIfStatement(int lineNum)
         {
             _tokens.Consume();
-            
+
             var expr = ParseExpression();
             var block = ParseBlock();
             var branch = ParseBranchStatement();
@@ -175,7 +179,7 @@ namespace Chow.Syntax.Parsing
             if (!_tokens.TryConsumeMatch(TokenType.KeywordElif))
             {
                 return _tokens.TryConsumeMatch(TokenType.KeywordElse)
-                    ? new BranchStatementNode(null, ParseBlock(), null, lineNum) 
+                    ? new BranchStatementNode(null, ParseBlock(), null, lineNum)
                     : null;
             }
 
@@ -194,23 +198,23 @@ namespace Chow.Syntax.Parsing
         Node ParseForStatement(int lineNum)
         {
             _tokens.Consume();
-            
+
             var targetName = _tokens.ConsumeMatch(TokenType.Name).Lexeme;
             var target = new NameNode(targetName, lineNum);
-            
+
             _tokens.ConsumeMatch(TokenType.KeywordIn);
 
             var iterable = ParseExpression();
             var block = ParseBlock();
-            
+
             Node elseBranch = null;
-            
+
             if (_tokens.IsMatch(TokenType.KeywordElse))
             {
                 var elseLineNum = _tokens.Consume().LineNumber;
                 elseBranch = new BranchStatementNode(null, ParseBlock(), null, elseLineNum);
             }
-            
+
             return new ForStatementNode(target, iterable, block, elseBranch, lineNum);
         }
 
@@ -247,7 +251,7 @@ namespace Chow.Syntax.Parsing
             _tokens.Consume();
             return new NonLocalNode(ParseDeclarationNameList(), lineNum);
         }
-        
+
         #endregion
 
         #region Expression Methods
@@ -256,10 +260,12 @@ namespace Chow.Syntax.Parsing
         {
             return ParseOr();
         }
-                
+
         /// <summary>Parses a left-associative binary operator precedence level.</summary>
-        /// <param name="parseOperand">Parses an operand at the next-higher precedence
-        /// level.</param>
+        /// <param name="parseOperand">
+        /// Parses an operand at the next-higher precedence
+        /// level.
+        /// </param>
         /// <param name="operatorTypes">The operator token types belonging to this level.</param>
         Node ParseBinaryLevel(Func<Node> parseOperand, params TokenType[] operatorTypes)
         {
@@ -270,7 +276,7 @@ namespace Chow.Syntax.Parsing
                 var opToken = _tokens.Consume();
                 var rightNode = parseOperand();
                 var binaryOp = SyntaxMaps.ToBinaryOperator(opToken.Type);
-                
+
                 leftNode = new ExpressionNode(binaryOp, leftNode, rightNode, opToken.LineNumber);
             }
 
@@ -286,41 +292,41 @@ namespace Chow.Syntax.Parsing
                 case TokenType.Name:
                     var idToken = _tokens.Consume();
                     return new NameNode(idToken.Lexeme, idToken.LineNumber);
-                
+
                 case TokenType.LiteralInt:
                 case TokenType.LiteralFloat:
                 case TokenType.LiteralStr:
                     var numToken = _tokens.Consume();
                     return new LiteralNode(numToken.Literal, numToken.LineNumber);
-                
+
                 case TokenType.LiteralFString:
                     var fstrToken = _tokens.Consume();
                     return ParseFString((FStringTokenPayload)fstrToken.Literal, fstrToken.LineNumber);
-                
+
                 case TokenType.KeywordNone:
                     var noneToken = _tokens.ConsumeMatch(TokenType.KeywordNone);
                     return new LiteralNode(null, noneToken.LineNumber);
-                
+
                 case TokenType.KeywordTrue:
                     var trueToken = _tokens.ConsumeMatch(TokenType.KeywordTrue);
                     return new LiteralNode(true, trueToken.LineNumber);
-                
+
                 case TokenType.KeywordFalse:
                     var falseToken = _tokens.ConsumeMatch(TokenType.KeywordFalse);
                     return new LiteralNode(false, falseToken.LineNumber);
-                
+
                 case TokenType.SymbolLeftParen:
                     _tokens.Consume();
                     var inner = ParseExpression();
                     _tokens.ConsumeMatch(TokenType.SymbolRightParen);
                     return inner;
-                
+
                 case TokenType.SymbolLeftBracket:
                     return ParseListLiteral();
-                
+
                 case TokenType.SymbolLeftCurly:
                     return ParseDictLiteral();
-                
+
                 default:
                     _tokens.ConsumeMatch(TokenType.Name);
                     return null;
@@ -328,35 +334,35 @@ namespace Chow.Syntax.Parsing
         }
 
         #region Arithmetic Methods
-        
+
         Node ParseAddOrSubtract()
         {
             return ParseBinaryLevel(
-                ParseDivision, 
-                TokenType.SymbolPlus, 
+                ParseDivision,
+                TokenType.SymbolPlus,
                 TokenType.SymbolMinus);
         }
 
         Node ParseDivision()
         {
             return ParseBinaryLevel(
-                ParseNegation, 
+                ParseNegation,
                 TokenType.SymbolMultiply,
                 TokenType.SymbolDivide,
                 TokenType.SymbolFloorDivide,
                 TokenType.SymbolPercent);
         }
-        
+
         Node ParseNegation()
         {
             if (!_tokens.TryConsumeMatch(TokenType.SymbolMinus, out var opToken))
             {
                 return ParseExponent();
             }
-            
+
             return new ExpressionNode(Operator.Negate, ParseNegation(), opToken.LineNumber);
         }
-                
+
         Node ParseExponent()
         {
             var leftNode = ParsePostfix();
@@ -371,11 +377,11 @@ namespace Chow.Syntax.Parsing
             return new ExpressionNode(Operator.Exponentiate, leftNode, rightNode, lineNum);
 
         }
-        
+
         #endregion
 
         #region Comparison & Logic Methods
-        
+
         Node ParseComparison()
         {
             var leftNode = ParseBitOr();
@@ -421,12 +427,12 @@ namespace Chow.Syntax.Parsing
 
             return result ?? leftNode;
         }
-        
+
         Node ParseAnd()
         {
             return ParseBinaryLevel(ParseNot, TokenType.KeywordAnd);
         }
-        
+
         Node ParseOr()
         {
             return ParseBinaryLevel(ParseAnd, TokenType.KeywordOr);
@@ -436,22 +442,22 @@ namespace Chow.Syntax.Parsing
         {
             return ParseBinaryLevel(ParseAddOrSubtract, TokenType.SymbolPipe);
         }
-        
+
         Node ParseNot()
-                {
-                    if (!_tokens.IsMatch(TokenType.KeywordNot))
-                    {
-                        return ParseComparison();
-                    }
-        
-                    var opToken = _tokens.Consume();
-                    return new ExpressionNode(Operator.Not, ParseNot(), opToken.LineNumber);
-                }
-        
+        {
+            if (!_tokens.IsMatch(TokenType.KeywordNot))
+            {
+                return ParseComparison();
+            }
+
+            var opToken = _tokens.Consume();
+            return new ExpressionNode(Operator.Not, ParseNot(), opToken.LineNumber);
+        }
+
         #endregion
-        
+
         #region Attribute & Subscript Methods
-        
+
         Node ParsePostfix()
         {
             // Accounts for dot notation, indexers, and function calls (e.g., parenthesis, arguments, etc.)
@@ -480,7 +486,7 @@ namespace Chow.Syntax.Parsing
 
             return node;
         }
-        
+
         Node ParseAttributeAccessTail(Node target)
         {
             var lineNum = _tokens.ConsumeMatch(TokenType.SymbolDot).LineNumber;
@@ -488,7 +494,7 @@ namespace Chow.Syntax.Parsing
 
             return new AttributeAccessNode(target, nameToken.Lexeme, lineNum);
         }
-        
+
         Node ParseInvokeTail(Node callNameNode)
         {
             var lineNum = _tokens.ConsumeMatch(TokenType.SymbolLeftParen).LineNumber;
@@ -502,7 +508,7 @@ namespace Chow.Syntax.Parsing
             _tokens.ConsumeMatch(TokenType.SymbolRightParen);
             return new CallNode(callNameNode, args, lineNum);
         }
-        
+
         Node ParseSubscriptTail(Node target)
         {
             var linNum = _tokens.ConsumeMatch(TokenType.SymbolLeftBracket).LineNumber;
@@ -546,11 +552,11 @@ namespace Chow.Syntax.Parsing
 
             return new SubscriptSliceNode(start, stop, step, sliceLine);
         }
-        
+
         #endregion
-        
+
         #region FString Methods
-        
+
         // TODO: Entirely refactor FString parsing
         Node ParseFString(FStringTokenPayload payload, int lineNum)
         {
@@ -559,12 +565,13 @@ namespace Chow.Syntax.Parsing
             foreach (var exprSource in payload.ExprSourceParts)
             {
                 var subTokens = new Scanner(
-                    exprSource, TokenStreamFactory.Create())
+                        exprSource,
+                        TokenStreamFactory.Create())
                     .TokenizeSourceCode();
-                
+
                 var subParser = new Parser(subTokens);
                 var exprNode = subParser.ParseSingleExpression();
-                
+
                 exprParts.Add(exprNode);
             }
 
@@ -582,11 +589,11 @@ namespace Chow.Syntax.Parsing
 
             return node;
         }
-        
+
         #endregion
 
         #region Collection Methods
-        
+
         Node ParseListLiteral()
         {
             var lineNum = _tokens.ConsumeMatch(TokenType.SymbolLeftBracket).LineNumber;
@@ -596,7 +603,8 @@ namespace Chow.Syntax.Parsing
             {
                 // Allow trailing comma: `[1, 2,]`
                 ParseCommaSeparatedElements(
-                    () => elements.Add(ParseExpression()), TokenType.SymbolRightBracket);
+                    () => elements.Add(ParseExpression()),
+                    TokenType.SymbolRightBracket);
             }
 
             _tokens.ConsumeMatch(TokenType.SymbolRightBracket);
@@ -612,7 +620,8 @@ namespace Chow.Syntax.Parsing
             if (!_tokens.IsMatch(TokenType.SymbolRightCurly))
             {
                 ParseCommaSeparatedElements(
-                    () => ParseDictEntry(keys, values), TokenType.SymbolRightCurly);
+                    () => ParseDictEntry(keys, values),
+                    TokenType.SymbolRightCurly);
             }
 
             _tokens.ConsumeMatch(TokenType.SymbolRightCurly);
@@ -623,9 +632,9 @@ namespace Chow.Syntax.Parsing
         {
             var key = ParseExpression();
             _tokens.ConsumeMatch(TokenType.SymbolColon);
-            
+
             var value = ParseExpression();
-            
+
             keys.Add(key);
             values.Add(value);
         }
@@ -634,19 +643,19 @@ namespace Chow.Syntax.Parsing
         {
             return _tokens.IsMatch(TokenType.KeywordNot) && _tokens.IsNextMatch(TokenType.KeywordIn);
         }
-        
+
         #endregion
-        
+
         #endregion
 
         #region Helper Methods
-        
+
         List<string> ParseDeclarationNameList()
         {
             var names = new List<string>();
 
             // TODO: Refactor to remove Action
-            ParseCommaSeparatedElements(() => 
+            ParseCommaSeparatedElements(() =>
                 names.Add(_tokens.ConsumeMatch(TokenType.Name).Lexeme));
 
             return names;
@@ -654,8 +663,10 @@ namespace Chow.Syntax.Parsing
 
         /// <summary>Parses one or more comma-separated elements.</summary>
         /// <param name="parseElement">Parses a single element and stores it.</param>
-        /// <param name="closingType">The token type that may follow a trailing comma to end the
-        /// list, or <c>null</c> if a trailing comma is not allowed.</param>
+        /// <param name="closingType">
+        /// The token type that may follow a trailing comma to end the
+        /// list, or <c>null</c> if a trailing comma is not allowed.
+        /// </param>
         void ParseCommaSeparatedElements(Action parseElement, TokenType? closingType = null)
         {
             parseElement();
@@ -668,6 +679,5 @@ namespace Chow.Syntax.Parsing
         }
 
         #endregion
-        
     }
 }

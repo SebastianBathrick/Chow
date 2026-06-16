@@ -16,11 +16,11 @@ namespace Chow.Syntax
         public Node ElseBranch { get; }
 
         public ForStatementNode(
-            NameNode target, 
+            NameNode target,
             Node iterable,
-            Node block, 
-            Node elseBranch, 
-            int line) 
+            Node block,
+            Node elseBranch,
+            int line)
             : base(line)
         {
             Target = target;
@@ -28,6 +28,5 @@ namespace Chow.Syntax
             Block = block;
             ElseBranch = elseBranch;
         }
-
     }
 }

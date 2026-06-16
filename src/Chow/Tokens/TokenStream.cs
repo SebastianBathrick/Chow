@@ -9,14 +9,14 @@ namespace Chow.Tokens
     class TokenStream : ITokenStream
     {
         const int InitialTokenIndex = 0;
-        
-        List<Token> _tokensList;
+
+        readonly List<Token> _tokensList;
         int _tokenIdx = InitialTokenIndex;
-        
+
         Token SelectedToken => _tokensList[_tokenIdx];
 
         public int LineNumber => SelectedToken.LineNumber;
-        
+
         /// <summary>Whether there are any more tokens to consume.</summary>
         public bool IsEndOfStream => _tokenIdx == _tokensList.Count;
 
@@ -28,13 +28,15 @@ namespace Chow.Tokens
 
         /// <summary>Creates a token stream over the given list of tokens.</summary>
         /// <param name="tokensList">The tokens this stream will select from, in order.</param>
-        /// <remarks>This constructor is temporary and will be removed after the scanner
-        /// refactor.</remarks>
+        /// <remarks>
+        /// This constructor is temporary and will be removed after the scanner
+        /// refactor.
+        /// </remarks>
         public TokenStream(List<Token> tokensList)
         {
             _tokensList = tokensList;
         }
-        
+
         /// <inheritdoc/>
         public void Add(Token token)
         {
@@ -43,7 +45,7 @@ namespace Chow.Tokens
                 throw new InvalidOperationException(
                     $"{nameof(TokenStream)} instances become readonly after a token is consumed.");
             }
-            
+
             _tokensList.Add(token);
         }
 
@@ -52,13 +54,13 @@ namespace Chow.Tokens
         {
             return SelectedToken.Type;
         }
-        
+
         /// <inheritdoc/>
         public Token Consume()
         {
             return _tokensList[_tokenIdx++];
         }
-        
+
         /// <inheritdoc/>
         public Token ConsumeMatch(TokenType expectedType)
         {
@@ -66,15 +68,15 @@ namespace Chow.Tokens
             {
                 return Consume();
             }
-            
+
             var exLineNum = IsEndOfStream ? _tokensList[_tokenIdx - 1].LineNumber : LineNumber;
             throw new SyntaxException(expectedType.ToString(), exLineNum);
         }
-        
+
         /// <inheritdoc/>
         public Token ConsumeMatches(
-            TokenType expectedType1, 
-            TokenType expectedType2, 
+            TokenType expectedType1,
+            TokenType expectedType2,
             params TokenType[] expectedTypes)
         {
             ConsumeMatch(expectedType1);
@@ -109,14 +111,14 @@ namespace Chow.Tokens
                     return true;
                 }
             }
-            
+
             return false;
         }
 
         /// <inheritdoc/>
         public bool IsNextMatch(TokenType targetType)
         {
-            return _tokenIdx + 1 < _tokensList.Count 
+            return _tokenIdx + 1                   < _tokensList.Count
                 && _tokensList[_tokenIdx + 1].Type == targetType;
         }
 
@@ -146,7 +148,7 @@ namespace Chow.Tokens
             {
                 return false;
             }
-            
+
             foreach (var type in targetTypes)
             {
                 if (IsMatch(type))
@@ -155,7 +157,7 @@ namespace Chow.Tokens
                     return true;
                 }
             }
-            
+
             return false;
         }
     }

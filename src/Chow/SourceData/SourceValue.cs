@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Chow.Utility;
 using Chow.VM;
+
 namespace Chow.SourceData
 {
     /// <summary>
@@ -15,16 +15,19 @@ namespace Chow.SourceData
     {
         // TODO: Major refactor going on currently
         public static readonly SourceValue None = new SourceValue(DataType.None);
-        
+
         /// <summary>Represents the SourceValue equivalent to null/nil/none values.</summary>
         [FieldOffset(ObjectFieldOffset)] readonly object _obj;
         [FieldOffset(LongFieldOffset)] readonly long _long;
         [FieldOffset(DoubleFieldOffset)] readonly double _dbl;
-        [FieldOffset(TagFieldOffset)] readonly DataType _dataType;
-        
+
         bool BoolValue => _long == BoolTrueToLong;
 
-        internal DataType DataType => _dataType;
+        [field: FieldOffset(TagFieldOffset)]
+        internal DataType DataType
+        {
+            get;
+        }
 
         #region Constructors
 
@@ -35,7 +38,7 @@ namespace Chow.SourceData
             long longVal = NotLongInitialValue,
             double doubleVal = NotDoubleInitialValue)
         {
-            _dataType = dataType;
+            DataType = dataType;
             _obj = objVal;
 
             // _long and _dbl share the same FieldOffset (explicit-layout union). The compiler still
@@ -77,7 +80,10 @@ namespace Chow.SourceData
 
         internal SourceValue(string value) : this(DataType.Str, objVal: value) {}
 
-        /// <summary>The value's tag comes from the object itself, so every ISourceObject kind shares this path.</summary>
+        /// <summary>
+        /// The value's tag comes from the object itself, so every ISourceObject kind shares this
+        /// path.
+        /// </summary>
         internal SourceValue(ISourceObject srcObj) : this(srcObj.Type, objVal: srcObj) {}
 
         /// <summary>
@@ -89,7 +95,7 @@ namespace Chow.SourceData
             switch (obj)
             {
                 case null:
-                // TODO: Look into changing this to SourceValue.None.
+                    // TODO: Look into changing this to SourceValue.None.
                     throw new ArgumentNullException(nameof(obj));
                 case string strValue:
                     this = new SourceValue(strValue);
@@ -114,7 +120,7 @@ namespace Chow.SourceData
                     this = chowValue;
                     break;
                 default:
-                    _dataType = DataType.Object;
+                    DataType = DataType.Object;
                     _obj = obj;
                     _long = NotLongInitialValue;
                     _dbl = NotDoubleInitialValue;
@@ -128,9 +134,9 @@ namespace Chow.SourceData
 
         internal SourceValue InvokeHostDelegate(SourceValue[] args)
         {
-            if (_dataType != DataType.Object)
+            if (DataType != DataType.Object)
             {
-                throw new DataTypeException($"'{_dataType}' object is not callable");
+                throw new DataTypeException($"'{DataType}' object is not callable");
             }
 
             if (_obj is Func<SourceValue[], SourceValue> methodDelegate)
@@ -142,7 +148,7 @@ namespace Chow.SourceData
         }
 
         #endregion
-        
+
         #region Conversion Methods
 
         // NOTE: These methods are for internal use only and are more performant than AsType<T>()
@@ -150,7 +156,7 @@ namespace Chow.SourceData
 
         internal bool ToBool()
         {
-            switch (_dataType)
+            switch (DataType)
             {
                 case DataType.None:
                     return NoneToBool;
@@ -177,7 +183,7 @@ namespace Chow.SourceData
                 case DataType.Slice:
                     return ((ISourceObject)_obj).Truthiness;
                 default:
-                    throw new DataTypeException(GetConversionErrorMessage(_dataType, DataType.Bool));
+                    throw new DataTypeException(GetConversionErrorMessage(DataType, DataType.Bool));
             }
         }
 
@@ -185,29 +191,29 @@ namespace Chow.SourceData
 
         internal long ToLong()
         {
-            switch (_dataType)
+            switch (DataType)
             {
                 case DataType.Bool:
                     return BoolValue ? BoolTrueToLong : BoolFalseToLong;
-                    
+
                 case DataType.Long:
                     return _long;
-                    
+
                 case DataType.Double:
                     return (long)_dbl;
-                    
+
                 case DataType.Str:
                     return StringToLong();
-                    
+
                 default:
-                    throw new DataTypeException(GetConversionErrorMessage(_dataType, DataType.Long));
+                    throw new DataTypeException(GetConversionErrorMessage(DataType, DataType.Long));
             }
 
         }
 
         internal double ToDouble()
         {
-            switch (_dataType)
+            switch (DataType)
             {
                 case DataType.Bool:
                     return BoolValue ? BoolTrueToDouble : BoolFalseToDouble;
@@ -220,25 +226,25 @@ namespace Chow.SourceData
 
                 case DataType.Str:
                     return StringToDouble();
-                    
+
                 default:
-                    throw new DataTypeException(GetConversionErrorMessage(_dataType, DataType.Double));
+                    throw new DataTypeException(GetConversionErrorMessage(DataType, DataType.Double));
             }
         }
 
         internal object ToObject()
         {
-            switch (_dataType)
+            switch (DataType)
             {
                 case DataType.None:
                     return null;
-                    
+
                 case DataType.Bool:
                     return BoolValue;
-                    
+
                 case DataType.Long:
                     return _long;
-                    
+
                 case DataType.Double:
                     return _dbl;
 
@@ -246,7 +252,7 @@ namespace Chow.SourceData
                     return _obj;
             }
         }
-        
+
         public static SourceValue[] ToSourceValues(object[] args)
         {
             var srcValArgs = new SourceValue[args.Length];
@@ -254,6 +260,7 @@ namespace Chow.SourceData
             {
                 srcValArgs[i] = new SourceValue(args[i]);
             }
+
             return srcValArgs;
         }
 
@@ -264,6 +271,7 @@ namespace Chow.SourceData
             {
                 objArgs[i] = args[i].ToObject();
             }
+
             return objArgs;
         }
 
@@ -272,21 +280,21 @@ namespace Chow.SourceData
         {
             return (ISourceObject)_obj;
         }
-        
+
         public override string ToString()
         {
-            switch (_dataType)
+            switch (DataType)
             {
                 case DataType.None:
                     // TODO: Update this class to use DataTypeNames where literals or consts are used
                     return NoneToString;
-                    
+
                 case DataType.Bool:
                     return BoolValue ? BoolTrueToString : BoolFalseToString;
-                    
+
                 case DataType.Long:
                     return _long.ToString(CultureInfo.InvariantCulture);
-                    
+
                 case DataType.Double:
                     return FloatToString();
 
@@ -297,7 +305,8 @@ namespace Chow.SourceData
 
         static string GetConversionErrorMessage(DataType fromDataType, DataType toDataType)
         {
-            return $"Cannot convert {DataTypeNames.GetTypeName(fromDataType)} to {DataTypeNames.GetTypeName(toDataType)}";
+            return
+                $"Cannot convert {DataTypeNames.GetTypeName(fromDataType)} to {DataTypeNames.GetTypeName(toDataType)}";
         }
 
         #endregion
@@ -313,6 +322,7 @@ namespace Chow.SourceData
 
             throw new InvalidOperationException("Expected string value for boolean comparison");
         }
+
         long StringToLong()
         {
             if (!(_obj is string strValue))
@@ -357,7 +367,7 @@ namespace Chow.SourceData
 
         static bool IsFractionalSuffix(string formatted)
         {
-            return formatted.IndexOf(DoublePointChar) == IndexOfCharNotFound
+            return formatted.IndexOf(DoublePointChar)             == IndexOfCharNotFound
                 && formatted.IndexOf(DoubleExponentLowercaseChar) == IndexOfCharNotFound
                 && formatted.IndexOf(DoubleExponentUppercaseChar) == IndexOfCharNotFound;
         }
@@ -455,7 +465,7 @@ namespace Chow.SourceData
         {
             return value.ToString();
         }
-        
+
         #endregion
 
         public static SourceValue Add(SourceValue r, SourceValue l)
@@ -537,12 +547,12 @@ namespace Chow.SourceData
         {
             return LogicEvaluator.EvaluateNot(ref operand);
         }
-        
+
         public bool Equals(SourceValue other)
         {
             // Cheapest, most-discriminating check first; _long and _dbl overlap in the
             // explicit-layout union, so one bitwise compare covers both numeric fields.
-            return _dataType == other._dataType && _long == other._long && Equals(_obj, other._obj);
+            return DataType == other.DataType && _long == other._long && Equals(_obj, other._obj);
         }
 
         public override bool Equals(object obj)
@@ -555,9 +565,9 @@ namespace Chow.SourceData
             unchecked
             {
                 // _dbl shares _long's bits in the union, so hashing _long covers both.
-                var hashCode = (_obj != null ? _obj.GetHashCode() : 0);
+                var hashCode = _obj != null ? _obj.GetHashCode() : 0;
                 hashCode = hashCode * HashCombinePrime ^ _long.GetHashCode();
-                hashCode = hashCode * HashCombinePrime ^ (int)_dataType;
+                hashCode = hashCode * HashCombinePrime ^ (int)DataType;
                 return hashCode;
             }
         }

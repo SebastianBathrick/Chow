@@ -10,6 +10,5 @@ namespace Chow.Syntax
         {
             VariableNames = varNames;
         }
-
     }
 }

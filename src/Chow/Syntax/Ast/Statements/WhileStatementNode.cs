@@ -11,6 +11,5 @@ namespace Chow.Syntax
             Expression = expr;
             Block = block;
         }
-
     }
 }

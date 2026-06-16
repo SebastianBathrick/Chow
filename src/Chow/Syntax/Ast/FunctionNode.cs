@@ -22,6 +22,5 @@ namespace Chow.Syntax
             Params = paramList;
             Block = block;
         }
-
     }
 }

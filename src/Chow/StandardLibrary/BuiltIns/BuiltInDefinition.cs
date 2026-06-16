@@ -9,29 +9,31 @@ namespace Chow.StandardLibrary.BuiltIns
     readonly struct BuiltInDefinition
     {
         const int ARGUMENT_COUNT_UNDEFINED = 0;
-        
+
         public string Name { get; }
         public int MinimumArguments { get; }
         public int MaximumArguments { get; }
 
         public bool HasParameters => MaximumArguments > ARGUMENT_COUNT_UNDEFINED;
-        
-        public Func<SourceValue[], SourceValue>  ValueReturnDelegateWithParams { get; }
+
+        public Func<SourceValue[], SourceValue> ValueReturnDelegateWithParams { get; }
         public Func<SourceValue> ValueReturnDelegate { get; }
-        public Action VoidDelegate { get;  }
+        public Action VoidDelegate { get; }
         public Action<SourceValue[]> VoidDelegateWithParams { get; }
-        
-        
+
+
         public bool IsVoid { get; }
-        
+
         /// <summary>
         /// Defines a built-in function that accepts arguments and returns a <see cref="SourceValue"/>.
         /// </summary>
         /// <param name="name">The source-language name the built-in is bound to in the module scope.</param>
         /// <param name="minimumArguments">The smallest number of arguments accepted at call time.</param>
         /// <param name="maximumArguments">The largest number of arguments accepted at call time.</param>
-        /// <param name="valueReturnDelegateWithParams">The delegate invoked with the call's arguments;
-        /// its return value is pushed onto the VM stack as the call result.</param>
+        /// <param name="valueReturnDelegateWithParams">
+        /// The delegate invoked with the call's arguments;
+        /// its return value is pushed onto the VM stack as the call result.
+        /// </param>
         public BuiltInDefinition(
             string name,
             int minimumArguments,
@@ -55,8 +57,10 @@ namespace Chow.StandardLibrary.BuiltIns
         /// <param name="name">The source-language name the built-in is bound to in the module scope.</param>
         /// <param name="minimumArguments">The smallest number of arguments accepted at call time.</param>
         /// <param name="maximumArguments">The largest number of arguments accepted at call time.</param>
-        /// <param name="voidDelegateWithParams">The delegate invoked with the call's arguments for
-        /// its side effects.</param>
+        /// <param name="voidDelegateWithParams">
+        /// The delegate invoked with the call's arguments for
+        /// its side effects.
+        /// </param>
         public BuiltInDefinition(
             string name,
             int minimumArguments,
@@ -77,8 +81,10 @@ namespace Chow.StandardLibrary.BuiltIns
         /// Defines a built-in function that accepts arguments and returns a <see cref="SourceValue"/>.
         /// </summary>
         /// <param name="name">The source-language name the built-in is bound to in the module scope.</param>
-        /// <param name="valueReturnDelegateWithParams">The delegate invoked with the call's arguments;
-        /// its return value is pushed onto the VM stack as the call result.</param>
+        /// <param name="valueReturnDelegateWithParams">
+        /// The delegate invoked with the call's arguments;
+        /// its return value is pushed onto the VM stack as the call result.
+        /// </param>
         /// <param name="minimumArguments">The smallest number of arguments accepted at call time.</param>
         /// <param name="maximumArguments">The largest number of arguments accepted at call time.</param>
         public BuiltInDefinition(
@@ -102,8 +108,10 @@ namespace Chow.StandardLibrary.BuiltIns
         /// the call result is implicitly <see cref="SourceValue.None"/>.
         /// </summary>
         /// <param name="name">The source-language name the built-in is bound to in the module scope.</param>
-        /// <param name="voidDelegateWithParams">The delegate invoked with the call's arguments for
-        /// its side effects.</param>
+        /// <param name="voidDelegateWithParams">
+        /// The delegate invoked with the call's arguments for
+        /// its side effects.
+        /// </param>
         /// <param name="minimumArguments">The smallest number of arguments accepted at call time.</param>
         /// <param name="maximumArguments">The largest number of arguments accepted at call time.</param>
         public BuiltInDefinition(
@@ -126,8 +134,10 @@ namespace Chow.StandardLibrary.BuiltIns
         /// Defines a built-in function that takes no arguments and returns a <see cref="SourceValue"/>.
         /// </summary>
         /// <param name="name">The source-language name the built-in is bound to in the module scope.</param>
-        /// <param name="valueReturnDelegate">The delegate invoked with no arguments; its return
-        /// value is pushed onto the VM stack as the call result.</param>
+        /// <param name="valueReturnDelegate">
+        /// The delegate invoked with no arguments; its return
+        /// value is pushed onto the VM stack as the call result.
+        /// </param>
         public BuiltInDefinition(
             string name,
             Func<SourceValue> valueReturnDelegate)

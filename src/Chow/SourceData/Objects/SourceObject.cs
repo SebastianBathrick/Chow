@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Chow.SourceData
 {
@@ -12,8 +13,11 @@ namespace Chow.SourceData
     abstract class SourceObject : ISourceObject
     {
         // ---------------- Construction ----------------
-        
-        /// <summary>(Python: <c>__init__</c>) Default accepts no state; constructor-initialized types need not override.</summary>
+
+        /// <summary>
+        /// (Python: <c>__init__</c>) Default accepts no state; constructor-initialized types need not
+        /// override.
+        /// </summary>
         public virtual void Initialize(params SourceValue[] args)
         {
         }
@@ -54,6 +58,7 @@ namespace Chow.SourceData
                 {
                     return Length != 0;
                 }
+
                 return true;
             }
         }
@@ -62,10 +67,7 @@ namespace Chow.SourceData
         /// (Python: <c>__len__</c>) Override together with
         /// <see cref="HasLength"/> to make the object sized.
         /// </summary>
-        public virtual int Length
-        {
-            get { throw new NotSupportedException(nameof(Length)); }
-        }
+        public virtual int Length => throw new NotSupportedException(nameof(Length));
 
         /// <summary>
         /// Signals whether <see cref="Length"/> is supported, so
@@ -152,6 +154,7 @@ namespace Chow.SourceData
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -187,8 +190,7 @@ namespace Chow.SourceData
         /// </summary>
         public virtual int HashCode()
         {
-            return System.Runtime.CompilerServices
-                .RuntimeHelpers.GetHashCode(this);
+            return RuntimeHelpers.GetHashCode(this);
         }
 
         public sealed override bool Equals(object obj)
@@ -196,7 +198,10 @@ namespace Chow.SourceData
             return obj is SourceObject so && EqualsTo(so);
         }
 
-        public sealed override int GetHashCode() => HashCode();
+        public sealed override int GetHashCode()
+        {
+            return HashCode();
+        }
 
         // ---------------- Callability ----------------
 
@@ -208,7 +213,7 @@ namespace Chow.SourceData
         {
             throw new NotSupportedException(nameof(Call));
         }
-        
+
         public virtual SourceValue Call(SourceValue arg1, SourceValue arg2, params SourceValue[] args)
         {
             throw new NotSupportedException(nameof(Call));

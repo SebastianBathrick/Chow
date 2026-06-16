@@ -20,26 +20,35 @@ namespace Chow.SourceData
         // ---------------- Attribute protocol ----------------
 
         SourceValue GetAttribute(SourceValue name);
+
         void SetAttribute(SourceValue name, SourceValue value);
+
         void DeleteAttribute(SourceValue name);
+
         List<string> Directory { get; }
 
         // ---------------- Item (container) protocol ----------------
 
         SourceValue GetItem(SourceValue key);
+
         void SetItem(SourceValue key, SourceValue value);
+
         void DeleteItem(SourceValue key);
+
         void AppendItem(SourceValue value);
 
         // ---------------- Membership & iteration ----------------
 
         bool Contains(SourceValue value);
+
         IIterator GetIterator();
+
         IIterator GetReversedIterator();
 
         // ---------------- Equality & hashing ----------------
 
         bool EqualsTo(SourceObject other);
+
         int HashCode();
 
         // ---------------- Callability ----------------
@@ -47,7 +56,7 @@ namespace Chow.SourceData
         SourceValue Call(params SourceValue[] args);
 
         SourceValue Call(SourceValue arg1, SourceValue arg2, params SourceValue[] args);
-        
+
         // ----------------- Type Conversion --------------------
 
         SourceValue ToSourceValue();

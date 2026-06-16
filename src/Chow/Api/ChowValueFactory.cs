@@ -14,7 +14,7 @@ namespace Chow
             var srcVal = SourceObjectFactory.CreateNewObject(DataType.Dict).ToSourceValue();
             return new ChowValue(ref srcVal);
         }
-        
+
         public static IChowValue CreateList()
         {
             var srcVal = SourceObjectFactory.CreateNewObject(DataType.List).ToSourceValue();

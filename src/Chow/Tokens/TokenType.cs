@@ -7,7 +7,7 @@ namespace Chow.Tokens
     {
         /// <summary>Library defined token that is not from Chow source code.</summary>
         EmptyToken,
-        
+
         /// <summary>Opening parenthesis: <c>(</c>.</summary>
         SymbolLeftParen,
 

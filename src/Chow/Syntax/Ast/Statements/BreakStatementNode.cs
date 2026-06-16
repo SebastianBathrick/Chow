@@ -5,6 +5,5 @@ namespace Chow.Syntax
         public BreakStatementNode(int line) : base(line)
         {
         }
-
     }
 }

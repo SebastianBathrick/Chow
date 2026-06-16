@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Text;
 using Chow.Utility;
 using Chow.VM;
+
 namespace Chow.SourceData
 {
     class ArithmeticEvaluator
@@ -14,58 +14,61 @@ namespace Chow.SourceData
         // A null entry means the operand pair is unsupported for that operator.
 
         // TODO: Create seperate classes to map conversion rules
-        
+
         // Python treats bool as a subtype of int; any float operand promotes the whole op to float.
-        static readonly DataType?[,] NumericConversionMap = BuildConversionMap(new[]
-        {
-            (DataType.Bool,   DataType.Bool,   DataType.Long  ),
-            (DataType.Bool,   DataType.Long,   DataType.Long  ),
-            (DataType.Long,   DataType.Bool,   DataType.Long  ),
-            (DataType.Bool,   DataType.Double, DataType.Double),
-            (DataType.Double, DataType.Bool,   DataType.Double),
-            (DataType.Long,   DataType.Long,   DataType.Long  ),
-            (DataType.Long,   DataType.Double, DataType.Double),
-            (DataType.Double, DataType.Long,   DataType.Double),
-            (DataType.Double, DataType.Double, DataType.Double),
-        });
+        static readonly DataType?[,] NumericConversionMap = BuildConversionMap(
+            new[]
+            {
+                (DataType.Bool, DataType.Bool, DataType.Long),
+                (DataType.Bool, DataType.Long, DataType.Long),
+                (DataType.Long, DataType.Bool, DataType.Long),
+                (DataType.Bool, DataType.Double, DataType.Double),
+                (DataType.Double, DataType.Bool, DataType.Double),
+                (DataType.Long, DataType.Long, DataType.Long),
+                (DataType.Long, DataType.Double, DataType.Double),
+                (DataType.Double, DataType.Long, DataType.Double),
+                (DataType.Double, DataType.Double, DataType.Double)
+            });
 
         // Extends numeric pairs with sequence-concatenation pairs valid for `+`.
-        static readonly DataType?[,] AdditionConversionMap = BuildConversionMap(new[]
-        {
-            (DataType.Bool,   DataType.Bool,   DataType.Long  ),
-            (DataType.Bool,   DataType.Long,   DataType.Long  ),
-            (DataType.Long,   DataType.Bool,   DataType.Long  ),
-            (DataType.Bool,   DataType.Double, DataType.Double),
-            (DataType.Double, DataType.Bool,   DataType.Double),
-            (DataType.Long,   DataType.Long,   DataType.Long  ),
-            (DataType.Long,   DataType.Double, DataType.Double),
-            (DataType.Double, DataType.Long,   DataType.Double),
-            (DataType.Double, DataType.Double, DataType.Double),
-            (DataType.Str,    DataType.Str,    DataType.Str   ),
-            (DataType.List,   DataType.List,   DataType.List  ),
-        });
+        static readonly DataType?[,] AdditionConversionMap = BuildConversionMap(
+            new[]
+            {
+                (DataType.Bool, DataType.Bool, DataType.Long),
+                (DataType.Bool, DataType.Long, DataType.Long),
+                (DataType.Long, DataType.Bool, DataType.Long),
+                (DataType.Bool, DataType.Double, DataType.Double),
+                (DataType.Double, DataType.Bool, DataType.Double),
+                (DataType.Long, DataType.Long, DataType.Long),
+                (DataType.Long, DataType.Double, DataType.Double),
+                (DataType.Double, DataType.Long, DataType.Double),
+                (DataType.Double, DataType.Double, DataType.Double),
+                (DataType.Str, DataType.Str, DataType.Str),
+                (DataType.List, DataType.List, DataType.List)
+            });
 
         // Extends numeric pairs with sequence-repetition pairs valid for `*`.
-        static readonly DataType?[,] MultiplicationConversionMap = BuildConversionMap(new[]
-        {
-            (DataType.Bool,   DataType.Bool,   DataType.Long  ),
-            (DataType.Bool,   DataType.Long,   DataType.Long  ),
-            (DataType.Long,   DataType.Bool,   DataType.Long  ),
-            (DataType.Bool,   DataType.Double, DataType.Double),
-            (DataType.Double, DataType.Bool,   DataType.Double),
-            (DataType.Long,   DataType.Long,   DataType.Long  ),
-            (DataType.Long,   DataType.Double, DataType.Double),
-            (DataType.Double, DataType.Long,   DataType.Double),
-            (DataType.Double, DataType.Double, DataType.Double),
-            (DataType.Str,    DataType.Long,   DataType.Str   ),
-            (DataType.Str,    DataType.Bool,   DataType.Str   ),
-            (DataType.Long,   DataType.Str,    DataType.Str   ),
-            (DataType.Bool,   DataType.Str,    DataType.Str   ),
-            (DataType.List,   DataType.Long,   DataType.List  ),
-            (DataType.List,   DataType.Bool,   DataType.List  ),
-            (DataType.Long,   DataType.List,   DataType.List  ),
-            (DataType.Bool,   DataType.List,   DataType.List  ),
-        });
+        static readonly DataType?[,] MultiplicationConversionMap = BuildConversionMap(
+            new[]
+            {
+                (DataType.Bool, DataType.Bool, DataType.Long),
+                (DataType.Bool, DataType.Long, DataType.Long),
+                (DataType.Long, DataType.Bool, DataType.Long),
+                (DataType.Bool, DataType.Double, DataType.Double),
+                (DataType.Double, DataType.Bool, DataType.Double),
+                (DataType.Long, DataType.Long, DataType.Long),
+                (DataType.Long, DataType.Double, DataType.Double),
+                (DataType.Double, DataType.Long, DataType.Double),
+                (DataType.Double, DataType.Double, DataType.Double),
+                (DataType.Str, DataType.Long, DataType.Str),
+                (DataType.Str, DataType.Bool, DataType.Str),
+                (DataType.Long, DataType.Str, DataType.Str),
+                (DataType.Bool, DataType.Str, DataType.Str),
+                (DataType.List, DataType.Long, DataType.List),
+                (DataType.List, DataType.Bool, DataType.List),
+                (DataType.Long, DataType.List, DataType.List),
+                (DataType.Bool, DataType.List, DataType.List)
+            });
 
         static DataType?[,] BuildConversionMap((DataType left, DataType right, DataType result)[] pairs)
         {
@@ -86,13 +89,14 @@ namespace Chow.SourceData
             {
                 case DataType.Long:   return new SourceValue(l.ToLong()   + r.ToLong());
                 case DataType.Double: return new SourceValue(l.ToDouble() + r.ToDouble());
-                
+
                 // Python overloads `+` for sequence concatenation; strings keep string results.
                 case DataType.Str:    return new SourceValue(l.ToString() + r.ToString());
                 
                 // List concatenation creates a new list; neither operand list is mutated.
-                case DataType.List:   return new SourceValue(SourceList.Concat((SourceList)l.ToObject(), (SourceList)r.ToObject()));
-                default:              throw new UnreachableException(nameof(Add));
+                case DataType.List:
+                    return new SourceValue(SourceList.Concat((SourceList)l.ToObject(), (SourceList)r.ToObject()));
+                default: throw new UnreachableException(nameof(Add));
             }
         }
 
@@ -113,25 +117,27 @@ namespace Chow.SourceData
                 case DataType.Str:
                 {
                     // Python repeats sequences with int-like counts; bool counts as 0 or 1.
-                    var str   = l.DataType == DataType.Str 
-                        ? l.ToString() 
+                    var str = l.DataType == DataType.Str
+                        ? l.ToString()
                         : r.ToString();
-                    
-                    var count = l.DataType == DataType.Str 
-                        ? ToRepeatCount(ref r) 
+
+                    var count = l.DataType == DataType.Str
+                        ? ToRepeatCount(ref r)
                         : ToRepeatCount(ref l);
-                    
+
                     return new SourceValue(RepeatString(str, count));
                 }
                 case DataType.List:
                 {
                     // SourceList.Repeat mirrors Python's non-positive counts by returning an empty list.
-                    var list  = l.DataType == DataType.List 
-                        ? (SourceList)l.ToObject() 
+                    var list = l.DataType == DataType.List
+                        ? (SourceList)l.ToObject()
                         : (SourceList)r.ToObject();
-                    var count = l.DataType == DataType.List 
-                        ? ToRepeatCount(ref r) 
+
+                    var count = l.DataType == DataType.List
+                        ? ToRepeatCount(ref r)
                         : ToRepeatCount(ref l);
+
                     return new SourceValue(SourceList.Repeat(list, count));
                 }
                 default: throw new UnreachableException(nameof(Multiply));
@@ -143,7 +149,10 @@ namespace Chow.SourceData
             // Python: `/` always yields float (e.g. 9 / 3 → 3.0), even for int operands.
             // Lookup validates operand types; result type is always double regardless of map value.
             GetConversionDataType(
-                NumericConversionMap, l.DataType, r.DataType, Operator.Divide);
+                NumericConversionMap,
+                l.DataType,
+                r.DataType,
+                Operator.Divide);
 
             var rightDbl = r.ToDouble();
             var leftDbl = l.ToDouble();
@@ -161,7 +170,10 @@ namespace Chow.SourceData
         public static SourceValue Mod(ref SourceValue r, ref SourceValue l)
         {
             var convDataType = GetConversionDataType(
-                NumericConversionMap, l.DataType, r.DataType, Operator.Modulus);
+                NumericConversionMap,
+                l.DataType,
+                r.DataType,
+                Operator.Modulus);
 
             if (convDataType == DataType.Long)
             {
@@ -201,7 +213,10 @@ namespace Chow.SourceData
         public static SourceValue EvaluateFloorDivision(ref SourceValue r, ref SourceValue l)
         {
             var convDataType = GetConversionDataType(
-                NumericConversionMap, l.DataType, r.DataType, Operator.FloorDivide);
+                NumericConversionMap,
+                l.DataType,
+                r.DataType,
+                Operator.FloorDivide);
 
             if (convDataType == DataType.Long)
             {
@@ -251,7 +266,10 @@ namespace Chow.SourceData
         public static SourceValue Pow(ref SourceValue r, ref SourceValue l)
         {
             var convDataType = GetConversionDataType(
-                NumericConversionMap, l.DataType, r.DataType, Operator.Exponentiate);
+                NumericConversionMap,
+                l.DataType,
+                r.DataType,
+                Operator.Exponentiate);
 
             if (convDataType == DataType.Long)
             {
@@ -381,7 +399,5 @@ namespace Chow.SourceData
         }
 
         #endregion
-
-
     }
 }

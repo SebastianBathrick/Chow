@@ -5,6 +5,5 @@ namespace Chow.Syntax
         public ContinueStatementNode(int line) : base(line)
         {
         }
-
     }
 }

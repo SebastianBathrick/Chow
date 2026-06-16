@@ -1,4 +1,3 @@
-
 namespace Chow.SourceData
 {
     sealed class SourceScope : SourceObject

@@ -1,6 +1,4 @@
-﻿using Chow.SourceData;
-
-namespace Chow
+﻿namespace Chow
 {
     public interface IChowValue
     {

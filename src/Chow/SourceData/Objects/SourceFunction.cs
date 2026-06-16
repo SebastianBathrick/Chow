@@ -6,12 +6,15 @@ using Chow.VM;
 namespace Chow.SourceData
 {
     /// <summary>
-    /// Runtime function value produced by a <c>def</c> statement in Chow source (as opposed to interop delegates supplied
-    /// by the host language). Pairs a compiled <see cref="BytecodeChunk"/> with the scope active at the moment <c>def</c> ran, so
+    /// Runtime function value produced by a <c>def</c> statement in Chow source (as opposed to interop
+    /// delegates supplied
+    /// by the host language). Pairs a compiled <see cref="BytecodeChunk"/> with the scope active at the
+    /// moment <c>def</c> ran, so
     /// the function body can later resolve enclosing names via the LEGB chain.
     /// </summary>
     /// <remarks>
-    /// <see cref="Enclosing"/> is a live reference — never a copy. Mutations to that scope after capture remain visible
+    /// <see cref="Enclosing"/> is a live reference — never a copy. Mutations to that scope after capture
+    /// remain visible
     /// to the function body, matching Python closure semantics.
     /// </remarks>
     sealed class SourceFunction : SourceObject
@@ -46,7 +49,7 @@ namespace Chow.SourceData
             if (name.DataType != DataType.Str)
             {
                 throw new InvalidOperationException(
-                    $"{nameof(SourceFunction.GetAttribute)} cannot be called with anything other "
+                    $"{nameof(GetAttribute)} cannot be called with anything other "
                     + $"than a {nameof(SourceValue.DataType)} of {nameof(DataType.Str)}.");
             }
 
@@ -61,7 +64,9 @@ namespace Chow.SourceData
             }
 
             throw new AttributeException(
-                DataTypeNames.GetTypeName(DataType.Str), name, -1);
+                DataTypeNames.GetTypeName(DataType.Str),
+                name,
+                -1);
         }
 
         public override string ToRepresentation()

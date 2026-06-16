@@ -13,6 +13,5 @@ namespace Chow.Syntax
             FunctionName = funcName;
             Args = args;
         }
-
     }
 }

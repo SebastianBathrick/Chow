@@ -12,7 +12,7 @@
         public const string ListPopMethodName = "pop";
         public const string ListRemoveMethodName = "remove";
         public const string ListReverseMethodName = "reverse";
-        
+
         // Dictionary constants
         public const string DictionaryGetMethodName = "get";
         public const string DictionaryClearMethodName = "clear";

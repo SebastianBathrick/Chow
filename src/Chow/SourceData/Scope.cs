@@ -1,9 +1,12 @@
 using System.Collections.Generic;
+
 namespace Chow.SourceData
 {
     /// <summary>
-    /// A flat variable-binding store linked to an optional parent for LEGB chain walking. Used for both module-level
-    /// scope (no parent) and per-function-call scope (parent = the closure's captured enclosing scope). Block bodies
+    /// A flat variable-binding store linked to an optional parent for LEGB chain walking. Used for both
+    /// module-level
+    /// scope (no parent) and per-function-call scope (parent = the closure's captured enclosing scope).
+    /// Block bodies
     /// share their enclosing scope — Chow matches Python's function-level scoping.
     /// </summary>
     sealed class Scope

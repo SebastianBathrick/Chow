@@ -7,34 +7,90 @@ namespace Chow.Utility
     {
         static readonly IReadOnlyDictionary<string, TokenType> KeywordTypeMap = new Dictionary<string, TokenType>
         {
-            { "True", TokenType.KeywordTrue },
-            { "False", TokenType.KeywordFalse },
-            { "None", TokenType.KeywordNone },
-            { "and", TokenType.KeywordAnd },
-            { "or", TokenType.KeywordOr },
-            { "not", TokenType.KeywordNot },
-            { "is", TokenType.KeywordIs },
-            { "in", TokenType.KeywordIn },
-            { "def", TokenType.KeywordDef },
-            { "return", TokenType.KeywordReturn },
-            { "class", TokenType.KeywordClass },
-            { "with", TokenType.KeywordWith },
-            { "as", TokenType.KeywordAs },
-            { "global", TokenType.KeywordGlobal },
-            { "nonlocal", TokenType.KeywordNonlocal },
-            { "if", TokenType.KeywordIf },
-            { "else", TokenType.KeywordElse },
-            { "elif", TokenType.KeywordElif },
-            { "for", TokenType.KeywordFor },
-            { "while", TokenType.KeywordWhile },
-            { "break", TokenType.KeywordBreak },
-            { "continue", TokenType.KeywordContinue },
-            { "pass", TokenType.KeywordPass },
-            { "try", TokenType.KeywordTry },
-            { "except", TokenType.KeywordExcept },
-            { "finally", TokenType.KeywordFinally },
-            { "raise", TokenType.KeywordRaise },
-            { "assert", TokenType.KeywordAssert }
+            {
+                "True", TokenType.KeywordTrue
+            },
+            {
+                "False", TokenType.KeywordFalse
+            },
+            {
+                "None", TokenType.KeywordNone
+            },
+            {
+                "and", TokenType.KeywordAnd
+            },
+            {
+                "or", TokenType.KeywordOr
+            },
+            {
+                "not", TokenType.KeywordNot
+            },
+            {
+                "is", TokenType.KeywordIs
+            },
+            {
+                "in", TokenType.KeywordIn
+            },
+            {
+                "def", TokenType.KeywordDef
+            },
+            {
+                "return", TokenType.KeywordReturn
+            },
+            {
+                "class", TokenType.KeywordClass
+            },
+            {
+                "with", TokenType.KeywordWith
+            },
+            {
+                "as", TokenType.KeywordAs
+            },
+            {
+                "global", TokenType.KeywordGlobal
+            },
+            {
+                "nonlocal", TokenType.KeywordNonlocal
+            },
+            {
+                "if", TokenType.KeywordIf
+            },
+            {
+                "else", TokenType.KeywordElse
+            },
+            {
+                "elif", TokenType.KeywordElif
+            },
+            {
+                "for", TokenType.KeywordFor
+            },
+            {
+                "while", TokenType.KeywordWhile
+            },
+            {
+                "break", TokenType.KeywordBreak
+            },
+            {
+                "continue", TokenType.KeywordContinue
+            },
+            {
+                "pass", TokenType.KeywordPass
+            },
+            {
+                "try", TokenType.KeywordTry
+            },
+            {
+                "except", TokenType.KeywordExcept
+            },
+            {
+                "finally", TokenType.KeywordFinally
+            },
+            {
+                "raise", TokenType.KeywordRaise
+            },
+            {
+                "assert", TokenType.KeywordAssert
+            }
         };
 
         static readonly IReadOnlyDictionary<TokenType, string> TypeToKeyword;
