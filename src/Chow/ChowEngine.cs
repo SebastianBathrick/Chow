@@ -1,9 +1,9 @@
 using System;
-using Chow.Ast.Parsing;
 using Chow.Bytecode.Compilation;
 using Chow.Semantics;
 using Chow.SourceData;
 using Chow.StandardLibrary.BuiltIns;
+using Chow.Syntax.Parsing;
 using Chow.Tokens;
 using Chow.Tokens.Scanning;
 using Chow.VM;

@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Chow.Ast;
-using Chow.Ast.Parsing;
 using Chow.SourceData;
+using Chow.Syntax;
 using Chow.Utility;
 
 namespace Chow.Bytecode.Compilation

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Chow.Ast;
 using Chow.Bytecode.Compilation;
+using Chow.Syntax;
 
 namespace Chow.Semantics
 {
