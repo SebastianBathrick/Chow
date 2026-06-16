@@ -15,7 +15,7 @@ scope["base_price"] = 100L;
 ChowEngine.Run(@"
 tax_rate = 0.2
 total = base_price + (base_price * tax_rate)
-", scope, useBuiltIns: false);
+", scope);
 
 // Second call: reuse state from the first call. The returned scope carries the
 // value of the last expression statement in its ExpressionResult.
