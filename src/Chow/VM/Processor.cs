@@ -623,7 +623,52 @@ namespace Chow.VM
 
         void CallInteropFunction(SourceValue calleeValue, SourceValue[] args)
         {
-            _valStack.Push(calleeValue.InvokeHostDelegate(args));
+            var toObjVal = calleeValue.ToObject();
+
+            switch (toObjVal)
+            {
+                case Action action:
+                    ThrowIfArguments(calleeValue, args);
+                    action.Invoke();
+                    break;
+                // TODO: Find a way around this dependency
+                case Func<object> funcNoParams:
+                    ThrowIfArguments(calleeValue, args);
+                    _valStack.Push(new SourceValue(funcNoParams.Invoke()));
+                    break;
+                case Action<object> actionOneObjectParam:
+                    ThrowIfArgumentCount(calleeValue, args, 1);
+                    actionOneObjectParam.Invoke(args[0].ToObject());
+                    break;
+                case Action<object[]> actionObjectArrayParam:
+                    actionObjectArrayParam.Invoke(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>()));
+                    break;
+                case Func<object[], object> funcParams:
+                    _valStack.Push(new SourceValue(funcParams.Invoke(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>()))));
+                    break;
+                default:
+                    throw new DataTypeException($"'{calleeValue}' object is not a valid delegate");
+                            
+            }
+        }
+
+        static void ThrowIfArguments(SourceValue calleeValue, SourceValue[] args)
+        {
+            if (args != null && args.Length != 0)
+            {
+                throw new ArgumentException(
+                    $"'{calleeValue.DataType}' does not support arguments");
+            }
+        }
+
+        static void ThrowIfArgumentCount(SourceValue calleeValue, SourceValue[] args, int expectedArgsCount)
+        {
+            var actualArgsCount = args?.Length ?? 0;
+            if (actualArgsCount != expectedArgsCount)
+            {
+                throw new ArgumentException(
+                    $"'{calleeValue.DataType}' expects {expectedArgsCount} argument(s), got {actualArgsCount}");
+            }
         }
 
         void PushClosureStackFrame(int argCount, ISourceObject function, SourceValue[] args)
