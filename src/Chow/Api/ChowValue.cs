@@ -125,6 +125,46 @@ namespace Chow
             return value.SourceValue.ToString();
         }
 
+        public static implicit operator ChowValue(Func<object> value)
+        {
+            Func<SourceValue[], SourceValue> wrapper = _ =>
+            {
+                var result = value();
+                return result is null ? SourceValue.None : new SourceValue(result);
+            };
+            return new ChowValue(new SourceValue(wrapper));
+        }
+
+        public static implicit operator ChowValue(Action<object> value)
+        {
+            Func<SourceValue[], SourceValue> wrapper = args =>
+            {
+                value(args != null && args.Length > 0 ? args[0].ToObject() : null);
+                return SourceValue.None;
+            };
+            return new ChowValue(new SourceValue(wrapper));
+        }
+
+        public static implicit operator ChowValue(Action<object[]> value)
+        {
+            Func<SourceValue[], SourceValue> wrapper = args =>
+            {
+                value(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>()));
+                return SourceValue.None;
+            };
+            return new ChowValue(new SourceValue(wrapper));
+        }
+
+        public static implicit operator ChowValue(Func<object[], object> value)
+        {
+            Func<SourceValue[], SourceValue> wrapper = args =>
+            {
+                var result = value(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>()));
+                return result is null ? SourceValue.None : new SourceValue(result);
+            };
+            return new ChowValue(new SourceValue(wrapper));
+        }
+
         public static bool operator ==(ChowValue l, ChowValue r)
         {
             if (ReferenceEquals(l, r)) 
