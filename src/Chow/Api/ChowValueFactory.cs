@@ -21,6 +21,12 @@ namespace Chow
             return new ChowValue(ref srcVal);
         }
 
+        public static IChowValue CreateScope()
+        {
+            var srcVal = SourceObjectFactory.CreateNewObject(DataType.Scope).ToSourceValue();
+            return new ChowValue(ref srcVal);
+        }
+
         // Use interface IChowValue to avoid ChowValue dependencies
         internal static IChowValue Create(ref SourceValue srcVal)
         {

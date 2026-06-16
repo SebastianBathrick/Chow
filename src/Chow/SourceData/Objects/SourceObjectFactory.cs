@@ -12,6 +12,8 @@ namespace Chow.SourceData
                     return new SourceList();
                 case DataType.Dict:
                     return new SourceDictionary();
+                case DataType.Scope:
+                    return new SourceScope(new Scope(), SourceValue.None);
                 default:
                     // Range/function/slice carry constructor state and are created directly.
                     throw new ArgumentOutOfRangeException(nameof(srcObjType), srcObjType, null);

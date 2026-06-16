@@ -27,14 +27,19 @@ namespace Chow
             return (ChowValue)RunPipeline(sourceCode, useBuiltIns, false);
         }
 
-        public static ChowValue ScopedExecute(string sourceCode, bool useBuiltIns = true)
+        public static ChowValue Execute(string sourceCode, ChowValue scope, bool useBuiltIns = true)
         {
-            return (ChowValue)RunPipeline(sourceCode, useBuiltIns, true);
+            if (scope == null)
+            {
+                throw new ArgumentNullException(nameof(scope));
+            }
+
+            // Calls run pipeline, imports build-ins (if the Scope.HasBuiltIns is false and useBuiltIns is true), compiles, and runs the source code with the global scope being what's provided
         }
 
         #endregion
 
-        static IChowValue RunPipeline(string sourceCode, bool useBuiltIns, bool doesReturnScope)
+        static IChowValue RunPipeline(string sourceCode, Scope scope, bool useBuiltIns, bool doesReturnScope)
         {
             var globalScope = CreateInitialScope(useBuiltIns);
 
@@ -132,17 +137,13 @@ namespace Chow
             return result;
         }
 
-        static IChowValue CreateVirtualMachineOutput(ref SourceValue result, bool doesReturnScope)
+        static IChowValue CreateVirtualMachineOutput(ref SourceValue result, Scope globalScope, bool doesReturnScope)
         {
-            if (!doesReturnScope)
-            {
-                return ChowValueFactory.Create(ref result);
-            }
-
-            var srcScope = SourceObjectFactory.CreateNewObject(DataType.Scope);
-            srcScope.SetAttribute(SourceObjectConsts.ExpressionResultAttribute, result);
-
-            return ChowValueFactory.Create(srcScope.ToSourceValue());
+            // If doesReturnScope is true then do the following (use factories as much as possible):
+            // 1. Create a SourceScope (ISourceObject) containing globalScope
+            // 2. Assign the result parameter to SourceScope's expression statement result attribute
+            // 3. Wrap the ISourceObject in a SourceValue instance.
+            // 4. Wrap the SourceValue in a ChowValue instance
         }
 
         internal static SourceValue Call(SourceValue func, params SourceValue[] args)
