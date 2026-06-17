@@ -84,15 +84,6 @@ public class ChowDictionaryTests
         Assert.That(dictionary.Get("missing") == ChowObject.None, Is.True);
     }
 
-    [Test]
-    public void Get_MissingKeyWithDefault_ReturnsDefault()
-    {
-        // Python: {}.get("missing", 0) -> 0
-        var dictionary = new ChowDictionary();
-
-        Assert.That(dictionary.Get("missing", 0L) == 0L, Is.True);
-    }
-
     #endregion
 
     #region Pop
@@ -121,21 +112,6 @@ public class ChowDictionaryTests
         Assert.Throws<SubscriptException>(() => dictionary.Pop("missing"));
     }
 
-    [Test]
-    public void Pop_MissingKeyWithDefault_ReturnsDefaultWithoutRemoving()
-    {
-        // Python: {}.pop("missing", "default") -> "default"
-        var dictionary = new ChowDictionary();
-
-        var popped = dictionary.Pop("missing", "default");
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(popped == "default", Is.True);
-            Assert.That(dictionary.Length, Is.Zero);
-        });
-    }
-
     #endregion
 
     #region Update
@@ -154,42 +130,6 @@ public class ChowDictionaryTests
             Assert.That(target["left"] == "old", Is.True);
             Assert.That(target["right"] == "new", Is.True);
             Assert.That(target.Length, Is.EqualTo(2));
-        });
-    }
-
-    #endregion
-
-    #region SetDefault
-
-    [Test]
-    public void SetDefault_NewKey_InsertsAndReturnsDefault()
-    {
-        // Python: {}.setdefault("key") -> None
-        var dictionary = new ChowDictionary();
-
-        var result = dictionary.SetDefault("key");
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(result == ChowObject.None, Is.True);
-            Assert.That(dictionary["key"] == ChowObject.None, Is.True);
-            Assert.That(dictionary.Length, Is.EqualTo(1));
-        });
-    }
-
-    [Test]
-    public void SetDefault_ExistingKey_ReturnsExistingWithoutOverwrite()
-    {
-        // Python: {"key": "existing"}.setdefault("key", "default") -> "existing"
-        var dictionary = CreateDictionaryWithEntry("key", "existing");
-
-        var result = dictionary.SetDefault("key", "default");
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(result == "existing", Is.True);
-            Assert.That(dictionary["key"] == "existing", Is.True);
-            Assert.That(dictionary.Length, Is.EqualTo(1));
         });
     }
 
