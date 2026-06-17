@@ -7,10 +7,6 @@ namespace Chow
 {
     public static class ChowEngine
     {
-        /// <summary>Compiles and interprets Chow source code contained in a <see langword="string"/>.</summary>
-        /// <returns> <see cref="SourceValue.None"/>, or the result of the last expression statement
-        /// interpreted, if there was one defined in <paramref name="sourceCode"/>, and it is not
-        /// null. </returns>
         public static ChowObject Run(string srcCode, IChowObject scope = null, bool useBuiltIns = true)
         {
             var globalScope = SetupGlobalScope(scope, useBuiltIns);
