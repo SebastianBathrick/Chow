@@ -11,7 +11,7 @@ namespace Chow.SourceData
                 case DataType.List:
                     return new SourceList();
                 case DataType.Dict:
-                    return new SourceDictionary();
+                    return new SourceDict();
                 case DataType.Scope:
                     return new SourceScope(new Scope(), SourceValue.None);
                 default:

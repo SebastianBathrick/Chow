@@ -375,7 +375,7 @@ public class ComparisonEvaluatorTests
 
     static SourceValue Dict(SourceValue key, SourceValue value)
     {
-        var dict = new SourceDictionary();
+        var dict = new SourceDict();
         dict.Add(key, value);
         return new SourceValue(dict);
     }

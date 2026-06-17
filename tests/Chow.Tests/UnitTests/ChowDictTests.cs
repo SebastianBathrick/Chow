@@ -3,13 +3,13 @@ using Chow.VM;
 namespace Chow.Tests.UnitTests;
 
 [TestFixture]
-public class ChowDictionaryTests
+public class ChowDictTests
 {
     #region Helpers
 
-    static ChowDictionary CreateDictionaryWithEntry(string key, string value)
+    static ChowDict CreateDictionaryWithEntry(string key, string value)
     {
-        var dictionary = new ChowDictionary();
+        var dictionary = new ChowDict();
         dictionary[key] = value;
         return dictionary;
     }
@@ -21,7 +21,7 @@ public class ChowDictionaryTests
     [Test]
     public void Constructor_NoArgs_ReturnsEmptyDictionary()
     {
-        var dictionary = new ChowDictionary();
+        var dictionary = new ChowDict();
 
         Assert.That(dictionary.Length, Is.Zero);
     }
@@ -29,7 +29,7 @@ public class ChowDictionaryTests
     [Test]
     public void Length_AfterIndexerSet_ReturnsOne()
     {
-        var dictionary = new ChowDictionary();
+        var dictionary = new ChowDict();
 
         dictionary["key"] = "@object";
 
@@ -51,7 +51,7 @@ public class ChowDictionaryTests
     [Test]
     public void IndexerSet_NewKey_StoresValue()
     {
-        var dictionary = new ChowDictionary();
+        var dictionary = new ChowDict();
 
         dictionary["key"] = "@object";
 
@@ -79,7 +79,7 @@ public class ChowDictionaryTests
     public void Get_MissingKey_ReturnsNone()
     {
         // Python: {}.get("missing") -> None
-        var dictionary = new ChowDictionary();
+        var dictionary = new ChowDict();
 
         Assert.That(dictionary.Get("missing") == ChowObject.None, Is.True);
     }
@@ -107,7 +107,7 @@ public class ChowDictionaryTests
     public void Pop_MissingKey_ThrowsKeyError()
     {
         // Python: {}.pop("missing") -> KeyError
-        var dictionary = new ChowDictionary();
+        var dictionary = new ChowDict();
 
         Assert.Throws<SubscriptException>(() => dictionary.Pop("missing"));
     }
@@ -154,7 +154,7 @@ public class ChowDictionaryTests
     [Test]
     public void ImplicitToChowValue_RoundTripsSameBackingObject()
     {
-        var dictionary = new ChowDictionary();
+        var dictionary = new ChowDict();
 
         ChowObject @object = dictionary;
         @object["key"] = "@object";
@@ -168,15 +168,15 @@ public class ChowDictionaryTests
         ChowObject @object = ChowObject.CreateDictionary();
         @object["key"] = "@object";
 
-        ChowDictionary dictionary = @object;
+        ChowDict dict = @object;
 
-        Assert.That(dictionary["key"] == "@object", Is.True);
+        Assert.That(dict["key"] == "@object", Is.True);
     }
 
     [Test]
     public void ToString_EmptyDictionary_MatchesChowValueRepresentation()
     {
-        var dictionary = new ChowDictionary();
+        var dictionary = new ChowDict();
 
         Assert.That(dictionary.ToString(), Is.EqualTo(ChowObject.CreateDictionary().ToString()));
     }

@@ -251,7 +251,7 @@ namespace Chow.StandardLibrary.BuiltIns
 
         static SourceValue Dict(SourceValue[] args)
         {
-            var result = new SourceDictionary();
+            var result = new SourceDict();
 
             if (!HasZeroArguments(args))
             {

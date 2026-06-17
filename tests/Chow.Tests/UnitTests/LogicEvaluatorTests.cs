@@ -336,19 +336,19 @@ public class LogicEvaluatorTests
 
     static SourceValue Dict()
     {
-        return new SourceValue(new SourceDictionary());
+        return new SourceValue(new SourceDict());
     }
 
     static SourceValue Dict(SourceValue key, SourceValue value)
     {
-        var dict = new SourceDictionary();
+        var dict = new SourceDict();
         dict.Add(key, value);
         return new SourceValue(dict);
     }
 
     static SourceValue DictOf(params (SourceValue Key, SourceValue Value)[] entries)
     {
-        var dict = new SourceDictionary();
+        var dict = new SourceDict();
 
         foreach (var entry in entries)
         {

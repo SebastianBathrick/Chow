@@ -29,7 +29,7 @@ namespace Chow.SourceData
             if (l.DataType == DataType.Dict && r.DataType == DataType.Dict)
             {
                 return new SourceValue(
-                    SourceDictionary.Merge((SourceDictionary)l.ToObject(), (SourceDictionary)r.ToObject()));
+                    SourceDict.Merge((SourceDict)l.ToObject(), (SourceDict)r.ToObject()));
             }
 
             throw UnsupportedBinary(l.DataType, r.DataType, Operator.BinaryOr);

@@ -5,7 +5,7 @@ using Chow.VM;
 
 namespace Chow.SourceData
 {
-    class SourceDictionary : SourceObject
+    class SourceDict : SourceObject
     {
         const string GetMethodName = "get";
         const string ClearMethodName = "clear";
@@ -80,7 +80,7 @@ namespace Chow.SourceData
 
         public override bool EqualsTo(SourceObject other)
         {
-            return other is SourceDictionary dict && ElementsEqual(this, dict);
+            return other is SourceDict dict && ElementsEqual(this, dict);
         }
 
         public void Add(SourceValue key, SourceValue value)
@@ -155,7 +155,7 @@ namespace Chow.SourceData
                 throw new DataTypeException($"'{args[0].DataType}' object is not a dict");
             }
 
-            var other = (SourceDictionary)args[0].ToObject();
+            var other = (SourceDict)args[0].ToObject();
 
             foreach (var key in other._elements.Keys)
             {
@@ -197,10 +197,10 @@ namespace Chow.SourceData
                     return SetDefault;
             }
 
-            throw new NotImplementedException($"Method '{methodName}' is not implemented for SourceDictionary");
+            throw new NotImplementedException($"Method '{methodName}' is not implemented for SourceDict");
         }
 
-        public static bool ElementsEqual(SourceDictionary a, SourceDictionary b)
+        public static bool ElementsEqual(SourceDict a, SourceDict b)
         {
             if (a._elements.Count != b._elements.Count)
             {
@@ -223,9 +223,9 @@ namespace Chow.SourceData
             return true;
         }
 
-        public static SourceDictionary Merge(SourceDictionary a, SourceDictionary b)
+        public static SourceDict Merge(SourceDict a, SourceDict b)
         {
-            var result = new SourceDictionary();
+            var result = new SourceDict();
 
             foreach (var key in a._keys)
             {

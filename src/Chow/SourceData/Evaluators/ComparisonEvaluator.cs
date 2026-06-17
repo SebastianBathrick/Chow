@@ -187,9 +187,9 @@ namespace Chow.SourceData
                     return SourceList.ElementsEqual((SourceList)l.ToObject(), (SourceList)r.ToObject());
                 case DataType.Dict:
                     // Dict equality is structural; key insertion order does not decide equality.
-                    return SourceDictionary.ElementsEqual(
-                        (SourceDictionary)l.ToObject(),
-                        (SourceDictionary)r.ToObject());
+                    return SourceDict.ElementsEqual(
+                        (SourceDict)l.ToObject(),
+                        (SourceDict)r.ToObject());
                 case DataType.Range:
                 case DataType.Object:
                     // Chow ranges/objects do not have Python structural equality yet; preserve identity behavior.

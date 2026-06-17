@@ -57,7 +57,7 @@ namespace Chow
         {
             switch (obj)
             {
-                case ChowDictionary dict:
+                case ChowDict dict:
                     return dict.WrappedObject;
                 case ChowList list:
                     return list.WrappedObject;

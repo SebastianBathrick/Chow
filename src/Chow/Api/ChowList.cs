@@ -18,6 +18,18 @@ namespace Chow
         /// <summary>The number of items in the list.</summary>
         public int Length => WrappedObject.Length;
 
+        /// <inheritdoc/>
+        public bool IsNone => WrappedObject.IsNone;
+
+        /// <inheritdoc/>
+        public bool IsList => WrappedObject.IsList;
+
+        /// <inheritdoc/>
+        public bool IsDictionary => WrappedObject.IsDictionary;
+
+        /// <inheritdoc/>
+        public bool IsScope => WrappedObject.IsScope;
+
         /// <summary>Gets or sets the item at the given index.</summary>
         /// <param name="index">The zero-based index of the item.</param>
         /// <returns>The item at <paramref name="index"/>.</returns>
@@ -33,7 +45,7 @@ namespace Chow
             WrappedObject = (ChowObject)ChowObjectFactory.CreateList();
         }
 
-        internal ChowList(ChowObject wrappedObject)
+        ChowList(ChowObject wrappedObject)
         {
             WrappedObject = wrappedObject;
         }

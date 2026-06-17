@@ -11,6 +11,18 @@ namespace Chow
         /// <summary>The number of variables defined in the scope.</summary>
         public int Length => WrappedObject.Length;
 
+        /// <inheritdoc/>
+        public bool IsNone => WrappedObject.IsNone;
+
+        /// <inheritdoc/>
+        public bool IsList => WrappedObject.IsList;
+
+        /// <inheritdoc/>
+        public bool IsDictionary => WrappedObject.IsDictionary;
+
+        /// <inheritdoc/>
+        public bool IsScope => WrappedObject.IsScope;
+
         internal ChowObject WrappedObject
         {
             get;

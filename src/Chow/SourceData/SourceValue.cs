@@ -20,14 +20,22 @@ namespace Chow.SourceData
         [FieldOffset(ObjectFieldOffset)] readonly object _obj;
         [FieldOffset(LongFieldOffset)] readonly long _long;
         [FieldOffset(DoubleFieldOffset)] readonly double _dbl;
-
-        bool BoolValue => _long == BoolTrueToLong;
-
+        
         [field: FieldOffset(TagFieldOffset)]
         internal DataType DataType
         {
             get;
         }
+        
+        public bool IsNone => DataType == DataType.None;
+
+        public bool IsList => DataType == DataType.List;
+
+        public bool IsDictionary => DataType == DataType.Dict;
+
+        public bool IsScope => DataType == DataType.Scope;
+        
+        bool LongToBoolValue => _long == BoolTrueToLong;
 
         #region Constructors
 
@@ -163,7 +171,7 @@ namespace Chow.SourceData
                     return NoneToBool;
 
                 case DataType.Bool:
-                    return BoolValue;
+                    return LongToBoolValue;
 
                 case DataType.Object:
                     return ObjectToBool;
@@ -195,7 +203,7 @@ namespace Chow.SourceData
             switch (DataType)
             {
                 case DataType.Bool:
-                    return BoolValue ? BoolTrueToLong : BoolFalseToLong;
+                    return LongToBoolValue ? BoolTrueToLong : BoolFalseToLong;
 
                 case DataType.Long:
                     return _long;
@@ -217,7 +225,7 @@ namespace Chow.SourceData
             switch (DataType)
             {
                 case DataType.Bool:
-                    return BoolValue ? BoolTrueToDouble : BoolFalseToDouble;
+                    return LongToBoolValue ? BoolTrueToDouble : BoolFalseToDouble;
 
                 case DataType.Long:
                     return _long;
@@ -241,7 +249,7 @@ namespace Chow.SourceData
                     return null;
 
                 case DataType.Bool:
-                    return BoolValue;
+                    return LongToBoolValue;
 
                 case DataType.Long:
                     return _long;
@@ -291,7 +299,7 @@ namespace Chow.SourceData
                     return NoneToString;
 
                 case DataType.Bool:
-                    return BoolValue ? BoolTrueToString : BoolFalseToString;
+                    return LongToBoolValue ? BoolTrueToString : BoolFalseToString;
 
                 case DataType.Long:
                     return _long.ToString(CultureInfo.InvariantCulture);
@@ -466,7 +474,7 @@ namespace Chow.SourceData
         {
             return value.ToString();
         }
-
+        
         #endregion
 
         public static SourceValue Add(SourceValue r, SourceValue l)

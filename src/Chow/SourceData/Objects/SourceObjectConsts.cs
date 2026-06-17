@@ -2,8 +2,8 @@
 {
     public class SourceObjectConsts
     {
-        public const string ChunkAttribute = "bytecodeChunk";
-        public const string EnclosingScopeAttribute = "enclosing_scope";
+        public const string ChunkAttribute = "chunk";
+        public const string EnclosingScopeAttribute = "enclosing";
 
         // List constants
         public const string ListAppendMethodName = "append";
@@ -14,13 +14,12 @@
         public const string ListReverseMethodName = "reverse";
 
         // Dictionary constants
-        public const string DictionaryGetMethodName = "get";
-        public const string DictionaryClearMethodName = "clear";
-        public const string DictionaryPopMethodName = "pop";
-        public const string DictionaryUpdateMethodName = "update";
-        public const string DictionarySetMethodName = "setdefault";
+        public const string DictGetMethodName = "get";
+        public const string DictClearMethodName = "clear";
+        public const string DictPopMethodName = "pop";
+        public const string DictUpdateMethodName = "update";
 
         public const string Scope = "expr_stmt_result";
-        public const string ScopeWrappedScopeAttribute = "wrapped_scope";
+        public const string ScopeWrappedScopeAttribute = "wrapped";
     }
 }

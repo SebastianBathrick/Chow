@@ -19,7 +19,19 @@ namespace Chow
         public static ChowObject None { get; }
             = (ChowObject)ApiConverter.Convert(SourceValue.None);
 
-        internal SourceValue SourceValue { get; }
+        internal SourceValue SourceValue { get; private set; }
+
+        /// <inheritdoc/>
+        public bool IsNone => SourceValue.IsNone;
+
+        /// <inheritdoc/>
+        public bool IsList => SourceValue.IsList;
+
+        /// <inheritdoc/>
+        public bool IsDictionary => SourceValue.IsDictionary;
+
+        /// <inheritdoc/>
+        public bool IsScope => SourceValue.IsScope;
 
         ISourceObject SourceObject => _srcObj ?? (_srcObj = SourceValue.ToISourceObject());
 
@@ -41,7 +53,7 @@ namespace Chow
             get => new ChowObject(SourceObject.GetItem(key.SourceValue));
             set => SourceObject.SetItem(key.SourceValue, value.SourceValue);
         }
-
+        
         // This is primarily for testing. Avoid using internally if possible
         internal ChowObject(SourceValue srcVal)
         {
@@ -111,7 +123,7 @@ namespace Chow
         public static ChowObject CreateDictionary()
         {
             // Cast, because IChowObject has no public API or implicit operators for the client
-            return (ChowObject)ChowObjectFactory.CreateDictionary();
+            return (ChowObject)ChowObjectFactory.CreateDict();
         }
 
         /// <summary>

@@ -156,7 +156,7 @@ namespace Chow.VM
                     ExecutePushNewSourceList(instr.Operand);
                     break;
                 case OperationCode.PushNewSourceDictionary:
-                    ExecutePushNewSourceDictionary(instr.Operand);
+                    ExecutePushNewSourceDict(instr.Operand);
                     break;
 
                 // -- Iterator Operations ---------------------------------------------------------
@@ -466,7 +466,7 @@ namespace Chow.VM
             _valStack.Push(new SourceValue(list));
         }
 
-        void ExecutePushNewSourceDictionary(int pairCount)
+        void ExecutePushNewSourceDict(int pairCount)
         {
             // Pop 2N values (value, key, value, key, ...); rebuild source order before insertion.
             var keys = new SourceValue[pairCount];

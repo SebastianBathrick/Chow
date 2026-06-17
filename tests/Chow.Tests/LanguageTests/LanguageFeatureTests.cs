@@ -2816,7 +2816,7 @@ public class LanguageFeatureTests
     const int TRUTHY_INT64 = 1; // Non-zero integer
     const double TRUTHY_FLOAT64 = 1.0; // Non-zero Chow float
     const string TRUTHY_LIST = "[1, 2, 3]"; // Non-empty list
-    const string TRUTHY_DICT = "{'a': 1, 'b': 2, 'c': 3}"; // Non-empty dictionary
+    const string TRUTHY_DICT = "{'a': 1, 'b': 2, 'c': 3}"; // Non-empty dict
     // const string TRUTHY_RANGE = "range(1, 10)"; // Non-empty range
 
     //--- Falsey Values ---
@@ -2824,7 +2824,7 @@ public class LanguageFeatureTests
     const string FALSEY_INT64 = "0"; // Zero integer
     const string FALSEY_FLOAT64 = "0.0"; // Zero Chow float
     const string FALSEY_LIST = "[]"; // Empty list
-    const string FALSEY_DICT = "{}"; // Empty dictionary
+    const string FALSEY_DICT = "{}"; // Empty dict
     // const string FALSEY_RANGE = "range(0)"; // Empty range
 
     #endregion

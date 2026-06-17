@@ -7,7 +7,7 @@ namespace Chow
     /// <see cref="ChowObject"/> values. Provides operations for reading, adding, and removing
     /// entries.
     /// </summary>
-    public class ChowDictionary : IChowObject
+    public class ChowDict : IChowObject
     {
         internal ChowObject WrappedObject
         {
@@ -16,6 +16,18 @@ namespace Chow
 
         /// <summary>The number of entries in the dictionary.</summary>
         public int Length => WrappedObject.Length;
+
+        /// <inheritdoc/>
+        public bool IsNone => WrappedObject.IsNone;
+
+        /// <inheritdoc/>
+        public bool IsList => WrappedObject.IsList;
+
+        /// <inheritdoc/>
+        public bool IsDictionary => WrappedObject.IsDictionary;
+
+        /// <inheritdoc/>
+        public bool IsScope => WrappedObject.IsScope;
 
         /// <summary>
         /// Gets or sets the value associated with the given key, adding it if absent.
@@ -29,12 +41,12 @@ namespace Chow
         }
 
         /// <summary>Creates a new, empty Chow dictionary.</summary>
-        public ChowDictionary()
+        public ChowDict()
         {
-            WrappedObject = (ChowObject)ChowObjectFactory.CreateDictionary();
+            WrappedObject = (ChowObject)ChowObjectFactory.CreateDict();
         }
 
-        internal ChowDictionary(ChowObject wrappedObject)
+        internal ChowDict(ChowObject wrappedObject)
         {
             WrappedObject = wrappedObject;
         }
@@ -48,7 +60,7 @@ namespace Chow
         /// object.</returns>
         public ChowObject Get(ChowObject key)
         {
-            return WrappedObject.Call(SourceObjectConsts.DictionaryGetMethodName, key);
+            return WrappedObject.Call(SourceObjectConsts.DictGetMethodName, key);
         }
 
         /// <summary>Removes the entry with the given key and returns its value.</summary>
@@ -56,36 +68,36 @@ namespace Chow
         /// <returns>The value that was associated with <paramref name="key"/>.</returns>
         public ChowObject Pop(ChowObject key)
         {
-            return WrappedObject.Call(SourceObjectConsts.DictionaryPopMethodName, key);
+            return WrappedObject.Call(SourceObjectConsts.DictPopMethodName, key);
         }
 
         /// <summary>Copies the entries from another dictionary, overwriting any existing keys.</summary>
         /// <param name="other">The dictionary whose entries are copied in.</param>
         public void Update(ChowObject other)
         {
-            WrappedObject.Call(SourceObjectConsts.DictionaryUpdateMethodName, other);
+            WrappedObject.Call(SourceObjectConsts.DictUpdateMethodName, other);
         }
 
         /// <summary>Removes all entries from the dictionary.</summary>
         public void Clear()
         {
-            WrappedObject.Call(SourceObjectConsts.DictionaryClearMethodName);
+            WrappedObject.Call(SourceObjectConsts.DictClearMethodName);
         }
 
         /// <summary>
-        /// Converts a <see cref="ChowDictionary"/> to a <see cref="ChowObject"/>.
+        /// Converts a <see cref="ChowDict"/> to a <see cref="ChowObject"/>.
         /// </summary>
-        public static implicit operator ChowObject(ChowDictionary value)
+        public static implicit operator ChowObject(ChowDict value)
         {
             return value.WrappedObject;
         }
 
         /// <summary>
-        /// Converts a <see cref="ChowObject"/> to a <see cref="ChowDictionary"/>.
+        /// Converts a <see cref="ChowObject"/> to a <see cref="ChowDict"/>.
         /// </summary>
-        public static implicit operator ChowDictionary(ChowObject @object)
+        public static implicit operator ChowDict(ChowObject @object)
         {
-            return new ChowDictionary(@object);
+            return new ChowDict(@object);
         }
 
         /// <summary>Returns the Chow string representation of this dictionary.</summary>

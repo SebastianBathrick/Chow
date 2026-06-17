@@ -1,4 +1,5 @@
-// ===[Simple API Usage Example]===============================================
+﻿### Simple API Example
+```csharp
 using Chow;
 
 ChowObject scope = ChowObject.CreateScope();
@@ -17,10 +18,11 @@ ChowEngine.Run("""
 // Get the 'total' and 'tax_rate' variables from scope and store them
 // in .NET variables
 ChowObject total = scope["total"];
-ChowObject taxRate = scope["tax_rate"]; 
+ChowObject taxRate = scope["tax_rate"];
 
-Console.WriteLine($"tax_rate: {taxRate}"); 
+Console.WriteLine($"tax_rate: {taxRate}");
 Console.WriteLine($"total: {total}");
 // Output:
 // tax_rate: 0.2
-// total: 120.0 
+// total: 120.0
+```

@@ -15,7 +15,7 @@ public class ChowObjectTests
 
     static ChowObject CreateEmptyDictionary()
     {
-        return new(new(new SourceDictionary()));
+        return new(new(new SourceDict()));
     }
 
     static bool IsSameAtListIndex(ChowObject list, int index, ChowObject item)
