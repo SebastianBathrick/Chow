@@ -10,12 +10,9 @@ Path: [`..\src\Chow\Api\ChowEngine.cs`](../src/Chow/Api/ChowEngine.cs)
 ## Interpreter
 Path: [`..\src\Chow\Pipelines\Interpreter.cs`](../src/Chow/Pipelines/Interpreter.cs)
 
-Orchestrates the two halves of the pipeline, compiling source code into bytecode and then executing it. 
--It also provides a path for the host to invoke a Chow closure directly through the virtual machine.
+Orchestrates the two halves of the pipeline, compiling source code into bytecode and then executing it. It also provides a path for the host to invoke a Chow closure directly through the virtual machine.
 
-## Interpreter Pipeline
-
-### Source Code → Bytecode
+### Interpreter: Source Code → Bytecode
 Before a piece of Chow source code can be evaluated, it must be compiled into bytecode that the virtual machine can execute. The `CompilationPipeline` ([..\src\Chow\Pipelines\Compilation\CompilationPipeline.cs](../src/Chow/Pipelines/Compilation/CompilationPipeline.cs)) drives the following stages in order, passing each stage's output to the next.
 
 - #### Scanner: [..\src\Chow\Pipelines\Compilation\Scanner.cs](../src/Chow/Pipelines/Compilation/Scanner.cs)
@@ -31,7 +28,7 @@ Before a piece of Chow source code can be evaluated, it must be compiled into by
 
     Compiler performs bytecode compilation, the final phase before execution, walking the annotated abstract syntax tree and emitting a chunk of bytecode the virtual machine can execute.
 
-### Bytecode Execution
+### Interpreter: Bytecode Execution
 Once Chow's source code is converted into a bytecode chunk, its actual logic is executed by the virtual machine. The `VirtualMachine` ([..\src\Chow\Pipelines\Execution\VirtualMachine.cs](../src/Chow/Pipelines/Execution/VirtualMachine.cs)) is a thin entry point that runs a chunk through the `Processor`.
 
 - It can also invoke a host-provided callable directly.
