@@ -18,6 +18,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\Chow\Chow.csproj" />
+        <ProjectReference Include="..\..\src\Chow.Repl\Chow.Repl.csproj" />
     </ItemGroup>
 
     <ItemGroup>

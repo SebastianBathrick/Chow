@@ -1,7 +1,11 @@
 ﻿namespace Chow.Repl;
 
-public interface IConsoleCursor
+public interface ICursor
 {
+    public int X { get; }
+    
+    public int Y { get; }
+    
     // --- Incremental Movement ---
 
     // Note: x and y start at 0. (0, 0) represents the beginning of the first line.
@@ -14,20 +18,23 @@ public interface IConsoleCursor
     // y-- return new y
     int MoveDown();
 
-    // x++ return new x
+    // x-- return new x
     int MoveLeft();
     
-    // x-- return new x
+    // x++ return new x
     int MoveRight();
     
     // --- Jump To Line Position ---
     
-    // Sets the maximum x value for the current line and moves to it
-    void JumpToColumn(int lineLength);
+    // Sets the maximum x value for the current line, moves to it
+    void JumpToColumn(int columnIndex);
     
-    // Moves to (0, y)
-    void JumpToFirstColumn();
+    // Moves to (0, y), returns 0
+    int JumpToFirstColumn();
 
-    // Jumps to (x, 0)
-    void JumpFirstLine();
+    // Jumps to (x, 0), returns 0
+    int JumpFirstLine();
+
+    // Jumps to (0, 0)
+    void JumpToStart();
 }
