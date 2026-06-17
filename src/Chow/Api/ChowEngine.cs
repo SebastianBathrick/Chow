@@ -5,8 +5,18 @@ using Chow.StandardLibrary.BuiltIns;
 
 namespace Chow
 {
+    /// <summary>The entry point for executing Chow source code.</summary>
     public static class ChowEngine
     {
+        /// <summary>Executes a piece of Chow source code and returns its result.</summary>
+        /// <param name="srcCode">The Chow source code to execute.</param>
+        /// <param name="scope">An optional <see cref="ChowScope"/> the code runs in. Its variables
+        /// are available to the code, and any variables the code defines are stored in it. When
+        /// <c>null</c>, a fresh scope is used.</param>
+        /// <param name="useBuiltIns">Whether the built-in functions are made available to the
+        /// code.</param>
+        /// <returns>The result of the last evaluated expression statement, or the Chow <c>None</c>
+        /// object if no expression statement was evaluated.</returns>
         public static ChowObject Run(string srcCode, IChowObject scope = null, bool useBuiltIns = true)
         {
             var globalScope = SetupGlobalScope(scope, useBuiltIns);
