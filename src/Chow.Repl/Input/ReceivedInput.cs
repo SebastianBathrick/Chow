@@ -1,0 +1,1 @@
+record struct ReceivedInput(InputType Type, char? Value = null);

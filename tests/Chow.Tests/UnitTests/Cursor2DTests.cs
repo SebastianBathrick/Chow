@@ -2,12 +2,12 @@ using Chow.Repl;
 
 namespace Chow.Tests.UnitTests;
 
-public class CursorTests
+public class Cursor2DTests
 {
     [Test]
     public void New_Cursor_StartsAtOrigin()
     {
-        var cursor = new Cursor();
+        var cursor = new Cursor2D();
 
         Assert.Multiple(() =>
         {
@@ -19,7 +19,7 @@ public class CursorTests
     [Test]
     public void MoveUp_FromOrigin_IncrementsYAndReturnsIt()
     {
-        var cursor = new Cursor();
+        var cursor = new Cursor2D();
 
         var result = cursor.MoveUp();
 
@@ -33,7 +33,7 @@ public class CursorTests
     [Test]
     public void MoveDown_AboveFirstLine_DecrementsYAndReturnsIt()
     {
-        var cursor = new Cursor();
+        var cursor = new Cursor2D();
         cursor.MoveUp();
         cursor.MoveUp();
 
@@ -49,7 +49,7 @@ public class CursorTests
     [Test]
     public void MoveDown_AtFirstLine_ClampsAtZeroAndReturnsZero()
     {
-        var cursor = new Cursor();
+        var cursor = new Cursor2D();
 
         var result = cursor.MoveDown();
 
@@ -63,7 +63,7 @@ public class CursorTests
     [Test]
     public void MoveRight_FromOrigin_IncrementsXAndReturnsIt()
     {
-        var cursor = new Cursor();
+        var cursor = new Cursor2D();
 
         var result = cursor.MoveRight();
 
@@ -77,7 +77,7 @@ public class CursorTests
     [Test]
     public void MoveLeft_AfterMoveRight_DecrementsXAndReturnsIt()
     {
-        var cursor = new Cursor();
+        var cursor = new Cursor2D();
         cursor.MoveRight();
         cursor.MoveRight();
 
@@ -93,7 +93,7 @@ public class CursorTests
     [Test]
     public void MoveLeft_AtFirstColumn_ClampsAtZeroAndReturnsZero()
     {
-        var cursor = new Cursor();
+        var cursor = new Cursor2D();
 
         var result = cursor.MoveLeft();
 
@@ -107,9 +107,9 @@ public class CursorTests
     [Test]
     public void JumpToColumn_PositiveIndex_MovesXToIndex()
     {
-        var cursor = new Cursor();
+        var cursor = new Cursor2D();
 
-        cursor.JumpToColumn(7);
+        cursor.JumpY(7);
 
         Assert.That(cursor.X, Is.EqualTo(7));
     }
@@ -117,10 +117,10 @@ public class CursorTests
     [Test]
     public void JumpToColumn_NegativeIndex_ClampsToZero()
     {
-        var cursor = new Cursor();
-        cursor.JumpToColumn(5);
+        var cursor = new Cursor2D();
+        cursor.JumpY(5);
 
-        cursor.JumpToColumn(-3);
+        cursor.JumpY(-3);
 
         Assert.That(cursor.X, Is.EqualTo(0));
     }
@@ -128,11 +128,11 @@ public class CursorTests
     [Test]
     public void JumpToFirstColumn_FromColumn_ZeroesXLeavesYAndReturnsZero()
     {
-        var cursor = new Cursor();
-        cursor.JumpToColumn(4);
+        var cursor = new Cursor2D();
+        cursor.JumpY(4);
         cursor.MoveUp();
 
-        var result = cursor.JumpToFirstColumn();
+        var result = cursor.JumpY();
 
         Assert.Multiple(() =>
         {
@@ -145,12 +145,12 @@ public class CursorTests
     [Test]
     public void JumpFirstLine_FromLine_ZeroesYLeavesXAndReturnsZero()
     {
-        var cursor = new Cursor();
+        var cursor = new Cursor2D();
         cursor.MoveUp();
         cursor.MoveUp();
         cursor.MoveRight();
 
-        var result = cursor.JumpFirstLine();
+        var result = cursor.JumpToTop();
 
         Assert.Multiple(() =>
         {
@@ -163,7 +163,7 @@ public class CursorTests
     [Test]
     public void JumpToStart_FromAnyPosition_ZeroesBothAxes()
     {
-        var cursor = new Cursor();
+        var cursor = new Cursor2D();
         cursor.MoveUp();
         cursor.MoveRight();
         cursor.MoveRight();

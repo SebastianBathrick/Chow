@@ -5,7 +5,6 @@ namespace Chow.SourceData
     sealed class SourceScope : SourceObject
     {
         readonly Scope _scope;
-        SourceValue _expressionStatementResult;
 
         public override DataType Type => DataType.Scope;
 
@@ -15,11 +14,10 @@ namespace Chow.SourceData
 
         internal Scope InternalScope => _scope;
 
-
-        public SourceScope(Scope scope, SourceValue expressionStatementResult)
+        public SourceScope(Scope scope)
         {
             _scope = scope;
-            _expressionStatementResult = expressionStatementResult;
+            SetItem(SourceObjectConsts.ScopeExpressionAttributeName, SourceValue.None);
         }
         
 
@@ -45,28 +43,10 @@ namespace Chow.SourceData
 
         public override SourceValue GetAttribute(SourceValue name)
         {
-            if (name == SourceObjectConsts.Scope)
-            {
-                return _expressionStatementResult;
-            }
+            return name == SourceObjectConsts.ScopeWrappedScopeAttributeName 
+                ? new SourceValue(_scope) 
+                : base.GetAttribute(name);
 
-            if (name == SourceObjectConsts.ScopeWrappedScopeAttribute)
-            {
-                return new SourceValue(_scope);
-            }
-
-            return base.GetAttribute(name);
-        }
-
-        public override void SetAttribute(SourceValue name, SourceValue value)
-        {
-            if (name == SourceObjectConsts.Scope)
-            {
-                _expressionStatementResult = value;
-                return;
-            }
-
-            throw new UnreachableException(nameof(SetAttribute));
         }
     }
 }

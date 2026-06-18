@@ -1,0 +1,4 @@
+interface ICodeEditor
+{
+    string GetTextSubmission();
+}

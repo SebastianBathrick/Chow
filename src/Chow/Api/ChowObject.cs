@@ -110,6 +110,11 @@ namespace Chow
 
         #region Create Methods
 
+        public static ChowObject Create(object netVal)
+        {
+            return (ChowObject)ChowObjectFactory.CreateObject(netVal);
+        }
+
         /// <summary>Creates a new, empty Chow list.</summary>
         /// <returns>An empty Chow list.</returns>
         public static ChowObject CreateList()

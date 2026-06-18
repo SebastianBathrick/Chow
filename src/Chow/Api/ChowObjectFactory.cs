@@ -9,6 +9,16 @@ namespace Chow
     /// </summary>
     static class ChowObjectFactory
     {
+        public static IChowObject CreateObject(object val)
+        {
+            if (val == null)
+            {
+                return ChowObject.None;
+            }
+            
+            return new ChowObject(new SourceValue(val));
+        }
+        
         public static IChowObject CreateDict()
         {
             var srcVal = SourceObjectFactory.CreateNewObject(DataType.Dict).ToSourceValue();

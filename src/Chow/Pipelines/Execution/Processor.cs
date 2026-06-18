@@ -14,7 +14,7 @@ namespace Chow.VM
 
         readonly CallStack _callStack;
         readonly Stack<SourceValue> _valStack;
-        SourceValue _expressionStatementVal = SourceValue.None;
+        SourceValue _exprStmntVal = SourceValue.None;
 
         // BytecodeChunk is null when the client is exclusively calling a closure
         public Processor(Scope globalScope = null, BytecodeChunk bytecodeChunk = null)
@@ -33,7 +33,7 @@ namespace Chow.VM
                 }
             }
 
-            return _expressionStatementVal;
+            return _exprStmntVal;
         }
 
         bool ExecuteInstruction()
@@ -193,9 +193,8 @@ namespace Chow.VM
                     _valStack.Push(new SourceValue(_valStack.Pop().ToString()));
                     break;
                 case OperationCode.PopExpressionStatementResult:
-                    _expressionStatementVal = _valStack.Pop();
+                    _exprStmntVal = _valStack.Count != 0 ? _valStack.Pop() : SourceValue.None;
                     break;
-
                 default:
                     throw new NotImplementedException($"Execution of {instr.Code} is not implemented.");
             }

@@ -19,7 +19,7 @@
         public const string DictPopMethodName = "pop";
         public const string DictUpdateMethodName = "update";
 
-        public const string Scope = "expr_stmt_result";
-        public const string ScopeWrappedScopeAttribute = "wrapped";
+        public const string ScopeExpressionAttributeName = "expr_result";
+        public const string ScopeWrappedScopeAttributeName = "wrapped";
     }
 }
