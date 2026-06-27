@@ -133,11 +133,6 @@ class CodeEditor : ICodeEditor
 
             case InputType.None:
                 break;
-
-            // Delete remains unhandled: TextArea still has no public way to remove
-            // the character ahead of the cursor.
-            default:
-                break;
         }
     }
 
