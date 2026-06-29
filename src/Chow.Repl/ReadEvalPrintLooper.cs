@@ -1,5 +1,7 @@
 ﻿using Chow;
 
+namespace Chow.Repl;
+
 class ReadEvalPrintLooper
 {
        const string ExpressionStatementResult = "expr_result";

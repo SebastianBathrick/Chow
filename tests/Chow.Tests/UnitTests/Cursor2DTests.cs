@@ -1,3 +1,5 @@
+using Chow.Repl;
+
 namespace Chow.Tests.UnitTests;
 
 public class Cursor2DTests
@@ -15,9 +17,25 @@ public class Cursor2DTests
     }
 
     [Test]
-    public void MoveUp_FromOrigin_IncrementsYAndReturnsIt()
+    public void MoveDown_FromOrigin_IncrementsYAndReturnsIt()
     {
         var cursor = new Cursor2D();
+
+        var result = cursor.MoveDown();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Is.EqualTo(1));
+            Assert.That(cursor.Y, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void MoveUp_AboveFirstLine_DecrementsYAndReturnsIt()
+    {
+        var cursor = new Cursor2D();
+        cursor.MoveDown();
+        cursor.MoveDown();
 
         var result = cursor.MoveUp();
 
@@ -29,27 +47,11 @@ public class Cursor2DTests
     }
 
     [Test]
-    public void MoveDown_AboveFirstLine_DecrementsYAndReturnsIt()
-    {
-        var cursor = new Cursor2D();
-        cursor.MoveUp();
-        cursor.MoveUp();
-
-        var result = cursor.MoveDown();
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(result, Is.EqualTo(1));
-            Assert.That(cursor.Y, Is.EqualTo(1));
-        });
-    }
-
-    [Test]
-    public void MoveDown_AtFirstLine_ClampsAtZeroAndReturnsZero()
+    public void MoveUp_AtFirstLine_ClampsAtZeroAndReturnsZero()
     {
         var cursor = new Cursor2D();
 
-        var result = cursor.MoveDown();
+        var result = cursor.MoveUp();
 
         Assert.Multiple(() =>
         {
@@ -128,7 +130,7 @@ public class Cursor2DTests
     {
         var cursor = new Cursor2D();
         cursor.JumpY(4);
-        cursor.MoveUp();
+        cursor.MoveDown();
 
         var result = cursor.JumpY();
 

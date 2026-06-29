@@ -1,4 +1,6 @@
-class Cursor2D
+namespace Chow.Repl;
+
+public class Cursor2D
 {
    
     readonly int _leftmost;
@@ -245,6 +247,14 @@ public bool TryMoveRight()
     int before = X;
     return MoveRight() != before;
 }
+
+    public int JumpY(int position = 0)
+    {
+        X = Math.Clamp(position, _leftmost, _rightmost);
+        return X;
+    }
+
+    public void JumpToStart() => JumpToTopLeft();
 
     public override string ToString() => $"({X}, {Y})";
 }

@@ -1,3 +1,5 @@
+namespace Chow.Repl;
+
 enum InputType
 {
     None,

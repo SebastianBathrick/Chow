@@ -1,3 +1,5 @@
+namespace Chow.Repl;
+
 class CodeEditor : ICodeEditor
 {
     readonly IRenderer _renderer;

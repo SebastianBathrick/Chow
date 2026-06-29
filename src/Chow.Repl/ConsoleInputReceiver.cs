@@ -1,3 +1,5 @@
+namespace Chow.Repl;
+
 class ConsoleInputReceiver : IInputReceiver
 {
     public bool TryGetNextInput(out ReceivedInput input)

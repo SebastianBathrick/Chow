@@ -1,3 +1,5 @@
+namespace Chow.Repl;
+
 static class ChowEditorFactory
 {
     public static ICodeEditor CreateEditor()

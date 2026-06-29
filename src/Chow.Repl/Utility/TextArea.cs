@@ -1,5 +1,7 @@
 using System.Text;
 
+namespace Chow.Repl;
+
 class TextArea
 {
     const int TabSpaceCount = 4;

@@ -1,4 +1,6 @@
-﻿static class Program
+﻿namespace Chow.Repl;
+
+static class Program
 {
     static int Main(string[] args)
     {

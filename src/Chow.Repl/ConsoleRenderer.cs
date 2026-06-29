@@ -1,4 +1,6 @@
 
+namespace Chow.Repl;
+
 class ConsoleRenderer : IRenderer
 {
     readonly int _areaWidth;

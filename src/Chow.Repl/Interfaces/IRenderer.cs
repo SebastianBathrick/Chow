@@ -1,3 +1,5 @@
+namespace Chow.Repl;
+
 interface IRenderer
 {
     protected Cursor2D Cursor2D { get; }
