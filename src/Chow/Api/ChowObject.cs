@@ -188,12 +188,6 @@ namespace Chow
             return new ChowObject(value);
         }
 
-        /// <summary>Converts this object to a host <see cref="string"/>.</summary>
-        public static implicit operator string(ChowObject @object)
-        {
-            return @object.SourceValue.ToString();
-        }
-
         /// <summary>
         /// Converts a host delegate into a Chow callable that takes no arguments and returns an
         /// object.
