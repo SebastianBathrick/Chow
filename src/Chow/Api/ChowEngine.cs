@@ -22,8 +22,8 @@ namespace Chow
             var globalScope = SetupGlobalScope(scope, useBuiltIns);
             Interpreter.Run(srcCode, globalScope, out var result);
             var resultChowObj = (ChowObject)ApiConverter.Convert(ref result);
-            
-            // This attribute might be removed
+
+            globalScope.AssignVariableValue(SourceObjectConsts.ScopeExpressionName, ref result);
             return resultChowObj;
         }
         
@@ -50,7 +50,6 @@ namespace Chow
             return srcVal.DataType != DataType.Scope 
                 ? throw new ArgumentException("Value is not a scope", nameof(apiScope)) 
                 : ((SourceScope)srcVal.ToISourceObject()).InternalScope;
-
         }
 
         static void AddBuiltInsToScope(Scope scope, bool useBuiltIns)

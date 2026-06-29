@@ -17,7 +17,7 @@ namespace Chow.SourceData
         public SourceScope(Scope scope)
         {
             _scope = scope;
-            SetItem(SourceObjectConsts.ScopeExpressionAttributeName, SourceValue.None);
+            SetItem(SourceObjectConsts.ScopeExpressionName, SourceValue.None);
         }
         
 
