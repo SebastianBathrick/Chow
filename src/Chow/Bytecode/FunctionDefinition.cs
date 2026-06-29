@@ -3,7 +3,7 @@ using Chow.SourceData;
 namespace Chow.Bytecode
 {
     /// <summary>
-    /// Compile-time-only representation of a function. Stored as a constant in the parent bytecodeChunk
+    /// Compile-time-only representation of a function. Stored as a constant in the parent <c>BytecodeChunk</c>
     /// and consumed by the <c>PushNewSourceFunction</c> op at runtime, which combines this template with
     /// the currently active scope to produce a real <see cref="SourceFunction"/>.
     /// </summary>
@@ -16,13 +16,13 @@ namespace Chow.Bytecode
         public string Name { get; }
 
         /// <summary>Declared positional-parameter count.</summary>
-        public int ParamCount { get; }
+        public int ParameterCount { get; }
 
         public FunctionDefinition(BytecodeChunk bytecodeChunk, string name, int paramCount)
         {
             BytecodeChunk = bytecodeChunk;
             Name = name;
-            ParamCount = paramCount;
+            ParameterCount = paramCount;
         }
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace Chow.Bytecode
         /// </summary>
         public ISourceObject MakeClosure(Scope enclosing)
         {
-            return new SourceFunction(BytecodeChunk, enclosing, Name, ParamCount);
+            return new SourceFunction(BytecodeChunk, enclosing, Name, ParameterCount);
         }
     }
 }

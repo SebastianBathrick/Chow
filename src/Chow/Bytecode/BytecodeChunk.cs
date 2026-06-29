@@ -7,35 +7,35 @@ namespace Chow.Bytecode
     {
         const int NoOperand = -1;
 
-        readonly List<Instruction> _instructions;
-        readonly List<SourceValue> _constantPool;
+        #region Fields
+        
+        readonly List<Instruction> _instrList = new List<Instruction>();
+        readonly List<SourceValue> _constPool = new List<SourceValue>();
 
-        readonly List<string> _varNames;
-        readonly List<int> _instrLines;
+        readonly List<string> _varNames = new List<string>();
+        readonly List<int> _instrLines = new List<int>();
 
-        public int InstructionCount => _instructions.Count;
+        #endregion
+        
+        #region Properties
+        
+        public int InstructionCount => _instrList.Count;
 
-        public Instruction this[int index] => _instructions[index];
+        public Instruction this[int index] => _instrList[index];
 
-        public BytecodeChunk()
-        {
-            _instructions = new List<Instruction>();
-            _constantPool = new List<SourceValue>();
-            _varNames = new List<string>();
-            _instrLines = new List<int>();
-        }
-
+        #endregion
+        
         #region Instruction Methods
 
         public void Add(OperationCode code, int line, int operand = NoOperand)
         {
-            _instructions.Add(new Instruction(code, operand));
+            _instrList.Add(new Instruction(code, operand));
             _instrLines.Add(line);
         }
 
         public void PatchOperand(int insrIdx, int operand)
         {
-            _instructions[insrIdx] = new Instruction(_instructions[insrIdx].Code, operand);
+            _instrList[insrIdx] = new Instruction(_instrList[insrIdx].Code, operand);
         }
 
         public int GetLineIndex(int instrIdx)
@@ -45,24 +45,24 @@ namespace Chow.Bytecode
 
         #endregion
 
-        #region Constant Methods
+        #region Constant Pool Methods
 
         public SourceValue ReadConstant(int operand)
         {
-            return _constantPool[operand];
+            return _constPool[operand];
         }
 
         public int RegisterConstant(SourceValue newConst)
         {
-            var constIndex = _constantPool.IndexOf(newConst);
+            var constIndex = _constPool.IndexOf(newConst);
 
             if (constIndex >= 0)
             {
                 return constIndex;
             }
 
-            constIndex = _constantPool.Count;
-            _constantPool.Add(newConst);
+            constIndex = _constPool.Count;
+            _constPool.Add(newConst);
             return constIndex;
         }
 

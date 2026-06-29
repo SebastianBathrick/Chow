@@ -26,18 +26,18 @@ namespace Chow
             return srcValValues;
         }
 
-        public static IChowObject[] ConvertToInterface(ChowObject[] classObjVals)
+        public static IChowObject[] ConvertToInterface(ChowObject[] classObjs)
         {
-            if (classObjVals == null)
+            if (classObjs == null)
             {
                 return null;
             }
             
-            var interfaceVals = new IChowObject[classObjVals.Length];
+            var interfaceVals = new IChowObject[classObjs.Length];
 
-            for (var i = 0; i < classObjVals.Length; i++)
+            for (var i = 0; i < classObjs.Length; i++)
             {
-                interfaceVals[i] = classObjVals[i];
+                interfaceVals[i] = classObjs[i];
             }
             
             return interfaceVals;

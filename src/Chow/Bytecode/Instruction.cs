@@ -11,9 +11,9 @@ namespace Chow.Bytecode
         const int NO_OPERAND = -1;
 
         /// <summary>
-        /// Additional information that may be required for specific instructions, such as the index of a
-        /// constant or
-        /// variable name. Default value is <see cref="NO_OPERAND"/>, indicating no operand.
+        /// Additional information that may be required for specific instructions, such as the
+        /// index of a constant or variable name. Default value is <see cref="NO_OPERAND"/>,
+        /// indicating no operand.
         /// </summary>
         public int Operand { get; }
 
@@ -27,14 +27,14 @@ namespace Chow.Bytecode
         /// Initializes a new instance of the Instruction class with the specified operation code and
         /// optional operand.
         /// </summary>
-        /// <param name="type">The operation code that defines the type of instruction to create.</param>
+        /// <param name="code">The operation code that defines the type of instruction to create.</param>
         /// <param name="operand">
         /// The operand value associated with the instruction. Defaults to NO_OPERAND if
         /// not specified.
         /// </param>
-        public Instruction(OperationCode type, int operand = NO_OPERAND)
+        public Instruction(OperationCode code, int operand = NO_OPERAND)
         {
-            Code = type;
+            Code = code;
             Operand = operand;
         }
     }

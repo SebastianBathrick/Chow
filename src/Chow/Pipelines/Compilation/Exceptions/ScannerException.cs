@@ -6,7 +6,8 @@ namespace Chow.Tokens.Scanning
     {
         public int LineNumber { get; }
 
-        public ScannerException(string message, int lineNumber) : base($"[line {lineNumber}] Error: {message}")
+        public ScannerException(string message, int lineNumber) 
+            : base($"[line {lineNumber}] Error: {message}")
         {
             LineNumber = lineNumber;
         }
