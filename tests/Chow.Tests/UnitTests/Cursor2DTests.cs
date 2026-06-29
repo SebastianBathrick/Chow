@@ -1,5 +1,3 @@
-using Chow.Repl;
-
 namespace Chow.Tests.UnitTests;
 
 public class Cursor2DTests
