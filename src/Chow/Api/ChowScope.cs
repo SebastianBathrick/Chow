@@ -1,5 +1,3 @@
-using Chow.SourceData;
-
 namespace Chow
 {
     /// <summary>

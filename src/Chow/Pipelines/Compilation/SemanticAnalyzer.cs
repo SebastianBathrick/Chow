@@ -297,26 +297,18 @@ namespace Chow.Semantics
                         node = forNode.ElseBranch;
                         continue;
 
-                        break;
-
                     case ReturnStatementNode returnNode:
                         node = returnNode.Expression;
                         continue;
-
-                        break;
 
                     case ExpressionStatementNode exprStmtNode:
                         node = exprStmtNode.Expression;
                         continue;
 
-                        break;
-
                     case ExpressionNode exprNode:
                         Annotate(exprNode.Left);
                         node = exprNode.Right;
                         continue;
-
-                        break;
 
                     case CallNode callNode:
                         Annotate(callNode.FunctionName);
@@ -325,7 +317,6 @@ namespace Chow.Semantics
                         {
                             Annotate(arg);
                         }
-
                         break;
 
                     case ListNode listNode:
@@ -333,7 +324,6 @@ namespace Chow.Semantics
                         {
                             Annotate(element);
                         }
-
                         break;
 
                     case DictionaryNode dictNode:
@@ -342,7 +332,6 @@ namespace Chow.Semantics
                             Annotate(dictNode.Keys[i]);
                             Annotate(dictNode.Values[i]);
                         }
-
                         break;
 
                     case SubscriptNode subscriptNode:
@@ -350,21 +339,15 @@ namespace Chow.Semantics
                         node = subscriptNode.Index;
                         continue;
 
-                        break;
-
                     case SubscriptSliceNode sliceNode:
                         Annotate(sliceNode.Start);
                         Annotate(sliceNode.Stop);
                         node = sliceNode.Step;
                         continue;
 
-                        break;
-
                     case AttributeAccessNode attrAccessNode:
                         node = attrAccessNode.Target;
                         continue;
-
-                        break;
 
                     case SubscriptAssignNode subscriptAssignNode:
                         Annotate(subscriptAssignNode.Target);
@@ -372,14 +355,10 @@ namespace Chow.Semantics
                         node = subscriptAssignNode.Expression;
                         continue;
 
-                        break;
-
                     case AttributeAssignNode attrAssignNode:
                         Annotate(attrAssignNode.Target);
                         node = attrAssignNode.Expression;
                         continue;
-
-                        break;
 
                     case LiteralNode _:
                     case BreakStatementNode _:

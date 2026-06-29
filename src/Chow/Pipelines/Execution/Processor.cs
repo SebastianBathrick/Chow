@@ -119,7 +119,6 @@ namespace Chow.VM
                 case OperationCode.JumpIfFalse:
                     return ExecuteJumpIfFalse(instr.Operand);
                 case OperationCode.JumpPastElseBranches:
-                    return ExecuteJump(instr.Operand);
                 case OperationCode.JumpToLoopStart:
                     return ExecuteJump(instr.Operand);
 
@@ -301,13 +300,14 @@ namespace Chow.VM
             // Always pops; jumps past the branch body when the condition is false
             var operand = _valStack.Pop();
 
-            if (LogicEvaluator.ShouldShortCircuitAnd(ref operand))
+            if (!LogicEvaluator.ShouldShortCircuitAnd(ref operand))
             {
-                _callStack.JumpToInstr(jumpTarget);
-                return StayAtInstruction;
+                return GoToNextInstruction;
             }
 
-            return GoToNextInstruction;
+            _callStack.JumpToInstr(jumpTarget);
+            return StayAtInstruction;
+
         }
 
         // Unconditional jump: set the instruction pointer and remain there (don't advance).
@@ -401,43 +401,46 @@ namespace Chow.VM
             var attrName = _callStack.CurrentBytecodeChunk.GetVariableName(operand);
             var target = _valStack.Pop();
 
-            // TODO: class instances add a branch that consults the instance attribute table, then the class method table.
-            if (target.DataType == DataType.List)
+            switch (target.DataType)
             {
-                var list = target.ToISourceObject();
-
-                if (!list.Directory.Contains(attrName))
+                // TODO: class instances add a branch that consults the instance attribute table, then the class method table.
+                case DataType.List:
                 {
+                    var list = target.ToISourceObject();
+
+                    if (!list.Directory.Contains(attrName))
+                    {
+                        throw new AttributeException(
+                            DataTypeNames.GetTypeName(target.DataType),
+                            attrName,
+                            _callStack.CurrentLineNum);
+                    }
+
+                    _valStack.Push(list.GetAttribute(new SourceValue(attrName)));
+                    break;
+                }
+                case DataType.Dict:
+                {
+                    // TODO: Create a ToInternalDict and ToInternalList to clean this up
+                    var dict = target.ToISourceObject();
+
+                    if (!dict.Directory.Contains(attrName))
+                    {
+                        throw new AttributeException(
+                            DataTypeNames.GetTypeName(target.DataType),
+                            attrName,
+                            _callStack.CurrentLineNum);
+                    }
+
+                    // TODO: Add implicit overloads to convert strings/longs/ints/doubles/etc to SourceValues
+                    _valStack.Push(dict.GetAttribute(new SourceValue(attrName)));
+                    break;
+                }
+                default:
                     throw new AttributeException(
                         DataTypeNames.GetTypeName(target.DataType),
                         attrName,
                         _callStack.CurrentLineNum);
-                }
-
-                _valStack.Push(list.GetAttribute(new SourceValue(attrName)));
-            }
-            else if (target.DataType == DataType.Dict)
-            {
-                // TODO: Create a ToInternalDict and ToInternalList to clean this up
-                var dict = target.ToISourceObject();
-
-                if (!dict.Directory.Contains(attrName))
-                {
-                    throw new AttributeException(
-                        DataTypeNames.GetTypeName(target.DataType),
-                        attrName,
-                        _callStack.CurrentLineNum);
-                }
-
-                // TODO: Add implicit overloads to convert strings/longs/ints/doubles/etc to SourceValues
-                _valStack.Push(dict.GetAttribute(new SourceValue(attrName)));
-            }
-            else
-            {
-                throw new AttributeException(
-                    DataTypeNames.GetTypeName(target.DataType),
-                    attrName,
-                    _callStack.CurrentLineNum);
             }
         }
 
@@ -526,25 +529,21 @@ namespace Chow.VM
             var index = _valStack.Pop();
             var target = _valStack.Pop();
 
-            if (target.DataType == DataType.Dict)
+            switch (target.DataType)
             {
-                target.ToISourceObject().SetItem(index, value);
-            }
-            else if (target.DataType == DataType.List)
-            {
-                if (index.DataType != DataType.Long)
-                {
+                case DataType.Dict:
+                    target.ToISourceObject().SetItem(index, value);
+                    break;
+                case DataType.List when index.DataType != DataType.Long:
                     throw new DataTypeException(
                         $"list indices must be integers, not {index.DataType}");
-                }
-
-                target.ToISourceObject().SetItem(index, value);
-            }
-            else
-            {
-                throw new DataTypeException(
-                    $"'{DataTypeNames.GetTypeName(target.DataType)}'"
-                    + " object does not support item assignment");
+                case DataType.List:
+                    target.ToISourceObject().SetItem(index, value);
+                    break;
+                default:
+                    throw new DataTypeException(
+                        $"'{DataTypeNames.GetTypeName(target.DataType)}'"
+                        + " object does not support item assignment");
             }
         }
 
@@ -554,32 +553,29 @@ namespace Chow.VM
             var index = _valStack.Pop();
             var target = _valStack.Pop();
 
-            // TODO: BinaryAdd a branch here for strings.
-            if (target.DataType == DataType.Dict)
+            switch (target.DataType)
             {
-                try
-                {
-                    _valStack.Push(target.ToISourceObject().GetItem(index));
-                }
-                catch (SubscriptException ex)
-                {
-                    throw new SubscriptException(ex.KeyRepr, _callStack.CurrentLineNum);
-                }
-            }
-            else if (target.DataType == DataType.List)
-            {
-                if (index.DataType != DataType.Long)
-                {
+                // TODO: BinaryAdd a branch here for strings.
+                case DataType.Dict:
+                    try
+                    {
+                        _valStack.Push(target.ToISourceObject().GetItem(index));
+                    }
+                    catch (SubscriptException ex)
+                    {
+                        throw new SubscriptException(ex.KeyRepr, _callStack.CurrentLineNum);
+                    }
+
+                    break;
+                case DataType.List when index.DataType != DataType.Long:
                     throw new DataTypeException(
                         $"list indices must be integers, not {index.DataType}");
-                }
-
-                _valStack.Push(target.ToISourceObject().GetItem(index));
-            }
-            else
-            {
-                throw new DataTypeException(
-                    $"'{DataTypeNames.GetTypeName(target.DataType)}' object is not subscriptable");
+                case DataType.List:
+                    _valStack.Push(target.ToISourceObject().GetItem(index));
+                    break;
+                default:
+                    throw new DataTypeException(
+                        $"'{DataTypeNames.GetTypeName(target.DataType)}' object is not subscriptable");
             }
         }
 

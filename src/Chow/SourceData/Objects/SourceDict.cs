@@ -67,11 +67,13 @@ namespace Chow.SourceData
             var methodName = name.ToString();
             _methodCache = _methodCache ?? new Dictionary<string, SourceValue>();
 
-            if (!_methodCache.TryGetValue(methodName, out var method))
+            if (_methodCache.TryGetValue(methodName, out var method))
             {
-                method = new SourceValue(GetMethod(methodName));
-                _methodCache[methodName] = method;
+                return method;
             }
+
+            method = new SourceValue(GetMethod(methodName));
+            _methodCache[methodName] = method;
 
             return method;
         }
@@ -138,12 +140,8 @@ namespace Chow.SourceData
                 return value;
             }
 
-            if (args.Length == 2)
-            {
-                return args[1];
-            }
+            return args.Length == 2 ? args[1] : throw new SubscriptException(key);
 
-            throw new SubscriptException(key);
         }
 
         SourceValue Update(SourceValue[] args)

@@ -41,18 +41,19 @@ namespace Chow.SourceData
 
         public override SourceValue GetItem(SourceValue key)
         {
-            if (key.DataType == DataType.Long)
+            switch (key.DataType)
             {
-                return this[(int)key.ToLong()];
+                case DataType.Long:
+                    return this[(int)key.ToLong()];
+                case DataType.Slice:
+                {
+                    var slice = (SourceSlice)key.ToISourceObject();
+                    return GetSlice(slice.Start, slice.Stop, slice.Step);
+                }
+                default:
+                    throw new DataTypeException(string.Format(IndexTypeErrorFormat, key.DataType));
             }
 
-            if (key.DataType == DataType.Slice)
-            {
-                var slice = (SourceSlice)key.ToISourceObject();
-                return GetSlice(slice.Start, slice.Stop, slice.Step);
-            }
-
-            throw new DataTypeException(string.Format(IndexTypeErrorFormat, key.DataType));
         }
 
         public override void SetItem(SourceValue key, SourceValue value)
@@ -75,11 +76,13 @@ namespace Chow.SourceData
             var methodName = name.ToString();
             _methodCache = _methodCache ?? new Dictionary<string, SourceValue>();
 
-            if (!_methodCache.TryGetValue(methodName, out var method))
+            if (_methodCache.TryGetValue(methodName, out var method))
             {
-                method = new SourceValue(GetMethod(methodName));
-                _methodCache[methodName] = method;
+                return method;
             }
+
+            method = new SourceValue(GetMethod(methodName));
+            _methodCache[methodName] = method;
 
             return method;
         }

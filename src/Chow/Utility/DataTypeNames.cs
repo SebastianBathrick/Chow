@@ -3,7 +3,7 @@ using Chow.SourceData;
 
 namespace Chow.Utility
 {
-    public class DataTypeNames
+    class DataTypeNames
     {
         static readonly IReadOnlyDictionary<DataType, string> DataTypeNameMap = new Dictionary<DataType, string>
         {

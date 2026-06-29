@@ -209,11 +209,13 @@ namespace Chow.Syntax.Parsing
 
             Node elseBranch = null;
 
-            if (_tokens.IsMatch(TokenType.KeywordElse))
+            if (!_tokens.IsMatch(TokenType.KeywordElse))
             {
-                var elseLineNum = _tokens.Consume().LineNumber;
-                elseBranch = new BranchStatementNode(null, ParseBlock(), null, elseLineNum);
+                return new ForStatementNode(target, iterable, block, elseBranch, lineNum);
             }
+
+            var elseLineNum = _tokens.Consume().LineNumber;
+            elseBranch = new BranchStatementNode(null, ParseBlock(), null, elseLineNum);
 
             return new ForStatementNode(target, iterable, block, elseBranch, lineNum);
         }
@@ -558,7 +560,7 @@ namespace Chow.Syntax.Parsing
         #region FString Methods
 
         // TODO: Entirely refactor FString parsing
-        Node ParseFString(FStringTokenPayload payload, int lineNum)
+        static Node ParseFString(FStringTokenPayload payload, int lineNum)
         {
             var exprParts = new List<Node>();
 

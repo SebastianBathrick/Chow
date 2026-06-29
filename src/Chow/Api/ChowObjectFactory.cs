@@ -11,12 +11,8 @@ namespace Chow
     {
         public static IChowObject CreateObject(object val)
         {
-            if (val == null)
-            {
-                return ChowObject.None;
-            }
-            
-            return new ChowObject(new SourceValue(val));
+            return val == null ? ChowObject.None : new ChowObject(new SourceValue(val));
+
         }
         
         public static IChowObject CreateDict()

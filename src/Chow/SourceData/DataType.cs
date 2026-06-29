@@ -1,7 +1,6 @@
 namespace Chow.SourceData
 {
-    // TODO: Change this back to internal after converting SourceValue to internal
-    public enum DataType : byte
+    enum DataType : byte
     {
         None,
         Bool,

@@ -4,31 +4,31 @@ namespace Chow.SourceData
 {
     sealed class SourceScope : SourceObject
     {
-        readonly Scope _scope;
 
         public override DataType Type => DataType.Scope;
 
         public override bool HasLength => true;
 
-        public override int Length => _scope.Count;
+        public override int Length => InternalInternalScope.Count;
 
-        internal Scope InternalScope => _scope;
-
-        public SourceScope(Scope scope)
+        internal Scope InternalInternalScope
         {
-            _scope = scope;
+            get;
+        }
+
+        public SourceScope(Scope internalScope)
+        {
+            InternalInternalScope = internalScope;
             SetItem(SourceObjectConsts.ScopeExpressionName, SourceValue.None);
         }
         
 
         public override SourceValue GetItem(SourceValue key)
         {
-            if (key.DataType != DataType.Str)
-            {
-                throw new DataTypeException($"The key '{key}' is not a str");
-            }
-            
-            return _scope.GetVariableValue(key.ToString());
+            return key.DataType != DataType.Str 
+                ? throw new DataTypeException($"The key '{key}' is not a str") 
+                : InternalInternalScope.GetVariableValue(key.ToString());
+
         }
 
         public override void SetItem(SourceValue key, SourceValue value)
@@ -38,13 +38,13 @@ namespace Chow.SourceData
                 throw new DataTypeException($"The key '{key}' is not a str");
             }
             
-            _scope.AssignVariableValue(key.ToString(), ref value);
+            InternalInternalScope.AssignVariableValue(key.ToString(), ref value);
         }
 
         public override SourceValue GetAttribute(SourceValue name)
         {
             return name == SourceObjectConsts.ScopeWrappedScopeAttributeName 
-                ? new SourceValue(_scope) 
+                ? new SourceValue(InternalInternalScope) 
                 : base.GetAttribute(name);
 
         }

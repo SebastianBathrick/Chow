@@ -54,36 +54,6 @@ namespace Chow.Utility
             }
         };
 
-
-        static readonly IReadOnlyDictionary<OperationCode, string> OperationCodeMap =
-            new Dictionary<OperationCode, string>
-            {
-                {
-                    OperationCode.BinaryAdd, "+"
-                },
-                {
-                    OperationCode.BinarySubtract, "-"
-                },
-                {
-                    OperationCode.BinaryMultiply, "*"
-                },
-                {
-                    OperationCode.BinaryDivide, "/"
-                },
-                {
-                    OperationCode.BinaryModulus, "%"
-                },
-                {
-                    OperationCode.BinaryPow, "**"
-                },
-                {
-                    OperationCode.BinaryFloor, "//"
-                },
-                {
-                    OperationCode.UnaryNegate, "-"
-                }
-            };
-
         public static string ToSource(Operator op)
         {
             return ExpressionOperatorMap[op];

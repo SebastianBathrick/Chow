@@ -19,7 +19,7 @@ namespace Chow
         public static ChowObject None { get; }
             = (ChowObject)ApiConverter.Convert(SourceValue.None);
 
-        internal SourceValue SourceValue { get; private set; }
+        internal SourceValue SourceValue { get; }
 
         /// <inheritdoc/>
         public bool IsNone => SourceValue.IsNone;
@@ -200,13 +200,13 @@ namespace Chow
         /// </summary>
         public static implicit operator ChowObject(Func<object> value)
         {
-            Func<SourceValue[], SourceValue> wrapper = _ =>
+            SourceValue Wrapper(SourceValue[] _)
             {
                 var result = value();
                 return result is null ? SourceValue.None : new SourceValue(result);
-            };
+            }
 
-            return new ChowObject(new SourceValue(wrapper));
+            return new ChowObject(new SourceValue((Func<SourceValue[], SourceValue>)Wrapper));
         }
 
         /// <summary>
@@ -215,13 +215,13 @@ namespace Chow
         /// </summary>
         public static implicit operator ChowObject(Action<object> value)
         {
-            Func<SourceValue[], SourceValue> wrapper = args =>
+            SourceValue Wrapper(SourceValue[] args)
             {
                 value(args != null && args.Length > 0 ? args[0].ToObject() : null);
                 return SourceValue.None;
-            };
+            }
 
-            return new ChowObject(new SourceValue(wrapper));
+            return new ChowObject(new SourceValue((Func<SourceValue[], SourceValue>)Wrapper));
         }
 
         /// <summary>
@@ -230,13 +230,13 @@ namespace Chow
         /// </summary>
         public static implicit operator ChowObject(Action<object[]> value)
         {
-            Func<SourceValue[], SourceValue> wrapper = args =>
+            SourceValue Wrapper(SourceValue[] args)
             {
                 value(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>()));
                 return SourceValue.None;
-            };
+            }
 
-            return new ChowObject(new SourceValue(wrapper));
+            return new ChowObject(new SourceValue((Func<SourceValue[], SourceValue>)Wrapper));
         }
 
         /// <summary>
@@ -245,13 +245,13 @@ namespace Chow
         /// </summary>
         public static implicit operator ChowObject(Func<object[], object> value)
         {
-            Func<SourceValue[], SourceValue> wrapper = args =>
+            SourceValue Wrapper(SourceValue[] args)
             {
                 var result = value(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>()));
                 return result is null ? SourceValue.None : new SourceValue(result);
-            };
+            }
 
-            return new ChowObject(new SourceValue(wrapper));
+            return new ChowObject(new SourceValue((Func<SourceValue[], SourceValue>)Wrapper));
         }
 
         /// <summary>

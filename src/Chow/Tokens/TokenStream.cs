@@ -151,11 +151,13 @@ namespace Chow.Tokens
 
             foreach (var type in targetTypes)
             {
-                if (IsMatch(type))
+                if (!IsMatch(type))
                 {
-                    Consume();
-                    return true;
+                    continue;
                 }
+
+                Consume();
+                return true;
             }
 
             return false;

@@ -97,6 +97,9 @@ namespace Chow.StandardLibrary.BuiltIns
 
         static Func<SourceValue[], SourceValue> BuildGuardedBuiltIn(BuiltInDefinition builtInDef)
         {
+
+            return GuardedDelegateInvocation;
+
             SourceValue GuardedDelegateInvocation(SourceValue[] args)
             {
                 if (builtInDef.HasParameters)
@@ -120,8 +123,6 @@ namespace Chow.StandardLibrary.BuiltIns
                 builtInDef.VoidDelegate();
                 return SourceValue.None;
             }
-
-            return GuardedDelegateInvocation;
         }
 
         static void ValidateArgumentCount(BuiltInDefinition builtInDef, SourceValue[] args)
@@ -195,55 +196,45 @@ namespace Chow.StandardLibrary.BuiltIns
 
         static SourceValue Float(SourceValue[] args)
         {
-            if (HasZeroArguments(args))
-            {
-                return new SourceValue(0.0);
-            }
+            return HasZeroArguments(args) 
+                ? new SourceValue(0.0) : new SourceValue(args[0].ToDouble());
 
-            return new SourceValue(args[0].ToDouble());
         }
 
         static SourceValue Str(SourceValue[] args)
         {
-            if (HasZeroArguments(args))
-            {
-                return new SourceValue(string.Empty);
-            }
+            return HasZeroArguments(args) 
+                ? new SourceValue(string.Empty) : new SourceValue(args[0].ToString());
 
-            return new SourceValue(args[0].ToString());
         }
 
         static SourceValue Int(SourceValue[] args)
         {
-            if (HasZeroArguments(args))
-            {
-                return new SourceValue(0L);
-            }
+            return HasZeroArguments(args) 
+                ? new SourceValue(0L) : new SourceValue(args[0].ToLong());
 
-            return new SourceValue(args[0].ToLong());
         }
 
         static SourceValue Bool(SourceValue[] args)
         {
-            if (HasZeroArguments(args))
-            {
-                return new SourceValue(false);
-            }
+            return HasZeroArguments(args) 
+                ? new SourceValue(false) : new SourceValue(args[0].ToBool());
 
-            return new SourceValue(args[0].ToBool());
         }
 
         static SourceValue List(SourceValue[] args)
         {
             var result = new SourceList();
 
-            if (!HasZeroArguments(args))
+            if (HasZeroArguments(args))
             {
-                var iterator = IteratorFactory.GetIterator(args[0]);
-                while (iterator.TryMoveNext(out var current))
-                {
-                    result.AppendItem(current);
-                }
+                return new SourceValue(result);
+            }
+
+            var iterator = IteratorFactory.GetIterator(args[0]);
+            while (iterator.TryMoveNext(out var current))
+            {
+                result.AppendItem(current);
             }
 
             return new SourceValue(result);
@@ -253,20 +244,18 @@ namespace Chow.StandardLibrary.BuiltIns
         {
             var result = new SourceDict();
 
-            if (!HasZeroArguments(args))
+            if (HasZeroArguments(args))
             {
-                if (args[0].DataType != DataType.Dict)
-                {
-                    // Python: TypeError. Chow has no kwargs/mapping protocol yet, so only dict copy is supported.
-                    throw new DataTypeException($"'{args[0].DataType}' object is not iterable");
-                }
-
-                result.GetMethod("update")(
-                    new[]
-                    {
-                        args[0]
-                    });
+                return new SourceValue(result);
             }
+
+            if (args[0].DataType != DataType.Dict)
+            {
+                // Python: TypeError. Chow has no kwargs/mapping protocol yet, so only dict copy is supported.
+                throw new DataTypeException($"'{args[0].DataType}' object is not iterable");
+            }
+
+            result.GetMethod("update")(new[] { args[0] });
 
             return new SourceValue(result);
         }
@@ -375,28 +364,31 @@ namespace Chow.StandardLibrary.BuiltIns
             long stop;
             long step;
 
-            if (args.Length == 1)
+            switch (args.Length)
             {
-                start = 0;
-                stop = RequireRangeInt(args[0]);
-                step = 1;
-            }
-            else if (args.Length == 2)
-            {
-                start = RequireRangeInt(args[0]);
-                stop = RequireRangeInt(args[1]);
-                step = 1;
-            }
-            else
-            {
-                start = RequireRangeInt(args[0]);
-                stop = RequireRangeInt(args[1]);
-                step = RequireRangeInt(args[2]);
-
-                if (step == 0)
+                case 1:
+                    start = 0;
+                    stop = RequireRangeInt(args[0]);
+                    step = 1;
+                    break;
+                case 2:
+                    start = RequireRangeInt(args[0]);
+                    stop = RequireRangeInt(args[1]);
+                    step = 1;
+                    break;
+                default:
                 {
-                    // Python: ValueError. No ValueException type in Chow yet.
-                    throw new InvalidOperationException("range() arg 3 must not be zero");
+                    start = RequireRangeInt(args[0]);
+                    stop = RequireRangeInt(args[1]);
+                    step = RequireRangeInt(args[2]);
+
+                    if (step == 0)
+                    {
+                        // Python: ValueError. No ValueException type in Chow yet.
+                        throw new InvalidOperationException("range() arg 3 must not be zero");
+                    }
+
+                    break;
                 }
             }
 

@@ -164,14 +164,12 @@ namespace Chow.VM.FunctionCalls
         /// </summary>
         public SourceValue GetVariableValue(string name)
         {
-            if (TryGetVariableValue(name, out var value))
-            {
-                return value;
-            }
+            return TryGetVariableValue(name, out var value) 
+                ? value
+                // Contract violation: callers must verify the name is defined first.
+                // KeyNotFoundException here surfaces the bug; NameError translation belongs to the VM.
+                : CurrFrame.Scope.GetVariableValue(name);
 
-            // Contract violation: callers must verify the name is defined first.
-            // KeyNotFoundException here surfaces the bug; NameError translation belongs to the VM.
-            return CurrFrame.Scope.GetVariableValue(name);
         }
 
         /// <summary>Advances the current frame's instruction pointer by one.</summary>

@@ -655,32 +655,30 @@ namespace Chow.Bytecode.Compilation
 
         static OperationCode GetScopeAssignOpCode(ScopeType resolution)
         {
-            if (resolution == ScopeType.Global)
+            switch (resolution)
             {
-                return OperationCode.AssignGlobal;
+                case ScopeType.Global:
+                    return OperationCode.AssignGlobal;
+                case ScopeType.NonLocal:
+                    return OperationCode.AssignNonLocal;
+                default:
+                    return OperationCode.AssignLocal;
             }
 
-            if (resolution == ScopeType.NonLocal)
-            {
-                return OperationCode.AssignNonLocal;
-            }
-
-            return OperationCode.AssignLocal;
         }
 
         static OperationCode GetScopeReadOpCode(ScopeType resolution)
         {
-            if (resolution == ScopeType.Global)
+            switch (resolution)
             {
-                return OperationCode.PushGlobalValue;
+                case ScopeType.Global:
+                    return OperationCode.PushGlobalValue;
+                case ScopeType.NonLocal:
+                    return OperationCode.PushNonLocalValue;
+                default:
+                    return OperationCode.PushVariableValue;
             }
 
-            if (resolution == ScopeType.NonLocal)
-            {
-                return OperationCode.PushNonLocalValue;
-            }
-
-            return OperationCode.PushVariableValue;
         }
 
         static OperationCode GetExpressionOpCode(ExpressionNode expressionNode)

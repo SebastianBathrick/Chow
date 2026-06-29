@@ -1,6 +1,6 @@
 ﻿namespace Chow.SourceData
 {
-    public class SourceObjectConsts
+    class SourceObjectConsts
     {
         public const string ChunkAttribute = "chunk";
         public const string EnclosingScopeAttribute = "enclosing";

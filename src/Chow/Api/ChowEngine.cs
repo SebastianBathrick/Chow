@@ -49,7 +49,7 @@ namespace Chow
 
             return srcVal.DataType != DataType.Scope 
                 ? throw new ArgumentException("Value is not a scope", nameof(apiScope)) 
-                : ((SourceScope)srcVal.ToISourceObject()).InternalScope;
+                : ((SourceScope)srcVal.ToISourceObject()).InternalInternalScope;
         }
 
         static void AddBuiltInsToScope(Scope scope, bool useBuiltIns)

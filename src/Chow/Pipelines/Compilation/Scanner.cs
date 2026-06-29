@@ -44,6 +44,7 @@ namespace Chow.Tokens.Scanning
         /// Initializes a new Scanner instance using Chow source code.
         /// </summary>
         /// <param name="sourceCode">Null or string containing raw Chow source code or whitespace.</param>
+        /// <param name="tokenStream">Stream instance to inject that will store analyzed tokens.</param>
         public Scanner(string sourceCode, ITokenStream tokenStream)
         {
             _sourceCode = sourceCode;
@@ -182,11 +183,13 @@ namespace Chow.Tokens.Scanning
         {
             var indentColumn = ScanIndentColumn();
 
-            if (IsCharToScan && !IsNewlineChar() && !IsCommentPrefix())
+            if (!IsCharToScan || IsNewlineChar() || IsCommentPrefix())
             {
-                CreateIndentTokens(indentColumn);
-                _isLineBegin = false;
+                return;
             }
+
+            CreateIndentTokens(indentColumn);
+            _isLineBegin = false;
         }
 
         int ScanIndentColumn()
@@ -551,52 +554,45 @@ namespace Chow.Tokens.Scanning
                     throw new ScannerException("Unterminated f-string literal", _lineNum);
                 }
 
-                if (CurrentChar == '{')
+                switch (CurrentChar)
                 {
-                    if (PeekNextChar() == '{')
-                    {
+                    case '{' when PeekNextChar() == '{':
                         currentPart.Append('{');
                         MoveToNextChar();
                         MoveToNextChar();
                         continue;
-                    }
-
-                    MoveToNextChar(); // skip opening {
-                    stringParts.Add(currentPart.ToString());
-                    currentPart.Clear();
-                    exprParts.Add(ScanFStringSlot());
-                    continue;
-                }
-
-                if (CurrentChar == '}')
-                {
-                    if (PeekNextChar() == '}')
-                    {
+                    case '{':
+                        MoveToNextChar(); // skip opening {
+                        stringParts.Add(currentPart.ToString());
+                        currentPart.Clear();
+                        exprParts.Add(ScanFStringSlot());
+                        continue;
+                    case '}' when PeekNextChar() == '}':
                         currentPart.Append('}');
                         MoveToNextChar();
                         MoveToNextChar();
                         continue;
-                    }
-
-                    throw new ScannerException("Single '}' is not allowed in f-string", _lineNum);
-                }
-
-                if (CurrentChar == '\\')
-                {
-                    MoveToNextChar();
-
-                    if (!IsCharToScan)
+                    case '}':
+                        throw new ScannerException("Single '}' is not allowed in f-string", _lineNum);
+                    case '\\':
                     {
-                        throw new ScannerException("Unterminated f-string literal", _lineNum);
-                    }
+                        MoveToNextChar();
 
-                    currentPart.Append(DecodeEscape(CurrentChar));
-                    MoveToNextChar();
-                    continue;
+                        if (!IsCharToScan)
+                        {
+                            throw new ScannerException("Unterminated f-string literal", _lineNum);
+                        }
+
+                        currentPart.Append(DecodeEscape(CurrentChar));
+                        MoveToNextChar();
+                        continue;
+                    }
+                    default:
+                        currentPart.Append(CurrentChar);
+                        MoveToNextChar();
+                        break;
                 }
 
-                currentPart.Append(CurrentChar);
-                MoveToNextChar();
             }
 
             if (!IsCharToScan)
@@ -698,12 +694,10 @@ namespace Chow.Tokens.Scanning
 
             var result = slotSource.ToString().Trim();
 
-            if (result.Length == 0)
-            {
-                throw new ScannerException("f-string: empty expression not allowed", _lineNum);
-            }
+            return result.Length == 0 
+                ? throw new ScannerException("f-string: empty expression not allowed", _lineNum) 
+                : result;
 
-            return result;
         }
 
         #endregion
@@ -735,7 +729,7 @@ namespace Chow.Tokens.Scanning
             return CurrentChar >= '0' && CurrentChar <= '9';
         }
 
-        bool IsDigitChar(char checkChar)
+        static bool IsDigitChar(char checkChar)
         {
             return checkChar >= '0' && checkChar <= '9';
         }

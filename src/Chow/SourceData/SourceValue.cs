@@ -339,12 +339,10 @@ namespace Chow.SourceData
                 throw new InvalidOperationException("Expected string value for long conversion");
             }
 
-            if (long.TryParse(strValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedLong))
-            {
-                return parsedLong;
-            }
+            return long.TryParse(
+                strValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedLong) 
+                ? parsedLong : throw new InvalidOperationException($"Cannot convert string '{strValue}' to long");
 
-            throw new InvalidOperationException($"Cannot convert string '{strValue}' to long");
         }
 
         double StringToDouble()
@@ -354,12 +352,10 @@ namespace Chow.SourceData
                 throw new InvalidOperationException("Expected string value for double conversion");
             }
 
-            if (double.TryParse(strValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedDouble))
-            {
-                return parsedDouble;
-            }
+            return double.TryParse(
+                strValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedDouble) 
+                ? parsedDouble : throw new InvalidOperationException($"Cannot convert string '{strValue}' to double");
 
-            throw new InvalidOperationException($"Cannot convert string '{strValue}' to double");
         }
 
         string FloatToString()
