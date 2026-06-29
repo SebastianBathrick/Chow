@@ -30,7 +30,7 @@ class ReadEvalPrintLooper
        public ReadEvalPrintLooper()
        {
               _scope = ChowObject.CreateScope();
-              _scope[ExitChowFunctionName] = ChowObject.Create(new Action(() => Environment.Exit(0)));
+              _scope[ExitChowFunctionName] = ChowObject.Create(() => Environment.Exit(0));
               _scope[HelpChowFunctionName] = ChowObject.Create(PrintHelp);
        }
 

@@ -1,3 +1,5 @@
+using Chow;
+
 namespace Chow.VM
 {
     class AttributeException : RuntimeException

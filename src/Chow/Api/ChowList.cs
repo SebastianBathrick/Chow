@@ -76,10 +76,10 @@ namespace Chow
         }
 
         /// <summary>Removes the first item equal to the given object.</summary>
-        /// <param name="index">The object to remove.</param>
-        public void Remove(ChowObject index)
+        /// <param name="value">The object to remove.</param>
+        public void Remove(ChowObject value)
         {
-            WrappedObject.Call(SourceObjectConsts.ListRemoveMethodName, index);
+            WrappedObject.Call(SourceObjectConsts.ListRemoveMethodName, value);
         }
 
         /// <summary>Reverses the order of the list's items in place.</summary>

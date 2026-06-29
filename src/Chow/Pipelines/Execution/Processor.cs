@@ -649,6 +649,35 @@ namespace Chow.VM
                     ThrowIfArgumentCount(calleeValue, args, 1);
                     actionOneObjectParam.Invoke(args[0].ToObject());
                     break;
+                case Action<object, object> actionTwoObjectParams:
+                    ThrowIfArgumentCount(calleeValue, args, 2);
+                    actionTwoObjectParams.Invoke(args[0].ToObject(), args[1].ToObject());
+                    break;
+                case Action<object, object, object> actionThreeObjectParams:
+                    ThrowIfArgumentCount(calleeValue, args, 3);
+                    actionThreeObjectParams.Invoke(
+                        args[0].ToObject(),
+                        args[1].ToObject(),
+                        args[2].ToObject());
+                    break;
+                case Func<object, object> funcOneObjectParam:
+                    ThrowIfArgumentCount(calleeValue, args, 1);
+                    _valStack.Push(new SourceValue(funcOneObjectParam.Invoke(args[0].ToObject())));
+                    break;
+                case Func<object, object, object> funcTwoObjectParams:
+                    ThrowIfArgumentCount(calleeValue, args, 2);
+                    _valStack.Push(
+                        new SourceValue(funcTwoObjectParams.Invoke(args[0].ToObject(), args[1].ToObject())));
+                    break;
+                case Func<object, object, object, object> funcThreeObjectParams:
+                    ThrowIfArgumentCount(calleeValue, args, 3);
+                    _valStack.Push(
+                        new SourceValue(
+                            funcThreeObjectParams.Invoke(
+                                args[0].ToObject(),
+                                args[1].ToObject(),
+                                args[2].ToObject())));
+                    break;
                 case Action<object[]> actionObjectArrayParam:
                     actionObjectArrayParam.Invoke(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>()));
                     break;

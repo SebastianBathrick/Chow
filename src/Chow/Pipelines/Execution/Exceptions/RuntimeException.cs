@@ -1,6 +1,6 @@
 using System;
 
-namespace Chow.VM
+namespace Chow
 {
     public abstract class RuntimeException : Exception
     {

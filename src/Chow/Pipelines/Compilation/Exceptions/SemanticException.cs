@@ -1,5 +1,5 @@
 using System;
-using Chow.VM;
+using Chow;
 
 namespace Chow.Semantics
 {

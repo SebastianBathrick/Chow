@@ -1,6 +1,64 @@
 ﻿# Chow
 Chow is a Pythonic scripting language for embedding in .NET projects, with an interpreter targeting .NET Standard 2.0 that has zero external dependencies. Currently, Chow is still in development, so features and implementations are subject to change, and use in production is not recommended until version 1.0.0+.
 
+## Getting Started
+
+Install via NuGet:
+
+```
+dotnet add package Chow
+```
+
+**Run a snippet:**
+
+```csharp
+using Chow;
+
+ChowObject result = ChowEngine.Run("1 + 2");
+Console.WriteLine(result); // 3
+```
+
+**Pass variables in via a scope:**
+
+```csharp
+using Chow;
+
+var scope = new ChowScope();
+scope["name"] = "world";
+
+ChowEngine.Run("greeting = f'Hello, {name}!'", scope);
+
+ChowObject greeting = scope["greeting"];
+Console.WriteLine(greeting); // Hello, world!
+```
+
+**Expose a .NET delegate to Chow code:**
+
+```csharp
+using Chow;
+
+var scope = new ChowScope();
+scope["add"] = ChowObject.Create((Func<int, int, int>)((a, b) => a + b));
+
+ChowObject result = ChowEngine.Run("add(3, 4)", scope);
+Console.WriteLine(result); // 7
+```
+
+**Handle errors:**
+
+```csharp
+using Chow;
+
+try
+{
+    ChowEngine.Run("x = 1 / 0");
+}
+catch (RuntimeException ex)
+{
+    Console.WriteLine(ex.Message); // ZeroDivisionError: division by zero on line 1
+}
+```
+
 ## Usecases
 - Run familiar, Python-like code inside your .NET application in a safe sandboxed environment.
 - Mix native .NET objects and functions with Chow code.
