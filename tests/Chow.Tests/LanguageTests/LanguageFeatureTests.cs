@@ -1,4 +1,4 @@
-﻿using Chow;
+using Chow;
 using Chow.SourceData;
 using Chow.VM;
 
@@ -701,47 +701,47 @@ public class LanguageFeatureTests
         #region Boolean Operands
 
         new(
-            TRUE_STR + PLUS + TRUE_STR,
+            TrueStr + PLUS + TrueStr,
             new(2)
         ),
 
         new(
-            TRUE_STR + PLUS + FALSE_STR,
+            TrueStr + PLUS + FalseStr,
             new(1)
         ),
 
         new(
-            FALSE_STR + PLUS + FALSE_STR,
+            FalseStr + PLUS + FalseStr,
             new(0)
         ),
 
         new(
-            TRUE_STR + MINUS + TRUE_STR,
+            TrueStr + MINUS + TrueStr,
             new(0)
         ),
 
         new(
-            TRUE_STR + MINUS + FALSE_STR,
+            TrueStr + MINUS + FalseStr,
             new(1)
         ),
 
         new(
-            FALSE_STR + MINUS + FALSE_STR,
+            FalseStr + MINUS + FalseStr,
             new(0)
         ),
 
         new(
-            TRUE_STR + TIMES + TRUE_STR,
+            TrueStr + TIMES + TrueStr,
             new(1)
         ),
 
         new(
-            TRUE_STR + TIMES + FALSE_STR,
+            TrueStr + TIMES + FalseStr,
             new(0)
         ),
 
         new(
-            FALSE_STR + TIMES + FALSE_STR,
+            FalseStr + TIMES + FalseStr,
             new(0)
         ),
 
@@ -749,52 +749,52 @@ public class LanguageFeatureTests
         // as a Chow float is 0.0, and it would result in a zero-division exception.
 
         new(
-            TRUE_STR + DIV + TRUE_STR,
+            TrueStr + DIV + TrueStr,
             new(1.0)
         ),
 
         new(
-            FALSE_STR + DIV + TRUE_STR,
+            FalseStr + DIV + TrueStr,
             new(0.0)
         ),
 
         new(
-            TRUE_STR + FLOOR + TRUE_STR,
+            TrueStr + FLOOR + TrueStr,
             new(1)
         ),
 
         new(
-            FALSE_STR + FLOOR + TRUE_STR,
+            FalseStr + FLOOR + TrueStr,
             new(0)
         ),
 
         new(
-            TRUE_STR + MOD + TRUE_STR,
+            TrueStr + MOD + TrueStr,
             new(0)
         ),
 
         new(
-            FALSE_STR + MOD + TRUE_STR,
+            FalseStr + MOD + TrueStr,
             new(0)
         ),
 
         new(
-            TRUE_STR + POW + TRUE_STR,
+            TrueStr + POW + TrueStr,
             new(1)
         ),
 
         new(
-            TRUE_STR + POW + FALSE_STR,
+            TrueStr + POW + FalseStr,
             new(1)
         ),
 
         new(
-            FALSE_STR + POW + TRUE_STR,
+            FalseStr + POW + TrueStr,
             new(0)
         ),
 
         new(
-            FALSE_STR + POW + FALSE_STR,
+            FalseStr + POW + FalseStr,
             new(1)
         ),
 
@@ -837,12 +837,12 @@ public class LanguageFeatureTests
         #region Unary Negation
 
         new(
-            "-" + TRUE_STR,
+            "-" + TrueStr,
             -1
         ),
 
         new(
-            "-" + FALSE_STR,
+            "-" + FalseStr,
             0
         ),
 
@@ -901,42 +901,42 @@ public class LanguageFeatureTests
         // Booleans behave as integers in arithmetic (True is 1, False is 0)
 
         new(
-            "5" + PLUS + TRUE_STR,
+            "5" + PLUS + TrueStr,
             new(6)
         ),
 
         new(
-            "5" + PLUS + FALSE_STR,
+            "5" + PLUS + FalseStr,
             new(5)
         ),
 
         new(
-            TRUE_STR + PLUS + "5",
+            TrueStr + PLUS + "5",
             new(6)
         ),
 
         new(
-            "5" + MINUS + TRUE_STR,
+            "5" + MINUS + TrueStr,
             new(4)
         ),
 
         new(
-            "5" + MINUS + FALSE_STR,
+            "5" + MINUS + FalseStr,
             new(5)
         ),
 
         new(
-            TRUE_STR + MINUS + "5",
+            TrueStr + MINUS + "5",
             new(-4)
         ),
 
         new(
-            "5" + TIMES + TRUE_STR,
+            "5" + TIMES + TrueStr,
             new(5)
         ),
 
         new(
-            "5" + TIMES + FALSE_STR,
+            "5" + TIMES + FalseStr,
             new(0)
         ),
 
@@ -944,52 +944,52 @@ public class LanguageFeatureTests
         // as a Chow float is 0.0, and it would result in a zero-division exception.
 
         new(
-            "5" + DIV + TRUE_STR,
+            "5" + DIV + TrueStr,
             new(5.0) // Division always converts operands to be Chow floats
         ),
 
         new(
-            FALSE_STR + DIV + "5",
+            FalseStr + DIV + "5",
             new(0.0)
         ),
 
         new(
-            "5" + FLOOR + TRUE_STR,
+            "5" + FLOOR + TrueStr,
             new(5)
         ),
 
         new(
-            TRUE_STR + FLOOR + "5",
+            TrueStr + FLOOR + "5",
             new(0)
         ),
 
         new(
-            "5" + MOD + TRUE_STR,
+            "5" + MOD + TrueStr,
             new(0)
         ),
 
         new(
-            TRUE_STR + MOD + "5",
+            TrueStr + MOD + "5",
             new(1)
         ),
 
         new(
-            "5" + POW + TRUE_STR,
+            "5" + POW + TrueStr,
             new(5)
         ),
 
         new(
-            "5" + POW + FALSE_STR,
+            "5" + POW + FalseStr,
             new(1)
         ),
 
         new(
-            TRUE_STR + POW + "5",
+            TrueStr + POW + "5",
             new(1)
         ),
 
         new(
-            FALSE_STR + POW + "5",
+            FalseStr + POW + "5",
             new(0)
         ),
 
@@ -1000,42 +1000,42 @@ public class LanguageFeatureTests
         // A boolean operand mixed with a float yields a Chow float result
 
         new(
-            "2.5" + PLUS + TRUE_STR,
+            "2.5" + PLUS + TrueStr,
             new(3.5)
         ),
 
         new(
-            "2.5" + PLUS + FALSE_STR,
+            "2.5" + PLUS + FalseStr,
             new(2.5)
         ),
 
         new(
-            TRUE_STR + PLUS + "2.5",
+            TrueStr + PLUS + "2.5",
             new(3.5)
         ),
 
         new(
-            "2.5" + MINUS + TRUE_STR,
+            "2.5" + MINUS + TrueStr,
             new(1.5)
         ),
 
         new(
-            "2.5" + MINUS + FALSE_STR,
+            "2.5" + MINUS + FalseStr,
             new(2.5)
         ),
 
         new(
-            TRUE_STR + MINUS + "2.5",
+            TrueStr + MINUS + "2.5",
             new(-1.5)
         ),
 
         new(
-            "2.5" + TIMES + TRUE_STR,
+            "2.5" + TIMES + TrueStr,
             new(2.5)
         ),
 
         new(
-            "2.5" + TIMES + FALSE_STR,
+            "2.5" + TIMES + FalseStr,
             new(0.0)
         ),
 
@@ -1043,52 +1043,52 @@ public class LanguageFeatureTests
         // as a Chow float is 0.0, and it would result in a zero-division exception.
 
         new(
-            "2.5" + DIV + TRUE_STR,
+            "2.5" + DIV + TrueStr,
             new(2.5)
         ),
 
         new(
-            FALSE_STR + DIV + "2.5",
+            FalseStr + DIV + "2.5",
             new(0.0)
         ),
 
         new(
-            "2.5" + FLOOR + TRUE_STR,
+            "2.5" + FLOOR + TrueStr,
             new(2.0)
         ),
 
         new(
-            TRUE_STR + FLOOR + "2.5",
+            TrueStr + FLOOR + "2.5",
             new(0.0)
         ),
 
         new(
-            "2.5" + MOD + TRUE_STR,
+            "2.5" + MOD + TrueStr,
             new(0.5)
         ),
 
         new(
-            TRUE_STR + MOD + "2.5",
+            TrueStr + MOD + "2.5",
             new(1.0)
         ),
 
         new(
-            "2.5" + POW + TRUE_STR,
+            "2.5" + POW + TrueStr,
             new(2.5)
         ),
 
         new(
-            "2.5" + POW + FALSE_STR,
+            "2.5" + POW + FalseStr,
             new(1.0)
         ),
 
         new(
-            TRUE_STR + POW + "2.5",
+            TrueStr + POW + "2.5",
             new(1.0)
         ),
 
         new(
-            FALSE_STR + POW + "2.5",
+            FalseStr + POW + "2.5",
             new(0.0)
         ),
 
@@ -1204,22 +1204,22 @@ public class LanguageFeatureTests
         #region Boolean Unary Minus
 
         new(
-            "-" + TRUE_STR,
+            "-" + TrueStr,
             new(-1)
         ),
 
         new(
-            "-" + FALSE_STR,
+            "-" + FalseStr,
             new(0)
         ),
 
         new(
-            "-(" + TRUE_STR + ")",
+            "-(" + TrueStr + ")",
             new(-1)
         ),
 
         new(
-            "-(" + FALSE_STR + ")",
+            "-(" + FalseStr + ")",
             new(0)
         ),
 
@@ -1256,12 +1256,12 @@ public class LanguageFeatureTests
             FalseChow),
 
         new(
-            "1" + NOT_EQUALS + "2",
+            "1" + NotEquals + "2",
             TrueChow
         ),
 
         new(
-            "1" + NOT_EQUALS + "1",
+            "1" + NotEquals + "1",
             FalseChow
         ),
 
@@ -1286,32 +1286,32 @@ public class LanguageFeatureTests
         ),
 
         new(
-            "1" + GREATER_EQUALS + "1",
+            "1" + GreaterEquals + "1",
             TrueChow
         ),
 
         new(
-            "2" + GREATER_EQUALS + "1",
+            "2" + GreaterEquals + "1",
             TrueChow
         ),
 
         new(
-            "1" + GREATER_EQUALS + "2",
+            "1" + GreaterEquals + "2",
             FalseChow
         ),
 
         new(
-            "1" + LESS_OR_EQUALS + "1",
+            "1" + LessOrEquals + "1",
             TrueChow
         ),
 
         new(
-            "1" + LESS_OR_EQUALS + "2",
+            "1" + LessOrEquals + "2",
             TrueChow
         ),
 
         new(
-            "2" + LESS_OR_EQUALS + "1",
+            "2" + LessOrEquals + "1",
             FalseChow
         ),
 
@@ -1351,12 +1351,12 @@ public class LanguageFeatureTests
         ),
 
         new(
-            "1.0" + NOT_EQUALS + "2.0",
+            "1.0" + NotEquals + "2.0",
             TrueChow
         ),
 
         new(
-            "1.0" + NOT_EQUALS + "1.0",
+            "1.0" + NotEquals + "1.0",
             FalseChow
         ),
 
@@ -1381,32 +1381,32 @@ public class LanguageFeatureTests
         ),
 
         new(
-            "1.0" + GREATER_EQUALS + "1.0",
+            "1.0" + GreaterEquals + "1.0",
             TrueChow
         ),
 
         new(
-            "2.0" + GREATER_EQUALS + "1.0",
+            "2.0" + GreaterEquals + "1.0",
             TrueChow
         ),
 
         new(
-            "1.0" + GREATER_EQUALS + "2.0",
+            "1.0" + GreaterEquals + "2.0",
             FalseChow
         ),
 
         new(
-            "1.0" + LESS_OR_EQUALS + "1.0",
+            "1.0" + LessOrEquals + "1.0",
             TrueChow
         ),
 
         new(
-            "1.0" + LESS_OR_EQUALS + "2.0",
+            "1.0" + LessOrEquals + "2.0",
             TrueChow
         ),
 
         new(
-            "2.0" + LESS_OR_EQUALS + "1.0",
+            "2.0" + LessOrEquals + "1.0",
             FalseChow
         ),
 
@@ -1439,12 +1439,12 @@ public class LanguageFeatureTests
         ),
 
         new(
-            "1" + NOT_EQUALS + "2.0",
+            "1" + NotEquals + "2.0",
             TrueChow
         ),
 
         new(
-            "1" + NOT_EQUALS + "1.0",
+            "1" + NotEquals + "1.0",
             FalseChow
         ),
 
@@ -1469,32 +1469,32 @@ public class LanguageFeatureTests
         ),
 
         new(
-            "1" + GREATER_EQUALS + "1.0",
+            "1" + GreaterEquals + "1.0",
             TrueChow
         ),
 
         new(
-            "2" + GREATER_EQUALS + "1.0",
+            "2" + GreaterEquals + "1.0",
             TrueChow
         ),
 
         new(
-            "1" + GREATER_EQUALS + "2.0",
+            "1" + GreaterEquals + "2.0",
             FalseChow
         ),
 
         new(
-            "1" + LESS_OR_EQUALS + "1.0",
+            "1" + LessOrEquals + "1.0",
             TrueChow
         ),
 
         new(
-            "1" + LESS_OR_EQUALS + "2.0",
+            "1" + LessOrEquals + "2.0",
             TrueChow
         ),
 
         new(
-            "2" + LESS_OR_EQUALS + "1.0",
+            "2" + LessOrEquals + "1.0",
             FalseChow
         ),
 
@@ -1525,12 +1525,12 @@ public class LanguageFeatureTests
         ),
 
         new(
-            "1.0" + NOT_EQUALS + "2",
+            "1.0" + NotEquals + "2",
             TrueChow
         ),
 
         new(
-            "1.0" + NOT_EQUALS + "1",
+            "1.0" + NotEquals + "1",
             FalseChow
         ),
 
@@ -1555,32 +1555,32 @@ public class LanguageFeatureTests
         ),
 
         new(
-            "1.0" + GREATER_EQUALS + "1",
+            "1.0" + GreaterEquals + "1",
             TrueChow
         ),
 
         new(
-            "2.0" + GREATER_EQUALS + "1",
+            "2.0" + GreaterEquals + "1",
             TrueChow
         ),
 
         new(
-            "1.0" + GREATER_EQUALS + "2",
+            "1.0" + GreaterEquals + "2",
             FalseChow
         ),
 
         new(
-            "1.0" + LESS_OR_EQUALS + "1",
+            "1.0" + LessOrEquals + "1",
             TrueChow
         ),
 
         new(
-            "1.0" + LESS_OR_EQUALS + "2",
+            "1.0" + LessOrEquals + "2",
             TrueChow
         ),
 
         new(
-            "2.0" + LESS_OR_EQUALS + "1",
+            "2.0" + LessOrEquals + "1",
             FalseChow
         ),
 
@@ -1618,12 +1618,12 @@ public class LanguageFeatureTests
         ),
 
         new(
-            "1" + LESS + "2" + LESS_OR_EQUALS + "2",
+            "1" + LESS + "2" + LessOrEquals + "2",
             TrueChow
         ),
 
         new(
-            "1" + LESS_OR_EQUALS + "1" + LESS + "2",
+            "1" + LessOrEquals + "1" + LESS + "2",
             TrueChow
         ),
 
@@ -1639,7 +1639,7 @@ public class LanguageFeatureTests
         ),
 
         new(
-            "1" + NOT_EQUALS + "2" + NOT_EQUALS + "3",
+            "1" + NotEquals + "2" + NotEquals + "3",
             TrueChow
         ),
 
@@ -1651,7 +1651,7 @@ public class LanguageFeatureTests
 
         // Mixed integer and float operands in a chain
         new(
-            "1" + LESS + "2.0" + LESS_OR_EQUALS + "2",
+            "1" + LESS + "2.0" + LessOrEquals + "2",
             TrueChow
         ),
 
@@ -1665,22 +1665,22 @@ public class LanguageFeatureTests
         #region And Operator
 
         new(
-            TRUE_STR + AND + TRUE_STR,
+            TrueStr + AND + TrueStr,
             TrueChow
         ),
 
         new(
-            TRUE_STR + AND + FALSE_STR,
+            TrueStr + AND + FalseStr,
             FalseChow
         ),
 
         new(
-            FALSE_STR + AND + TRUE_STR,
+            FalseStr + AND + TrueStr,
             FalseChow
         ),
 
         new(
-            FALSE_STR + AND + FALSE_STR,
+            FalseStr + AND + FalseStr,
             FalseChow
         ),
 
@@ -1689,22 +1689,22 @@ public class LanguageFeatureTests
         #region Or Operator
 
         new(
-            TRUE_STR + OR + TRUE_STR,
+            TrueStr + OR + TrueStr,
             TrueChow
         ),
 
         new(
-            TRUE_STR + OR + FALSE_STR,
+            TrueStr + OR + FalseStr,
             TrueChow
         ),
 
         new(
-            FALSE_STR + OR + TRUE_STR,
+            FalseStr + OR + TrueStr,
             TrueChow
         ),
 
         new(
-            FALSE_STR + OR + FALSE_STR,
+            FalseStr + OR + FalseStr,
             FalseChow
         ),
 
@@ -1715,32 +1715,32 @@ public class LanguageFeatureTests
         #region Value-Returning And Operator
 
         new(
-            FALSEY_INT64 + AND + "\"rhs\"",
+            FalseyInt64 + AND + "\"rhs\"",
             0L
         ),
 
         new(
-            TRUTHY_INT64 + AND + "\"rhs\"",
+            TruthyInt64 + AND + "\"rhs\"",
             "rhs"
         ),
 
         new(
-            FALSEY_STR + AND + "3",
+            FalseyStr + AND + "3",
             string.Empty
         ),
 
         new(
-            TRUTHY_STR + AND + "3",
+            TruthyStr + AND + "3",
             3
         ),
 
         new(
-            NONE_STR + AND + "3",
+            NoneStr + AND + "3",
             ChowObject.None
         ),
 
         new(
-            TRUTHY_LIST + AND + "\"rhs\"",
+            TruthyList + AND + "\"rhs\"",
             "rhs"
         ),
 
@@ -1749,32 +1749,32 @@ public class LanguageFeatureTests
         #region Value-Returning Or Operator
 
         new(
-            FALSEY_INT64 + OR + "\"rhs\"",
+            FalseyInt64 + OR + "\"rhs\"",
             "rhs"
         ),
 
         new(
-            TRUTHY_INT64 + OR + "\"rhs\"",
+            TruthyInt64 + OR + "\"rhs\"",
             1
         ),
 
         new(
-            FALSEY_STR + OR + "3",
+            FalseyStr + OR + "3",
             3
         ),
 
         new(
-            TRUTHY_STR + OR + "3",
+            TruthyStr + OR + "3",
             "Truthy string"
         ),
 
         new(
-            NONE_STR + OR + "3",
+            NoneStr + OR + "3",
             3
         ),
 
         new(
-            FALSEY_LIST + OR + "\"rhs\"",
+            FalseyList + OR + "\"rhs\"",
             "rhs"
         ),
 
@@ -1783,22 +1783,22 @@ public class LanguageFeatureTests
         #region Short-Circuiting
 
         new(
-            FALSEY_INT64 + AND + "(" + "1" + DIV + "0" + ")",
+            FalseyInt64 + AND + "(" + "1" + DIV + "0" + ")",
             0
         ),
 
         new(
-            TRUTHY_INT64 + OR + "(" + "1" + DIV + "0" + ")",
+            TruthyInt64 + OR + "(" + "1" + DIV + "0" + ")",
             1
         ),
 
         new(
-            FALSE_STR + AND + "(" + "1" + DIV + "0" + ")",
+            FalseStr + AND + "(" + "1" + DIV + "0" + ")",
             FalseChow
         ),
 
         new(
-            TRUE_STR + OR + "(" + "1" + DIV + "0" + ")",
+            TrueStr + OR + "(" + "1" + DIV + "0" + ")",
             TrueChow
         ),
 
@@ -1809,33 +1809,33 @@ public class LanguageFeatureTests
         #region Boolean Unary Not
 
         new(
-            NOT + TRUE_STR,
+            NOT + TrueStr,
             FalseChow
             ),
         
         new(
-            NOT + FALSE_STR,
+            NOT + FalseStr,
             TrueChow
         ),
 
         // Behaves like not (not (not True))
         new(
-            NOT + NOT + NOT + TRUE_STR,
+            NOT + NOT + NOT + TrueStr,
             FalseChow
         ),
 
         new(
-            NOT + NOT + NOT + FALSE_STR,
+            NOT + NOT + NOT + FalseStr,
             TrueChow
         ),
 
         new(
-            NOT + "(" + TRUE_STR + ")",
+            NOT + "(" + TrueStr + ")",
             FalseChow
         ),
 
         new(
-            NOT + "(" + FALSE_STR + ")",
+            NOT + "(" + FalseStr + ")",
             TrueChow
         ),
 
@@ -1883,62 +1883,62 @@ public class LanguageFeatureTests
         
         // None
         new(
-            NOT + NONE_STR,
+            NOT + NoneStr,
             TrueChow
             ),
 
         // Strings
         new(
-            NOT + TRUTHY_STR,
+            NOT + TruthyStr,
             FalseChow
         ),
 
         new(
-            NOT + FALSEY_STR,
+            NOT + FalseyStr,
            TrueChow
         ),
 
         // Integers
         new(
-            NOT + TRUTHY_INT64,
+            NOT + TruthyInt64,
             FalseChow
         ),
 
         new(
-            NOT + FALSEY_INT64,
+            NOT + FalseyInt64,
             TrueChow
         ),
 
         // Floats
         new(
-            NOT + TRUTHY_FLOAT64,
+            NOT + TruthyFloat64,
             FalseChow
         ),
 
         new(
-            NOT + FALSEY_FLOAT64,
+            NOT + FalseyFloat64,
             TrueChow
         ),
 
         // Lists
         new(
-            NOT + TRUTHY_LIST,
+            NOT + TruthyList,
             FalseChow
         ),
 
         new(
-            NOT + FALSEY_LIST,
+            NOT + FalseyList,
             TrueChow
         ),
         
         // Dictionaries
         new(
-            NOT + TRUTHY_DICT,
+            NOT + TruthyDict,
             FalseChow
         ),
 
         new(
-            NOT + FALSEY_DICT,
+            NOT + FalseyDict,
             TrueChow
         ),
         
@@ -1946,12 +1946,12 @@ public class LanguageFeatureTests
         // TODO: Uncomment after making range something other than a built-in function
         /*
         new(
-            NOT + TRUTHY_RANGE,
+            NOT + TruthyRange,
             FalseChow
         ),
 
         new(
-            NOT + FALSEY_RANGE,
+            NOT + FalseyRange,
             TrueChow
         ),
         */
@@ -2259,17 +2259,17 @@ public class LanguageFeatureTests
         // Sequences '\n\r', '\r\r', and '\n\n' would be two lines
 
         new(
-            NEWLINE_LINUX_MAC,
+            NewlineLinuxMac,
             ChowObject.None
         ),
 
         new(
-            NEWLINE_WINDOWS,
+            NewlineWindows,
             ChowObject.None
         ),
 
         new(
-            NEWLINE_OLD_MAC,
+            NewlineOldMac,
             ChowObject.None
         ),
 
@@ -2281,12 +2281,12 @@ public class LanguageFeatureTests
         ),
 
         new(
-            SINGLE_INDENT_SPACES,
+            SingleIndentSpaces,
             ChowObject.None
         ),
 
         new(
-            SINGLE_INDENT_SPACES + SINGLE_INDENT_SPACES,
+            SingleIndentSpaces + SingleIndentSpaces,
             ChowObject.None
         ),
 
@@ -2295,12 +2295,12 @@ public class LanguageFeatureTests
         #region Pure Tabs
 
         new(
-            SINGLE_INDENT_TAB,
+            SingleIndentTab,
             ChowObject.None
         ),
 
         new(
-            SINGLE_INDENT_TAB + SINGLE_INDENT_TAB,
+            SingleIndentTab + SingleIndentTab,
             ChowObject.None
         ),
 
@@ -2309,12 +2309,12 @@ public class LanguageFeatureTests
         #region Mixed Spaces and Tabs
 
         new(
-            SINGLE_INDENT_SPACES + SINGLE_INDENT_TAB,
+            SingleIndentSpaces + SingleIndentTab,
             ChowObject.None
         ),
 
         new(
-            SINGLE_INDENT_TAB + SINGLE_INDENT_SPACES,
+            SingleIndentTab + SingleIndentSpaces,
             ChowObject.None
         ),
 
@@ -2323,17 +2323,17 @@ public class LanguageFeatureTests
         #region Multiple Newlines (Same Style)
 
         new(
-            NEWLINE_LINUX_MAC + NEWLINE_LINUX_MAC,
+            NewlineLinuxMac + NewlineLinuxMac,
             ChowObject.None
         ),
 
         new(
-            NEWLINE_WINDOWS + NEWLINE_WINDOWS,
+            NewlineWindows + NewlineWindows,
             ChowObject.None
         ),
 
         new(
-            NEWLINE_OLD_MAC + NEWLINE_OLD_MAC,
+            NewlineOldMac + NewlineOldMac,
             ChowObject.None
         ),
 
@@ -2342,22 +2342,22 @@ public class LanguageFeatureTests
         #region Multiple Newlines (Mixed Styles)
 
         new(
-            NEWLINE_LINUX_MAC + NEWLINE_WINDOWS,
+            NewlineLinuxMac + NewlineWindows,
             ChowObject.None
         ),
 
         new(
-            NEWLINE_WINDOWS + NEWLINE_OLD_MAC,
+            NewlineWindows + NewlineOldMac,
             ChowObject.None
         ),
 
         new(
-            NEWLINE_OLD_MAC + NEWLINE_LINUX_MAC,
+            NewlineOldMac + NewlineLinuxMac,
             ChowObject.None
         ),
 
         new(
-            NEWLINE_LINUX_MAC + NEWLINE_WINDOWS + NEWLINE_OLD_MAC,
+            NewlineLinuxMac + NewlineWindows + NewlineOldMac,
             ChowObject.None
         ),
 
@@ -2366,27 +2366,27 @@ public class LanguageFeatureTests
         #region Whitespace Combined With Newlines
 
         new(
-            SINGLE_INDENT_SPACES + NEWLINE_LINUX_MAC,
+            SingleIndentSpaces + NewlineLinuxMac,
             ChowObject.None
         ),
 
         new(
-            NEWLINE_LINUX_MAC + SINGLE_INDENT_SPACES,
+            NewlineLinuxMac + SingleIndentSpaces,
             ChowObject.None
         ),
 
         new(
-            SINGLE_INDENT_TAB + NEWLINE_WINDOWS + SINGLE_INDENT_TAB,
+            SingleIndentTab + NewlineWindows + SingleIndentTab,
             ChowObject.None
         ),
 
         new(
-            NEWLINE_LINUX_MAC + SINGLE_INDENT_SPACES + NEWLINE_OLD_MAC,
+            NewlineLinuxMac + SingleIndentSpaces + NewlineOldMac,
             ChowObject.None
         ),
 
         new(
-            SINGLE_INDENT_SPACES + NEWLINE_WINDOWS + SINGLE_INDENT_TAB + NEWLINE_LINUX_MAC,
+            SingleIndentSpaces + NewlineWindows + SingleIndentTab + NewlineLinuxMac,
             ChowObject.None
         ),
 
@@ -2402,7 +2402,7 @@ public class LanguageFeatureTests
         ),
 
         new(
-            "\f" + NEWLINE_LINUX_MAC + SINGLE_INDENT_SPACES,
+            "\f" + NewlineLinuxMac + SingleIndentSpaces,
             ChowObject.None
         ),
 
@@ -2412,34 +2412,34 @@ public class LanguageFeatureTests
 
         // Comment with no trailing newline — SkipRemainingLineChars consumes it and reaches EOF
         new(
-            CODE_COMMENT,
+            CodeComment,
             ChowObject.None
         ),
 
         new(
-            CODE_COMMENT + NEWLINE_LINUX_MAC,
+            CodeComment + NewlineLinuxMac,
             ChowObject.None
         ),
 
         // Multiple comment lines separated by different newline styles
         new(
-            CODE_COMMENT + NEWLINE_LINUX_MAC + CODE_COMMENT,
+            CodeComment + NewlineLinuxMac + CodeComment,
             ChowObject.None
         ),
 
         new(
-            CODE_COMMENT + NEWLINE_WINDOWS + CODE_COMMENT + NEWLINE_OLD_MAC + CODE_COMMENT,
+            CodeComment + NewlineWindows + CodeComment + NewlineOldMac + CodeComment,
             ChowObject.None
         ),
 
         // Leading whitespace before a comment (spaces/tabs are consumed as indent chars first)
         new(
-            SINGLE_INDENT_SPACES + CODE_COMMENT,
+            SingleIndentSpaces + CodeComment,
             ChowObject.None
         ),
 
         new(
-            SINGLE_INDENT_TAB + CODE_COMMENT + NEWLINE_LINUX_MAC,
+            SingleIndentTab + CodeComment + NewlineLinuxMac,
             ChowObject.None
         ),
 
@@ -2761,9 +2761,9 @@ public class LanguageFeatureTests
     
     #region Data Type Literals
 
-    const string TRUE_STR = "True";
-    const string FALSE_STR = "False";
-    const string NONE_STR = "None";
+    const string TrueStr = "True";
+    const string FalseStr = "False";
+    const string NoneStr = "None";
 
     #endregion
     
@@ -2782,11 +2782,11 @@ public class LanguageFeatureTests
     
     //--- Comparison Operators ---
     const string EQUALS = " == ";
-    const string NOT_EQUALS = " != ";
+    const string NotEquals = " != ";
     const string LESS = " < ";
     const string GREATER = " > ";
-    const string GREATER_EQUALS = " >= ";
-    const string LESS_OR_EQUALS = " <= ";
+    const string GreaterEquals = " >= ";
+    const string LessOrEquals = " <= ";
 
     //--- Logic Operators ---
     const string AND = " and ";
@@ -2798,34 +2798,34 @@ public class LanguageFeatureTests
     #region Newlines, Whitespace, and Comments
 
     //--- Newlines ---
-    const string NEWLINE_LINUX_MAC = "\n";
-    const string NEWLINE_WINDOWS = "\r\n";
-    const string NEWLINE_OLD_MAC = "\r";
+    const string NewlineLinuxMac = "\n";
+    const string NewlineWindows = "\r\n";
+    const string NewlineOldMac = "\r";
 
     //--- Whitespace ---
-    const string SINGLE_INDENT_SPACES = "    "; // Indents used for blocks are 4 spaces
-    const string SINGLE_INDENT_TAB = "\t";
-    const string CODE_COMMENT = "# This is a comment";
+    const string SingleIndentSpaces = "    "; // Indents used for blocks are 4 spaces
+    const string SingleIndentTab = "\t";
+    const string CodeComment = "# This is a comment";
 
     #endregion
 
     #region Truthy and Falsey Values
 
     //--- Truthy Values ---
-    const string TRUTHY_STR = "\"Truthy string\""; // Anything with more than one character
-    const int TRUTHY_INT64 = 1; // Non-zero integer
-    const double TRUTHY_FLOAT64 = 1.0; // Non-zero Chow float
-    const string TRUTHY_LIST = "[1, 2, 3]"; // Non-empty list
-    const string TRUTHY_DICT = "{'a': 1, 'b': 2, 'c': 3}"; // Non-empty dict
-    // const string TRUTHY_RANGE = "range(1, 10)"; // Non-empty range
+    const string TruthyStr = "\"Truthy string\""; // Anything with more than one character
+    const int TruthyInt64 = 1; // Non-zero integer
+    const double TruthyFloat64 = 1.0; // Non-zero Chow float
+    const string TruthyList = "[1, 2, 3]"; // Non-empty list
+    const string TruthyDict = "{'a': 1, 'b': 2, 'c': 3}"; // Non-empty dict
+    // const string TruthyRange = "range(1, 10)"; // Non-empty range
 
     //--- Falsey Values ---
-    const string FALSEY_STR = "\"\""; // Empty string
-    const string FALSEY_INT64 = "0"; // Zero integer
-    const string FALSEY_FLOAT64 = "0.0"; // Zero Chow float
-    const string FALSEY_LIST = "[]"; // Empty list
-    const string FALSEY_DICT = "{}"; // Empty dict
-    // const string FALSEY_RANGE = "range(0)"; // Empty range
+    const string FalseyStr = "\"\""; // Empty string
+    const string FalseyInt64 = "0"; // Zero integer
+    const string FalseyFloat64 = "0.0"; // Zero Chow float
+    const string FalseyList = "[]"; // Empty list
+    const string FalseyDict = "{}"; // Empty dict
+    // const string FalseyRange = "range(0)"; // Empty range
 
     #endregion
 

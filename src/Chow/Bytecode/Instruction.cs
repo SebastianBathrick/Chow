@@ -8,11 +8,11 @@ namespace Chow.Bytecode
     /// </summary>
     readonly struct Instruction
     {
-        const int NO_OPERAND = -1;
+        const int NoOperand = -1;
 
         /// <summary>
         /// Additional information that may be required for specific instructions, such as the
-        /// index of a constant or variable name. Default value is <see cref="NO_OPERAND"/>,
+        /// index of a constant or variable name. Default value is <see cref="NoOperand"/>,
         /// indicating no operand.
         /// </summary>
         public int Operand { get; }
@@ -29,10 +29,10 @@ namespace Chow.Bytecode
         /// </summary>
         /// <param name="code">The operation code that defines the type of instruction to create.</param>
         /// <param name="operand">
-        /// The operand value associated with the instruction. Defaults to NO_OPERAND if
+        /// The operand value associated with the instruction. Defaults to NoOperand if
         /// not specified.
         /// </param>
-        public Instruction(OperationCode code, int operand = NO_OPERAND)
+        public Instruction(OperationCode code, int operand = NoOperand)
         {
             Code = code;
             Operand = operand;

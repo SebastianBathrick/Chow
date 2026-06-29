@@ -2,11 +2,11 @@ namespace Chow.VM
 {
     class SubscriptException : RuntimeException
     {
-        const string EXCEPTION_ALIAS = "KeyError";
+        const string ExceptionAlias = "KeyError";
 
         public string KeyRepr { get; }
 
-        public SubscriptException(string keyRepr, int lineNumber = -1) : base(EXCEPTION_ALIAS, keyRepr, lineNumber)
+        public SubscriptException(string keyRepr, int lineNumber = -1) : base(ExceptionAlias, keyRepr, lineNumber)
         {
             KeyRepr = keyRepr;
         }

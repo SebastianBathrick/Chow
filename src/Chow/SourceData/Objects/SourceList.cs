@@ -7,23 +7,23 @@ namespace Chow.SourceData
 {
     class SourceList : SourceObject
     {
-        const string METHOD_APPEND_NAME = "append";
-        const string METHOD_CLEAR_NAME = "clear";
-        const string METHOD_INSERT_NAME = "insert";
-        const string METHOD_POP_NAME = "pop";
-        const string METHOD_REMOVE_NAME = "remove";
-        const string METHOD_REVERSE_NAME = "reverse";
+        const string MethodAppendName = "append";
+        const string MethodClearName = "clear";
+        const string MethodInsertName = "insert";
+        const string MethodPopName = "pop";
+        const string MethodRemoveName = "remove";
+        const string MethodReverseName = "reverse";
 
-        const string INDEX_TYPE_ERROR_FORMAT = "list indices must be integers, not {0}";
+        const string IndexTypeErrorFormat = "list indices must be integers, not {0}";
 
         static readonly List<string> MethodNames = new List<string>
         {
-            METHOD_APPEND_NAME,
-            METHOD_CLEAR_NAME,
-            METHOD_INSERT_NAME,
-            METHOD_POP_NAME,
-            METHOD_REMOVE_NAME,
-            METHOD_REVERSE_NAME
+            MethodAppendName,
+            MethodClearName,
+            MethodInsertName,
+            MethodPopName,
+            MethodRemoveName,
+            MethodReverseName
         };
 
         readonly List<SourceValue> _elements = new List<SourceValue>();
@@ -52,14 +52,14 @@ namespace Chow.SourceData
                 return GetSlice(slice.Start, slice.Stop, slice.Step);
             }
 
-            throw new DataTypeException(string.Format(INDEX_TYPE_ERROR_FORMAT, key.DataType));
+            throw new DataTypeException(string.Format(IndexTypeErrorFormat, key.DataType));
         }
 
         public override void SetItem(SourceValue key, SourceValue value)
         {
             if (key.DataType != DataType.Long)
             {
-                throw new DataTypeException(string.Format(INDEX_TYPE_ERROR_FORMAT, key.DataType));
+                throw new DataTypeException(string.Format(IndexTypeErrorFormat, key.DataType));
             }
 
             this[(int)key.ToLong()] = value;
@@ -245,17 +245,17 @@ namespace Chow.SourceData
         {
             switch (methodName)
             {
-                case METHOD_APPEND_NAME:
+                case MethodAppendName:
                     return Append;
-                case METHOD_CLEAR_NAME:
+                case MethodClearName:
                     return Clear;
-                case METHOD_INSERT_NAME:
+                case MethodInsertName:
                     return Insert;
-                case METHOD_POP_NAME:
+                case MethodPopName:
                     return Pop;
-                case METHOD_REMOVE_NAME:
+                case MethodRemoveName:
                     return Remove;
-                case METHOD_REVERSE_NAME:
+                case MethodReverseName:
                     return Reverse;
                 default:
                     throw new NotImplementedException(

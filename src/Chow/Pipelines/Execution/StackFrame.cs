@@ -10,7 +10,7 @@ namespace Chow.VM.FunctionCalls
     /// </summary>
     class StackFrame
     {
-        const int INIT_INSTR_IDX = 0;
+        const int InitInstrIdx = 0;
 
         // TODO: Start using "instr" to abbreviate "instruction"
         int _instrIdx;
@@ -38,7 +38,7 @@ namespace Chow.VM.FunctionCalls
         {
             BytecodeChunk = bytecodeChunk;
             Scope = scope;
-            _instrIdx = INIT_INSTR_IDX;
+            _instrIdx = InitInstrIdx;
         }
 
         /// <summary>Advances the instruction pointer by one.</summary>

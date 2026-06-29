@@ -2,14 +2,14 @@ namespace Chow.VM
 {
     class ZeroDivisionException : RuntimeException
     {
-        const string EXCEPTION_ALIAS = "ZeroDivisionError";
-        const string DEFAULT_MESSAGE = "division by zero";
+        const string ExceptionAlias = "ZeroDivisionError";
+        const string DefaultMessage = "division by zero";
 
-        public ZeroDivisionException(int lineNumber = -1) : base(EXCEPTION_ALIAS, DEFAULT_MESSAGE, lineNumber)
+        public ZeroDivisionException(int lineNumber = -1) : base(ExceptionAlias, DefaultMessage, lineNumber)
         {
         }
 
-        public ZeroDivisionException(string message, int lineNumber = -1) : base(EXCEPTION_ALIAS, message, lineNumber)
+        public ZeroDivisionException(string message, int lineNumber = -1) : base(ExceptionAlias, message, lineNumber)
         {
         }
     }

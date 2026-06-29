@@ -11,12 +11,12 @@ namespace Chow.Semantics
     /// </summary>
     sealed class SemanticException : Exception
     {
-        const string EXCEPTION_ALIAS = "SyntaxError";
+        const string ExceptionAlias = "SyntaxError";
 
         public int LineNum { get; }
 
         public SemanticException(string msg, int lineNum) 
-            : base($"[line {lineNum}] {EXCEPTION_ALIAS}: {msg}")
+            : base($"[line {lineNum}] {ExceptionAlias}: {msg}")
         {
             LineNum = lineNum;
         }

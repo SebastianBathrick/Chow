@@ -24,7 +24,7 @@ namespace Chow.Tokens.Scanning
     {
         #region Fields & Consts
 
-        const int SINGLE_INDENT_SIZE = 4;
+        const int SingleIndentSize = 4;
 
         readonly string _sourceCode;
         readonly ITokenStream _tokenStream;
@@ -203,7 +203,7 @@ namespace Chow.Tokens.Scanning
                 if (CurrentChar == '\t')
                 {
                     // Tab rounds column up to the next multiple of 4 (Python rule)
-                    indentColumn = (indentColumn / SINGLE_INDENT_SIZE + 1) * SINGLE_INDENT_SIZE;
+                    indentColumn = (indentColumn / SingleIndentSize + 1) * SingleIndentSize;
                 }
                 else
                 {

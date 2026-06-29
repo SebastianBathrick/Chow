@@ -8,13 +8,13 @@ namespace Chow.StandardLibrary.BuiltIns
     // The overhaul will include built-in functions THAT DO NOT USE DELEGATES.
     readonly struct BuiltInDefinition
     {
-        const int ARGUMENT_COUNT_UNDEFINED = 0;
+        const int ArgumentCountUndefined = 0;
 
         public string Name { get; }
         public int MinimumArguments { get; }
         public int MaximumArguments { get; }
 
-        public bool HasParameters => MaximumArguments > ARGUMENT_COUNT_UNDEFINED;
+        public bool HasParameters => MaximumArguments > ArgumentCountUndefined;
 
         public Func<SourceValue[], SourceValue> ValueReturnDelegateWithParams { get; }
         public Func<SourceValue> ValueReturnDelegate { get; }
@@ -143,8 +143,8 @@ namespace Chow.StandardLibrary.BuiltIns
             Func<SourceValue> valueReturnDelegate)
         {
             Name = name;
-            MinimumArguments = ARGUMENT_COUNT_UNDEFINED;
-            MaximumArguments = ARGUMENT_COUNT_UNDEFINED;
+            MinimumArguments = ArgumentCountUndefined;
+            MaximumArguments = ArgumentCountUndefined;
             IsVoid = false;
             ValueReturnDelegateWithParams = null;
             ValueReturnDelegate = valueReturnDelegate;
@@ -163,8 +163,8 @@ namespace Chow.StandardLibrary.BuiltIns
             Action voidDelegate)
         {
             Name = name;
-            MinimumArguments = ARGUMENT_COUNT_UNDEFINED;
-            MaximumArguments = ARGUMENT_COUNT_UNDEFINED;
+            MinimumArguments = ArgumentCountUndefined;
+            MaximumArguments = ArgumentCountUndefined;
             IsVoid = true;
             ValueReturnDelegateWithParams = null;
             ValueReturnDelegate = null;

@@ -12,7 +12,7 @@ namespace Chow.VM.FunctionCalls
     /// </summary>
     class CallStack
     {
-        const string ARITY_ERROR_FORMAT = "{0}() takes {1} positional arguments but {2} were given";
+        const string ArityErrorFormat = "{0}() takes {1} positional arguments but {2} were given";
 
         readonly StackFrame _moduleLvl;
         readonly Stack<StackFrame> _callFrames;
@@ -198,7 +198,7 @@ namespace Chow.VM.FunctionCalls
             if (argCount != sourceFunc.ParamCount)
             {
                 throw new DataTypeException(
-                    string.Format(ARITY_ERROR_FORMAT, sourceFunc.Name, sourceFunc.ParamCount, argCount));
+                    string.Format(ArityErrorFormat, sourceFunc.Name, sourceFunc.ParamCount, argCount));
             }
 
             var frameScope = new Scope(sourceFunc.Enclosing);

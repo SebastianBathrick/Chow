@@ -59,21 +59,21 @@ namespace Chow.StandardLibrary.BuiltIns
 
         static List<(string, object)> CreateBuiltInsMap()
         {
-            var printDef = new BuiltInDefinition(BUILT_IN_NAME_PRINT, Print, 0, short.MaxValue);
-            var inputDef = new BuiltInDefinition(BUILT_IN_NAME_INPUT, Input, 0, 1);
-            var clearDef = new BuiltInDefinition(BUILT_IN_NAME_CLEAR, Clear);
-            var floatDef = new BuiltInDefinition(BUILT_IN_NAME_FLOAT, Float, 0, 1);
-            var strDef = new BuiltInDefinition(BUILT_IN_NAME_STR, Str, 0, 1);
-            var intDef = new BuiltInDefinition(BUILT_IN_NAME_INT, Int, 0, 1);
-            var boolDef = new BuiltInDefinition(BUILT_IN_NAME_BOOL, Bool, 0, 1);
-            var listDef = new BuiltInDefinition(BUILT_IN_NAME_LIST, List, 0, 1);
-            var dictDef = new BuiltInDefinition(BUILT_IN_NAME_DICT, Dict, 0, 1);
-            var lenDef = new BuiltInDefinition(BUILT_IN_NAME_LEN, Len, 1, 1);
-            var absDef = new BuiltInDefinition(BUILT_IN_NAME_ABS, Abs, 1, 1);
-            var roundDef = new BuiltInDefinition(BUILT_IN_NAME_ROUND, Round, 1, 2);
-            var minDef = new BuiltInDefinition(BUILT_IN_NAME_MIN, Min, 1, short.MaxValue);
-            var maxDef = new BuiltInDefinition(BUILT_IN_NAME_MAX, Max, 1, short.MaxValue);
-            var rangeDef = new BuiltInDefinition(BUILT_IN_NAME_RANGE, Range, 1, 3);
+            var printDef = new BuiltInDefinition(BuiltInNamePrint, Print, 0, short.MaxValue);
+            var inputDef = new BuiltInDefinition(BuiltInNameInput, Input, 0, 1);
+            var clearDef = new BuiltInDefinition(BuiltInNameClear, Clear);
+            var floatDef = new BuiltInDefinition(BuiltInNameFloat, Float, 0, 1);
+            var strDef = new BuiltInDefinition(BuiltInNameStr, Str, 0, 1);
+            var intDef = new BuiltInDefinition(BuiltInNameInt, Int, 0, 1);
+            var boolDef = new BuiltInDefinition(BuiltInNameBool, Bool, 0, 1);
+            var listDef = new BuiltInDefinition(BuiltInNameList, List, 0, 1);
+            var dictDef = new BuiltInDefinition(BuiltInNameDict, Dict, 0, 1);
+            var lenDef = new BuiltInDefinition(BuiltInNameLen, Len, 1, 1);
+            var absDef = new BuiltInDefinition(BuiltInNameAbs, Abs, 1, 1);
+            var roundDef = new BuiltInDefinition(BuiltInNameRound, Round, 1, 2);
+            var minDef = new BuiltInDefinition(BuiltInNameMin, Min, 1, short.MaxValue);
+            var maxDef = new BuiltInDefinition(BuiltInNameMax, Max, 1, short.MaxValue);
+            var rangeDef = new BuiltInDefinition(BuiltInNameRange, Range, 1, 3);
 
             return new List<(string, object)>
             {
@@ -423,21 +423,21 @@ namespace Chow.StandardLibrary.BuiltIns
 
         #region Constants
 
-        const string BUILT_IN_NAME_PRINT = "print";
-        const string BUILT_IN_NAME_INPUT = "input";
-        const string BUILT_IN_NAME_CLEAR = "clear";
-        const string BUILT_IN_NAME_FLOAT = "float";
-        const string BUILT_IN_NAME_STR = "str";
-        const string BUILT_IN_NAME_INT = "int";
-        const string BUILT_IN_NAME_BOOL = "bool";
-        const string BUILT_IN_NAME_LIST = "list";
-        const string BUILT_IN_NAME_DICT = "dict";
-        const string BUILT_IN_NAME_LEN = "len";
-        const string BUILT_IN_NAME_ABS = "abs";
-        const string BUILT_IN_NAME_ROUND = "round";
-        const string BUILT_IN_NAME_MIN = "min";
-        const string BUILT_IN_NAME_MAX = "max";
-        const string BUILT_IN_NAME_RANGE = "range";
+        const string BuiltInNamePrint = "print";
+        const string BuiltInNameInput = "input";
+        const string BuiltInNameClear = "clear";
+        const string BuiltInNameFloat = "float";
+        const string BuiltInNameStr = "str";
+        const string BuiltInNameInt = "int";
+        const string BuiltInNameBool = "bool";
+        const string BuiltInNameList = "list";
+        const string BuiltInNameDict = "dict";
+        const string BuiltInNameLen = "len";
+        const string BuiltInNameAbs = "abs";
+        const string BuiltInNameRound = "round";
+        const string BuiltInNameMin = "min";
+        const string BuiltInNameMax = "max";
+        const string BuiltInNameRange = "range";
 
         #endregion
     }

@@ -6,7 +6,7 @@ namespace Chow.SourceData
     /// </summary>
     sealed class SourceSlice : SourceObject
     {
-        const string REPR_FORMAT = "slice({0}, {1}, {2})";
+        const string ReprFormat = "slice({0}, {1}, {2})";
 
         public override DataType Type => DataType.Slice;
 
@@ -23,7 +23,7 @@ namespace Chow.SourceData
 
         public override string ToRepresentation()
         {
-            return string.Format(REPR_FORMAT, Start, Stop, Step);
+            return string.Format(ReprFormat, Start, Stop, Step);
         }
     }
 }
