@@ -10,6 +10,7 @@
         <Version>0.1.32</Version>
         <AssemblyName>Chow</AssemblyName>
         <GenerateDocumentationFile>True</GenerateDocumentationFile>
+        <IsAotCompatible>true</IsAotCompatible>
     </PropertyGroup>
 
     <ItemGroup>
