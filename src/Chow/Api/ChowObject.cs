@@ -113,6 +113,10 @@ namespace Chow
 
         #region Create Methods
 
+        /// <summary>Creates a Chow object from a native .NET value.</summary>
+        /// <param name="netVal">The .NET value to wrap, such as a primitive, string, collection, or
+        /// delegate, that the resulting Chow object represents.</param>
+        /// <returns>A Chow object representing <paramref name="netVal"/>.</returns>
         public static ChowObject Create(object netVal)
         {
             return (ChowObject)ChowObjectFactory.CreateObject(netVal);
