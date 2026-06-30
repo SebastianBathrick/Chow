@@ -37,3 +37,22 @@ Once Chow's source code is converted into a bytecode chunk, its actual logic is 
     *Path:* [..\src\Chow\Pipelines\Execution\Processor.cs](../src/Chow/Pipelines/Execution/Processor.cs)
 
     `Processor` executes the primary business logic of the interpreter's virtual machine, running a bytecode chunk against a global scope using an operand stack and a call stack of frames, and returning the result of the last evaluated expression statement to the caller.
+
+## Value Model
+
+Chow keeps values in two parallel representations and converts between them only at the public boundary. Keeping the two straight is essential when working across the API/VM line.
+
+### SourceValue
+Path: [`..\src\Chow\SourceData\SourceValue.cs`](../src/Chow/SourceData/SourceValue.cs)
+
+`SourceValue` is the internal runtime value—what the virtual machine pushes and pops. It is an immutable `readonly struct` with an explicit memory layout (a union over `object`, `long`, and `double`) tagged by a `DataType`, letting it hold any Chow type (`int`, `float`, `str`, `bool`, `None`, `list`, `dict`, `range`, and boxed .NET types). Object-like types (lists, dicts, ranges, functions, scopes) implement `ISourceObject` ([..\src\Chow\SourceData\Objects](../src/Chow/SourceData/Objects)) and are constructed through `SourceObjectFactory`.
+
+### ChowObject
+Path: [`..\src\Chow\Api\ChowObject.cs`](../src/Chow/Api/ChowObject.cs)
+
+`ChowObject` (implementing `IChowObject`) is the public wrapper the host program sees. It wraps a single `SourceValue` and exposes host-friendly members—`Length`, an indexer, the `IsNone`/`IsList`/etc. flags, and the `Create`/`CreateList`/`CreateDictionary`/`CreateScope` factories—while keeping the internal `SourceValue` hidden from clients. `ChowScope` is the host-facing variable bag handed to `ChowEngine.Run`.
+
+### ApiConverter
+Path: [`..\src\Chow\Api\ApiConverter.cs`](../src/Chow/Api/ApiConverter.cs)
+
+`ApiConverter` is the sole bridge between the two layers, translating `SourceValue` to `ChowObject` on the way out and back again on the way in. Conversion happens only at the boundary: internal `SourceValue`s are never exposed on the public surface, and `ChowObject`s never enter the virtual machine.

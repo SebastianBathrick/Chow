@@ -1,6 +1,6 @@
 # API
 
-The `Chow` namespace exposes a small public API for embedding the interpreter in a host program. A host evaluates source code through `ChowEngine`, exchanging values with the interpreter as `ChowObject`s, and can optionally carry state across executions with a `ChowScope`. Every public type implements `IChowObject`, and the collection wrappers `ChowList` and `ChowDictionary` present Chow's `list` and `dict` in a host-friendly form.
+The `Chow` namespace exposes a small public API for embedding the interpreter in a host program. A host evaluates source code through `ChowEngine`, exchanging values with the interpreter as `ChowObject`s, and can optionally carry state across executions with a `ChowScope`. Every public type implements `IChowObject`, and the dedicated wrappers `ChowList`, `ChowDict`, and `ChowString` present Chow's `list`, `dict`, and `str` in a host-friendly form.
 
 All of these types live in `[..\src\Chow\Api](../src/Chow/Api)`. Conversion between the public types and the interpreter's internal value representation happens behind the API surface, so the host only ever deals with the types described below.
 
@@ -36,8 +36,14 @@ Path: `[..\src\Chow\Api\ChowList.cs](../src/Chow/Api/ChowList.cs)`
 
 `ChowList` is a host-friendly wrapper over a Chow `list`, an ordered, mutable sequence of `ChowObject`s. It lets the host build up, inspect, and modify a list from .NET, mirroring the operations available on a list inside Chow.
 
-## ChowDictionary
+## ChowDict
 
-Path: `[..\src\Chow\Api\ChowDictionary.cs](../src/Chow/Api/ChowDictionary.cs)`
+Path: `[..\src\Chow\Api\ChowDict.cs](../src/Chow/Api/ChowDict.cs)`
 
-`ChowDictionary` is a host-friendly wrapper over a Chow `dict`, a mutable mapping of `ChowObject` keys to `ChowObject` values. It lets the host create, look up, and update entries from .NET, mirroring the operations available on a dictionary inside Chow.
+`ChowDict` is a host-friendly wrapper over a Chow `dict`, a mutable mapping of `ChowObject` keys to `ChowObject` values. It lets the host create, look up, and update entries from .NET, mirroring the operations available on a dictionary inside Chow.
+
+## ChowString
+
+Path: `[..\src\Chow\Api\ChowString.cs](../src/Chow/Api/ChowString.cs)`
+
+`ChowString` is a host-friendly wrapper over a Chow `str`, an immutable sequence of characters. It offers read-only access to the string—its `Length` and individual characters by index—along with common string operations such as `Contains`, `StartsWith`, `EndsWith`, `IndexOf`, `Substring`, `ToUpper`, and `ToLower`. It converts implicitly to and from `ChowObject` and the host's own `string`.
