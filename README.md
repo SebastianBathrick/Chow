@@ -99,7 +99,7 @@ The following is a list of features already implemented in Chow:
 Install via NuGet:
 
 ```
-dotnet add package Chow
+dotnet add package Chow --prerelease
 ```
 
 **Run a snippet:**
