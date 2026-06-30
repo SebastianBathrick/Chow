@@ -2,6 +2,8 @@
 
 Chow uses a bytecode interpreter. At runtime, Chow source code is compiled into bytecode and executed using a stack-based virtual machine.
 
+**Documentation last updated:** 6-30-2026
+
 ## ChowEngine
 Path: [`..\src\Chow\Api\ChowEngine.cs`](../src/Chow/Api/ChowEngine.cs)
 
@@ -56,3 +58,4 @@ Path: [`..\src\Chow\Api\ChowObject.cs`](../src/Chow/Api/ChowObject.cs)
 Path: [`..\src\Chow\Api\ApiConverter.cs`](../src/Chow/Api/ApiConverter.cs)
 
 `ApiConverter` is the sole bridge between the two layers, translating `SourceValue` to `ChowObject` on the way out and back again on the way in. Conversion happens only at the boundary: internal `SourceValue`s are never exposed on the public surface, and `ChowObject`s never enter the virtual machine.
+

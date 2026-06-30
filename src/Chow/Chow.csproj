@@ -10,7 +10,7 @@
         <Version>0.1.32</Version>
         <AssemblyName>Chow</AssemblyName>
         <GenerateDocumentationFile>True</GenerateDocumentationFile>
-        <IsAotCompatible>true</IsAotCompatible>
+        <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">true</IsAotCompatible>
     </PropertyGroup>
 
     <ItemGroup>
