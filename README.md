@@ -16,17 +16,16 @@
 ```
 
 # Chow
-A Python-sublanguage interpreter written entirely in C# for embedding in .NET projects. It targets .NET Standard 2.0 and has no external dependencies.
+A Python sublanguage interpreter written entirely in C# for embedding in .NET projects. It targets .NET Standard 2.0 and has no external dependencies.
 
-Currently, Chow is still in development, so features and implementations are subject to change, and use in production is not recommended until version 1.0.0+.
+Chow is still in development, so features and the API are subject to change, and use in production is not recommended until version 1.0.0+.
 
-## Usecases
-- Run a safe and sandboxed Python code in your .NET application.
+## Use Cases
+- Run safe, sandboxed Python code in your .NET application.
 - Mix native .NET objects and functions with Chow code.
 - Support scripting in .NET applications, allowing users to customize their applications using Chow (e.g., Unity/Godot games).
-- Write readable frontend code in Chow for your Blazor applications.
-- Add functionality to an application after it's already built using Chow scripts (even AOT compiled applications).
-
+- Write frontend Python code for your Blazor applications.
+- Add functionality to an application after it's already built using Chow scripts (even AOT-compiled applications).
 
 ## Features
 The following is a list of features already implemented in Chow:
@@ -93,7 +92,7 @@ The following is a list of features already implemented in Chow:
 - range(stop), range(start, stop), range(start, stop, step)
 
 ### Built-in Functions
-- print, input, clear, len, abs, round, min, max, range, and type constructors int, float, str, bool, list, & dict.
+- print, input, clear, len, abs, round, min, max, range, and type constructors int, float, str, bool, list, and dict.
 
 ## Getting Started
 
