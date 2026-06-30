@@ -31,7 +31,9 @@ class ReadEvalPrintLooper
        {
               _scope = ChowObject.CreateScope();
               _scope[ExitChowFunctionName] = ChowObject.Create(() => Environment.Exit(0));
+#pragma warning disable CS8974 // Converting method group to non-delegate type
               _scope[HelpChowFunctionName] = ChowObject.Create(PrintHelp);
+#pragma warning restore CS8974 // Converting method group to non-delegate type
        }
 
        public void Loop()
