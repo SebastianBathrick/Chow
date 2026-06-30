@@ -46,9 +46,11 @@ class ReadEvalPrintLooper
                      {
                             var editor = ChowEditorFactory.CreateEditor();
                             var srcCode = editor.GetTextSubmission();
+
+                            Console.WriteLine(); // In case the cursor is not at the first column
                             var output = Evaluate(srcCode);
 
-                            if (output.IsNone)
+                            if (!output.IsNone)
                             {
                                    Console.WriteLine($"\n{output}");
                             }
