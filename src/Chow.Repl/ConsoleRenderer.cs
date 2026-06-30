@@ -13,8 +13,14 @@ class ConsoleRenderer : IRenderer
     {
 
         Console.Clear();
-        Console.WindowTop = 0;
-        Console.WindowLeft = 0;
+
+        // Resetting the viewport position is only supported on Windows; other platforms are
+        // already at the top-left after Console.Clear().
+        if (OperatingSystem.IsWindows())
+        {
+            Console.WindowTop = 0;
+            Console.WindowLeft = 0;
+        }
 
         _areaWidth = Console.WindowWidth;
         _areaHeight = Console.WindowHeight;

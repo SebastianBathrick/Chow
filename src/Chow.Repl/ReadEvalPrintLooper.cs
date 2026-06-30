@@ -47,7 +47,11 @@ class ReadEvalPrintLooper
                             var editor = ChowEditorFactory.CreateEditor();
                             var srcCode = editor.GetTextSubmission();
                             var output = Evaluate(srcCode);
-                            Console.WriteLine($"\n{output}");
+
+                            if (output.IsNone)
+                            {
+                                   Console.WriteLine($"\n{output}");
+                            }
                      }          
                      catch (Exception ex)
                      {
