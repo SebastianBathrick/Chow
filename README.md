@@ -16,7 +16,9 @@
 ```
 
 # Chow
-Chow is a Python sublanguage for embedding in .NET projects, with an interpreter targeting .NET Standard 2.0 that has zero external dependencies. Currently, Chow is still in development, so features and implementations are subject to change, and use in production is not recommended until version 1.0.0+.
+A Python-sublanguage interpreter written entirely in C# for embedding in .NET projects. It targets .NET Standard 2.0 and has no external dependencies.
+
+Currently, Chow is still in development, so features and implementations are subject to change, and use in production is not recommended until version 1.0.0+.
 
 ## Usecases
 - Run a safe and sandboxed Python code in your .NET application.
@@ -57,7 +59,7 @@ The following is a list of features already implemented in Chow:
 - Arithmetic: +  -  *  /  //  %  **
 - Comparison: ==  !=  <  <=  >  >=
 - Logical: and  or  not (short-circuit)
-- Identity / membership: is, in, not in
+- Identity/membership: is, in, not in
 - Dict merge: |
 - Unary: -x, not x
 
