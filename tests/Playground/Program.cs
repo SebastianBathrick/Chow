@@ -1,9 +1,10 @@
 using Chow;
 
 var scope = new ChowScope();
-scope["greet"] = ChowObject.Create((object name) => $"Greetings {name}.");
+var 
+scope["add"] = ChowObject.Create();
 
 ChowEngine.Run(
-    "print(greet())", scope); // 7
+    "print(add(3, 4))", scope); // 7
 
 
