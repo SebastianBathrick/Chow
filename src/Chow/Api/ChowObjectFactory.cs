@@ -33,6 +33,12 @@ namespace Chow
             return new ChowObject(ref srcVal);
         }
 
+        public static IChowObject CreateString(string value)
+        {
+            var srcVal = new SourceValue(value);
+            return new ChowObject(ref srcVal);
+        }
+
         // Use interface IChowObject to avoid ChowObject dependencies
         internal static IChowObject Create(ref SourceValue srcVal)
         {

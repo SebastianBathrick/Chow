@@ -63,6 +63,8 @@ namespace Chow
                     return list.WrappedObject;
                 case ChowScope scope:
                     return scope.WrappedObject;
+                case ChowString str:
+                    return str.WrappedObject;
                 default:
                     throw new UnreachableException(nameof(GetWrappedChowObject));
             }

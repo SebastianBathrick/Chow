@@ -29,6 +29,9 @@ namespace Chow
         /// <inheritdoc/>
         public bool IsScope => WrappedObject.IsScope;
 
+        /// <inheritdoc/>
+        public bool IsString => WrappedObject.IsString;
+
         /// <summary>
         /// Gets or sets the value associated with the given key, adding it if absent.
         /// </summary>

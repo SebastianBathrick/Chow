@@ -34,7 +34,9 @@ namespace Chow.SourceData
         public bool IsDictionary => DataType == DataType.Dict;
 
         public bool IsScope => DataType == DataType.Scope;
-        
+
+        public bool IsString => DataType == DataType.Str;
+
         bool LongToBoolValue => _long == BoolTrueToLong;
 
         #region Constructors

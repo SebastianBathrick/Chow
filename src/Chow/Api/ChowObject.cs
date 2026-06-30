@@ -33,6 +33,9 @@ namespace Chow
         /// <inheritdoc/>
         public bool IsScope => SourceValue.IsScope;
 
+        /// <inheritdoc/>
+        public bool IsString => SourceValue.IsString;
+
         ISourceObject SourceObject => _srcObj ?? (_srcObj = SourceValue.ToISourceObject());
 
         /// <summary>

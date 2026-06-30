@@ -279,7 +279,7 @@ public class ChowObjectTests
     {
         ChowObject @object = "hello";
 
-        Assert.That((string)@object, Is.EqualTo("hello"));
+        Assert.That(@object.ToString(), Is.EqualTo("hello"));
     }
 
     [Test]
@@ -317,7 +317,7 @@ public class ChowObjectTests
     {
         ChowObject @object = "hello";
 
-        string scalar = @object;
+        string scalar = @object.As<string>();
 
         Assert.That(scalar, Is.EqualTo("hello"));
     }

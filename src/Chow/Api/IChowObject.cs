@@ -17,7 +17,10 @@
 
         /// <summary>Whether this object is a Chow scope.</summary>
         bool IsScope { get; }
-        
+
+        /// <summary>Whether this object is a Chow <c>str</c>.</summary>
+        bool IsString { get; }
+
         /// <summary>Returns the Chow string representation of this object.</summary>
         /// <returns>The string representation of this object.</returns>
         string ToString();

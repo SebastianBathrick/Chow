@@ -34,23 +34,27 @@ public class ChowScopeTests
         Assert.That(result == 42L, Is.True);
     }
 
+    // A fresh scope is seeded with the internal "expr_result" entry that holds the value of the
+    // last evaluated expression, so its baseline Length is 1.
+    const int SeededEntryCount = 1;
+
     [Test]
-    public void Length_FreshScope_ReturnsZero()
+    public void Length_FreshScope_ReturnsSeededEntryCount()
     {
         var scope = new ChowScope();
 
-        Assert.That(scope.Length, Is.Zero);
+        Assert.That(scope.Length, Is.EqualTo(SeededEntryCount));
     }
 
     [Test]
-    public void Length_AfterTwoAssignments_ReturnsTwo()
+    public void Length_AfterTwoAssignments_ReturnsTwoPlusSeededEntries()
     {
         var scope = new ChowScope();
 
         scope["a"] = 1L;
         scope["b"] = 2L;
 
-        Assert.That(scope.Length, Is.EqualTo(2));
+        Assert.That(scope.Length, Is.EqualTo(SeededEntryCount + 2));
     }
 
     [Test]
