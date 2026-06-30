@@ -43,7 +43,7 @@ public class ChowScopeTests
     {
         var scope = new ChowScope();
 
-        Assert.That(scope.Length, Is.EqualTo(SeededEntryCount));
+        Assert.That(scope.Length, Is.EqualTo(0));
     }
 
     [Test]
@@ -54,7 +54,7 @@ public class ChowScopeTests
         scope["a"] = 1L;
         scope["b"] = 2L;
 
-        Assert.That(scope.Length, Is.EqualTo(SeededEntryCount + 2));
+        Assert.That(scope.Length, Is.EqualTo(2));
     }
 
     [Test]

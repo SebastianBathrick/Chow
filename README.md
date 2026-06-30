@@ -107,7 +107,7 @@ dotnet add package Chow
 using Chow;
 
 ChowObject result = ChowEngine.Run("1 + 2");
-Console.WriteLine(result); // 3
+Console.WriteLine(result.ToString()); // 3
 ```
 
 **Pass variables in via a scope:**
@@ -121,7 +121,7 @@ scope["name"] = "world";
 ChowEngine.Run("greeting = f'Hello, {name}!'", scope);
 
 ChowObject greeting = scope["greeting"];
-Console.WriteLine(greeting); // Hello, world!
+Console.WriteLine(greeting.ToString()); // Hello, world!
 ```
 
 **Expose a .NET delegate to Chow code:**

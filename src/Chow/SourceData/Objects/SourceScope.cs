@@ -4,12 +4,13 @@ namespace Chow.SourceData
 {
     sealed class SourceScope : SourceObject
     {
-
+        bool _hasExprResult;
+        
         public override DataType Type => DataType.Scope;
 
         public override bool HasLength => true;
 
-        public override int Length => InternalInternalScope.Count;
+        public override int Length => InternalInternalScope.Count - (_hasExprResult ? 1 : 0);
 
         internal Scope InternalInternalScope
         {
@@ -36,6 +37,11 @@ namespace Chow.SourceData
             if (key.DataType != DataType.Str)
             {
                 throw new DataTypeException($"The key '{key}' is not a str");
+            }
+
+            if (key == SourceObjectConsts.ScopeExpressionName)
+            {
+                _hasExprResult = true;
             }
             
             InternalInternalScope.AssignVariableValue(key.ToString(), ref value);
