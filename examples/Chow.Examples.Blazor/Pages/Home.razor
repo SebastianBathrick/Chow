@@ -1,7 +1,101 @@
-﻿@page "/"
+@page "/"
+@using Chow
 
-<PageTitle>Chow Blazor Example</PageTitle>
+<h1>Chow Blazor Example Editor</h1>
 
-<h1>Hello, world!</h1>
+<div class="editor">
+    <section class="pane">
+        <textarea class="code" spellcheck="false" @bind="src" @bind:event="oninput"
+                  placeholder="print('hello world')"></textarea>
+        <div class="pane-header">
+            <span class="pane-title">Code</span>
+            <div class="buttons">
+                <button class="btn btn-run" @onclick="RunCode">Run</button>
+                <button class="btn" @onclick="ClearCode">Clear code</button>
+            </div>
+        </div>
+    </section>
 
-Welcome to your new app.
+    <section class="pane @(_isRunning ? "running" : "")">
+        <div class="pane-header">
+            <span class="pane-title">Console@(_isRunning ? " — running…" : "")</span>
+            <div class="buttons">
+                <button class="btn" @onclick="ClearConsole">Clear console</button>
+            </div>
+        </div>
+        <div class="console">
+            @foreach (var segment in _console)
+            {
+                <div class="@(segment.IsError ? "segment error" : "segment")">@segment.Text</div>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    record ConsoleSegment(string Text, bool IsError);
+
+    string src = string.Empty;
+    bool _isRunning = false;
+    readonly List<ConsoleSegment> _console = new();
+
+    async Task RunCode()
+    {
+        if (_isRunning)
+        {
+            return;
+        }
+
+        if (_console.Count > 0)
+        {
+            // separator between runs
+            _console.Add(new ConsoleSegment("────────────", IsError: false));
+        }
+
+        // Paint the "running" state before the synchronous, UI-blocking Run call: set the flag,
+        // then yield once so Blazor flushes a render before execution freezes the WASM thread.
+        _isRunning = true;
+        StateHasChanged();
+        await Task.Yield();
+
+        var original = Console.Out;
+        var buffer = new StringWriter();
+        string captured = string.Empty;
+        ConsoleSegment? error = null;
+        try
+        {
+            Console.SetOut(buffer);
+            ChowEngine.Run(src);
+        }
+        catch (Exception ex) // no single Chow base type — catch all, show Message
+        {
+            error = new ConsoleSegment(ex.Message, IsError: true);
+        }
+        finally
+        {
+            Console.SetOut(original); // always restore, even on throw
+            captured = buffer.ToString();
+            _isRunning = false;
+        }
+
+        if (captured.Length > 0)
+        {
+            _console.Add(new ConsoleSegment(captured.TrimEnd('\n', '\r'), IsError: false));
+        }
+
+        if (error is not null)
+        {
+            _console.Add(error);
+        }
+    }
+
+    void ClearCode()
+    {
+        src = string.Empty;
+    }
+
+    void ClearConsole()
+    {
+        _console.Clear();
+    }
+}
