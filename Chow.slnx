@@ -1,4 +1,5 @@
 <Solution>
+    <Project Path="examples/Chow.Examples.Blazor/Chow.Examples.Blazor.csproj" />
     <Project Path="src/Chow.Repl/Chow.Repl.csproj" />
     <Project Path="src/Chow/Chow.csproj" />
     <Project Path="tests/Chow.Tests/Chow.Tests.csproj" />
