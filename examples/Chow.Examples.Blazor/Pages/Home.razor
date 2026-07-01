@@ -1,5 +1,6 @@
 @page "/"
 @using Chow
+@inject IJSRuntime JS
 
 <h1>Chow Blazor Example Editor</h1>
 
@@ -65,7 +66,16 @@
         try
         {
             Console.SetOut(buffer);
-            ChowEngine.Run(src);
+
+            // input() reads from Console by default, which has nothing attached in a browser.
+            // Warm up a fresh scope with built-ins, then override "input" with a popup — this
+            // must happen on a scope that already has HasBuiltIns set, otherwise the next Run
+            // call would re-populate built-ins and clobber the override.
+            var scope = new ChowScope();
+            ChowEngine.Run(string.Empty, scope);
+            scope["input"] = ChowObject.Create((Func<object[], object>)InputOverride);
+
+            ChowEngine.Run(src, scope);
         }
         catch (Exception ex) // no single Chow base type — catch all, show Message
         {
@@ -87,6 +97,13 @@
         {
             _console.Add(error);
         }
+    }
+
+    object InputOverride(object[] args)
+    {
+        var prompt = args.Length > 0 && args[0] != null ? args[0].ToString() : string.Empty;
+        var js = (IJSInProcessRuntime)JS;
+        return js.Invoke<string>("prompt", prompt) ?? string.Empty;
     }
 
     void ClearCode()
