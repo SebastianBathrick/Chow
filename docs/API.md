@@ -4,6 +4,8 @@ The `Chow` namespace exposes a small public API for embedding the interpreter in
 
 All of these types live in `[..\src\Chow\Api](../src/Chow/Api)`. Conversion between the public types and the interpreter's internal value representation happens behind the API surface, so the host only ever deals with the types described below.
 
+**Documentation last updated:** 7-1-2026
+
 ## ChowEngine
 
 Path: `[..\src\Chow\Api\ChowEngine.cs](../src/Chow/Api/ChowEngine.cs)`
