@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Chow.SourceData;
 using Chow.VM;
 
-namespace Chow.StandardLibrary.BuiltIns
+namespace Chow.Interop.Functions.BuiltIns
 {
     static class BuiltInFunctions
     {

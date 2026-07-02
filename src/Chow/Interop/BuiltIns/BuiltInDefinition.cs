@@ -1,7 +1,7 @@
 using System;
 using Chow.SourceData;
 
-namespace Chow.StandardLibrary.BuiltIns
+namespace Chow.Interop.Functions.BuiltIns
 {
     // **WARNING**:
     // Avoid adding new built-in functions until built-ins overhaul. This class is temporary.
