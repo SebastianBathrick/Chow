@@ -34,6 +34,7 @@ namespace Chow.SourceData
         /// </summary>
         public virtual string ToRepresentation()
         {
+            // TODO: Replace this without GetType(), it can cause exceptions on certain platforms
             return $"<{GetType().Name} object>";
         }
 

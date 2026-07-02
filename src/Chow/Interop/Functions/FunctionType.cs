@@ -1,6 +1,6 @@
 ﻿namespace Chow.Interop.Functions.Interfaces
 {
-    enum CallType
+    enum FunctionType : byte
     {
         Chunk,
         Native
