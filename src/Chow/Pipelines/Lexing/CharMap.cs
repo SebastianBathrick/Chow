@@ -31,6 +31,52 @@
             }
         }
 
+        
+        public static bool TryDecodeEscape(char c, out char result)
+        {
+            switch (c)
+            {
+                case 'n':
+                    result = '\n'; 
+                    break;
+                case 't':
+                    result = '\t';
+                    break;
+                case 'r':
+                    result = '\r';
+                    break;
+                case '\\':
+                    result = '\\';
+                    break;
+                case '\'':
+                    result = '\'';
+                    break;
+                case '"':
+                    result = '"';
+                    break;
+                case '0':
+                    result = '\0';
+                    break;
+                case 'a':
+                    result = '\a';
+                    break;
+                case 'b':
+                    result = '\b';
+                    break;
+                case 'f':
+                    result = '\f';
+                    break;
+                case 'v':
+                    result = '\v';
+                    break;
+                default:
+                    result = default;
+                    return false;
+            }
+            
+            return true;
+        }
+
         static bool IsDigit(char c)
         {
             return c >= '0' && c <= '9';
