@@ -726,57 +726,53 @@ namespace Chow.Tokens.Scanning
 
         bool IsDigitChar()
         {
-            return CurrentChar >= '0' && CurrentChar <= '9';
+            return CharMap.IsOfType(CurrentChar, CharType.Digit);
         }
 
         static bool IsDigitChar(char checkChar)
         {
-            return checkChar >= '0' && checkChar <= '9';
-        }
-
-        bool IsAlphaChar()
-        {
-            return CurrentChar >= 'a' && CurrentChar <= 'z' || CurrentChar >= 'A' && CurrentChar <= 'Z';
+            return CharMap.IsOfType(checkChar, CharType.Digit);
         }
 
         bool IsIndentChar()
         {
-            return CurrentChar == ' ' || CurrentChar == '\t';
+            return CharMap.IsOfType(CurrentChar, CharType.Indent);
         }
 
         bool IsFormFeedChar()
         {
-            return CurrentChar == '\f';
+            return CharMap.IsOfType(CurrentChar, CharType.FormFeed);
         }
 
         bool IsNewlineChar()
         {
-            return CurrentChar == '\n' || CurrentChar == '\r';
+            return CharMap.IsOfType(CurrentChar, CharType.Newline);
         }
 
         bool IsCommentPrefix()
         {
-            return CurrentChar == '#';
+            return CharMap.IsOfType(CurrentChar, CharType.CommentPrefix);
         }
 
         bool IsQuoteChar()
         {
-            return CurrentChar == '\'' || CurrentChar == '"';
+            return CharMap.IsOfType(CurrentChar, CharType.Quote);
         }
 
         bool IsFStringPrefix()
         {
-            return (CurrentChar == 'f' || CurrentChar == 'F') && (PeekNextChar() == '\'' || PeekNextChar() == '"');
+            return CharMap.IsOfType(CurrentChar, CharType.FStringPrefix)
+                   && CharMap.IsOfType(PeekNextChar(), CharType.Quote);
         }
 
         bool IsNameLeadingChar()
         {
-            return IsAlphaChar() || CurrentChar == '_';
+            return CharMap.IsOfType(CurrentChar, CharType.IdentifierPrefix);
         }
 
         bool IsNameTrailChar()
         {
-            return IsAlphaChar() || IsDigitChar() || CurrentChar == '_';
+            return CharMap.IsOfType(CurrentChar, CharType.IdentifierSuffix);
         }
 
         #endregion
