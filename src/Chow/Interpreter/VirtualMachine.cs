@@ -8,7 +8,13 @@ namespace Chow.Interpreter
 {
     static class VirtualMachine
     {
-        public static void RunChunk(BytecodeChunk chunk, Scope globalScope, out SourceValue result)
+        public static void Run(string srcCode, Scope globalScope, out SourceValue result)
+        {
+            var chunk = BytecodeConverter.Compile(srcCode);
+            RunChunk(chunk, globalScope, out result);
+        }
+
+        static void RunChunk(BytecodeChunk chunk, Scope globalScope, out SourceValue result)
         {
             var processor = new Processor(globalScope, chunk);
             
