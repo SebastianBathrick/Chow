@@ -1,5 +1,4 @@
 using System;
-using Chow.Pipelines;
 using Chow.SourceData;
 using Chow.StandardLibrary.BuiltIns;
 
@@ -20,7 +19,7 @@ namespace Chow
         public static ChowObject Run(string srcCode, IChowObject scope = null, bool useBuiltIns = true)
         {
             var globalScope = SetupGlobalScope(scope, useBuiltIns);
-            Interpreter.Run(srcCode, globalScope, out var result);
+            Interpreter.VM.Interpreter.Run(srcCode, globalScope, out var result);
             var resultChowObj = (ChowObject)ApiConverter.Convert(ref result);
 
             globalScope.AssignVariableValue(SourceObjectConsts.ScopeExpressionName, ref result);
@@ -30,7 +29,7 @@ namespace Chow
         
         internal static IChowObject Call(ref SourceValue func, IChowObject[] args)
         {
-            Interpreter.RunFunctionCall(ref func, ApiConverter.Convert(args), out var returnVal);
+            Interpreter.VM.Interpreter.RunFunctionCall(ref func, ApiConverter.Convert(args), out var returnVal);
             return ChowObjectFactory.Create(ref returnVal);
         }
 

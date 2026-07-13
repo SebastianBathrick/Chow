@@ -1,6 +1,6 @@
 using Chow;
+using Chow.Interpreter.Exceptions;
 using Chow.SourceData;
-using Chow.VM;
 
 namespace Chow.Tests.UnitTests;
 

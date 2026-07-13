@@ -1,7 +1,7 @@
 using Chow.Bytecode;
 using Chow.SourceData;
 
-namespace Chow.VM.FunctionCalls
+namespace Chow.Interpreter.VM
 {
     /// <summary>
     /// One slot on the <see cref="CallStack"/>. Pairs a <see cref="BytecodeChunk"/> being executed with

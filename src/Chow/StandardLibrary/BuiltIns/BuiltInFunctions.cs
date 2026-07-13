@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Chow.Interpreter.Exceptions;
 using Chow.SourceData;
-using Chow.VM;
 
 namespace Chow.StandardLibrary.BuiltIns
 {

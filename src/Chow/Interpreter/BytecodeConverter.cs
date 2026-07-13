@@ -1,15 +1,14 @@
-﻿using Chow.Tokens.Scanning;
-using Chow.Tokens;
-using Chow.Syntax.Parsing;
+﻿using Chow.Bytecode;
+using Chow.Interpreter.Compilation;
+using Chow.Interpreter.Lexing;
+using Chow.Interpreter.Semantics;
+using Chow.Interpreter.Syntax;
 using Chow.Syntax;
-using Chow.Semantics;
-using Chow.Bytecode;
-using Chow.Bytecode.Compilation;
+using Chow.Tokens;
 
-
-namespace Chow.Pipeline
+namespace Chow.Interpreter
 {
-    static class CompilationPipeline
+    static class BytecodeConverter
     {
         public static BytecodeChunk Compile(string sourceCode)
         {

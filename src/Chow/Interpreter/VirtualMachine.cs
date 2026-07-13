@@ -1,9 +1,10 @@
-﻿
-using System;
+﻿using System;
 using Chow.Bytecode;
+using Chow.Interpreter.Exceptions;
+using Chow.Interpreter.VM;
 using Chow.SourceData;
 
-namespace Chow.VM
+namespace Chow.Interpreter
 {
     static class VirtualMachine
     {

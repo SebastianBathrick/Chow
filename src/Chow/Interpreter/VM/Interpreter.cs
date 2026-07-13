@@ -1,14 +1,12 @@
-﻿using Chow.Pipeline;
-using Chow.SourceData;
-using Chow.VM;
+﻿using Chow.SourceData;
 
-namespace Chow.Pipelines
+namespace Chow.Interpreter.VM
 {
     static class Interpreter
     {
         public static void Run(string srcCode, Scope globalScope, out SourceValue result)
         {
-            var chunk = CompilationPipeline.Compile(srcCode);
+            var chunk = BytecodeConverter.Compile(srcCode);
             VirtualMachine.RunChunk(chunk, globalScope, out result);
         }
 

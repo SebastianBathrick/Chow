@@ -1,6 +1,6 @@
 using System;
 
-namespace Chow
+namespace Chow.Interpreter.Exceptions
 {
     /// <summary>
     /// The base type for exceptions raised while executing Chow source code, such as type, name,

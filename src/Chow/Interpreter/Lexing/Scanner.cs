@@ -1,21 +1,23 @@
-    using System;
-    using System.Collections.Generic;
-    using System.Globalization;
-    using System.Text;
-    using Chow.Code;
-    
-    namespace Chow.Tokens.Scanning
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
+using Chow.Code;
+using Chow.Interpreter.Exceptions;
+using Chow.Tokens;
+
+namespace Chow.Interpreter.Lexing
     {
         /// <summary>
         /// <para>
-        /// Instances facilitate the first phase of the interpreter, lexical analysis/scanning. The client
-        /// provides source code via an argument passed to an instance's constructor.
+        /// Instances facilitate the first phase of the interpreter, lexical analysis/scanning. The
+        /// client provides source code via an argument passed to an instance's constructor.
         /// </para>
         /// <para>
-        /// To begin lexical analysis, the client must call the <see cref="TokenizeSourceCode"/> method, 
-        /// which tokenizes the source code and returns a list of <see cref="Token"/>s. After 
-        /// <see cref="TokenizeSourceCode"/>, the Scanner instance will be considered dirty, and 
-        /// cannot be used again.
+        /// To begin lexical analysis, the client must call the <see cref="TokenizeSourceCode"/>
+        /// method, which tokenizes the source code and returns a list of <see cref="Token"/>s.
+        /// After <see cref="TokenizeSourceCode"/>, the Scanner instance will be considered dirty,
+        /// and cannot be used again.
         /// </para>
         /// </summary>
         sealed class Scanner

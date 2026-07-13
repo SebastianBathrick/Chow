@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Chow.Tokens;
-using Chow.Tokens.Scanning;
 using Chow.Code;
+using Chow.Interpreter.Lexing;
+using Chow.Syntax;
+using Chow.Tokens;
 
-namespace Chow.Syntax.Parsing
+namespace Chow.Interpreter.Syntax
 {
     /// <summary>
     /// A recursive-descent parser that builds an abstract syntax tree from a stream of scanner

@@ -1,4 +1,4 @@
-﻿namespace Chow.Code
+﻿namespace Chow.Interpreter.Lexing
 {
     enum CharType : byte
     {

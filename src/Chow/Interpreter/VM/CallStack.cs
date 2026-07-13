@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using Chow.Bytecode;
+using Chow.Interpreter.Exceptions;
 using Chow.SourceData;
 
-namespace Chow.VM.FunctionCalls
+namespace Chow.Interpreter.VM
 {
     /// <summary>
     /// Owns the module frame plus a stack of function-call frames, and exposes scope-aware

@@ -1,6 +1,5 @@
 using Chow;
 using Chow.SourceData;
-using Chow.VM;
 
 namespace Chow.Tests;
 

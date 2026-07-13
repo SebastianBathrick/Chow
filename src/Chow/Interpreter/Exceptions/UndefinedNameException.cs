@@ -1,6 +1,4 @@
-using Chow;
-
-namespace Chow.VM
+namespace Chow.Interpreter.Exceptions
 {
     class UndefinedNameException : RuntimeException
     {

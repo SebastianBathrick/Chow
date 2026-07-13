@@ -1,7 +1,7 @@
 using System;
 using Chow.Bytecode;
 using Chow.Code;
-using Chow.VM;
+using Chow.Interpreter.Exceptions;
 
 namespace Chow.SourceData
 {

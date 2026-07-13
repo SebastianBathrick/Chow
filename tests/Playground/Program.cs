@@ -1,4 +1,5 @@
 using Chow;
+using Chow.Interpreter.Exceptions;
 
 ChowObject result = ChowEngine.Run("1 + 2");
 Console.WriteLine(result.ToString()); // 3

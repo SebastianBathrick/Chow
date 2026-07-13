@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Chow.Bytecode.Compilation;
+using Chow.Interpreter.Compilation;
+using Chow.Interpreter.Exceptions;
 using Chow.Syntax;
 
-namespace Chow.Semantics
+namespace Chow.Interpreter.Semantics
 {
     /// <summary>
     /// Performs name-resolution between parsing and compilation. Walks the AST and stamps every

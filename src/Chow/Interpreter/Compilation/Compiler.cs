@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using Chow.Bytecode;
+using Chow.Code;
+using Chow.Interpreter.Exceptions;
 using Chow.SourceData;
 using Chow.Syntax;
-using Chow.Code;
 
-namespace Chow.Bytecode.Compilation
+namespace Chow.Interpreter.Compilation
 {
     sealed class Compiler
     {

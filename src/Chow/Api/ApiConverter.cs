@@ -1,4 +1,5 @@
-﻿using Chow.SourceData;
+﻿using Chow.Interpreter.Exceptions;
+using Chow.SourceData;
 
 namespace Chow
 {

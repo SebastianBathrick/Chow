@@ -1,7 +1,8 @@
-﻿using Chow.Tokens;
-using Chow.Code;
+﻿using Chow.Code;
+using Chow.Interpreter.Exceptions;
+using Chow.Tokens;
 
-namespace Chow.Syntax.Parsing
+namespace Chow.Interpreter.Lexing
 {
     /// <summary>Classifies token types by their syntactic role.</summary>
     static class SyntaxMaps

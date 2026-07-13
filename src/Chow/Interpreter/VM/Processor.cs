@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using Chow.Bytecode;
-using Chow.SourceData;
 using Chow.Code;
-using Chow.VM.FunctionCalls;
+using Chow.Interpreter.Exceptions;
+using Chow.SourceData;
 
-namespace Chow.VM
+namespace Chow.Interpreter.VM
 {
     sealed class Processor
     {

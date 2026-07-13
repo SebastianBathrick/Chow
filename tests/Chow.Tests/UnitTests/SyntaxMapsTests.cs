@@ -1,7 +1,8 @@
 using Chow;
-using Chow.Syntax.Parsing;
 using Chow.Tokens;
 using Chow.Code;
+using Chow.Interpreter.Exceptions;
+using Chow.Interpreter.Lexing;
 
 namespace Chow.Tests.UnitTests;
 

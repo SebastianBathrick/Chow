@@ -1,6 +1,6 @@
 using System;
 
-namespace Chow
+namespace Chow.Interpreter.Exceptions
 {
     /// <summary>
     /// Thrown when execution reaches a point in the interpreter that was believed to be
