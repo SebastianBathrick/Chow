@@ -1,7 +1,7 @@
 using Chow;
 using Chow.Syntax.Parsing;
 using Chow.Tokens;
-using Chow.Utility;
+using Chow.Code;
 
 namespace Chow.Tests.UnitTests;
 

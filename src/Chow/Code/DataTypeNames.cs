@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Chow.SourceData;
 
-namespace Chow.Utility
+namespace Chow.Code
 {
     class DataTypeNames
     {

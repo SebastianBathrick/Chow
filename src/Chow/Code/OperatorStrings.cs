@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Chow.Bytecode;
 
-namespace Chow.Utility
+namespace Chow.Code
 {
     static class OperatorStrings
     {

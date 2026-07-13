@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Chow.Bytecode;
 using Chow.SourceData;
-using Chow.Utility;
+using Chow.Code;
 using Chow.VM.FunctionCalls;
 
 namespace Chow.VM

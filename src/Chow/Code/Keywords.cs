@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Chow.Tokens;
 
-namespace Chow.Utility
+namespace Chow.Code
 {
     static class Keywords
     {

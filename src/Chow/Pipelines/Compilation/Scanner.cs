@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using Chow.Utility;
+using Chow.Code;
 
 namespace Chow.Tokens.Scanning
 {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Chow.Tokens;
 using Chow.Tokens.Scanning;
-using Chow.Utility;
+using Chow.Code;
 
 namespace Chow.Syntax.Parsing
 {

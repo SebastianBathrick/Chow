@@ -1,5 +1,5 @@
 ﻿using Chow.Tokens;
-using Chow.Utility;
+using Chow.Code;
 
 namespace Chow.Syntax.Parsing
 {

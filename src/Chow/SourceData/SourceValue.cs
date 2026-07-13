@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using Chow.Utility;
+using Chow.Code;
 using Chow.VM;
 
 namespace Chow.SourceData

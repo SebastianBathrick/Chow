@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Chow.SourceData;
 using Chow.Syntax;
-using Chow.Utility;
+using Chow.Code;
 
 namespace Chow.Bytecode.Compilation
 {

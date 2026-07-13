@@ -1,4 +1,4 @@
-namespace Chow.Utility
+namespace Chow.Code
 {
     enum Operator
     {
