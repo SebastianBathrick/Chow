@@ -38,7 +38,7 @@ namespace Chow.Tokens.Scanning
 
         #endregion
 
-        #region Constructor & Primary Methods
+        #region Constructor & Entry Point
 
         /// <summary>
         /// Initializes a new Scanner instance using Chow source code.
@@ -107,32 +107,34 @@ namespace Chow.Tokens.Scanning
                 }
             }
 
-            if (IsFStringPrefix())
+            // TODO: Refactor to be in-order of: Most common case -> Least common case
+            if (CharMap.IsOfType(CurrentChar, CharType.FStringPrefix) && CharMap.IsOfType(PeekNextChar(), CharType.Quote))
             {
                 MoveToNextChar(); // skip f/F
                 ScanFStringToken();
             }
-            else if (IsNameLeadingChar())
+            else if (CharMap.IsOfType(CurrentChar, CharType.IdentifierPrefix))
             {
                 ScanNameToken();
             }
-            else if (IsNewlineChar())
+            else if (CharMap.IsOfType(CurrentChar, CharType.Newline))
             {
                 ScanNewlineToken();
             }
-            else if (IsDigitChar() || CurrentChar == '.' && IsDigitChar(PeekNextChar()))
+            else if (CharMap.IsOfType(CurrentChar, CharType.Digit)
+                     || CurrentChar == '.' && CharMap.IsOfType(PeekNextChar(), CharType.Digit))
             {
                 ScanNumericToken();
             }
-            else if (IsQuoteChar())
+            else if (CharMap.IsOfType(CurrentChar, CharType.Quote))
             {
                 ScanStringToken();
             }
-            else if (IsIndentChar())
+            else if (CharMap.IsOfType(CurrentChar, CharType.Indent))
             {
                 MoveToNextChar();
             }
-            else if (IsCommentPrefix())
+            else if (CharMap.IsOfType(CurrentChar, CharType.CommentPrefix))
             {
                 SkipRemainingLineChars();
             }
@@ -150,7 +152,7 @@ namespace Chow.Tokens.Scanning
         {
             var startIdx = _charIdx;
 
-            while (IsCharToScan && IsNameTrailChar())
+            while (IsCharToScan && CharMap.IsOfType(CurrentChar, CharType.IdentifierSuffix))
             {
                 MoveToNextChar();
             }
@@ -183,7 +185,9 @@ namespace Chow.Tokens.Scanning
         {
             var indentColumn = ScanIndentColumn();
 
-            if (!IsCharToScan || IsNewlineChar() || IsCommentPrefix())
+            if (!IsCharToScan
+                || CharMap.IsOfType(CurrentChar, CharType.Newline)
+                || CharMap.IsOfType(CurrentChar, CharType.CommentPrefix))
             {
                 return;
             }
@@ -196,12 +200,12 @@ namespace Chow.Tokens.Scanning
         {
             var indentColumn = 0;
 
-            while (IsCharToScan && IsFormFeedChar())
+            while (IsCharToScan && CharMap.IsOfType(CurrentChar, CharType.FormFeed))
             {
                 MoveToNextChar();
             }
 
-            while (IsCharToScan && IsIndentChar())
+            while (IsCharToScan && CharMap.IsOfType(CurrentChar, CharType.Indent))
             {
                 if (CurrentChar == '\t')
                 {
@@ -394,7 +398,7 @@ namespace Chow.Tokens.Scanning
                 {
                     MoveToNextChar();
                 }
-                while (IsCharToScan && IsDigitChar());
+                while (IsCharToScan && CharMap.IsOfType(CurrentChar, CharType.Digit));
             }
 
             // If there is a decimal point, move past it and any following digits
@@ -417,7 +421,7 @@ namespace Chow.Tokens.Scanning
         {
             MoveToNextChar();
 
-            while (IsCharToScan && IsDigitChar())
+            while (IsCharToScan && CharMap.IsOfType(CurrentChar, CharType.Digit))
             {
                 MoveToNextChar();
             }
@@ -478,7 +482,7 @@ namespace Chow.Tokens.Scanning
 
             while (IsCharToScan && CurrentChar != quoteChar)
             {
-                if (IsNewlineChar())
+                if (CharMap.IsOfType(CurrentChar, CharType.Newline))
                 {
                     throw new ScannerException("Unterminated string literal", _lineNum);
                 }
@@ -549,7 +553,7 @@ namespace Chow.Tokens.Scanning
 
             while (IsCharToScan && CurrentChar != quoteChar)
             {
-                if (IsNewlineChar())
+                if (CharMap.IsOfType(CurrentChar, CharType.Newline))
                 {
                     throw new ScannerException("Unterminated f-string literal", _lineNum);
                 }
@@ -615,7 +619,7 @@ namespace Chow.Tokens.Scanning
 
             while (IsCharToScan && depth > 0)
             {
-                if (IsNewlineChar())
+                if (CharMap.IsOfType(CurrentChar, CharType.Newline))
                 {
                     throw new ScannerException("Unterminated f-string expression", _lineNum);
                 }
@@ -651,7 +655,7 @@ namespace Chow.Tokens.Scanning
 
                     while (IsCharToScan && CurrentChar != c)
                     {
-                        if (IsNewlineChar())
+                        if (CharMap.IsOfType(CurrentChar, CharType.Newline))
                         {
                             throw new ScannerException("Unterminated string in f-string expression", _lineNum);
                         }
@@ -722,61 +726,6 @@ namespace Chow.Tokens.Scanning
 
         #endregion
 
-        #region Char Classification Methods
-
-        bool IsDigitChar()
-        {
-            return CharMap.IsOfType(CurrentChar, CharType.Digit);
-        }
-
-        static bool IsDigitChar(char checkChar)
-        {
-            return CharMap.IsOfType(checkChar, CharType.Digit);
-        }
-
-        bool IsIndentChar()
-        {
-            return CharMap.IsOfType(CurrentChar, CharType.Indent);
-        }
-
-        bool IsFormFeedChar()
-        {
-            return CharMap.IsOfType(CurrentChar, CharType.FormFeed);
-        }
-
-        bool IsNewlineChar()
-        {
-            return CharMap.IsOfType(CurrentChar, CharType.Newline);
-        }
-
-        bool IsCommentPrefix()
-        {
-            return CharMap.IsOfType(CurrentChar, CharType.CommentPrefix);
-        }
-
-        bool IsQuoteChar()
-        {
-            return CharMap.IsOfType(CurrentChar, CharType.Quote);
-        }
-
-        bool IsFStringPrefix()
-        {
-            return CharMap.IsOfType(CurrentChar, CharType.FStringPrefix)
-                   && CharMap.IsOfType(PeekNextChar(), CharType.Quote);
-        }
-
-        bool IsNameLeadingChar()
-        {
-            return CharMap.IsOfType(CurrentChar, CharType.IdentifierPrefix);
-        }
-
-        bool IsNameTrailChar()
-        {
-            return CharMap.IsOfType(CurrentChar, CharType.IdentifierSuffix);
-        }
-
-        #endregion
-
         #region Helper Methods
 
         void MovePastNewline()
@@ -809,15 +758,15 @@ namespace Chow.Tokens.Scanning
         {
             while (IsCharToScan)
             {
-                if (IsIndentChar())
+                if (CharMap.IsOfType(CurrentChar, CharType.Indent))
                 {
                     MoveToNextChar();
                 }
-                else if (IsNewlineChar())
+                else if (CharMap.IsOfType(CurrentChar, CharType.Newline))
                 {
                     MovePastNewline();
                 }
-                else if (IsCommentPrefix())
+                else if (CharMap.IsOfType(CurrentChar, CharType.CommentPrefix))
                 {
                     SkipRemainingLineChars();
                 }
@@ -834,7 +783,7 @@ namespace Chow.Tokens.Scanning
 
         void SkipRemainingLineChars()
         {
-            while (IsCharToScan && !IsNewlineChar())
+            while (IsCharToScan && !CharMap.IsOfType(CurrentChar, CharType.Newline))
             {
                 MoveToNextChar();
             }
