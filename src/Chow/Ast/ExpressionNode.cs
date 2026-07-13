@@ -1,4 +1,4 @@
-using Chow.Utility;
+using Chow.Code;
 
 namespace Chow.Syntax
 {

@@ -1,4 +1,4 @@
-using Chow.VM;
+using Chow.Interpreter.VM;
 
 namespace Chow.Bytecode
 {

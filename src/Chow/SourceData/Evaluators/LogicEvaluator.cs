@@ -1,5 +1,6 @@
-using Chow.Utility;
-using Chow.VM;
+using Chow.Code;
+using Chow.Interpreter.Exceptions;
+using Chow.Interpreter.VM;
 
 namespace Chow.SourceData
 {
