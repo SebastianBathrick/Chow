@@ -41,23 +41,43 @@ namespace Chow.Interop.Functions
        const int DefaultMinArguments = 0;
        const int DefaultMaxArguments = 0;
 
-       public abstract FunctionType FunctionType
+       protected InteropFunction(
+           SourceValue enclosingScope,
+           Arity arity = Arity.None,
+           int minArguments = DefaultMinArguments,
+           int maxArguments = DefaultMaxArguments)
+       {
+           EnclosingScope = enclosingScope;
+           Arity = arity;
+           MinArguments = minArguments;
+           MaxArguments = maxArguments;
+       }
+
+       public FunctionType FunctionType => FunctionType.Native;
+
+       public abstract InvokeOverload InvokeOverload
        {
            get;
        }
 
-       
-       public abstract Arity Arity
+       public Arity Arity
        {
            get;
        }
-       
-       public SourceValue EnclosingScope => SourceValue.None;
 
-       public int MinArguments => DefaultMinArguments;
+       public SourceValue EnclosingScope
+       {
+           get;
+       }
 
-       public int MaxArguments => DefaultMaxArguments;
-       
-       public void Call
+       public int MinArguments
+       {
+           get;
+       }
+
+       public int MaxArguments
+       {
+           get;
+       }
    }
 }

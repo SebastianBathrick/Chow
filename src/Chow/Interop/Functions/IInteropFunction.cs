@@ -7,9 +7,9 @@ namespace Chow.Interop.Functions.Interfaces
         Arity Arity { get; }
         
         FunctionType FunctionType { get; }
-        
-        
-        
+
+        InvokeOverload InvokeOverload { get; }
+
         int MinArguments { get; }
         
         int MaxArguments { get; }
