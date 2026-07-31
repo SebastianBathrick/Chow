@@ -655,6 +655,11 @@ namespace Chow.Interpreter.Compilation
 
         #region Helper Methods
 
+        public void AddInstruction(OperationCode opCode, int lineNumber, int operand = -1)
+        {
+
+        }
+
         static OperationCode GetScopeAssignOpCode(ScopeType resolution)
         {
             switch (resolution)

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Chow.Sandboxing;
 using Chow.SourceData;
 using Chow.StandardLibrary.BuiltIns;
 
@@ -16,7 +18,11 @@ namespace Chow
         /// code.</param>
         /// <returns>The result of the last evaluated expression statement, or the Chow <c>None</c>
         /// object if no expression statement was evaluated.</returns>
-        public static ChowObject Run(string srcCode, IChowObject scope = null, bool useBuiltIns = true)
+        public static ChowObject Run(
+            string srcCode, 
+            IChowObject scope = null, 
+            bool useBuiltIns = true, 
+            params InterpreterBehavior[] behaviors)
         {
             var globalScope = SetupGlobalScope(scope, useBuiltIns);
             Interpreter.VirtualMachine.Run(srcCode, globalScope, out var result);
