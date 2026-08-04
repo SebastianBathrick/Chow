@@ -188,7 +188,7 @@ public class ChowListTests
         var list = new ChowList();
 
         ChowObject @object = list;
-        @object.Call("append", "item");
+        @object.CallMethod("append", "item");
 
         Assert.That(list[0] == "item", Is.True);
     }
@@ -197,7 +197,7 @@ public class ChowListTests
     public void ImplicitFromChowValue_WrapsExistingList()
     {
         ChowObject @object = ChowObject.CreateList();
-        @object.Call("append", "item");
+        @object.CallMethod("append", "item");
 
         ChowList list = @object;
 

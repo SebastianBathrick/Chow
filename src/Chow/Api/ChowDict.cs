@@ -69,7 +69,7 @@ namespace Chow
         /// object.</returns>
         public ChowObject Get(ChowObject key)
         {
-            return WrappedObject.Call(SourceObjectConsts.DictGetMethodName, key);
+            return WrappedObject.CallMethod(SourceObjectConsts.DictGetMethodName, key);
         }
 
         /// <summary>Removes the entry with the given key and returns its value.</summary>
@@ -77,20 +77,20 @@ namespace Chow
         /// <returns>The value that was associated with <paramref name="key"/>.</returns>
         public ChowObject Pop(ChowObject key)
         {
-            return WrappedObject.Call(SourceObjectConsts.DictPopMethodName, key);
+            return WrappedObject.CallMethod(SourceObjectConsts.DictPopMethodName, key);
         }
 
         /// <summary>Copies the entries from another dictionary, overwriting any existing keys.</summary>
         /// <param name="other">The dictionary whose entries are copied in.</param>
         public void Update(ChowObject other)
         {
-            WrappedObject.Call(SourceObjectConsts.DictUpdateMethodName, other);
+            WrappedObject.CallMethod(SourceObjectConsts.DictUpdateMethodName, other);
         }
 
         /// <summary>Removes all entries from the dictionary.</summary>
         public void Clear()
         {
-            WrappedObject.Call(SourceObjectConsts.DictClearMethodName);
+            WrappedObject.CallMethod(SourceObjectConsts.DictClearMethodName);
         }
 
         /// <summary>

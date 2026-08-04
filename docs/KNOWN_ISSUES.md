@@ -39,9 +39,12 @@ is internal *and* derives from `Exception` rather than `RuntimeException`. A hos
 with the wrong number of arguments therefore has no public type to catch:
 
 ```csharp
-try { instance.Call("read", 1L); }
+try { instance.CallMethod("read", 1L); }
 catch (RuntimeException) { }  // never runs — DataTypeException is not one
 ```
+
+The same applies to `CallSelf` on a value that is not callable at all, which reports
+`'Long' object is not callable` — the internal enum name rather than the Chow type name `int`.
 
 **Fix:** rebase it on `RuntimeException`. Its constructor would then gain the alias prefix and line
 suffix that base applies, which changes its message text and breaks the `TypeError: …` assertions in

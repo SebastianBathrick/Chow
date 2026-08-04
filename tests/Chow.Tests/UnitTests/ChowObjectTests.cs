@@ -27,7 +27,7 @@ public class ChowObjectTests
     static ChowObject CreateOneElementList(string item)
     {
         var list = ChowObject.CreateList();
-        list.Call("append", item);
+        list.CallMethod("append", item);
         return list;
     }
 
@@ -71,8 +71,8 @@ public class ChowObjectTests
     {
         var list = ChowObject.CreateList();
 
-        list.Call("append", "first");
-        list.Call("append", "second");
+        list.CallMethod("append", "first");
+        list.CallMethod("append", "second");
 
         Assert.That(list.Length, Is.EqualTo(2));
     }
@@ -182,7 +182,7 @@ public class ChowObjectTests
         var list = ChowObject.CreateList();
         var item = "item";
         
-        list.Call("append", item);
+        list.CallMethod("append", item);
         
         Assert.That(IsSameAtListIndex(list, 0, item), Is.True);
     }
@@ -192,7 +192,7 @@ public class ChowObjectTests
     {
         var dictionary = CreateDictionaryWithEntry("key", "@object");
 
-        dictionary.Call("clear");
+        dictionary.CallMethod("clear");
 
         Assert.That(dictionary.Length, Is.Zero);
     }
@@ -534,7 +534,7 @@ public class ChowObjectTests
             """,
             "scaler");
 
-        Assert.That(instance.Call("scale", 4L), Is.EqualTo((ChowObject)12L));
+        Assert.That(instance.CallMethod("scale", 4L), Is.EqualTo((ChowObject)12L));
     }
 
     [Test]
@@ -542,7 +542,7 @@ public class ChowObjectTests
     {
         var counter = CreateCounterInstance();
 
-        Assert.That(counter.Call("read"), Is.EqualTo((ChowObject)5L));
+        Assert.That(counter.CallMethod("read"), Is.EqualTo((ChowObject)5L));
     }
 
     [Test]
@@ -550,7 +550,7 @@ public class ChowObjectTests
     {
         var counter = CreateCounterInstance();
 
-        Assert.That(counter.Call("bump", 1L), Is.EqualTo(ChowObject.None));
+        Assert.That(counter.CallMethod("bump", 1L), Is.EqualTo(ChowObject.None));
     }
 
     [Test]
@@ -558,7 +558,7 @@ public class ChowObjectTests
     {
         var counter = CreateCounterInstance();
 
-        counter.Call("bump", 3L);
+        counter.CallMethod("bump", 3L);
 
         Assert.That(counter.GetAttribute("value"), Is.EqualTo((ChowObject)8L));
     }
@@ -569,9 +569,9 @@ public class ChowObjectTests
     {
         var counter = CreateCounterInstance();
 
-        counter.Call("bump_twice", 10L);
+        counter.CallMethod("bump_twice", 10L);
 
-        Assert.That(counter.Call("read"), Is.EqualTo((ChowObject)25L));
+        Assert.That(counter.CallMethod("read"), Is.EqualTo((ChowObject)25L));
     }
 
     // A host call has no surrounding frame, so the module scope is recovered from the closure.
@@ -595,9 +595,9 @@ public class ChowObjectTests
             scope);
 
         ChowObject recorder = scope["recorder"];
-        recorder.Call("record", 4L);
+        recorder.CallMethod("record", 4L);
 
-        Assert.That(recorder.Call("record", 6L), Is.EqualTo((ChowObject)10L));
+        Assert.That(recorder.CallMethod("record", 6L), Is.EqualTo((ChowObject)10L));
         Assert.That(scope["tally"], Is.EqualTo((ChowObject)10L));
     }
 
@@ -606,7 +606,7 @@ public class ChowObjectTests
     {
         var counter = CreateCounterInstance();
 
-        Assert.Throws<DataTypeException>(() => counter.Call("read", 1L));
+        Assert.Throws<DataTypeException>(() => counter.CallMethod("read", 1L));
     }
 
     [Test]
@@ -614,7 +614,7 @@ public class ChowObjectTests
     {
         var counter = CreateCounterInstance();
 
-        Assert.Throws<AttributeException>(() => counter.Call("missing"));
+        Assert.Throws<AttributeException>(() => counter.CallMethod("missing"));
     }
 
     #endregion
@@ -773,6 +773,236 @@ public class ChowObjectTests
     public void ClassName_NonClassObject_ReturnsNull()
     {
         Assert.That(ChowObject.CreateList().ClassName, Is.Null);
+    }
+
+    #endregion
+
+    #region Calling The Object Itself
+
+    const string ScalerSourceCode = """
+                                    class Scaler:
+                                        def __init__(self, factor):
+                                            self.factor = factor
+
+                                        def scale(self, value):
+                                            return self.factor * value
+
+                                    def triple(value):
+                                        return value * 3
+
+                                    def greet():
+                                        return "hi"
+
+                                    def ignore(value):
+                                        pass
+
+                                    scaler = Scaler(2)
+                                    """;
+
+    [Test]
+    public void CallSelf_ChowFunctionWithArgument_ReturnsResult()
+    {
+        var function = RunAndGet(ScalerSourceCode, "triple");
+
+        Assert.That(function.CallSelf(5L), Is.EqualTo((ChowObject)15L));
+    }
+
+    [Test]
+    public void CallSelf_ChowFunctionWithNoArguments_ReturnsResult()
+    {
+        var function = RunAndGet(ScalerSourceCode, "greet");
+
+        Assert.That(function.CallSelf(), Is.EqualTo((ChowObject)"hi"));
+    }
+
+    // Calling a class constructs an instance, the same as calling it from Chow source.
+    [Test]
+    public void CallSelf_Class_ConstructsInstance()
+    {
+        var scalerClass = RunAndGet(ScalerSourceCode, "Scaler");
+
+        var instance = scalerClass.CallSelf(7L);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(instance.IsClassInstance, Is.True);
+            Assert.That(instance.ClassName, Is.EqualTo("Scaler"));
+            Assert.That(instance.GetAttribute("factor"), Is.EqualTo((ChowObject)7L));
+        });
+    }
+
+    [Test]
+    public void CallSelf_BoundMethodFromGetAttribute_ReturnsResult()
+    {
+        var instance = RunAndGet(ScalerSourceCode, "scaler");
+
+        var boundMethod = instance.GetAttribute("scale");
+
+        Assert.That(boundMethod.CallSelf(4L), Is.EqualTo((ChowObject)8L));
+    }
+
+    [Test]
+    public void CallSelf_HostDelegateStoredInScope_ReturnsResult()
+    {
+        var scope = new ChowScope();
+        scope["double"] = ChowObject.Create((Func<object, object>)(value => (long)value * 2));
+
+        ChowObject storedDelegate = scope["double"];
+
+        Assert.That(storedDelegate.CallSelf(21L), Is.EqualTo((ChowObject)42L));
+    }
+
+    [Test]
+    public void CallSelf_CallableWithoutReturn_ReturnsNone()
+    {
+        var function = RunAndGet(ScalerSourceCode, "ignore");
+
+        Assert.That(function.CallSelf(1L), Is.EqualTo(ChowObject.None));
+    }
+
+    [Test]
+    public void CallSelf_WrongArgumentCount_ThrowsDataTypeException()
+    {
+        var function = RunAndGet(ScalerSourceCode, "triple");
+
+        Assert.Throws<DataTypeException>(() => function.CallSelf(1L, 2L));
+    }
+
+    // Documents current behaviour: the failure surfaces as the internal DataTypeException rather
+    // than a RuntimeException. See docs/KNOWN_ISSUES.md.
+    [Test]
+    public void CallSelf_NonCallableObject_Throws()
+    {
+        var number = ChowObject.Create(5L);
+
+        Assert.Throws<DataTypeException>(() => number.CallSelf());
+    }
+
+    #endregion
+
+    #region Native Argument Overloads
+
+    [TestCase(5, 15L)]
+    [TestCase(5L, 15L)]
+    public void CallSelf_NativeIntegerArgument_ConvertsToChowInt(object argument, long expected)
+    {
+        var function = RunAndGet(ScalerSourceCode, "triple");
+
+        Assert.That(function.CallSelf(argument), Is.EqualTo((ChowObject)expected));
+    }
+
+    [Test]
+    public void CallSelf_NativeDoubleArgument_ConvertsToChowFloat()
+    {
+        var function = RunAndGet(ScalerSourceCode, "triple");
+
+        Assert.That(function.CallSelf(1.5), Is.EqualTo((ChowObject)4.5));
+    }
+
+    [Test]
+    public void CallSelf_NativeStringArgument_ConvertsToChowString()
+    {
+        var function = RunAndGet(ScalerSourceCode, "triple");
+
+        Assert.That(function.CallSelf("ab"), Is.EqualTo((ChowObject)"ababab"));
+    }
+
+    [Test]
+    public void CallSelf_NullArgument_PassesNone()
+    {
+        var scope = new ChowScope();
+        ChowEngine.Run(
+            """
+            def is_none(value):
+                return value == None
+            """,
+            scope);
+
+        ChowObject function = scope["is_none"];
+
+        Assert.That(function.CallSelf((object?)null), Is.EqualTo((ChowObject)true));
+    }
+
+    // A ChowObject reaching the object[] overload has to be unwrapped, not wrapped a second time —
+    // a re-wrapped one would enter the VM as an opaque host object.
+    [Test]
+    public void CallSelf_ChowObjectThroughNativeOverload_MatchesTypedOverload()
+    {
+        var function = RunAndGet(ScalerSourceCode, "triple");
+        ChowObject argument = 5L;
+
+        var throughTyped = function.CallSelf(argument);
+        var throughNative = function.CallSelf(new object[] { argument });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(throughNative, Is.EqualTo(throughTyped));
+            Assert.That(throughNative, Is.EqualTo((ChowObject)15L));
+        });
+    }
+
+    [Test]
+    public void CallMethod_ChowObjectThroughNativeOverload_MatchesTypedOverload()
+    {
+        var instance = RunAndGet(ScalerSourceCode, "scaler");
+        ChowObject argument = 4L;
+
+        var throughTyped = instance.CallMethod("scale", argument);
+        var throughNative = instance.CallMethod("scale", new object[] { argument });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(throughNative, Is.EqualTo(throughTyped));
+            Assert.That(throughNative, Is.EqualTo((ChowObject)8L));
+        });
+    }
+
+    // The wrapper types are IChowObject but not ChowObject, so they need unwrapping of their own.
+    [Test]
+    public void CallSelf_ChowListWrapperThroughNativeOverload_PassesUnderlyingList()
+    {
+        var scope = new ChowScope();
+        ChowEngine.Run(
+            """
+            def count(values):
+                return len(values)
+            """,
+            scope);
+
+        var list = new ChowList();
+        list.Append("first");
+        list.Append("second");
+
+        ChowObject function = scope["count"];
+
+        Assert.That(function.CallSelf(new object[] { list }), Is.EqualTo((ChowObject)2L));
+    }
+
+    [Test]
+    public void CallSelf_MixedChowObjectAndNativeArguments_PassesBoth()
+    {
+        var scope = new ChowScope();
+        ChowEngine.Run(
+            """
+            def combine(left, right):
+                return left + right
+            """,
+            scope);
+
+        ChowObject function = scope["combine"];
+        ChowObject left = 10L;
+
+        Assert.That(function.CallSelf(new object[] { left, 5 }), Is.EqualTo((ChowObject)15L));
+    }
+
+    [Test]
+    public void CallMethod_NativeIntegerArgument_ConvertsToChowInt()
+    {
+        var counter = CreateCounterInstance();
+
+        counter.CallMethod("bump", 3);
+
+        Assert.That(counter.GetAttribute("value"), Is.EqualTo((ChowObject)8L));
     }
 
     #endregion

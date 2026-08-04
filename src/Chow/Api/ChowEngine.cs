@@ -27,9 +27,9 @@ namespace Chow
         }
         
         
-        internal static IChowObject Call(ref SourceValue func, IChowObject[] args)
+        internal static IChowObject Call(ref SourceValue func, SourceValue[] args)
         {
-            Interpreter.VirtualMachine.RunFunctionCall(ref func, out var returnVal, ApiConverter.Convert(args));
+            Interpreter.VirtualMachine.RunFunctionCall(ref func, out var returnVal, args);
             return ChowObjectFactory.Create(ref returnVal);
         }
 

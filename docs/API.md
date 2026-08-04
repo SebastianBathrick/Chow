@@ -24,9 +24,15 @@ Path: `[..\src\Chow\Api\ChowObject.cs](../src/Chow/Api/ChowObject.cs)`
 
 `ChowObject` is the primary value type the host works with. It represents any single Chow value, such as an `int`, `float`, `str`, `bool`, `None`, `list`, `dict`, or `scope`, and is what `ChowEngine` returns and accepts.
 
-It is designed to feel natural from host code: it converts to and from common .NET types, lets the host index into collections, read and assign attributes, and invoke methods on Chow objects, and can wrap host delegates so native functions can be called from Chow. It also supports value-based equality and comparison against ordinary .NET values.
+It is designed to feel natural from host code: it converts to and from common .NET types, lets the host index into collections, read and assign attributes, and invoke Chow objects, and can wrap host delegates so native functions can be called from Chow. It also supports value-based equality and comparison against ordinary .NET values.
 
-For objects produced by a `class` declaration, `GetAttribute` and `SetAttribute` read and write instance fields and class variables, `Call` invokes a method by name, and `ClassName` reports which class the object belongs to—the declaring class for an instance, its own name for a class, and `null` for anything else. Attribute access on a type that has none raises a `RuntimeException`, the same error a host catches for any other Chow runtime failure.
+There are two ways to invoke something. `CallMethod` calls a named method on this object, and `CallSelf` calls the object itself—useful when the callable is the value you are holding, such as a function read out of a scope. Calling a class constructs an instance of it, so `point.CallSelf(3, 4)` is the host spelling of `Point(3, 4)`. A callable that returns nothing yields the Chow `None` object.
+
+Both come in two forms: one taking `ChowObject` arguments, and one taking native .NET values so an `int`, a `float`, or a `null` can be passed without wrapping it first. Arguments that are already Chow objects are unwrapped rather than wrapped again, so the two forms are interchangeable and can be mixed in one call.
+
+Going the other way, a host delegate assigned into a scope becomes callable from Chow through an implicit conversion. Delegates come in the same two flavours: those taking `object` receive host values, while those taking `ChowObject` receive Chow values, which is what you want when the argument may be a `list`, a `dict`, or a class instance the delegate needs to inspect. Each flavour covers up to three fixed parameters plus a params-array form, with and without a return value, so any of them can be assigned into a scope directly. A delegate that returns nothing, or returns `null`, yields the Chow `None` object; one that is handed fewer arguments than it declares receives `None` for the rest rather than failing.
+
+For objects produced by a `class` declaration, `GetAttribute` and `SetAttribute` read and write instance fields and class variables, `CallMethod` invokes a method by name, and `ClassName` reports which class the object belongs to—the declaring class for an instance, its own name for a class, and `null` for anything else. Attribute access on a type that has none raises a `RuntimeException`, the same error a host catches for any other Chow runtime failure.
 
 ## ChowScope
 

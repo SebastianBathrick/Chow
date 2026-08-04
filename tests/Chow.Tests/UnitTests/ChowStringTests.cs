@@ -147,7 +147,7 @@ public class ChowStringTests
         var list = ChowObject.CreateList();
         ChowString item = "hello";
 
-        Assert.DoesNotThrow(() => list.Call("append", item));
+        Assert.DoesNotThrow(() => list.CallMethod("append", item));
         Assert.That(list[0L].ToString(), Is.EqualTo("hello"));
     }
 }

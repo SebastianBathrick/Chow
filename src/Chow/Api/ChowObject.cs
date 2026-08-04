@@ -159,12 +159,62 @@ namespace Chow
         /// <param name="methodName">The name of the method to invoke.</param>
         /// <param name="args">The arguments to pass to the method.</param>
         /// <returns>The object returned by the method.</returns>
-        public ChowObject Call(string methodName, params ChowObject[] args)
+        public ChowObject CallMethod(string methodName, params ChowObject[] args)
+        {
+            return InvokeMethod(methodName, ApiConverter.Convert(args));
+        }
+
+        /// <summary>
+        /// Invokes a named method on this object, passing native .NET values as the arguments. A
+        /// <see langword="null"/> argument is passed as the Chow <c>None</c> object.
+        /// </summary>
+        /// <param name="methodName">The name of the method to invoke.</param>
+        /// <param name="args">The arguments to pass to the method.</param>
+        /// <returns>The object returned by the method.</returns>
+        public ChowObject CallMethod(string methodName, params object[] args)
+        {
+            return InvokeMethod(methodName, ApiConverter.ConvertHostArguments(args));
+        }
+
+        /// <summary>
+        /// Invokes this object itself, passing the supplied arguments. Calling a class constructs an
+        /// instance of it, the same as calling the class from Chow source.
+        /// </summary>
+        /// <param name="args">The arguments to pass to the call.</param>
+        /// <returns>
+        /// The object the call returned, or the Chow <c>None</c> object when it returned nothing.
+        /// </returns>
+        public ChowObject CallSelf(params ChowObject[] args)
+        {
+            return InvokeSelf(ApiConverter.Convert(args));
+        }
+
+        /// <summary>
+        /// Invokes this object itself, passing native .NET values as the arguments. A
+        /// <see langword="null"/> argument is passed as the Chow <c>None</c> object. Calling a class
+        /// constructs an instance of it, the same as calling the class from Chow source.
+        /// </summary>
+        /// <param name="args">The arguments to pass to the call.</param>
+        /// <returns>
+        /// The object the call returned, or the Chow <c>None</c> object when it returned nothing.
+        /// </returns>
+        public ChowObject CallSelf(params object[] args)
+        {
+            return InvokeSelf(ApiConverter.ConvertHostArguments(args));
+        }
+
+        ChowObject InvokeMethod(string methodName, SourceValue[] args)
         {
             var methodAttr = SourceObject.GetAttribute(methodName);
-            var convertedArgs = ApiConverter.ConvertToInterface(args);
-            
-            return (ChowObject)ChowEngine.Call(ref methodAttr, convertedArgs);
+
+            return (ChowObject)ChowEngine.Call(ref methodAttr, args);
+        }
+
+        ChowObject InvokeSelf(SourceValue[] args)
+        {
+            var callee = SourceValue;
+
+            return (ChowObject)ChowEngine.Call(ref callee, args);
         }
 
         /// <summary>Returns this object as the requested host type.</summary>
@@ -270,6 +320,23 @@ namespace Chow
             return new ChowObject(value);
         }
 
+        // ---- Host delegates taking native .NET values ----
+
+        /// <summary>
+        /// Converts a host delegate into a Chow callable that takes no arguments and returns
+        /// nothing.
+        /// </summary>
+        public static implicit operator ChowObject(Action value)
+        {
+            SourceValue Wrapper(SourceValue[] _)
+            {
+                value();
+                return SourceValue.None;
+            }
+
+            return ToCallable(Wrapper);
+        }
+
         /// <summary>
         /// Converts a host delegate into a Chow callable that takes no arguments and returns an
         /// object.
@@ -278,11 +345,10 @@ namespace Chow
         {
             SourceValue Wrapper(SourceValue[] _)
             {
-                var result = value();
-                return result is null ? SourceValue.None : new SourceValue(result);
+                return ApiConverter.ConvertHostValue(value());
             }
 
-            return new ChowObject(new SourceValue((Func<SourceValue[], SourceValue>)Wrapper));
+            return ToCallable(Wrapper);
         }
 
         /// <summary>
@@ -293,11 +359,84 @@ namespace Chow
         {
             SourceValue Wrapper(SourceValue[] args)
             {
-                value(args != null && args.Length > 0 ? args[0].ToObject() : null);
+                value(ArgAt(args, 0));
                 return SourceValue.None;
             }
 
-            return new ChowObject(new SourceValue((Func<SourceValue[], SourceValue>)Wrapper));
+            return ToCallable(Wrapper);
+        }
+
+        /// <summary>
+        /// Converts a host delegate into a Chow callable that takes two arguments and returns
+        /// nothing.
+        /// </summary>
+        public static implicit operator ChowObject(Action<object, object> value)
+        {
+            SourceValue Wrapper(SourceValue[] args)
+            {
+                value(ArgAt(args, 0), ArgAt(args, 1));
+                return SourceValue.None;
+            }
+
+            return ToCallable(Wrapper);
+        }
+
+        /// <summary>
+        /// Converts a host delegate into a Chow callable that takes three arguments and returns
+        /// nothing.
+        /// </summary>
+        public static implicit operator ChowObject(Action<object, object, object> value)
+        {
+            SourceValue Wrapper(SourceValue[] args)
+            {
+                value(ArgAt(args, 0), ArgAt(args, 1), ArgAt(args, 2));
+                return SourceValue.None;
+            }
+
+            return ToCallable(Wrapper);
+        }
+
+        /// <summary>
+        /// Converts a host delegate into a Chow callable that takes a single argument and returns an
+        /// object.
+        /// </summary>
+        public static implicit operator ChowObject(Func<object, object> value)
+        {
+            SourceValue Wrapper(SourceValue[] args)
+            {
+                return ApiConverter.ConvertHostValue(value(ArgAt(args, 0)));
+            }
+
+            return ToCallable(Wrapper);
+        }
+
+        /// <summary>
+        /// Converts a host delegate into a Chow callable that takes two arguments and returns an
+        /// object.
+        /// </summary>
+        public static implicit operator ChowObject(Func<object, object, object> value)
+        {
+            SourceValue Wrapper(SourceValue[] args)
+            {
+                return ApiConverter.ConvertHostValue(value(ArgAt(args, 0), ArgAt(args, 1)));
+            }
+
+            return ToCallable(Wrapper);
+        }
+
+        /// <summary>
+        /// Converts a host delegate into a Chow callable that takes three arguments and returns an
+        /// object.
+        /// </summary>
+        public static implicit operator ChowObject(Func<object, object, object, object> value)
+        {
+            SourceValue Wrapper(SourceValue[] args)
+            {
+                return ApiConverter.ConvertHostValue(
+                    value(ArgAt(args, 0), ArgAt(args, 1), ArgAt(args, 2)));
+            }
+
+            return ToCallable(Wrapper);
         }
 
         /// <summary>
@@ -312,7 +451,7 @@ namespace Chow
                 return SourceValue.None;
             }
 
-            return new ChowObject(new SourceValue((Func<SourceValue[], SourceValue>)Wrapper));
+            return ToCallable(Wrapper);
         }
 
         /// <summary>
@@ -323,11 +462,171 @@ namespace Chow
         {
             SourceValue Wrapper(SourceValue[] args)
             {
-                var result = value(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>()));
-                return result is null ? SourceValue.None : new SourceValue(result);
+                return ApiConverter.ConvertHostValue(
+                    value(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>())));
             }
 
-            return new ChowObject(new SourceValue((Func<SourceValue[], SourceValue>)Wrapper));
+            return ToCallable(Wrapper);
+        }
+
+        // ---- Host delegates taking Chow objects ----
+
+        /// <summary>
+        /// Converts a host delegate into a Chow callable that takes no arguments and returns a Chow
+        /// object.
+        /// </summary>
+        public static implicit operator ChowObject(Func<ChowObject> value)
+        {
+            SourceValue Wrapper(SourceValue[] _)
+            {
+                return ToSourceValue(value());
+            }
+
+            return ToCallable(Wrapper);
+        }
+
+        /// <summary>
+        /// Converts a host delegate into a Chow callable that takes a single Chow object and returns
+        /// nothing. A call that supplies no argument passes the Chow <c>None</c> object.
+        /// </summary>
+        public static implicit operator ChowObject(Action<ChowObject> value)
+        {
+            SourceValue Wrapper(SourceValue[] args)
+            {
+                value(ChowArgAt(args, 0));
+                return SourceValue.None;
+            }
+
+            return ToCallable(Wrapper);
+        }
+
+        /// <summary>
+        /// Converts a host delegate into a Chow callable that takes two Chow objects and returns
+        /// nothing.
+        /// </summary>
+        public static implicit operator ChowObject(Action<ChowObject, ChowObject> value)
+        {
+            SourceValue Wrapper(SourceValue[] args)
+            {
+                value(ChowArgAt(args, 0), ChowArgAt(args, 1));
+                return SourceValue.None;
+            }
+
+            return ToCallable(Wrapper);
+        }
+
+        /// <summary>
+        /// Converts a host delegate into a Chow callable that takes three Chow objects and returns
+        /// nothing.
+        /// </summary>
+        public static implicit operator ChowObject(Action<ChowObject, ChowObject, ChowObject> value)
+        {
+            SourceValue Wrapper(SourceValue[] args)
+            {
+                value(ChowArgAt(args, 0), ChowArgAt(args, 1), ChowArgAt(args, 2));
+                return SourceValue.None;
+            }
+
+            return ToCallable(Wrapper);
+        }
+
+        /// <summary>
+        /// Converts a host delegate into a Chow callable that takes a single Chow object and returns
+        /// a Chow object.
+        /// </summary>
+        public static implicit operator ChowObject(Func<ChowObject, ChowObject> value)
+        {
+            SourceValue Wrapper(SourceValue[] args)
+            {
+                return ToSourceValue(value(ChowArgAt(args, 0)));
+            }
+
+            return ToCallable(Wrapper);
+        }
+
+        /// <summary>
+        /// Converts a host delegate into a Chow callable that takes two Chow objects and returns a
+        /// Chow object.
+        /// </summary>
+        public static implicit operator ChowObject(Func<ChowObject, ChowObject, ChowObject> value)
+        {
+            SourceValue Wrapper(SourceValue[] args)
+            {
+                return ToSourceValue(value(ChowArgAt(args, 0), ChowArgAt(args, 1)));
+            }
+
+            return ToCallable(Wrapper);
+        }
+
+        /// <summary>
+        /// Converts a host delegate into a Chow callable that takes three Chow objects and returns a
+        /// Chow object.
+        /// </summary>
+        public static implicit operator ChowObject(
+            Func<ChowObject, ChowObject, ChowObject, ChowObject> value)
+        {
+            SourceValue Wrapper(SourceValue[] args)
+            {
+                return ToSourceValue(
+                    value(ChowArgAt(args, 0), ChowArgAt(args, 1), ChowArgAt(args, 2)));
+            }
+
+            return ToCallable(Wrapper);
+        }
+
+        /// <summary>
+        /// Converts a host delegate into a Chow callable that takes multiple Chow objects and
+        /// returns nothing.
+        /// </summary>
+        public static implicit operator ChowObject(Action<ChowObject[]> value)
+        {
+            SourceValue Wrapper(SourceValue[] args)
+            {
+                value(ApiConverter.ConvertToClass(args));
+                return SourceValue.None;
+            }
+
+            return ToCallable(Wrapper);
+        }
+
+        /// <summary>
+        /// Converts a host delegate into a Chow callable that takes multiple Chow objects and
+        /// returns a Chow object.
+        /// </summary>
+        public static implicit operator ChowObject(Func<ChowObject[], ChowObject> value)
+        {
+            SourceValue Wrapper(SourceValue[] args)
+            {
+                return ToSourceValue(value(ApiConverter.ConvertToClass(args)));
+            }
+
+            return ToCallable(Wrapper);
+        }
+
+        // Wraps a delegate as the callable shape the VM invokes directly, bypassing the interop
+        // dispatch it would otherwise have to match the host delegate's type against.
+        static ChowObject ToCallable(Func<SourceValue[], SourceValue> wrapper)
+        {
+            return new ChowObject(new SourceValue(wrapper));
+        }
+
+        // A host delegate returning null is treated as Chow's None, matching how the object-based
+        // delegate conversions handle a null result.
+        static SourceValue ToSourceValue(ChowObject result)
+        {
+            return result is null ? SourceValue.None : result.SourceValue;
+        }
+
+        // Arguments a call did not supply arrive as absent rather than as an error, so a delegate
+        // declaring more parameters than the call passes still runs.
+        static object ArgAt(SourceValue[] args, int index)
+        {
+            return args != null && args.Length > index ? args[index].ToObject() : null;
+        }
+
+        static ChowObject ChowArgAt(SourceValue[] args, int index)
+        {
+            return args != null && args.Length > index ? ApiConverter.ConvertToClass(args[index]) : None;
         }
 
         /// <summary>

@@ -63,7 +63,7 @@ namespace Chow
         /// <param name="object">The object to add.</param>
         public void Append(ChowObject @object)
         {
-            WrappedObject.Call(SourceObjectConsts.ListAppendMethodName, @object);
+            WrappedObject.CallMethod(SourceObjectConsts.ListAppendMethodName, @object);
         }
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace Chow
         /// <param name="object">The object to insert.</param>
         public void Insert(ChowObject index, ChowObject @object)
         {
-            WrappedObject.Call(SourceObjectConsts.ListInsertMethodName, index, @object);
+            WrappedObject.CallMethod(SourceObjectConsts.ListInsertMethodName, index, @object);
         }
 
         /// <summary>Removes and returns the item at the given index.</summary>
@@ -81,27 +81,27 @@ namespace Chow
         /// <returns>The removed item.</returns>
         public ChowObject Pop(ChowObject index)
         {
-            return WrappedObject.Call(SourceObjectConsts.ListPopMethodName, index);
+            return WrappedObject.CallMethod(SourceObjectConsts.ListPopMethodName, index);
         }
 
         /// <summary>Removes the first item equal to the given object.</summary>
         /// <param name="value">The object to remove.</param>
         public void Remove(ChowObject value)
         {
-            WrappedObject.Call(SourceObjectConsts.ListRemoveMethodName, value);
+            WrappedObject.CallMethod(SourceObjectConsts.ListRemoveMethodName, value);
         }
 
         /// <summary>Reverses the order of the list's items in place.</summary>
         /// <returns>The Chow <c>None</c> object.</returns>
         public ChowObject Reverse()
         {
-            return WrappedObject.Call(SourceObjectConsts.ListReverseMethodName);
+            return WrappedObject.CallMethod(SourceObjectConsts.ListReverseMethodName);
         }
 
         /// <summary>Removes all items from the list.</summary>
         public void Clear()
         {
-            WrappedObject.Call(SourceObjectConsts.ListClearMethodName);
+            WrappedObject.CallMethod(SourceObjectConsts.ListClearMethodName);
         }
 
         /// <summary>Converts a <see cref="ChowList"/> to a <see cref="ChowObject"/>.</summary>
