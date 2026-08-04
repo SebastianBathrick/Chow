@@ -1,4 +1,6 @@
 ﻿using System;
+using Chow.Code;
+using Chow.Interpreter.Exceptions;
 using Chow.SourceData;
 
 namespace Chow
@@ -13,6 +15,9 @@ namespace Chow
     /// </summary>
     public sealed class ChowObject : IChowObject
     {
+        // Errors raised by a host call have no line of Chow source behind them.
+        const int NoLineNumber = -1;
+
         ISourceObject _srcObj;
 
         /// <summary>The Chow <c>None</c> object, representing the absence of a value.</summary>
@@ -35,6 +40,32 @@ namespace Chow
 
         /// <inheritdoc/>
         public bool IsString => SourceValue.IsString;
+
+        /// <inheritdoc/>
+        public bool IsClass => SourceValue.IsClass;
+
+        /// <inheritdoc/>
+        public bool IsClassInstance => SourceValue.IsClassInstance;
+
+        /// <summary>
+        /// The name of the Chow class this object belongs to: the declaring class for an instance,
+        /// or its own name for a class. <c>null</c> for every other kind of object.
+        /// </summary>
+        public string ClassName
+        {
+            get
+            {
+                switch (SourceValue.ToObject())
+                {
+                    case SourceClassInstance instance:
+                        return instance.TypeName;
+                    case SourceClass sourceClass:
+                        return sourceClass.Name;
+                    default:
+                        return null;
+                }
+            }
+        }
 
         ISourceObject SourceObject => _srcObj ?? (_srcObj = SourceValue.ToISourceObject());
 
@@ -71,11 +102,54 @@ namespace Chow
         /// <summary>Retrieves a named attribute from this object.</summary>
         /// <param name="name">The name of the attribute to retrieve.</param>
         /// <returns>The requested attribute.</returns>
+        /// <exception cref="RuntimeException">
+        /// This object has no attribute called <paramref name="name"/>, or its type does not support
+        /// attributes at all.
+        /// </exception>
         public ChowObject GetAttribute(ChowObject name)
         {
-            var attr = SourceObject.GetAttribute(name.SourceValue);
-            var chowVal = new ChowObject(attr);
-            return chowVal;
+            try
+            {
+                var attr = SourceObject.GetAttribute(name.SourceValue);
+                var chowVal = new ChowObject(attr);
+                return chowVal;
+            }
+            catch (NotSupportedException)
+            {
+                // Types with no attribute protocol fall through to the SourceObject base, which
+                // signals that with a plain .NET exception. Reading an attribute they do not have is
+                // an AttributeError from the host's point of view, same as any missing name.
+                throw AttributeNotSupported(name);
+            }
+        }
+
+        /// <summary>
+        /// Assigns <paramref name="value"/> to a named attribute of this object, adding the
+        /// attribute if it does not already exist. Supported by Chow classes and their instances.
+        /// </summary>
+        /// <param name="name">The name of the attribute to assign.</param>
+        /// <param name="value">The value to assign to the attribute.</param>
+        /// <exception cref="RuntimeException">
+        /// This object's type does not support attribute assignment.
+        /// </exception>
+        public void SetAttribute(ChowObject name, ChowObject value)
+        {
+            try
+            {
+                SourceObject.SetAttribute(name.SourceValue, value.SourceValue);
+            }
+            catch (NotSupportedException)
+            {
+                throw AttributeNotSupported(name);
+            }
+        }
+
+        AttributeException AttributeNotSupported(ChowObject name)
+        {
+            return new AttributeException(
+                DataTypeNames.GetTypeName(SourceValue.DataType),
+                name.ToString(),
+                NoLineNumber);
         }
 
         /// <summary>

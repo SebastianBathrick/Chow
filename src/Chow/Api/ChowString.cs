@@ -29,6 +29,12 @@ namespace Chow
         /// <inheritdoc/>
         public bool IsString => WrappedObject.IsString;
 
+        /// <inheritdoc/>
+        public bool IsClass => WrappedObject.IsClass;
+
+        /// <inheritdoc/>
+        public bool IsClassInstance => WrappedObject.IsClassInstance;
+
         /// <summary>Gets the single-character string at the given index.</summary>
         /// <param name="index">The zero-based index of the character.</param>
         /// <returns>The character at <paramref name="index"/> as a Chow <c>str</c>.</returns>

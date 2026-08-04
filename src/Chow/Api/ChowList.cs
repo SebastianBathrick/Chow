@@ -33,6 +33,12 @@ namespace Chow
         /// <inheritdoc/>
         public bool IsString => WrappedObject.IsString;
 
+        /// <inheritdoc/>
+        public bool IsClass => WrappedObject.IsClass;
+
+        /// <inheritdoc/>
+        public bool IsClassInstance => WrappedObject.IsClassInstance;
+
         /// <summary>Gets or sets the item at the given index.</summary>
         /// <param name="index">The zero-based index of the item.</param>
         /// <returns>The item at <paramref name="index"/>.</returns>

@@ -37,6 +37,10 @@ namespace Chow.SourceData
 
         public bool IsString => DataType == DataType.Str;
 
+        public bool IsClass => DataType == DataType.Class;
+
+        public bool IsClassInstance => DataType == DataType.Instance;
+
         bool LongToBoolValue => _long == BoolTrueToLong;
 
         #region Constructors

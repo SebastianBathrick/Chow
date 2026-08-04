@@ -68,4 +68,18 @@ public class ChowScopeTests
 
         Assert.That(backToScope["x"] == 7L, Is.True);
     }
+
+    // Covers the wrapper delegating the class type-check flags to the object it wraps.
+    [Test]
+    public void ClassTypeChecks_Scope_ReportFalse()
+    {
+        var scope = new ChowScope();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(scope.IsClass, Is.False);
+            Assert.That(scope.IsClassInstance, Is.False);
+            Assert.That(scope.IsScope, Is.True);
+        });
+    }
 }

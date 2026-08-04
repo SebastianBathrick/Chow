@@ -16,7 +16,7 @@ Path: `[..\src\Chow\Api\ChowEngine.cs](../src/Chow/Api/ChowEngine.cs)`
 
 Path: `[..\src\Chow\Api\IChowObject.cs](../src/Chow/Api/IChowObject.cs)`
 
-`IChowObject` is the common interface shared by every public Chow object type. It lets the API accept and return Chow values without depending on any one concrete wrapper, and guarantees that every Chow value can render itself as a Chow-style string.
+`IChowObject` is the common interface shared by every public Chow object type. It lets the API accept and return Chow values without depending on any one concrete wrapper, and guarantees that every Chow value can render itself as a Chow-style string. It also carries the type-check flags—`IsNone`, `IsList`, `IsDictionary`, `IsScope`, `IsString`, `IsClass`, and `IsClassInstance`—so a host can discriminate a value it was handed without probing it and catching.
 
 ## ChowObject
 
@@ -24,7 +24,9 @@ Path: `[..\src\Chow\Api\ChowObject.cs](../src/Chow/Api/ChowObject.cs)`
 
 `ChowObject` is the primary value type the host works with. It represents any single Chow value, such as an `int`, `float`, `str`, `bool`, `None`, `list`, `dict`, or `scope`, and is what `ChowEngine` returns and accepts.
 
-It is designed to feel natural from host code: it converts to and from common .NET types, lets the host index into collections, read attributes, and invoke methods on Chow objects, and can wrap host delegates so native functions can be called from Chow. It also supports value-based equality and comparison against ordinary .NET values.
+It is designed to feel natural from host code: it converts to and from common .NET types, lets the host index into collections, read and assign attributes, and invoke methods on Chow objects, and can wrap host delegates so native functions can be called from Chow. It also supports value-based equality and comparison against ordinary .NET values.
+
+For objects produced by a `class` declaration, `GetAttribute` and `SetAttribute` read and write instance fields and class variables, `Call` invokes a method by name, and `ClassName` reports which class the object belongs to—the declaring class for an instance, its own name for a class, and `null` for anything else. Attribute access on a type that has none raises a `RuntimeException`, the same error a host catches for any other Chow runtime failure.
 
 ## ChowScope
 

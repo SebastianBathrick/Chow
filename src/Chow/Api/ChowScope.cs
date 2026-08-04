@@ -24,6 +24,12 @@ namespace Chow
         /// <inheritdoc/>
         public bool IsString => WrappedObject.IsString;
 
+        /// <inheritdoc/>
+        public bool IsClass => WrappedObject.IsClass;
+
+        /// <inheritdoc/>
+        public bool IsClassInstance => WrappedObject.IsClassInstance;
+
         internal ChowObject WrappedObject
         {
             get;

@@ -618,4 +618,162 @@ public class ChowObjectTests
     }
 
     #endregion
+
+    #region Class Attributes
+
+    const string ConfigSourceCode = """
+                                    class Config:
+                                        limit = 10
+
+                                        def __init__(self, name):
+                                            self.name = name
+
+                                    config = Config("primary")
+                                    """;
+
+    [Test]
+    public void SetAttribute_NewName_AddsReadableField()
+    {
+        var counter = CreateCounterInstance();
+
+        counter.SetAttribute("label", "totals");
+
+        Assert.That(counter.GetAttribute("label"), Is.EqualTo((ChowObject)"totals"));
+    }
+
+    [Test]
+    public void SetAttribute_ExistingName_OverwritesField()
+    {
+        var counter = CreateCounterInstance();
+
+        counter.SetAttribute("value", 42L);
+
+        Assert.That(counter.GetAttribute("value"), Is.EqualTo((ChowObject)42L));
+    }
+
+    [Test]
+    public void SetAttribute_OnClass_RebindsClassVariableForInstances()
+    {
+        var scope = new ChowScope();
+        ChowEngine.Run(ConfigSourceCode, scope);
+
+        ChowObject configClass = scope["Config"];
+        configClass.SetAttribute("limit", 25L);
+
+        Assert.That(((ChowObject)scope["config"]).GetAttribute("limit"), Is.EqualTo((ChowObject)25L));
+    }
+
+    // A field written from the host has to be visible to Chow code that runs afterwards.
+    [Test]
+    public void SetAttribute_FieldReadByLaterChowCode_UsesAssignedValue()
+    {
+        var scope = new ChowScope();
+        ChowEngine.Run(ConfigSourceCode, scope);
+
+        ((ChowObject)scope["config"]).SetAttribute("name", "replaced");
+
+        Assert.That(ChowEngine.Run("config.name", scope), Is.EqualTo((ChowObject)"replaced"));
+    }
+
+    [Test]
+    public void SetAttribute_TypeWithoutAttributes_ThrowsRuntimeException()
+    {
+        var list = ChowObject.CreateList();
+
+        Assert.Throws<AttributeException>(() => list.SetAttribute("total", 1L));
+    }
+
+    // Types with no attribute protocol used to let the SourceObject base's NotSupportedException
+    // escape through the public API.
+    [Test]
+    public void GetAttribute_TypeWithoutAttributes_ThrowsRuntimeException()
+    {
+        var scope = new ChowScope();
+
+        Assert.Throws<AttributeException>(() => ((ChowObject)scope).GetAttribute("missing"));
+    }
+
+    [Test]
+    public void GetAttribute_UndefinedName_MessageOmitsLineNumber()
+    {
+        var counter = CreateCounterInstance();
+
+        var exception = Assert.Throws<AttributeException>(() => counter.GetAttribute("missing"));
+
+        Assert.That(exception.Message, Does.Not.Contain("on line"));
+    }
+
+    #endregion
+
+    #region Class Type Checks
+
+    static ChowObject CreateConfigClass()
+    {
+        return RunAndGet(ConfigSourceCode, "Config");
+    }
+
+    static ChowObject CreateConfigInstance()
+    {
+        return RunAndGet(ConfigSourceCode, "config");
+    }
+
+    [Test]
+    public void IsClass_ClassObject_ReturnsTrue()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(CreateConfigClass().IsClass, Is.True);
+            Assert.That(CreateConfigClass().IsClassInstance, Is.False);
+        });
+    }
+
+    [Test]
+    public void IsClassInstance_Instance_ReturnsTrue()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(CreateConfigInstance().IsClassInstance, Is.True);
+            Assert.That(CreateConfigInstance().IsClass, Is.False);
+        });
+    }
+
+    [TestCaseSource(nameof(NonClassObjects))]
+    public void IsClass_NonClassObject_ReturnsFalse(ChowObject @object)
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(@object.IsClass, Is.False);
+            Assert.That(@object.IsClassInstance, Is.False);
+        });
+    }
+
+    static IEnumerable<ChowObject> NonClassObjects()
+    {
+        yield return ChowObject.CreateList();
+        yield return ChowObject.CreateDictionary();
+        yield return ChowObject.CreateScope();
+        yield return "text";
+        yield return 1L;
+        yield return ChowObject.None;
+    }
+
+    [Test]
+    public void ClassName_Instance_ReturnsDeclaringClassName()
+    {
+        Assert.That(CreateConfigInstance().ClassName, Is.EqualTo("Config"));
+    }
+
+    [Test]
+    public void ClassName_ClassObject_ReturnsOwnName()
+    {
+        Assert.That(CreateConfigClass().ClassName, Is.EqualTo("Config"));
+    }
+
+    [Test]
+    public void ClassName_NonClassObject_ReturnsNull()
+    {
+        Assert.That(ChowObject.CreateList().ClassName, Is.Null);
+    }
+
+    #endregion
 }

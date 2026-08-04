@@ -21,8 +21,17 @@ namespace Chow.Interpreter.Exceptions
         /// <param name="lineNumber">The line of Chow source the error occurred on, or -1 when it did
         /// not originate from a line of Chow source.</param>
         protected RuntimeException(string exceptionAlias, string message, int lineNumber = NoLineNumber) : base(
-            $"{exceptionAlias}: {message} on line {lineNumber}")
+            FormatMessage(exceptionAlias, message, lineNumber))
         {
+        }
+
+        // Errors raised from the host API have no line of Chow source behind them, so the suffix is
+        // dropped rather than reported as "on line -1".
+        static string FormatMessage(string exceptionAlias, string message, int lineNumber)
+        {
+            return lineNumber == NoLineNumber
+                ? $"{exceptionAlias}: {message}"
+                : $"{exceptionAlias}: {message} on line {lineNumber}";
         }
     }
 }
