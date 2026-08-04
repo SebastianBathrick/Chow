@@ -630,6 +630,7 @@ namespace Chow.Interpreter.VM
             return calleeValue.DataType == DataType.Function;
         }
 
+        // TODO: Refactor and move to a different class (thus, avoiding ChowObject dependency)
         void CallInteropFunction(SourceValue calleeValue, SourceValue[] args)
         {
             var toObjVal = calleeValue.ToObject();
@@ -639,6 +640,13 @@ namespace Chow.Interpreter.VM
                 case Action action:
                     ThrowIfArguments(calleeValue, args);
                     action.Invoke();
+                    break;
+                // Return-type covariance makes a Func<ChowObject> match case Func<object>, so it has
+                // to be tested first. Parameter contravariance runs the other way, which is why the
+                // Action<object> cases stay ahead of their Action<ChowObject> counterparts.
+                case Func<ChowObject> funcNoChowParams:
+                    ThrowIfArguments(calleeValue, args);
+                    _valStack.Push(ToSourceValue(funcNoChowParams.Invoke()));
                     break;
                 // TODO: Find a way around this dependency
                 case Func<object> funcNoParams:
@@ -686,11 +694,63 @@ namespace Chow.Interpreter.VM
                         new SourceValue(funcParams.Invoke(SourceValue.ToObjects(args ?? Array.Empty<SourceValue>()))));
 
                     break;
+                case Action<ChowObject> actionOneChowParam:
+                    ThrowIfArgumentCount(calleeValue, args, 1);
+                    actionOneChowParam.Invoke(ApiConverter.ConvertToClass(args[0]));
+                    break;
+                case Action<ChowObject, ChowObject> actionTwoChowParams:
+                    ThrowIfArgumentCount(calleeValue, args, 2);
+                    actionTwoChowParams.Invoke(
+                        ApiConverter.ConvertToClass(args[0]),
+                        ApiConverter.ConvertToClass(args[1]));
+                    break;
+                case Action<ChowObject, ChowObject, ChowObject> actionThreeChowParams:
+                    ThrowIfArgumentCount(calleeValue, args, 3);
+                    actionThreeChowParams.Invoke(
+                        ApiConverter.ConvertToClass(args[0]),
+                        ApiConverter.ConvertToClass(args[1]),
+                        ApiConverter.ConvertToClass(args[2]));
+                    break;
+                case Func<ChowObject, ChowObject> funcOneChowParam:
+                    ThrowIfArgumentCount(calleeValue, args, 1);
+                    _valStack.Push(
+                        ToSourceValue(funcOneChowParam.Invoke(ApiConverter.ConvertToClass(args[0]))));
+                    break;
+                case Func<ChowObject, ChowObject, ChowObject> funcTwoChowParams:
+                    ThrowIfArgumentCount(calleeValue, args, 2);
+                    _valStack.Push(
+                        ToSourceValue(
+                            funcTwoChowParams.Invoke(
+                                ApiConverter.ConvertToClass(args[0]),
+                                ApiConverter.ConvertToClass(args[1]))));
+                    break;
+                case Func<ChowObject, ChowObject, ChowObject, ChowObject> funcThreeChowParams:
+                    ThrowIfArgumentCount(calleeValue, args, 3);
+                    _valStack.Push(
+                        ToSourceValue(
+                            funcThreeChowParams.Invoke(
+                                ApiConverter.ConvertToClass(args[0]),
+                                ApiConverter.ConvertToClass(args[1]),
+                                ApiConverter.ConvertToClass(args[2]))));
+                    break;
+                case Action<ChowObject[]> actionChowArrayParam:
+                    actionChowArrayParam.Invoke(ApiConverter.ConvertToClass(args));
+                    break;
+                case Func<ChowObject[], ChowObject> funcChowParams:
+                    _valStack.Push(ToSourceValue(funcChowParams.Invoke(ApiConverter.ConvertToClass(args))));
+                    break;
                 default:
                     // TODO: After built-ins refactor, remove this
                     _valStack.Push(calleeValue.InvokeHostDelegate(args));
                     break;
             }
+        }
+
+        // A host delegate returning null is treated as Chow's None, matching ChowObject's delegate
+        // conversion operators.
+        static SourceValue ToSourceValue(ChowObject result)
+        {
+            return result is null ? SourceValue.None : ApiConverter.Convert(result);
         }
 
         static void ThrowIfArguments(SourceValue calleeValue, SourceValue[] args)

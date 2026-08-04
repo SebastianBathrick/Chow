@@ -1,4 +1,5 @@
-﻿using Chow.Interpreter.Exceptions;
+﻿using System;
+using Chow.Interpreter.Exceptions;
 using Chow.SourceData;
 
 namespace Chow
@@ -13,6 +14,28 @@ namespace Chow
         public static IChowObject Convert(ref SourceValue srcVal)
         {
             return new ChowObject(ref srcVal);
+        }
+
+        public static ChowObject ConvertToClass(SourceValue srcVal)
+        {
+            return new ChowObject(ref srcVal);
+        }
+
+        public static ChowObject[] ConvertToClass(SourceValue[] srcVals)
+        {
+            if (srcVals == null)
+            {
+                return Array.Empty<ChowObject>();
+            }
+
+            var classObjs = new ChowObject[srcVals.Length];
+
+            for (var i = 0; i < srcVals.Length; i++)
+            {
+                classObjs[i] = ConvertToClass(srcVals[i]);
+            }
+
+            return classObjs;
         }
 
         public static SourceValue[] Convert(IChowObject[] apiVals)
