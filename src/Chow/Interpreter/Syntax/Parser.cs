@@ -100,9 +100,18 @@ namespace Chow.Interpreter.Syntax
                     return ParseNonlocalDeclaration(lineNum);
                 case TokenType.Name:
                     return ParseAssignStatement(lineNum);
+                case TokenType.KeywordClass:
+                    return ParseClassDeclaration(lineNum);
                 default:
                     return ParseExpressionStatement(lineNum);
             }
+        }
+
+        Node ParseClassDeclaration(int lineNum)
+        {
+            _tokens.Consume();
+            var className = _tokens.ConsumeMatch(TokenType.Name).Lexeme;
+            return new ClassNode(className, ParseBlock(), lineNum);
         }
 
         Node ParseAssignStatement(int lineNum)
