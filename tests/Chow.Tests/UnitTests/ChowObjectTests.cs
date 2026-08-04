@@ -1,4 +1,5 @@
 ﻿using Chow;
+using Chow.Interpreter.Exceptions;
 using Chow.SourceData;
 
 namespace Chow.Tests.UnitTests;
@@ -479,6 +480,141 @@ public class ChowObjectTests
         var list = ChowObject.CreateList();
 
         Assert.That(list.ToString(), Is.EqualTo(CreateEmptyList().ToString()));
+    }
+
+    #endregion
+
+    #region Calling Chow-Defined Methods
+
+    // Runs source in a fresh scope and hands back one of the variables it defined.
+    static ChowObject RunAndGet(string sourceCode, string variableName)
+    {
+        var scope = new ChowScope();
+        ChowEngine.Run(sourceCode, scope);
+
+        return scope[variableName];
+    }
+
+    static ChowObject CreateCounterInstance()
+    {
+        return RunAndGet(
+            """
+            class Counter:
+                def __init__(self, start):
+                    self.value = start
+
+                def read(self):
+                    return self.value
+
+                def bump(self, amount):
+                    self.value = self.value + amount
+
+                def bump_twice(self, amount):
+                    self.bump(amount)
+                    self.bump(amount)
+
+            counter = Counter(5)
+            """,
+            "counter");
+    }
+
+    [Test]
+    public void Call_MethodWithArgument_ReturnsResult()
+    {
+        var instance = RunAndGet(
+            """
+            class Scaler:
+                def __init__(self, factor):
+                    self.factor = factor
+
+                def scale(self, value):
+                    return self.factor * value
+
+            scaler = Scaler(3)
+            """,
+            "scaler");
+
+        Assert.That(instance.Call("scale", 4L), Is.EqualTo((ChowObject)12L));
+    }
+
+    [Test]
+    public void Call_MethodWithNoArguments_ReturnsResult()
+    {
+        var counter = CreateCounterInstance();
+
+        Assert.That(counter.Call("read"), Is.EqualTo((ChowObject)5L));
+    }
+
+    [Test]
+    public void Call_MethodWithoutReturn_ReturnsNone()
+    {
+        var counter = CreateCounterInstance();
+
+        Assert.That(counter.Call("bump", 1L), Is.EqualTo(ChowObject.None));
+    }
+
+    [Test]
+    public void Call_MutatingMethod_UpdatesInstanceState()
+    {
+        var counter = CreateCounterInstance();
+
+        counter.Call("bump", 3L);
+
+        Assert.That(counter.GetAttribute("value"), Is.EqualTo((ChowObject)8L));
+    }
+
+    // The receiver has to survive a call the method makes back through self.
+    [Test]
+    public void Call_MethodCallingAnotherMethod_AppliesBothCalls()
+    {
+        var counter = CreateCounterInstance();
+
+        counter.Call("bump_twice", 10L);
+
+        Assert.That(counter.Call("read"), Is.EqualTo((ChowObject)25L));
+    }
+
+    // A host call has no surrounding frame, so the module scope is recovered from the closure.
+    [Test]
+    public void Call_MethodUsingGlobal_ResolvesAgainstModuleScope()
+    {
+        var scope = new ChowScope();
+
+        ChowEngine.Run(
+            """
+            tally = 0
+
+            class Recorder:
+                def record(self, amount):
+                    global tally
+                    tally = tally + amount
+                    return tally
+
+            recorder = Recorder()
+            """,
+            scope);
+
+        ChowObject recorder = scope["recorder"];
+        recorder.Call("record", 4L);
+
+        Assert.That(recorder.Call("record", 6L), Is.EqualTo((ChowObject)10L));
+        Assert.That(scope["tally"], Is.EqualTo((ChowObject)10L));
+    }
+
+    [Test]
+    public void Call_MethodWithWrongArgumentCount_ThrowsDataTypeException()
+    {
+        var counter = CreateCounterInstance();
+
+        Assert.Throws<DataTypeException>(() => counter.Call("read", 1L));
+    }
+
+    [Test]
+    public void Call_UndefinedMethodName_ThrowsAttributeException()
+    {
+        var counter = CreateCounterInstance();
+
+        Assert.Throws<AttributeException>(() => counter.Call("missing"));
     }
 
     #endregion

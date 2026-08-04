@@ -33,7 +33,7 @@ Before a piece of Chow source code can be evaluated, it must be compiled into by
 ### VirtualMachine: Bytecode Execution
 Once Chow's source code is converted into a bytecode chunk, the `VirtualMachine` executes its actual logic by running the chunk through the `Processor`.
 
-- It can also invoke a host-provided callable directly.
+- It can also invoke a single callable on its own, without a chunk around it, which is how the host reaches into Chow through `ChowObject.Call`. A host-provided delegate is invoked directly; a Chow callable—a closure, a bound method, or a class—is run by a `Processor` through `CallValue`, which applies the same call rules compiled code goes through. Since a call made from the host has no surrounding frame to inherit a module scope from, it is recovered by walking the callable's captured scope chain to its root, so `global` inside the body still resolves.
 
 - #### Processor
     *Path:* [..\src\Chow\Interpreter\VM\Processor.cs](../src/Chow/Interpreter/VM/Processor.cs)

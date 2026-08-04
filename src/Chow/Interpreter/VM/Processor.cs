@@ -206,38 +206,42 @@ namespace Chow.Interpreter.VM
             return GoToNextInstruction;
         }
 
-        /// <summary>Calls a function stored in a global variable with the name provided.</summary>
-        /// <param name="callVarName">
-        /// The name of a variable declared in the global scope. Caller
-        /// is responsible for verifying the name is defined.
+        /// <summary>
+        /// Calls <paramref name="callee"/> and runs it to completion, as though a
+        /// <c>CallFunction</c> instruction had been reached. Lets the host invoke a Chow callable
+        /// without a surrounding bytecode chunk to sit inside.
+        /// </summary>
+        /// <param name="callee">
+        /// The value to call: a Chow closure, a bound method, a class, or a host delegate. Whether
+        /// it is callable at all is decided by the same logic that runs a call in compiled code, so
+        /// a non-callable raises the language's own error.
         /// </param>
         /// <param name="args">
-        /// The arguments to pass to the function. If there aren't any, this
-        /// parameter can be null.
+        /// The arguments to pass to the call. If there aren't any, this parameter can be null.
         /// </param>
-        /// <returns>The result of the function call.</returns>
-        /// <remarks>
-        /// Assumes that there is a global scope already set up that was provided to the
-        /// constructor.
-        /// </remarks>
-        public SourceValue CallGlobalFunction(string callVarName, SourceValue[] args)
+        /// <returns>The result of the call, or None when the callee produced no value.</returns>
+        public SourceValue CallValue(SourceValue callee, SourceValue[] args)
         {
-            _valStack.Push(_callStack.GetVariableValue(callVarName));
+            // Void host delegates push no result, so the depth recorded here is what says whether
+            // one ever arrived.
+            var stackDepthBeforeCall = _valStack.Count;
+            var argCount = args?.Length ?? 0;
 
-            if (args != null)
+            _valStack.Push(callee);
+
+            for (var i = 0; i < argCount; i++)
             {
-                foreach (var arg in args)
-                {
-                    _valStack.Push(arg);
-                }
+                _valStack.Push(args[i]);
             }
 
-            if (ExecuteCallFunction(args?.Length ?? 0) == StayAtInstruction)
+            // A closure switches to its own frame rather than producing a value inline, so it has to
+            // be run to its return before the result is on the stack.
+            if (ExecuteCallFunction(argCount) == StayAtInstruction)
             {
                 Execute();
             }
 
-            return _valStack.Pop();
+            return _valStack.Count > stackDepthBeforeCall ? _valStack.Pop() : SourceValue.None;
         }
 
         #region Binary Operations
