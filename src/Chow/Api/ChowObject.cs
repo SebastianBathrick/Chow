@@ -152,6 +152,7 @@ namespace Chow
                 NoLineNumber);
         }
 
+
         /// <summary>
         /// Invokes a named method on this object, passing the supplied arguments.
         /// </summary>

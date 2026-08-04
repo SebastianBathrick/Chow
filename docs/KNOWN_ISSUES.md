@@ -11,42 +11,6 @@ for bugs.
 
 ## Correctness
 
-### A void .NET delegate crashes when called inside a loop
-
-Calling a host-provided `Action` from Chow corrupts the value stack, so the second iteration of any
-enclosing loop fails:
-
-```csharp
-var scope = new ChowScope();
-scope["log"] = ChowObject.Create((Action<object>)(v => Console.WriteLine(v)));
-
-ChowEngine.Run("""
-    for i in [1, 2, 3]:
-        log(i)
-    """, scope);
-```
-
-```
-1
-Unhandled exception: InvalidOperationException: Stack empty.
-```
-
-`CallInteropFunction` in [..\src\Chow\Interpreter\VM\Processor.cs](../src/Chow/Interpreter/VM/Processor.cs)
-invokes each `Action` shape but pushes no result, while every `Func` shape pushes one. A call
-compiled as an expression statement is always followed by `PopExpressionStatementResult`, which pops
-regardless. Outside a loop the stack is empty and that op quietly yields `None`, which is why the
-problem is easy to miss. Inside a `for` loop the iterator is the top of the stack for the loop's
-whole lifetime, so it gets popped instead — and the next `JumpOrForIteratorNext` finds nothing there.
-
-Affects every void delegate shape: `Action`, `Action<object>` through `Action<object, object, object>`,
-`Action<object[]>`, `Action<ChowObject>` through `Action<ChowObject, ChowObject, ChowObject>`, and
-`Action<ChowObject[]>`.
-
-**Fix:** push `SourceValue.None` in each `Action` branch, so that every call leaves exactly one value
-behind. `Processor.CallValue` already compensates for the imbalance on the host-initiated path by
-comparing stack depth before and after, so `ChowObject.Call` on a void callable is unaffected; only
-calls made from Chow source are.
-
 ### Attribute errors on a function report the wrong type
 
 ```
