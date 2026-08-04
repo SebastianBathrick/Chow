@@ -1,4 +1,5 @@
 using Chow;
+using Chow.Interpreter.Exceptions;
 using Chow.SourceData;
 
 namespace Chow.Tests;
@@ -14,6 +15,7 @@ public class LanguageFeatureTests
     [TestCaseSource(nameof(ExecuteIterationCases))]
     [TestCaseSource(nameof(ExecuteCollectionSubscriptAndAssignmentCases))]
     [TestCaseSource(nameof(ExecuteFunctionScopeAndClosureCases))]
+    [TestCaseSource(nameof(ExecuteClassCases))]
     [TestCaseSource(nameof(LiteralValueCases))]
     [TestCaseSource(nameof(ExecuteLogicOperatorCases))]
     [TestCaseSource(nameof(ExecuteComparisonOperatorCases))]
@@ -25,6 +27,111 @@ public class LanguageFeatureTests
 
         Assert.That(returnValue, Is.EqualTo(caseExecute.ExpectedResult));
     }
+
+    [TestCaseSource(nameof(ClassAttributeErrorCases))]
+    public void Execute_InvalidClassAttributeUse_ThrowsAttributeException(string sourceCode)
+    {
+        Assert.Throws<AttributeException>(() => ChowEngine.Run(sourceCode));
+    }
+
+    [TestCaseSource(nameof(ClassArityErrorCases))]
+    public void Execute_InvalidClassCallArity_ThrowsDataTypeException(string sourceCode)
+    {
+        Assert.Throws<DataTypeException>(() => ChowEngine.Run(sourceCode));
+    }
+
+    [TestCaseSource(nameof(ClassSyntaxErrorCases))]
+    public void Execute_UnsupportedClassSyntax_ThrowsSyntaxException(string sourceCode)
+    {
+        Assert.Throws<SyntaxException>(() => ChowEngine.Run(sourceCode));
+    }
+
+    #endregion
+
+    #region ProcessInstructions: Class Errors
+
+    static readonly IReadOnlyList<string> ClassAttributeErrorCases =
+    [
+        // Attribute defined by neither the instance nor its class.
+        """
+        class Point:
+            def __init__(self, x):
+                self.x = x
+
+        Point(1).y
+        """,
+
+        // Instance fields do not leak onto the class that produced them.
+        """
+        class Point:
+            def __init__(self, x):
+                self.x = x
+
+        Point(1)
+        Point.x
+        """,
+
+        // Types without an attribute table still reject assignment.
+        """
+        values = [1, 2]
+        values.total = 3
+        """
+    ];
+
+    static readonly IReadOnlyList<string> ClassArityErrorCases =
+    [
+        // Too few arguments for the constructor.
+        """
+        class Point:
+            def __init__(self, x, y):
+                self.x = x
+                self.y = y
+
+        Point(1)
+        """,
+
+        // A bound method's receiver is implicit, so passing self explicitly is one too many.
+        """
+        class Greeter:
+            def greet(self):
+                return "hello"
+
+        Greeter().greet(1)
+        """,
+
+        // A class without a constructor takes no arguments.
+        """
+        class Empty:
+            pass
+
+        Empty(1)
+        """
+    ];
+
+    static readonly IReadOnlyList<string> ClassSyntaxErrorCases =
+    [
+        // Inheritance is not supported.
+        """
+        class Animal:
+            pass
+
+        class Dog(Animal):
+            pass
+        """,
+
+        // Class bodies hold methods and class variables only.
+        """
+        class Broken:
+            print("side effect")
+        """,
+
+        // An assignment target with no name to bind on the class.
+        """
+        class Broken:
+            values = [1]
+            values[0] = 2
+        """
+    ];
 
     #endregion
 
@@ -2027,6 +2134,240 @@ public class LanguageFeatureTests
 
         // NOTE: Deferred niche function syntax not yet confirmed in Chow:
         // lambda, decorators, variadic/keyword-only parameters, and advanced nonlocal edge patterns.
+    ];
+
+    static readonly IReadOnlyList<CaseExecute> ExecuteClassCases =
+    [
+        //--- Declaration and Instantiation ---
+
+        new(
+            """
+            class Empty:
+                pass
+
+            instance = Empty()
+            1
+            """,
+            1
+        ),
+
+        new(
+            """
+            class Empty:
+                pass
+
+            bool(Empty())
+            """,
+            TrueChow
+        ),
+
+        //--- Constructor and Instance Fields ---
+
+        new(
+            """
+            class Point:
+                def __init__(self, x):
+                    self.x = x
+
+            p = Point(5)
+            p.x
+            """,
+            5
+        ),
+
+        new(
+            """
+            class Point:
+                def __init__(self, x, y):
+                    self.x = x
+                    self.y = y
+
+            p = Point(3, 4)
+            p.x + p.y
+            """,
+            7
+        ),
+
+        // Each instance owns its fields; rebinding one must not disturb another.
+        new(
+            """
+            class Box:
+                def __init__(self, value):
+                    self.value = value
+
+            first = Box(1)
+            second = Box(2)
+            second.value = 10
+            first.value
+            """,
+            1
+        ),
+
+        //--- Methods ---
+
+        new(
+            """
+            class Greeter:
+                def greet(self):
+                    return "hello"
+
+            Greeter().greet()
+            """,
+            new("hello")
+        ),
+
+        new(
+            """
+            class Counter:
+                def __init__(self, start):
+                    self.value = start
+
+                def bump(self, amount):
+                    self.value = self.value + amount
+                    return self.value
+
+            counter = Counter(5)
+            counter.bump(2)
+            """,
+            7
+        ),
+
+        // A method reached through self, so binding has to work from inside a method body too.
+        new(
+            """
+            class Doubler:
+                def double(self, n):
+                    return n * 2
+
+                def quadruple(self, n):
+                    return self.double(self.double(n))
+
+            Doubler().quadruple(3)
+            """,
+            12
+        ),
+
+        //--- Class Variables ---
+
+        new(
+            """
+            class Config:
+                limit = 10
+
+            Config.limit
+            """,
+            10
+        ),
+
+        // Reading through an instance falls through to the class.
+        new(
+            """
+            class Config:
+                limit = 10
+
+            Config().limit
+            """,
+            10
+        ),
+
+        // Assigning through an instance shadows the class variable and leaves the class unchanged.
+        new(
+            """
+            class Config:
+                limit = 10
+
+            config = Config()
+            config.limit = 99
+            config.limit + Config.limit
+            """,
+            109
+        ),
+
+        new(
+            """
+            class Config:
+                limit = 10
+
+            Config.limit = 20
+            Config().limit
+            """,
+            20
+        ),
+
+        new(
+            """
+            class Config:
+                total = 2 * 3
+
+            Config.total
+            """,
+            6
+        ),
+
+        new(
+            """
+            class Tally:
+                count = 0
+
+                def __init__(self, start):
+                    self.count = start
+
+                def total(self):
+                    return self.count + Tally.count
+
+            Tally(4).total()
+            """,
+            4
+        ),
+
+        //--- Interaction With Other Features ---
+
+        // A class declared inside a function: its methods must capture the defining scope.
+        new(
+            """
+            def make_holder():
+                hidden = 42
+                class Holder:
+                    def reveal(self):
+                        return hidden
+                return Holder()
+
+            make_holder().reveal()
+            """,
+            42
+        ),
+
+        new(
+            """
+            class Person:
+                def __init__(self, name):
+                    self.name = name
+
+            person = Person("Ada")
+            f"hi {person.name}"
+            """,
+            new("hi Ada")
+        ),
+
+        new(
+            """
+            class Box:
+                def __init__(self, value):
+                    self.value = value
+
+            def total(boxes):
+                running = 0
+                for box in boxes:
+                    running = running + box.value
+                return running
+
+            total([Box(1), Box(2), Box(3)])
+            """,
+            6
+        ),
+
+        // NOTE: Deferred class features: inheritance, polymorphism, dunder dispatch
+        // (__str__/__eq__/__len__), @classmethod/@staticmethod, and super().
     ];
 
     static readonly IReadOnlyList<CaseExecute> ExecuteCollectionSubscriptAndAssignmentCases =

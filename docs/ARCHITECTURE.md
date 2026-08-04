@@ -47,7 +47,7 @@ Chow keeps values in two parallel representations and converts between them only
 ### SourceValue
 Path: [`..\src\Chow\SourceData\SourceValue.cs`](../src/Chow/SourceData/SourceValue.cs)
 
-`SourceValue` is the internal runtime value—what the virtual machine pushes and pops. It is an immutable `readonly struct` with an explicit memory layout (a union over `object`, `long`, and `double`) tagged by a `DataType`, letting it hold any Chow type (`int`, `float`, `str`, `bool`, `None`, `list`, `dict`, `range`, and boxed .NET types). Object-like types (lists, dicts, ranges, functions, scopes) implement `ISourceObject` ([..\src\Chow\SourceData\Objects](../src/Chow/SourceData/Objects)) and are constructed through `SourceObjectFactory`.
+`SourceValue` is the internal runtime value—what the virtual machine pushes and pops. It is an immutable `readonly struct` with an explicit memory layout (a union over `object`, `long`, and `double`) tagged by a `DataType`, letting it hold any Chow type (`int`, `float`, `str`, `bool`, `None`, `list`, `dict`, `range`, and boxed .NET types). Object-like types (lists, dicts, ranges, functions, scopes, classes, and class instances) implement `ISourceObject` ([..\src\Chow\SourceData\SourceObjects](../src/Chow/SourceData/SourceObjects)) and are constructed through `SourceObjectFactory`—except those carrying constructor state (ranges, functions, slices, classes, and instances), which are built directly.
 
 ### ChowObject
 Path: [`..\src\Chow\Api\ChowObject.cs`](../src/Chow/Api/ChowObject.cs)
@@ -58,4 +58,14 @@ Path: [`..\src\Chow\Api\ChowObject.cs`](../src/Chow/Api/ChowObject.cs)
 Path: [`..\src\Chow\Api\ApiConverter.cs`](../src/Chow/Api/ApiConverter.cs)
 
 `ApiConverter` is the sole bridge between the two layers, translating `SourceValue` to `ChowObject` on the way out and back again on the way in. Conversion happens only at the boundary: internal `SourceValue`s are never exposed on the public surface, and `ChowObject`s never enter the virtual machine.
+
+## Classes
+
+Classes reuse the machinery that already builds functions, and are worth understanding as a pair with it.
+
+A `def` compiles to a `FunctionDefinition` ([..\src\Chow\Bytecode\FunctionDefinition.cs](../src/Chow/Bytecode/FunctionDefinition.cs)) stored as a chunk constant; the `PushNewSourceFunction` op combines that template with the scope active at declaration time to produce a `SourceFunction`. A `class` works the same way: it compiles to a `ClassDefinition` ([..\src\Chow\Bytecode\ClassDefinition.cs](../src/Chow/Bytecode/ClassDefinition.cs)) holding one `FunctionDefinition` per method, and the `PushNewSourceClass` op turns each into a closure over the *declaring* scope before assembling a `SourceClass`. The class body is therefore never executed as a frame, which is what makes a method resolve names against the scope the class was declared in rather than against the class—matching Python, where a method cannot see class-level names without going through `self` or the class. Class-level variables are the one part evaluated at declaration time: the Compiler emits their initializers into the enclosing chunk and `PushNewSourceClass` pops the resulting values, the same push-N-then-build shape used by list and dict literals.
+
+Methods and class variables share one attribute table on `SourceClass`, since a method is just an attribute holding a `SourceFunction`. Reading an attribute off a `SourceClassInstance` checks the instance's own fields first and then falls through to the class; a function found there is bound to the receiver via `SourceFunction.Bind`, which returns a copy of the closure carrying the instance. The VM pushes that receiver ahead of the call's arguments so it lands in the first declared parameter (`self`), and expects one fewer argument at the call site to account for it.
+
+Construction is the one place the call protocol differs. Calling a class allocates a `SourceClassInstance`, and—when the class declares `__init__`—enters that method's frame with the instance recorded on the frame as its construction result. `__init__` returns None like any other function, so on return the Processor discards that value and pushes the instance, which is what makes `Point(1, 2)` evaluate to the new object.
 

@@ -33,12 +33,36 @@ namespace Chow.Interpreter.VM
         /// <summary>Source line number associated with the current instruction.</summary>
         public int CurrentLineNum => BytecodeChunk.GetLineIndex(_instrIdx);
 
+        /// <summary>
+        /// The value the call site yields instead of this frame's return value. Set when the frame
+        /// is a constructor call: <c>__init__</c> returns None, but <c>Point(1, 2)</c> must evaluate
+        /// to the new instance. Meaningful only when <see cref="HasConstructionResult"/> is
+        /// <see langword="true"/>.
+        /// </summary>
+        public SourceValue ConstructionResult { get; private set; }
+
+        /// <summary>
+        /// Whether this frame carries a <see cref="ConstructionResult"/>. Tracked separately because
+        /// None is itself a legitimate return value.
+        /// </summary>
+        public bool HasConstructionResult { get; private set; }
+
         /// <summary>Creates a frame positioned at the first instruction.</summary>
         public StackFrame(BytecodeChunk bytecodeChunk, Scope scope)
         {
             BytecodeChunk = bytecodeChunk;
             Scope = scope;
             _instrIdx = InitInstrIdx;
+        }
+
+        /// <summary>
+        /// Marks this frame as a constructor call whose caller receives
+        /// <paramref name="instance"/> in place of the frame's own return value.
+        /// </summary>
+        public void SetConstructionResult(SourceValue instance)
+        {
+            ConstructionResult = instance;
+            HasConstructionResult = true;
         }
 
         /// <summary>Advances the instruction pointer by one.</summary>

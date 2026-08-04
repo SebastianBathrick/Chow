@@ -15,6 +15,11 @@ namespace Chow.Interpreter.Syntax
     {
         const int ModuleNodeLineNumber = 1;
 
+        // SyntaxException renders these as "expected '<text>'", so both read as the thing the parser
+        // wanted to find in place of what it got.
+        const string ClassInheritanceUnsupported = "a colon; class inheritance is not supported";
+        const string ClassMemberExpected = "def, pass, or a class variable assignment";
+
         readonly ITokenStream _tokens;
 
         /// <summary>Initializes a new instance with the tokens it will analyze.</summary>
@@ -94,6 +99,8 @@ namespace Chow.Interpreter.Syntax
                     return ParseBreakStatement(lineNum);
                 case TokenType.KeywordContinue:
                     return ParseContinueStatement(lineNum);
+                case TokenType.KeywordPass:
+                    return ParsePassStatement(lineNum);
                 case TokenType.KeywordGlobal:
                     return ParseGlobalDeclaration(lineNum);
                 case TokenType.KeywordNonlocal:
@@ -110,8 +117,70 @@ namespace Chow.Interpreter.Syntax
         Node ParseClassDeclaration(int lineNum)
         {
             _tokens.Consume();
+
             var className = _tokens.ConsumeMatch(TokenType.Name).Lexeme;
-            return new ClassNode(className, ParseBlock(), lineNum);
+
+            // Rejected by name so `class Dog(Animal):` reports the unsupported feature instead of
+            // failing on the parenthesis as an unexpected token.
+            if (_tokens.IsMatch(TokenType.SymbolLeftParen))
+            {
+                throw new SyntaxException(ClassInheritanceUnsupported, lineNum);
+            }
+
+            return ParseClassBody(className, lineNum);
+        }
+
+        /// <summary>
+        /// Parses an indented class body. Shares the colon/newline/indent/dedent framing with
+        /// <see cref="ParseBlock"/>, but accepts only the member kinds a class is built from, so
+        /// anything else is reported here rather than compiling into a class that silently drops it.
+        /// </summary>
+        Node ParseClassBody(string className, int lineNum)
+        {
+            _tokens.ConsumeMatches(TokenType.SymbolColon, TokenType.Newline);
+            _tokens.ConsumeMatch(TokenType.Indent);
+
+            var methods = new List<FunctionNode>();
+            var classVariables = new List<AssignStatementNode>();
+
+            while (!_tokens.TryConsumeMatch(TokenType.Dedent))
+            {
+                if (_tokens.TryConsumeMatch(TokenType.Newline))
+                {
+                    continue;
+                }
+
+                var memberLineNum = _tokens.LineNumber;
+
+                switch (_tokens.PeekType())
+                {
+                    case TokenType.KeywordDef:
+                        methods.Add((FunctionNode)ParseFunctionDefinition(memberLineNum));
+                        break;
+
+                    case TokenType.KeywordPass:
+                        _tokens.Consume();
+                        break;
+
+                    case TokenType.Name:
+                        classVariables.Add(ParseClassVariable(memberLineNum));
+                        break;
+
+                    default:
+                        throw new SyntaxException(ClassMemberExpected, memberLineNum);
+                }
+            }
+
+            return new ClassNode(className, methods, classVariables, lineNum);
+        }
+
+        // Narrows a class-body statement to a plain `name = expression`. Subscript and attribute
+        // targets parse as assignments too, but have no name to bind on the class.
+        AssignStatementNode ParseClassVariable(int lineNum)
+        {
+            return ParseAssignStatement(lineNum) is AssignStatementNode classVariable
+                ? classVariable
+                : throw new SyntaxException(ClassMemberExpected, lineNum);
         }
 
         Node ParseAssignStatement(int lineNum)
@@ -240,6 +309,12 @@ namespace Chow.Interpreter.Syntax
         {
             _tokens.Consume();
             return new ContinueStatementNode(lineNum);
+        }
+
+        Node ParsePassStatement(int lineNum)
+        {
+            _tokens.Consume();
+            return new PassStatementNode(lineNum);
         }
 
         Node ParseReturnStatement(int lineNum)

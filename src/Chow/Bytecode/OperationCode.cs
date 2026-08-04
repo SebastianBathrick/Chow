@@ -39,6 +39,7 @@ namespace Chow.Bytecode
         JumpToLoopStart,
         CallFunction,
         PushNewSourceFunction,
+        PushNewSourceClass,
         PushNewSourceList,
         PushSubscriptValue,
         PushSubscriptSliceValue,

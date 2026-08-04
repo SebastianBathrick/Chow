@@ -126,6 +126,9 @@ namespace Chow.Interpreter.Compilation
                 case FunctionNode funcNode:
                     CompileFunctionDeclaration(funcNode);
                     break;
+                case ClassNode classNode:
+                    CompileClassDeclaration(classNode);
+                    break;
                 case CallNode callNode:
                     CompileCall(callNode);
                     break;
@@ -152,6 +155,9 @@ namespace Chow.Interpreter.Compilation
                 case NonLocalNode _:
                     // Declarations are compile-time directives consumed by SemanticAnalysis;
                     // they emit no bytecode.
+                    break;
+                case PassStatementNode _:
+                    // `pass` does nothing by definition.
                     break;
                 default:
                     throw new UnreachableException(nameof(CompileTargetNode));
@@ -192,6 +198,52 @@ namespace Chow.Interpreter.Compilation
 
             // The global/nonlocal resolution is determined during semantic analysis.
             _bytecodeChunk.Add(GetScopeAssignOpCode(funcNode.Resolution), funcNode.LineNumber, varNameIdx);
+        }
+
+        void CompileClassDeclaration(ClassNode classNode)
+        {
+            // Class-variable initializers are evaluated here, in the declaring scope, and left on
+            // the stack for PushNewSourceClass to consume — the same push-N-then-build shape used
+            // by list and dict literals.
+            foreach (var classVariable in classNode.ClassVariables)
+            {
+                CompileTargetNode(classVariable.Expression);
+            }
+
+            var methodDefs = new FunctionDefinition[classNode.Methods.Count];
+            var classVarNames = new string[classNode.ClassVariables.Count];
+
+            for (var i = 0; i < classNode.Methods.Count; i++)
+            {
+                var methodNode = classNode.Methods[i];
+                var methodChunk = new Compiler(methodNode).CompileFunctionBody();
+
+                methodDefs[i] = new FunctionDefinition(methodChunk, methodNode.Name, methodNode.Params.Count);
+            }
+
+            for (var i = 0; i < classNode.ClassVariables.Count; i++)
+            {
+                classVarNames[i] = classNode.ClassVariables[i].Name;
+            }
+
+            var def = new ClassDefinition(classNode.ClassName, methodDefs, classVarNames);
+            var defConstIdx = _bytecodeChunk.RegisterConstant(new SourceValue(def));
+
+            // Push the class definition to act as a blueprint for a class object. It goes on last,
+            // so the op pops it before the class-variable values sitting underneath it.
+            _bytecodeChunk.Add(OperationCode.PushConstantValue, classNode.LineNumber, defConstIdx);
+
+            // Use the class definition to create a first-class class object.
+            _bytecodeChunk.Add(
+                OperationCode.PushNewSourceClass,
+                classNode.LineNumber,
+                classNode.ClassVariables.Count);
+
+            // Create a variable with the class's name and initialize it to the class object.
+            var varNameIdx = _bytecodeChunk.RegisterVariableName(classNode.ClassName);
+
+            // The global/nonlocal resolution is determined during semantic analysis.
+            _bytecodeChunk.Add(GetScopeAssignOpCode(classNode.Resolution), classNode.LineNumber, varNameIdx);
         }
 
         void CompileVariableAssign(AssignStatementNode assignStatementNode)

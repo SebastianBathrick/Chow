@@ -16,7 +16,9 @@ from typing import Any
 
 # Subprocess prints this prefix so we can parse the result line from stdout
 RESULT_SENTINEL = "__CHOW_PY_RESULT__:"
-DEFAULT_CS_PATH = Path(__file__).resolve().parent.parent / "LanguageFeatureTests.cs"
+DEFAULT_CS_PATH = (
+    Path(__file__).resolve().parent.parent / "LanguageTests" / "LanguageFeatureTests.cs"
+)
 
 # Parsed from LanguageFeatureTests.cs at runtime — no hard-coded const values
 RE_CONST_STRING = re.compile(

@@ -13,6 +13,8 @@ namespace Chow.SourceData
         Range,
         Function,
         Slice,
-        Scope
+        Scope,
+        Class,
+        Instance
     }
 }

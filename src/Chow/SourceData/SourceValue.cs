@@ -71,6 +71,8 @@ namespace Chow.SourceData
                 case DataType.Function:
                 case DataType.Slice:
                 case DataType.Scope:
+                case DataType.Class:
+                case DataType.Instance:
                 case DataType.Str:
                 case DataType.None:
                 case DataType.Long:
@@ -192,6 +194,8 @@ namespace Chow.SourceData
                 case DataType.Range:
                 case DataType.Function:
                 case DataType.Slice:
+                case DataType.Class:
+                case DataType.Instance:
                     return ((ISourceObject)_obj).Truthiness;
                 default:
                     throw new DataTypeException(GetConversionErrorMessage(DataType, DataType.Bool));

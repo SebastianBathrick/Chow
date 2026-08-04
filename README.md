@@ -43,6 +43,7 @@ The following is a list of features already implemented in Chow:
 - int, float, bool, str, None
 - list, dict, range
 - functions (first-class objects)
+- classes and their instances
 
 ### Literals
 
@@ -78,6 +79,14 @@ The following is a list of features already implemented in Chow:
 - def with parameters and return
 - Closures (capture enclosing variables live)
 - First-class — pass and store functions as values
+
+### Classes
+- class declarations with an `__init__` constructor
+- instance fields assigned through `self`
+- methods (`self` is an explicit first parameter, as in Python)
+- class-level variables, readable through the class or an instance
+- Not supported: inheritance, `super()`, decorators such as `@classmethod`/`@staticmethod`, and
+  dunder dispatch (`__str__`, `__eq__`, `__len__`)
 
 ### Lists
 - Indexing, negative indices, slicing (a[1:5:2]), assignment, iteration

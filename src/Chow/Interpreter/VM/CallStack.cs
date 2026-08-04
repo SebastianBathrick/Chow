@@ -194,10 +194,15 @@ namespace Chow.Interpreter.VM
         {
             var sourceFunc = (SourceFunction)func;
 
-            if (argCount != sourceFunc.ParamCount)
+            // A bound method absorbs its first parameter (self) from the receiver, so the call site
+            // is expected to supply one fewer argument than the method declares.
+            var expectedArgCount = sourceFunc.HasReceiver
+                ? sourceFunc.ParamCount - 1 : sourceFunc.ParamCount;
+
+            if (argCount != expectedArgCount)
             {
                 throw new DataTypeException(
-                    string.Format(ArityErrorFormat, sourceFunc.Name, sourceFunc.ParamCount, argCount));
+                    string.Format(ArityErrorFormat, sourceFunc.Name, expectedArgCount, argCount));
             }
 
             var frameScope = new Scope(sourceFunc.Enclosing);
@@ -207,13 +212,25 @@ namespace Chow.Interpreter.VM
         }
 
         /// <summary>
-        /// Pops the current function frame. Its local scope is dropped (kept alive only if a nested
-        /// closure captured it).
+        /// Marks the frame entered most recently as a constructor call, so its caller receives
+        /// <paramref name="instance"/> in place of the frame's return value.
         /// </summary>
-        public void ExitFunctionCall()
+        public void SetConstructionResult(SourceValue instance)
         {
-            _callFrames.Pop();
+            CurrFrame.SetConstructionResult(instance);
+        }
+
+        /// <summary>
+        /// Pops the current function frame and returns it, so the caller can inspect what the
+        /// completed call should yield. The frame's local scope is dropped (kept alive only if a
+        /// nested closure captured it).
+        /// </summary>
+        public StackFrame ExitFunctionCall()
+        {
+            var completedFrame = _callFrames.Pop();
             CurrFrame = _callFrames.Count == 0 ? _moduleLvl : _callFrames.Peek();
+
+            return completedFrame;
         }
     }
 }

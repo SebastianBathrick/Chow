@@ -12,6 +12,8 @@ namespace Chow.Interpreter.VM
         const bool GoToNextInstruction = true;
         const bool StayAtInstruction = false;
 
+        const string NoInitializerArityErrorFormat = "{0}() takes no arguments but {1} were given";
+
         readonly CallStack _callStack;
         readonly Stack<SourceValue> _valStack;
         SourceValue _exprStmntVal = SourceValue.None;
@@ -181,10 +183,13 @@ namespace Chow.Interpreter.VM
                     // If false, the bytecodeChunk will have switched to the called closure's
                     return ExecuteCallFunction(instr.Operand);
                 case OperationCode.PushReturnValue:
-                    _callStack.ExitFunctionCall();
+                    ExecuteReturn();
                     return StayAtInstruction;
                 case OperationCode.PushNewSourceFunction:
                     ExecutePushNewSourceFunction();
+                    break;
+                case OperationCode.PushNewSourceClass:
+                    ExecutePushNewSourceClass(instr.Operand);
                     break;
 
                 // -- Expression Evaluation Operations --------------------------------------------
@@ -387,13 +392,23 @@ namespace Chow.Interpreter.VM
         void ExecuteAssignAttribute(int operand)
         {
             var attrName = _callStack.CurrentBytecodeChunk.GetVariableName(operand);
-            _valStack.Pop();
+            var value = _valStack.Pop();
             var target = _valStack.Pop();
 
-            throw new AttributeException(
-                DataTypeNames.GetTypeName(target.DataType),
-                attrName,
-                _callStack.CurrentLineNum);
+            // Classes and their instances are the only types with a writable attribute table;
+            // everything else rejects assignment, as it does in Python.
+            switch (target.DataType)
+            {
+                case DataType.Instance:
+                case DataType.Class:
+                    target.ToISourceObject().SetAttribute(attrName, value);
+                    break;
+                default:
+                    throw new AttributeException(
+                        DataTypeNames.GetTypeName(target.DataType),
+                        attrName,
+                        _callStack.CurrentLineNum);
+            }
         }
 
         void ExecutePushAttribute(int operand)
@@ -403,7 +418,38 @@ namespace Chow.Interpreter.VM
 
             switch (target.DataType)
             {
-                // TODO: class instances add a branch that consults the instance attribute table, then the class method table.
+                case DataType.Instance:
+                {
+                    // Pre-checked rather than letting the object throw, so the error carries the
+                    // line number the access occurred on.
+                    var instance = (SourceClassInstance)target.ToISourceObject();
+
+                    if (!instance.TryGetAttribute(attrName, out var attrValue))
+                    {
+                        throw new AttributeException(
+                            instance.TypeName,
+                            attrName,
+                            _callStack.CurrentLineNum);
+                    }
+
+                    _valStack.Push(attrValue);
+                    break;
+                }
+                case DataType.Class:
+                {
+                    var sourceClass = (SourceClass)target.ToISourceObject();
+
+                    if (!sourceClass.TryGetAttribute(attrName, out var attrValue))
+                    {
+                        throw new AttributeException(
+                            sourceClass.TypeName,
+                            attrName,
+                            _callStack.CurrentLineNum);
+                    }
+
+                    _valStack.Push(attrValue);
+                    break;
+                }
                 case DataType.List:
                 {
                     var list = target.ToISourceObject();
@@ -620,6 +666,12 @@ namespace Chow.Interpreter.VM
                 return StayAtInstruction;
             }
 
+            // Calling a class constructs an instance of it.
+            if (calleeValue.DataType == DataType.Class)
+            {
+                return ExecuteConstructInstance((SourceClass)calleeValue.ToISourceObject(), args);
+            }
+
             // Will push its return value onto the stack.
             CallInteropFunction(calleeValue, args);
             return GoToNextInstruction;
@@ -772,8 +824,61 @@ namespace Chow.Interpreter.VM
             }
         }
 
+        /// <summary>
+        /// Builds an instance of <paramref name="sourceClass"/> and runs its constructor, if it
+        /// declares one.
+        /// </summary>
+        /// <returns>
+        /// Whether to advance past the call instruction. A class with a constructor enters that
+        /// frame instead, so execution stays put.
+        /// </returns>
+        bool ExecuteConstructInstance(SourceClass sourceClass, SourceValue[] args)
+        {
+            var instance = new SourceValue(new SourceClassInstance(sourceClass));
+
+            if (!sourceClass.TryGetInitializer(out var initializer))
+            {
+                if (args.Length != 0)
+                {
+                    throw new DataTypeException(
+                        string.Format(NoInitializerArityErrorFormat, sourceClass.Name, args.Length));
+                }
+
+                _valStack.Push(instance);
+                return GoToNextInstruction;
+            }
+
+            PushClosureStackFrame(args.Length, initializer.Bind(instance), args);
+
+            // The constructor returns None, so the frame carries the instance forward as what this
+            // call site evaluates to.
+            _callStack.SetConstructionResult(instance);
+            return StayAtInstruction;
+        }
+
+        void ExecuteReturn()
+        {
+            var completedFrame = _callStack.ExitFunctionCall();
+
+            if (!completedFrame.HasConstructionResult)
+            {
+                return;
+            }
+
+            // Discard what __init__ returned; `Point(1, 2)` evaluates to the instance itself.
+            _valStack.Pop();
+            _valStack.Push(completedFrame.ConstructionResult);
+        }
+
         void PushClosureStackFrame(int argCount, ISourceObject function, SourceValue[] args)
         {
+            // A bound method's receiver goes on first so it lands in the first parameter: the body
+            // binds params in reverse, popping the last one off the top.
+            if (function is SourceFunction sourceFunc && sourceFunc.HasReceiver)
+            {
+                _valStack.Push(sourceFunc.Receiver);
+            }
+
             // Re-push args; function body's first ops are param-bind AssignLocal's, popping right-to-left.
             for (var i = 0; i < argCount; i++)
             {
@@ -793,6 +898,23 @@ namespace Chow.Interpreter.VM
             var closure = template.MakeClosure(_callStack.CurrentScope);
 
             _valStack.Push(new SourceValue(closure));
+        }
+
+        void ExecutePushNewSourceClass(int classVarCount)
+        {
+            // The definition is pushed last, so it sits above the class-variable values.
+            var template = (ClassDefinition)_valStack.Pop().ToObject();
+
+            // Pop N values; reverse so declaration order is preserved.
+            var classVarValues = new SourceValue[classVarCount];
+
+            for (var i = classVarCount - 1; i >= 0; i--)
+            {
+                classVarValues[i] = _valStack.Pop();
+            }
+
+            var sourceClass = template.MakeClass(_callStack.CurrentScope, classVarValues);
+            _valStack.Push(new SourceValue(sourceClass));
         }
 
         #endregion

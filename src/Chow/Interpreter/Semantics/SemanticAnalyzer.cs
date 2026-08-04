@@ -113,6 +113,18 @@ namespace Chow.Interpreter.Semantics
                     RecordBinding(funcNode.Name, funcNode.LineNumber);
                     break;
 
+                case ClassNode classNode:
+                    // Class-variable initializers are evaluated in this scope, so their expressions
+                    // take part in its name resolution. The variable names themselves are class
+                    // attributes, not bindings here. Method bodies are opaque, as with FunctionNode.
+                    foreach (var classVariable in classNode.ClassVariables)
+                    {
+                        PreScan(classVariable.Expression);
+                    }
+
+                    RecordBinding(classNode.ClassName, classNode.LineNumber);
+                    break;
+
                 case NameNode nameNode:
                     RecordUse(nameNode.Name, nameNode.LineNumber);
                     break;
@@ -227,6 +239,7 @@ namespace Chow.Interpreter.Semantics
                 case LiteralNode _:
                 case BreakStatementNode _:
                 case ContinueStatementNode _:
+                case PassStatementNode _:
                     break;
             }
         }
@@ -264,6 +277,25 @@ namespace Chow.Interpreter.Semantics
                     case FunctionNode funcNode:
                         funcNode.Resolution = ResolveName(funcNode.Name);
                         AnalyzeFunction(funcNode);
+                        break;
+
+                    case ClassNode classNode:
+                        foreach (var classVariable in classNode.ClassVariables)
+                        {
+                            Annotate(classVariable.Expression);
+                        }
+
+                        classNode.Resolution = ResolveName(classNode.ClassName);
+
+                        // Methods are analyzed as ordinary nested functions of this scope, which is
+                        // what makes their bodies resolve names against the scope the class was
+                        // declared in. They get no Resolution of their own — the class holds them,
+                        // so no enclosing-scope name is bound to a method.
+                        foreach (var method in classNode.Methods)
+                        {
+                            AnalyzeFunction(method);
+                        }
+
                         break;
 
                     case NameNode nameNode:
@@ -364,6 +396,7 @@ namespace Chow.Interpreter.Semantics
                     case LiteralNode _:
                     case BreakStatementNode _:
                     case ContinueStatementNode _:
+                    case PassStatementNode _:
                         break;
                 }
 
