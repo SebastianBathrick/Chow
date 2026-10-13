@@ -16,9 +16,7 @@
 ```
 
 # Chow
-A Python sublanguage interpreter written entirely in C# for embedding in .NET projects. It targets .NET Standard 2.0 and has no external dependencies.
-
-Chow is still in development, so features and the API are subject to change, and use in production is not recommended until version 1.0.0+.
+A Python sublanguage interpreter written entirely in C# for embedding in .NET projects. It provides a sandboxed scripting environment featuring OOP, LEGB-enforced scope, closures, and more. Chow targets .NET Standard 2.0 and has no external dependencies.
 
 ## Use Cases
 - Run safe, sandboxed Python code in your .NET application.

@@ -7,13 +7,14 @@
         <RepositoryType>git</RepositoryType>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
         <Copyright>Copyright © 2026 Sebastian Bathrick</Copyright>
-        <Version>0.1.4-preview</Version>
+        <Version>0.2.0-preview</Version>
         <AssemblyName>Chow</AssemblyName>
         <GenerateDocumentationFile>True</GenerateDocumentationFile>
         <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">true</IsAotCompatible>
-        <Description>A Python sublanguage interpreter written entirely in C# for embedding in .NET projects. It targets .NET Standard 2.0 and has no external dependencies.</Description>
+        <Description>A Python sublanguage interpreter written entirely in C# for embedding in .NET projects. It provides a sandboxed scripting environment featuring OOP, LEGB-enforced scope, closures, and more. Chow targets .NET Standard 2.0 and has no external dependencies.
+</Description>
         <RepositoryUrl>https://github.com/SebastianBathrick/Chow</RepositoryUrl>
-        <PackageTags>python script scripting interop</PackageTags>
+        <PackageTags>python embedded scripting interop oop</PackageTags>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
