@@ -27,12 +27,23 @@ namespace Chow.Interpreter.VM
 
         public SourceValue Execute()
         {
-            while (_callStack.IsInstructionToExecute)
+            try
             {
-                if (ExecuteInstruction())
+                while (_callStack.IsInstructionToExecute)
                 {
-                    _callStack.MoveToNextInstruction();
+                    if (ExecuteInstruction())
+                    {
+                        _callStack.MoveToNextInstruction();
+                    }
                 }
+            }
+            // Errors raised away from the VM (evaluators, built-ins, source objects) don't know which
+            // line they came from. The instruction that raised them is still current, and since Chow
+            // calls run as frames on this Processor, it belongs to the innermost call.
+            catch (RuntimeException ex) when (ex.LineNumber == null && _callStack.IsInstructionToExecute)
+            {
+                ex.LineNumber = _callStack.CurrentLineNum;
+                throw;
             }
 
             return _exprStmntVal;
@@ -261,7 +272,8 @@ namespace Chow.Interpreter.VM
             }
             else
             {
-                throw new DataTypeException($"argument of type '{container.DataType}' is not iterable");
+                throw new DataTypeException(
+                    $"argument of type '{DataTypeNames.GetTypeName(container.DataType)}' is not iterable");
             }
 
             _valStack.Push(new SourceValue(negate ? !found : found));
@@ -584,7 +596,7 @@ namespace Chow.Interpreter.VM
                     break;
                 case DataType.List when index.DataType != DataType.Long:
                     throw new DataTypeException(
-                        $"list indices must be integers, not {index.DataType}");
+                        $"list indices must be integers, not {DataTypeNames.GetTypeName(index.DataType)}");
                 case DataType.List:
                     target.ToISourceObject().SetItem(index, value);
                     break;
@@ -617,7 +629,7 @@ namespace Chow.Interpreter.VM
                     break;
                 case DataType.List when index.DataType != DataType.Long:
                     throw new DataTypeException(
-                        $"list indices must be integers, not {index.DataType}");
+                        $"list indices must be integers, not {DataTypeNames.GetTypeName(index.DataType)}");
                 case DataType.List:
                     _valStack.Push(target.ToISourceObject().GetItem(index));
                     break;
@@ -637,7 +649,8 @@ namespace Chow.Interpreter.VM
             // FUTURE: strings add a parallel slice branch.
             if (target.DataType != DataType.List)
             {
-                throw new DataTypeException($"'{target.DataType}' object is not subscriptable");
+                throw new DataTypeException(
+                    $"'{DataTypeNames.GetTypeName(target.DataType)}' object is not subscriptable");
             }
 
             var slice = new SourceValue(new SourceSlice(start, stop, step));
@@ -803,8 +816,8 @@ namespace Chow.Interpreter.VM
         {
             if (args != null && args.Length != 0)
             {
-                throw new ArgumentException(
-                    $"'{calleeValue.DataType}' does not support arguments");
+                throw new DataTypeException(
+                    $"'{DataTypeNames.GetTypeName(calleeValue.DataType)}' does not support arguments");
             }
         }
 
@@ -813,8 +826,9 @@ namespace Chow.Interpreter.VM
             var actualArgsCount = args?.Length ?? 0;
             if (actualArgsCount != expectedArgsCount)
             {
-                throw new ArgumentException(
-                    $"'{calleeValue.DataType}' expects {expectedArgsCount} argument(s), got {actualArgsCount}");
+                throw new DataTypeException(
+                    $"'{DataTypeNames.GetTypeName(calleeValue.DataType)}' expects {expectedArgsCount} "
+                    + $"argument(s), got {actualArgsCount}");
             }
         }
 
@@ -866,6 +880,9 @@ namespace Chow.Interpreter.VM
 
         void PushClosureStackFrame(int argCount, ISourceObject function, SourceValue[] args)
         {
+            // Checked while the caller's IP is still on the call, so an arity error reports its line.
+            CallStack.ThrowIfArityMismatch(function, argCount);
+
             // A bound method's receiver goes on first so it lands in the first parameter: the body
             // binds params in reverse, popping the last one off the top.
             if (function is SourceFunction sourceFunc && sourceFunc.HasReceiver)
@@ -882,7 +899,7 @@ namespace Chow.Interpreter.VM
             // Advance caller's IP BEFORE pushing the frame, so PushReturnValue lands at the next
             // caller instruction.
             _callStack.MoveToNextInstruction();
-            _callStack.EnterFunctionCall(function, argCount);
+            _callStack.EnterFunctionCall(function);
         }
 
         void ExecutePushNewSourceFunction()

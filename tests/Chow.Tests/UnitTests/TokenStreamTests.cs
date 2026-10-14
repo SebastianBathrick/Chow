@@ -65,7 +65,7 @@ public class TokenStreamTests
 
         Assert.That(exception, Is.Not.Null);
         Assert.That(exception!.LineNumber, Is.EqualTo(7));
-        Assert.That(exception.Message, Is.EqualTo("SyntaxError: expected 'SymbolLeftParen'"));
+        Assert.That(exception.Message, Is.EqualTo("SyntaxError: expected 'SymbolLeftParen' on line 7"));
         Assert.That(stream.IsMatch(TokenType.Name), Is.True);
     }
 
@@ -80,7 +80,7 @@ public class TokenStreamTests
 
         Assert.That(exception, Is.Not.Null);
         Assert.That(exception!.LineNumber, Is.EqualTo(9));
-        Assert.That(exception.Message, Is.EqualTo("SyntaxError: expected 'SymbolLeftParen'"));
+        Assert.That(exception.Message, Is.EqualTo("SyntaxError: expected 'SymbolLeftParen' on line 9"));
     }
 
     [Test]

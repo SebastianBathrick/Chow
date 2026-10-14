@@ -156,7 +156,7 @@ public class ChowProgramTests
         Assert.That(exception!.LineNumber, Is.EqualTo(2));
         Assert.That(
             exception.Message,
-            Is.EqualTo("[line 2] Error: int literal out of range: 99999999999999999999"));
+            Is.EqualTo("SyntaxError: int literal out of range: 99999999999999999999 on line 2"));
     }
 
     [Test]
@@ -165,7 +165,7 @@ public class ChowProgramTests
         var exception = Assert.Catch<CompileException>(() => ChowEngine.Compile("break"));
 
         Assert.That(exception!.LineNumber, Is.EqualTo(1));
-        Assert.That(exception.Message, Is.EqualTo("SyntaxError: 'break' outside loop"));
+        Assert.That(exception.Message, Is.EqualTo("SyntaxError: 'break' outside loop on line 1"));
     }
 
     [Test]
@@ -174,7 +174,7 @@ public class ChowProgramTests
         var exception = Assert.Catch<CompileException>(() => ChowEngine.Compile("x = 1\ncontinue"));
 
         Assert.That(exception!.LineNumber, Is.EqualTo(2));
-        Assert.That(exception.Message, Is.EqualTo("SyntaxError: 'continue' not properly in loop"));
+        Assert.That(exception.Message, Is.EqualTo("SyntaxError: 'continue' not properly in loop on line 2"));
     }
 
     #endregion

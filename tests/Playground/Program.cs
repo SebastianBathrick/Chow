@@ -36,7 +36,7 @@ try
 catch (CompileException ex)
 {
     // The source code failed to compile, so none of it ran.
-    Console.WriteLine($"{ex.Message} (line {ex.LineNumber})");
+    Console.WriteLine(ex.Message);
 }
 catch (RuntimeException ex)
 {
@@ -47,7 +47,7 @@ try
 {
     ChowEngine.Compile("for i in range(3):\n    pass\nbreak");
 }
-catch (CompileException ex)
+catch (ChowException ex)
 {
-    Console.WriteLine($"{ex.Message} (line {ex.LineNumber})"); // SyntaxError: 'break' outside loop (line 3)
+    Console.WriteLine(ex.Message); // SyntaxError: 'break' outside loop on line 3
 }

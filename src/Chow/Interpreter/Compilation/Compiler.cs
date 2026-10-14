@@ -475,7 +475,6 @@ namespace Chow.Interpreter.Compilation
         {
             if (_loopContextStack.Count == 0)
             {
-                // TODO: Remove SyntaxException in the compiler and replace with a more appropriate exception type
                 throw SyntaxException.FromMessage(
                     "'continue' not properly in loop",
                     continueStatementNode.LineNumber);

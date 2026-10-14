@@ -151,17 +151,13 @@ namespace Chow.SourceData
 
         internal SourceValue InvokeHostDelegate(SourceValue[] args)
         {
-            if (DataType != DataType.Object)
-            {
-                throw new DataTypeException($"'{DataType}' object is not callable");
-            }
-
-            if (_obj is Func<SourceValue[], SourceValue> methodDelegate)
+            if (DataType == DataType.Object && _obj is Func<SourceValue[], SourceValue> methodDelegate)
             {
                 return methodDelegate(args ?? Array.Empty<SourceValue>());
             }
 
-            throw new InvalidOperationException($"Object of type '{_obj.GetType().Name}' is not callable");
+            // A host object that isn't a delegate is as uncallable as any Chow value.
+            throw new DataTypeException($"'{DataTypeNames.GetTypeName(DataType)}' object is not callable");
         }
 
         #endregion
@@ -351,7 +347,7 @@ namespace Chow.SourceData
 
             return long.TryParse(
                 strValue, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedLong) 
-                ? parsedLong : throw new InvalidOperationException($"Cannot convert string '{strValue}' to long");
+                ? parsedLong : throw new ValueException($"invalid literal for int() with base 10: '{strValue}'");
 
         }
 
@@ -364,7 +360,7 @@ namespace Chow.SourceData
 
             return double.TryParse(
                 strValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsedDouble) 
-                ? parsedDouble : throw new InvalidOperationException($"Cannot convert string '{strValue}' to double");
+                ? parsedDouble : throw new ValueException($"could not convert string to float: '{strValue}'");
 
         }
 

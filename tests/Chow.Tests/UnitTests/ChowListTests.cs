@@ -1,3 +1,5 @@
+using Chow.Interpreter.Exceptions;
+
 namespace Chow.Tests.UnitTests;
 
 [TestFixture]
@@ -166,7 +168,7 @@ public class ChowListTests
         // Python: ["item"].pop(1) -> IndexError
         var list = CreateListWithItems("item");
 
-        Assert.Throws<IndexOutOfRangeException>(() => list.Pop(1L));
+        Assert.Throws<IndexException>(() => list.Pop(1L));
     }
 
     [Test]
@@ -175,7 +177,7 @@ public class ChowListTests
         // Python: ["item"].remove("missing") -> ValueError
         var list = CreateListWithItems("item");
 
-        Assert.Throws<ArgumentException>(() => list.Remove("missing"));
+        Assert.Throws<ValueException>(() => list.Remove("missing"));
     }
 
     #endregion

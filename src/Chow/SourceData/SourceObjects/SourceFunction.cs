@@ -84,7 +84,7 @@ namespace Chow.SourceData
             }
 
             throw new AttributeException(
-                DataTypeNames.GetTypeName(DataType.Str),
+                DataTypeNames.GetTypeName(DataType.Function),
                 name,
                 -1);
         }

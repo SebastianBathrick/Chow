@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Chow.Code;
 using Chow.Interpreter.Exceptions;
 
 namespace Chow.SourceData
@@ -150,7 +151,7 @@ namespace Chow.SourceData
 
             if (args[0].DataType != DataType.Dict)
             {
-                throw new DataTypeException($"'{args[0].DataType}' object is not a dict");
+                throw new DataTypeException($"'{DataTypeNames.GetTypeName(args[0].DataType)}' object is not a dict");
             }
 
             var other = (SourceDict)args[0].ToObject();
@@ -306,7 +307,7 @@ namespace Chow.SourceData
                 return;
             }
 
-            throw new ArgumentException(
+            throw new DataTypeException(
                 $"Method requires {expectedCount} arguments, but {actualCount} were provided");
         }
 
@@ -319,7 +320,7 @@ namespace Chow.SourceData
                 return;
             }
 
-            throw new ArgumentException(
+            throw new DataTypeException(
                 $"Method requires between {min} and {max} arguments, but "
                 + $"{actualCount} were provided");
 

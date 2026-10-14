@@ -76,7 +76,7 @@ namespace Chow.SourceData
         {
             // Message shape mirrors Python's TypeError wording and type names.
             return new DataTypeException(
-                $"TypeError: unsupported operand type(s) for {OperatorStrings.ToSource(op)}: "
+                $"unsupported operand type(s) for {OperatorStrings.ToSource(op)}: "
                 + $"'{DataTypeNames.GetTypeName(leftDataType)}' and '{DataTypeNames.GetTypeName(rightDataType)}'");
         }
 

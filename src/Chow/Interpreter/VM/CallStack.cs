@@ -15,6 +15,9 @@ namespace Chow.Interpreter.VM
     {
         const string ArityErrorFormat = "{0}() takes {1} positional arguments but {2} were given";
 
+        // The Processor attaches the current instruction's line to errors raised here.
+        const int NoLineNumber = -1;
+
         readonly StackFrame _moduleLvl;
         readonly Stack<StackFrame> _callFrames;
 
@@ -97,8 +100,8 @@ namespace Chow.Interpreter.VM
         /// <summary>
         /// Binds <paramref name="name"/> to <paramref name="value"/> in the nearest enclosing
         /// function scope that already defines <paramref name="name"/>. The module scope is
-        /// excluded from the walk. Throws <see cref="KeyNotFoundException"/> if no such scope
-        /// exists; semantic analysis is expected to prevent this at compile time.
+        /// excluded from the walk. Throws <see cref="UndefinedNameException"/> if no such scope
+        /// exists, which happens when the enclosing function has not bound the name yet.
         /// </summary>
         public void AssignToNonlocal(string name, ref SourceValue value)
         {
@@ -108,8 +111,9 @@ namespace Chow.Interpreter.VM
 
         /// <summary>
         /// Reads <paramref name="name"/> from the nearest enclosing function scope that defines
-        /// it. The module scope is excluded from the walk. Throws <see cref="KeyNotFoundException"/>
-        /// if no such scope exists; semantic analysis is expected to prevent this at compile time.
+        /// it. The module scope is excluded from the walk. Throws <see cref="UndefinedNameException"/>
+        /// if no such scope exists, which happens when the enclosing function has not bound the name
+        /// yet.
         /// </summary>
         public SourceValue GetNonlocal(string name)
         {
@@ -121,12 +125,12 @@ namespace Chow.Interpreter.VM
                 }
             }
 
-            throw new KeyNotFoundException($"No enclosing scope binds nonlocal '{name}'");
+            throw new UndefinedNameException(name, NoLineNumber);
         }
 
         // Walks ParentOrNull from CurrFrame.Scope upward, stopping before the module scope
         // (compared by reference against _moduleLvl.Scope), and returns the first scope that
-        // defines `name`. Throws KeyNotFoundException if none does.
+        // defines `name`. Throws UndefinedNameException if none does.
         Scope FindNonlocalScope(string name)
         {
             for (var s = CurrFrame.Scope.Parent; s != null && !ReferenceEquals(s, _moduleLvl.Scope); s = s.Parent)
@@ -137,7 +141,7 @@ namespace Chow.Interpreter.VM
                 }
             }
 
-            throw new KeyNotFoundException($"No enclosing scope binds nonlocal '{name}'");
+            throw new UndefinedNameException(name, NoLineNumber);
         }
 
         /// <summary>
@@ -186,11 +190,11 @@ namespace Chow.Interpreter.VM
         }
 
         /// <summary>
-        /// Pushes a new function frame for <paramref name="func"/> after arity-checking the call.
-        /// A fresh <see cref="Scope"/> is allocated with its parent set to the closure's captured
-        /// enclosing scope, becoming the L of LEGB for the duration of the call.
+        /// Throws a <see cref="DataTypeException"/> when <paramref name="argCount"/> does not match
+        /// the number of arguments <paramref name="func"/> expects. Must be called before the
+        /// caller's instruction pointer moves past the call, so the error reports the call's line.
         /// </summary>
-        public void EnterFunctionCall(ISourceObject func, int argCount)
+        public static void ThrowIfArityMismatch(ISourceObject func, int argCount)
         {
             var sourceFunc = (SourceFunction)func;
 
@@ -204,7 +208,17 @@ namespace Chow.Interpreter.VM
                 throw new DataTypeException(
                     string.Format(ArityErrorFormat, sourceFunc.Name, expectedArgCount, argCount));
             }
+        }
 
+        /// <summary>
+        /// Pushes a new function frame for <paramref name="func"/>, whose arity must already have
+        /// been checked with <see cref="ThrowIfArityMismatch"/>. A fresh <see cref="Scope"/> is
+        /// allocated with its parent set to the closure's captured enclosing scope, becoming the L of
+        /// LEGB for the duration of the call.
+        /// </summary>
+        public void EnterFunctionCall(ISourceObject func)
+        {
+            var sourceFunc = (SourceFunction)func;
             var frameScope = new Scope(sourceFunc.Enclosing);
             var newFrame = new StackFrame(sourceFunc.BytecodeChunk, frameScope);
             _callFrames.Push(newFrame);

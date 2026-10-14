@@ -134,7 +134,7 @@ namespace Chow.Interpreter.Lexing
                 }
                 else if (!TryScanSymbolToken())
                 {
-                    throw new ScannerException($"Unexpected character '{CurrentChar}'.", _lineNum);
+                    throw new ScannerException($"Unexpected character '{CurrentChar}'", _lineNum);
                 }
             }
     
@@ -242,7 +242,7 @@ namespace Chow.Interpreter.Lexing
     
                 if (_indentLevels.Peek() != indentLvl)
                 {
-                    throw new ScannerException("Inconsistent dedent.", _lineNum);
+                    throw new ScannerException("Inconsistent dedent", _lineNum);
                 }
             }
     
@@ -756,7 +756,7 @@ namespace Chow.Interpreter.Lexing
                     }
                     else
                     {
-                        throw new ScannerException("Unexpected indentation.", _lineNum);
+                        throw new ScannerException("Unexpected indentation", _lineNum);
                     }
                 }
             }

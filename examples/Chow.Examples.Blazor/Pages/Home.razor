@@ -77,7 +77,9 @@
 
             ChowEngine.Run(src, scope);
         }
-        catch (Exception ex) // no single Chow base type — catch all, show Message
+        // ChowException covers every Chow error; Exception also catches a failing host delegate
+        // such as InputOverride, so every failure shows up in the console the same way.
+        catch (Exception ex)
         {
             error = new ConsoleSegment(ex.Message, IsError: true);
         }

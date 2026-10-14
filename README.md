@@ -175,10 +175,12 @@ try
 catch (CompileException ex)
 {
     // The source code failed to compile, so none of it ran.
-    Console.WriteLine($"{ex.Message} (line {ex.LineNumber})");
+    Console.WriteLine(ex.Message);
 }
 catch (RuntimeException ex)
 {
     Console.WriteLine(ex.Message); // ZeroDivisionError: division by zero on line 1
 }
 ```
+
+Both derive from `ChowException`, so catching it handles any Chow error. Each error also exposes its `ErrorName` (e.g. `ZeroDivisionError`) and `LineNumber`.

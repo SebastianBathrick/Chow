@@ -1,10 +1,10 @@
-using System;
-
 namespace Chow.Interpreter.Exceptions
 {
-    class DataTypeException : Exception
+    class DataTypeException : RuntimeException
     {
-        public DataTypeException(string message) : base(message)
+        const string ExceptionAlias = "TypeError";
+
+        public DataTypeException(string message) : base(ExceptionAlias, message)
         {
         }
     }

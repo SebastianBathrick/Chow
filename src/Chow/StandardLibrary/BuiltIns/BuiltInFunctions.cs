@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Chow.Code;
 using Chow.Interpreter.Exceptions;
 using Chow.SourceData;
 
@@ -252,7 +253,7 @@ namespace Chow.StandardLibrary.BuiltIns
             if (args[0].DataType != DataType.Dict)
             {
                 // Python: TypeError. Chow has no kwargs/mapping protocol yet, so only dict copy is supported.
-                throw new DataTypeException($"'{args[0].DataType}' object is not iterable");
+                throw new DataTypeException($"'{DataTypeNames.GetTypeName(args[0].DataType)}' object is not iterable");
             }
 
             result.GetMethod("update")(new[] { args[0] });
@@ -274,7 +275,7 @@ namespace Chow.StandardLibrary.BuiltIns
                     return new SourceValue(value.ToISourceObject().Length);
             }
 
-            throw new DataTypeException($"object of type '{value.DataType}' has no len()");
+            throw new DataTypeException($"object of type '{DataTypeNames.GetTypeName(value.DataType)}' has no len()");
         }
 
         static SourceValue Abs(SourceValue[] args)
@@ -291,7 +292,7 @@ namespace Chow.StandardLibrary.BuiltIns
                     return new SourceValue(value.ToBool() ? 1L : 0L);
             }
 
-            throw new DataTypeException($"bad operand type for abs(): '{value.DataType}'");
+            throw new DataTypeException($"bad operand type for abs(): '{DataTypeNames.GetTypeName(value.DataType)}'");
         }
 
         static SourceValue Round(SourceValue[] args)
@@ -339,8 +340,7 @@ namespace Chow.StandardLibrary.BuiltIns
 
             if (!iterator.TryMoveNext(out var winner))
             {
-                // Python: ValueError. No ValueException type in Chow yet.
-                throw new InvalidOperationException($"{name}() arg is an empty sequence");
+                throw new ValueException($"{name}() arg is an empty sequence");
             }
 
             while (iterator.TryMoveNext(out var next))
@@ -384,8 +384,7 @@ namespace Chow.StandardLibrary.BuiltIns
 
                     if (step == 0)
                     {
-                        // Python: ValueError. No ValueException type in Chow yet.
-                        throw new InvalidOperationException("range() arg 3 must not be zero");
+                        throw new ValueException("range() arg 3 must not be zero");
                     }
 
                     break;
@@ -400,7 +399,7 @@ namespace Chow.StandardLibrary.BuiltIns
             if (arg.DataType != DataType.Long)
             {
                 throw new DataTypeException(
-                    $"'{arg.DataType}' object cannot be interpreted as an integer");
+                    $"'{DataTypeNames.GetTypeName(arg.DataType)}' object cannot be interpreted as an integer");
             }
 
             return arg;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Chow.Code;
 using Chow.Interpreter.Exceptions;
 
 namespace Chow.SourceData
@@ -15,6 +16,7 @@ namespace Chow.SourceData
         const string MethodReverseName = "reverse";
 
         const string IndexTypeErrorFormat = "list indices must be integers, not {0}";
+        const string IntegerArgErrorFormat = "'{0}' object cannot be interpreted as an integer";
 
         static readonly List<string> MethodNames = new List<string>
         {
@@ -51,7 +53,8 @@ namespace Chow.SourceData
                     return GetSlice(slice.Start, slice.Stop, slice.Step);
                 }
                 default:
-                    throw new DataTypeException(string.Format(IndexTypeErrorFormat, key.DataType));
+                    throw new DataTypeException(
+                        string.Format(IndexTypeErrorFormat, DataTypeNames.GetTypeName(key.DataType)));
             }
 
         }
@@ -60,7 +63,8 @@ namespace Chow.SourceData
         {
             if (key.DataType != DataType.Long)
             {
-                throw new DataTypeException(string.Format(IndexTypeErrorFormat, key.DataType));
+                throw new DataTypeException(
+                    string.Format(IndexTypeErrorFormat, DataTypeNames.GetTypeName(key.DataType)));
             }
 
             this[(int)key.ToLong()] = value;
@@ -133,7 +137,7 @@ namespace Chow.SourceData
 
             if (idx < 0 || idx >= _elements.Count)
             {
-                throw new IndexOutOfRangeException();
+                throw new IndexException("list index out of range");
             }
 
             return idx;
@@ -159,7 +163,8 @@ namespace Chow.SourceData
 
             if (args[0].DataType != DataType.Long)
             {
-                throw new ArgumentException($"Argument 0 must be of type {DataType.Long}, but was {args[0].DataType}");
+                throw new DataTypeException(
+                    string.Format(IntegerArgErrorFormat, DataTypeNames.GetTypeName(args[0].DataType)));
             }
 
             var idx = (int)args[0];
@@ -181,12 +186,12 @@ namespace Chow.SourceData
         {
             if (args != null && args.Length > 1)
             {
-                throw new ArgumentException($"Method 'pop' takes at most 1 argument, but {args.Length} were provided");
+                throw new DataTypeException($"pop expected at most 1 argument, got {args.Length}");
             }
 
             if (_elements.Count == 0)
             {
-                throw new InvalidOperationException("pop from empty list");
+                throw new IndexException("pop from empty list");
             }
 
             var index = _elements.Count - 1;
@@ -195,8 +200,8 @@ namespace Chow.SourceData
             {
                 if (args[0].DataType != DataType.Long)
                 {
-                    throw new ArgumentException(
-                        $"Argument 0 must be of type {DataType.Long}, but was {args[0].DataType}");
+                    throw new DataTypeException(
+                        string.Format(IntegerArgErrorFormat, DataTypeNames.GetTypeName(args[0].DataType)));
                 }
 
                 index = (int)args[0];
@@ -208,7 +213,7 @@ namespace Chow.SourceData
 
                 if (index < 0 || index >= _elements.Count)
                 {
-                    throw new IndexOutOfRangeException();
+                    throw new IndexException("pop index out of range");
                 }
             }
 
@@ -233,7 +238,7 @@ namespace Chow.SourceData
                 return SourceValue.None;
             }
 
-            throw new ArgumentException("list.remove(x): x not in list");
+            throw new ValueException("list.remove(x): x not in list");
         }
 
         SourceValue Reverse(SourceValue[] args)
@@ -318,7 +323,7 @@ namespace Chow.SourceData
 
             if (step == 0)
             {
-                throw new ArgumentException("slice step cannot be zero");
+                throw new ValueException("slice step cannot be zero");
             }
 
             int lower;
@@ -416,7 +421,7 @@ namespace Chow.SourceData
 
             if (value.DataType != DataType.Long)
             {
-                throw new ArgumentException($"slice indices must be integers or None, got {value.DataType}");
+                throw new DataTypeException("slice indices must be integers or None");
             }
 
             return (int)value;
@@ -449,7 +454,7 @@ namespace Chow.SourceData
 
             if (actualCount != expectedCount)
             {
-                throw new ArgumentException(
+                throw new DataTypeException(
                     $"Method requires {expectedCount} arguments, but {actualCount} were provided");
             }
 
@@ -465,7 +470,9 @@ namespace Chow.SourceData
                     continue;
                 }
 
-                throw new ArgumentException($"Argument {i} must be of type {reqTypes[i]}, but was {args[i].DataType}");
+                throw new DataTypeException(
+                    $"Argument {i} must be of type {DataTypeNames.GetTypeName(reqTypes[i])}, "
+                    + $"but was {DataTypeNames.GetTypeName(args[i].DataType)}");
             }
         }
     }

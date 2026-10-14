@@ -1,4 +1,5 @@
 using System;
+using Chow.Interpreter.Exceptions;
 
 namespace Chow.SourceData
 {
@@ -21,7 +22,7 @@ namespace Chow.SourceData
         {
             if (step == 0)
             {
-                throw new ArgumentException(ZeroStepError);
+                throw new ValueException(ZeroStepError);
             }
 
             Start = start;

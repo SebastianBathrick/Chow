@@ -12,7 +12,7 @@ namespace Chow.Interpreter.Exceptions
         const string ExceptionAlias = "SyntaxError";
 
         public SemanticException(string msg, int lineNum)
-            : base($"[line {lineNum}] {ExceptionAlias}: {msg}", lineNum)
+            : base(ExceptionAlias, msg, lineNum)
         {
         }
     }

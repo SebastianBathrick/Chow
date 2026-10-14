@@ -7,11 +7,11 @@ namespace Chow
         const string ExceptionAlias = "SyntaxError";
 
         public SyntaxException(string expected, int line)
-            : this(line, $"{ExceptionAlias}: expected '{expected}'")
+            : this(line, $"expected '{expected}'")
         {
         }
 
-        SyntaxException(int line, string message) : base(message, line)
+        SyntaxException(int line, string message) : base(ExceptionAlias, message, line)
         {
         }
 
@@ -21,7 +21,7 @@ namespace Chow
         /// </summary>
         public static SyntaxException FromMessage(string message, int line)
         {
-            return new SyntaxException(line, $"{ExceptionAlias}: {message}");
+            return new SyntaxException(line, message);
         }
     }
 }
