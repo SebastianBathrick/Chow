@@ -2,7 +2,7 @@
 
 Chow uses a bytecode interpreter. At runtime, Chow source code is compiled into bytecode and executed using a stack-based virtual machine.
 
-**Documentation last updated:** 7-13-2026
+**Documentation last updated:** 10-13-2026
 
 ## ChowEngine
 Path: [`..\src\Chow\Api\ChowEngine.cs`](../src/Chow/Api/ChowEngine.cs)
@@ -12,7 +12,14 @@ Path: [`..\src\Chow\Api\ChowEngine.cs`](../src/Chow/Api/ChowEngine.cs)
 ## VirtualMachine
 Path: [`..\src\Chow\Interpreter\VirtualMachine.cs`](../src/Chow/Interpreter/VirtualMachine.cs)
 
-Orchestrates the two halves of the pipeline, compiling source code into bytecode and then executing it. It also provides a path for the host to invoke a Chow closure directly.
+Orchestrates the two halves of the pipeline, compiling source code into bytecode and executing that bytecode. The two halves are exposed separately, so `ChowEngine.Compile` can hand the host a compiled chunk wrapped in a `ChowProgram` ([..\src\Chow\Api\ChowProgram.cs](../src/Chow/Api/ChowProgram.cs)) and run it any number of times later. It also provides a path for the host to invoke a Chow closure directly.
+
+Reusing a compiled chunk is only safe because of two invariants, which any change to the pipeline must preserve:
+
+- **The `Processor` never modifies a chunk.** All per-run state, such as the instruction pointer, lives on the call stack's frames, never on the chunk.
+- **A chunk's constant pool holds only immutable values:** literals plus the `FunctionDefinition`/`ClassDefinition` templates. Anything mutable, such as a list or dict literal, is built by an instruction on every run instead of being stored as a constant, so one run cannot leak state into the next.
+
+A chunk does not depend on any scope, since compilation sees only source code, so one chunk can run against any scope. Compile-time errors all derive from `CompileException` ([..\src\Chow\Interpreter\Exceptions\CompileException.cs](../src/Chow/Interpreter/Exceptions/CompileException.cs)), so `Compile` and execution fail with distinct exception families.
 
 ### VirtualMachine: Source Code → Bytecode
 Before a piece of Chow source code can be evaluated, it must be compiled into bytecode that the virtual machine can execute. The `BytecodeConverter` ([..\src\Chow\Interpreter\BytecodeConverter.cs](../src/Chow/Interpreter/BytecodeConverter.cs)) drives the following stages in order, passing each stage's output to the next.

@@ -456,7 +456,7 @@ namespace Chow.Interpreter.Compilation
         {
             if (_loopContextStack.Count == 0)
             {
-                throw new SyntaxException("'break' outside loop", breakStatementNode.LineNumber);
+                throw SyntaxException.FromMessage("'break' outside loop", breakStatementNode.LineNumber);
             }
 
             var loopContext = _loopContextStack.Peek();
@@ -476,7 +476,9 @@ namespace Chow.Interpreter.Compilation
             if (_loopContextStack.Count == 0)
             {
                 // TODO: Remove SyntaxException in the compiler and replace with a more appropriate exception type
-                throw new SyntaxException("'continue' not properly in loop", continueStatementNode.LineNumber);
+                throw SyntaxException.FromMessage(
+                    "'continue' not properly in loop",
+                    continueStatementNode.LineNumber);
             }
 
             var loopContext = _loopContextStack.Peek();
@@ -684,7 +686,7 @@ namespace Chow.Interpreter.Compilation
         {
             if (node.Index is SubscriptSliceNode)
             {
-                throw new NotImplementedException("slice assignment is not implemented");
+                throw SyntaxException.FromMessage("slice assignment is not supported", node.LineNumber);
             }
 
             CompileTargetNode(node.Target);

@@ -1,15 +1,10 @@
-using System;
-
 namespace Chow.Interpreter.Exceptions
 {
-    sealed class ScannerException : Exception
+    sealed class ScannerException : CompileException
     {
-        public int LineNumber { get; }
-
-        public ScannerException(string message, int lineNumber) 
-            : base($"[line {lineNumber}] Error: {message}")
+        public ScannerException(string message, int lineNumber)
+            : base($"[line {lineNumber}] Error: {message}", lineNumber)
         {
-            LineNumber = lineNumber;
         }
     }
 }

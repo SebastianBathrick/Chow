@@ -407,7 +407,7 @@ namespace Chow.Interpreter.Lexing
                 var len = _charIdx - startIdx;
                 var lexeme = _sourceCode.Substring(startIdx, len);
                 var numTokenType = isFloat ? TokenType.LiteralFloat : TokenType.LiteralInt;
-                var literal = ParseNumericLiteral(isFloat, lexeme, numTokenType);
+                var literal = ParseNumericLiteral(isFloat, lexeme, _lineNum);
     
                 AddNewToken(numTokenType, lexeme, _lineNum, literal);
             }
@@ -422,7 +422,7 @@ namespace Chow.Interpreter.Lexing
                 }
             }
     
-            static object ParseNumericLiteral(bool isFloat, string lexeme, TokenType numTokenType)
+            static object ParseNumericLiteral(bool isFloat, string lexeme, int lineNum)
             {
                 object literal;
     
@@ -439,10 +439,9 @@ namespace Chow.Interpreter.Lexing
                 }
                 catch (OverflowException)
                 {
-                    // TODO: Refactor to use Python-appropriate exception.
-                    throw new OverflowException(
-                        $"{numTokenType} literal value out of range & parsing failed. "
-                        + $"Literal Value: {lexeme}");
+                    throw new ScannerException(
+                        $"{(isFloat ? "float" : "int")} literal out of range: {lexeme}",
+                        lineNum);
                 }
                 catch (FormatException)
                 {

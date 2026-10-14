@@ -1,7 +1,7 @@
 ﻿namespace Chow.Tests;
 
 [TestFixture]
-public class ChowProgramTests
+public class SampleProgramTests
 {
     #region Source Code
 

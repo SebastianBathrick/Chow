@@ -1,24 +1,19 @@
-using System;
 using Chow.Interpreter.Semantics;
 
 namespace Chow.Interpreter.Exceptions
 {
     /// <summary>
     /// Compile-time error raised by <see cref="SemanticAnalyzer"/> between parsing and compilation
-    /// (e.g. invalid <c>global</c>/<c>nonlocal</c> declarations). Not a
-    /// <see cref="RuntimeException"/> because the source code never starts executing; mirrors the
-    /// shape of <see cref="SyntaxException"/>.
+    /// (e.g. invalid <c>global</c>/<c>nonlocal</c> declarations). A <see cref="CompileException"/>
+    /// rather than a <see cref="RuntimeException"/> because the source code never starts executing.
     /// </summary>
-    sealed class SemanticException : Exception
+    sealed class SemanticException : CompileException
     {
         const string ExceptionAlias = "SyntaxError";
 
-        public int LineNum { get; }
-
-        public SemanticException(string msg, int lineNum) 
-            : base($"[line {lineNum}] {ExceptionAlias}: {msg}")
+        public SemanticException(string msg, int lineNum)
+            : base($"[line {lineNum}] {ExceptionAlias}: {msg}", lineNum)
         {
-            LineNum = lineNum;
         }
     }
 }

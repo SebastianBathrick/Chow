@@ -17,11 +17,37 @@ scope["greet"] = ChowObject.Create((object name) => $"Greetings {name}.");
 
 ChowEngine.Run("print(greet(\"Linus\"))", scope); // Greetings Linus.
 
+ChowProgram program = ChowEngine.Compile("total = price * quantity");
+
+foreach (var (price, quantity) in new[] { (3L, 4L), (10L, 2L) })
+{
+    scope = new ChowScope();
+    scope["price"] = price;
+    scope["quantity"] = quantity;
+
+    ChowEngine.Run(program, scope);
+    Console.WriteLine(scope["total"].ToString()); // 12, then 20
+}
+
 try
 {
     ChowEngine.Run("x = 1 / 0");
 }
+catch (CompileException ex)
+{
+    // The source code failed to compile, so none of it ran.
+    Console.WriteLine($"{ex.Message} (line {ex.LineNumber})");
+}
 catch (RuntimeException ex)
 {
     Console.WriteLine(ex.Message); // ZeroDivisionError: division by zero on line 1
+}
+
+try
+{
+    ChowEngine.Compile("for i in range(3):\n    pass\nbreak");
+}
+catch (CompileException ex)
+{
+    Console.WriteLine($"{ex.Message} (line {ex.LineNumber})"); // SyntaxError: 'break' outside loop (line 3)
 }

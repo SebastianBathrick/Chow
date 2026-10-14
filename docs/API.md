@@ -1,16 +1,34 @@
 # API
 
-The `Chow` namespace exposes a small public API for embedding the interpreter in a host program. A host evaluates source code through `ChowEngine`, exchanging values with the interpreter as `ChowObject`s, and can optionally carry state across executions with a `ChowScope`. Every public type implements `IChowObject`, and the dedicated wrappers `ChowList`, `ChowDict`, and `ChowString` present Chow's `list`, `dict`, and `str` in a host-friendly form.
+The `Chow` namespace exposes a small public API for embedding the interpreter in a host program. A host evaluates source code through `ChowEngine`, exchanging values with the interpreter as `ChowObject`s, and can optionally carry state across executions with a `ChowScope`. Source code that runs repeatedly can be compiled once into a `ChowProgram`. Every public type that represents a Chow value implements `IChowObject`, and the dedicated wrappers `ChowList`, `ChowDict`, and `ChowString` present Chow's `list`, `dict`, and `str` in a host-friendly form.
 
 All of these types live in `[..\src\Chow\Api](../src/Chow/Api)`. Conversion between the public types and the interpreter's internal value representation happens behind the API surface, so the host only ever deals with the types described below.
 
-**Documentation last updated:** 7-1-2026
+**Documentation last updated:** 10-13-2026
 
 ## ChowEngine
 
 Path: `[..\src\Chow\Api\ChowEngine.cs](../src/Chow/Api/ChowEngine.cs)`
 
 `ChowEngine` is a static class and the entry point for executing Chow source code. The host hands it source code, optionally along with a scope to run in and a choice of whether the language's built-in functions are available, and receives the result of the execution back as a `ChowObject`. It is the only type a host needs to begin running Chow.
+
+`Run` compiles the source code and executes it in one step. `Compile` performs only the first half, returning a `ChowProgram` that a second `Run` overload executes. Both `Run` overloads behave identically once the code is compiled. Source code is always compiled before the scope is touched, so code that fails to compile leaves the scope unchanged.
+
+## ChowProgram
+
+Path: `[..\src\Chow\Api\ChowProgram.cs](../src/Chow/Api/ChowProgram.cs)`
+
+`ChowProgram` is a piece of Chow source code that has already been compiled, created by `ChowEngine.Compile`. A host that runs the same source code repeatedly, such as a script that runs on every frame or event, compiles it once and passes the program to `ChowEngine.Run` each time, skipping compilation on every run after the first.
+
+A program is not tied to any scope: the same program can run against the same scope to build up state, or against different scopes to run independently. Running a program never changes it. It is safe to run one program from several threads at once, provided each concurrent run uses its own scope, since a scope is not safe to modify from multiple threads.
+
+A program is an opaque handle with no public members. It is not a Chow value, so it does not implement `IChowObject` and cannot be stored in a scope or passed into Chow code.
+
+## Errors
+
+Path: `[..\src\Chow\Interpreter\Exceptions](../src/Chow/Interpreter/Exceptions)` (namespace `Chow.Interpreter.Exceptions`)
+
+Chow reports errors in the source code it runs through two exception base types. `CompileException` is raised when source code cannot be compiled, such as a syntax error, an unterminated string, or an invalid `global`/`nonlocal` declaration. None of the source code has run when it is thrown, and its `LineNumber` reports the line the error occurred on. `ChowEngine.Compile` raises only compile errors, which lets a host validate source code before running it. `RuntimeException` is raised while the code is executing, such as for an undefined name or a division by zero.
 
 ## IChowObject
 

@@ -31,6 +31,7 @@ The following is a list of features already implemented in Chow:
 ### API
 
 - Inline Chow code execution.
+- Compile once, run many times (precompiled `ChowProgram`s).
 - AOT compatibility.
 - Interoperable .NET and Chow objects and variables.
 - Sandboxed, managed Chow scopes (e.g., variables, functions, etc.).
@@ -143,14 +144,38 @@ scope["greet"] = ChowObject.Create((object name) => $"Greetings {name}.");
 ChowEngine.Run("print(greet(\"Linus\"))", scope); // Greetings Linus.
 ```
 
-**Handle errors:**
+**Compile once, run many times:**
 
 ```csharp
 using Chow;
 
+ChowProgram program = ChowEngine.Compile("total = price * quantity");
+
+foreach (var (price, quantity) in new[] { (3L, 4L), (10L, 2L) })
+{
+    var scope = new ChowScope();
+    scope["price"] = price;
+    scope["quantity"] = quantity;
+
+    ChowEngine.Run(program, scope);
+    Console.WriteLine(scope["total"].ToString()); // 12, then 20
+}
+```
+
+**Handle errors:**
+
+```csharp
+using Chow;
+using Chow.Interpreter.Exceptions;
+
 try
 {
     ChowEngine.Run("x = 1 / 0");
+}
+catch (CompileException ex)
+{
+    // The source code failed to compile, so none of it ran.
+    Console.WriteLine($"{ex.Message} (line {ex.LineNumber})");
 }
 catch (RuntimeException ex)
 {

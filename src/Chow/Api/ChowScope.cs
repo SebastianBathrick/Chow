@@ -2,7 +2,8 @@ namespace Chow
 {
     /// <summary>
     /// Represents a Chow scope, a named collection of variable bindings. A scope can be supplied to
-    /// <see cref="ChowEngine.Run"/> to carry variable state across separate executions.
+    /// either <see cref="ChowEngine"/> <c>Run</c> overload to carry variable state across separate
+    /// executions.
     /// </summary>
     public class ChowScope : IChowObject
     {
