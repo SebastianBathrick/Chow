@@ -529,6 +529,16 @@ namespace Chow.SourceData
             return ComparisonEvaluator.EvaluateNotEqual(ref r, ref l);
         }
 
+        public static SourceValue IsIdentical(SourceValue r, SourceValue l)
+        {
+            return ComparisonEvaluator.EvaluateIs(ref r, ref l);
+        }
+
+        public static SourceValue IsNotIdentical(SourceValue r, SourceValue l)
+        {
+            return ComparisonEvaluator.EvaluateIsNot(ref r, ref l);
+        }
+
         public static SourceValue IsLess(SourceValue r, SourceValue l)
         {
             return ComparisonEvaluator.EvaluateLess(ref r, ref l);

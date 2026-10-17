@@ -22,6 +22,8 @@ namespace Chow.Code
         BinaryOr,
         In,
         NotIn,
+        Is,
+        IsNot,
         ToStr
     }
 }

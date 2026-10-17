@@ -794,6 +794,12 @@ namespace Chow.Interpreter.Compilation
                 case Operator.NotIn:
                     return OperationCode.BinaryNotIn;
 
+                case Operator.Is:
+                    return OperationCode.BinaryIs;
+
+                case Operator.IsNot:
+                    return OperationCode.BinaryIsNot;
+
                 case Operator.And:
                 case Operator.Or:
                 case Operator.ToStr:

@@ -62,6 +62,20 @@ namespace Chow.SourceData
 
         #endregion
 
+        #region Identity Operations
+
+        public static SourceValue EvaluateIs(ref SourceValue r, ref SourceValue l)
+        {
+            return new SourceValue(IsIdentical(ref l, ref r));
+        }
+
+        public static SourceValue EvaluateIsNot(ref SourceValue r, ref SourceValue l)
+        {
+            return new SourceValue(!IsIdentical(ref l, ref r));
+        }
+
+        #endregion
+
         #region Ordering Operations
 
         public static SourceValue EvaluateLess(ref SourceValue r, ref SourceValue l)
@@ -197,6 +211,31 @@ namespace Chow.SourceData
                     return ReferenceEquals(l.ToObject(), r.ToObject());
                 default:
                     return false;
+            }
+        }
+
+        static bool IsIdentical(ref SourceValue l, ref SourceValue r)
+        {
+            if (l.DataType != r.DataType)
+            {
+                // Unlike ==, no numeric promotion: True is 1 and 1 is 1.0 are both false in Python.
+                return false;
+            }
+
+            switch (l.DataType)
+            {
+                case DataType.None:
+                    return true;
+                case DataType.Bool:
+                case DataType.Long:
+                    // Primitives have no object identity in a SourceValue, so identity falls back to value.
+                    return l.ToLong() == r.ToLong();
+                case DataType.Double:
+                    // Bitwise so a NaN is itself and 0.0 is not -0.0.
+                    return BitConverter.DoubleToInt64Bits(l.ToDouble())
+                        == BitConverter.DoubleToInt64Bits(r.ToDouble());
+                default:
+                    return ReferenceEquals(l.ToObject(), r.ToObject());
             }
         }
 

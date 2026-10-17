@@ -1762,6 +1762,136 @@ public class LanguageFeatureTests
         ),
 
         #endregion
+
+        //--- Identity Operands ---
+        // Int/str literals are bound to names first because CPython warns on 'is' with a literal.
+
+        #region Identity Operands
+
+        new(
+            NoneStr + IS + NoneStr,
+            TrueChow
+        ),
+
+        new(
+            NoneStr + IsNot + NoneStr,
+            FalseChow
+        ),
+
+        new(
+            TrueStr + IS + TrueStr,
+            TrueChow
+        ),
+
+        new(
+            TrueStr + IS + FalseStr,
+            FalseChow
+        ),
+
+        new(
+            """
+            x = None
+            x is None
+            """,
+            TrueChow
+        ),
+
+        new(
+            """
+            x = None
+            x is not None
+            """,
+            FalseChow
+        ),
+
+        // 'not' binds looser than 'is': not (x is None)
+        new(
+            """
+            x = None
+            not x is None
+            """,
+            FalseChow
+        ),
+
+        new(
+            """
+            a = [1]
+            b = a
+            a is b
+            """,
+            TrueChow
+        ),
+
+        new(
+            """
+            a = [1]
+            c = [1]
+            a is c
+            """,
+            FalseChow
+        ),
+
+        new(
+            """
+            a = [1]
+            c = [1]
+            a is not c
+            """,
+            TrueChow
+        ),
+
+        new(
+            """
+            d = {"a": 1}
+            e = d
+            d is e
+            """,
+            TrueChow
+        ),
+
+        // No numeric promotion, unlike ==
+        new(
+            """
+            t = True
+            one = 1
+            t is one
+            """,
+            FalseChow
+        ),
+
+        new(
+            """
+            f = 1.5
+            f is f
+            """,
+            TrueChow
+        ),
+
+        new(
+            """
+            s1 = "hi"
+            s2 = "hi"
+            s1 is s2
+            """,
+            TrueChow
+        ),
+
+        // Chains
+        new(
+            NoneStr + IS + NoneStr + IS + NoneStr,
+            TrueChow
+        ),
+
+        new(
+            """
+            a = [1]
+            b = a
+            a is b is not None
+            """,
+            TrueChow
+        ),
+
+        #endregion
     ];
 
     static readonly IReadOnlyList<CaseExecute> ExecuteLogicOperatorCases =
@@ -2875,7 +3005,29 @@ public class LanguageFeatureTests
             """,
             true
         ),
-        
+
+        new(
+            """
+            x = None
+            if x is None:
+                1
+            else:
+                2
+            """,
+            1
+        ),
+
+        new(
+            """
+            x = [1]
+            if x is not None:
+                1
+            else:
+                2
+            """,
+            1
+        ),
+
         #endregion
 
         #region While Loops
@@ -3127,6 +3279,8 @@ public class LanguageFeatureTests
     const string GREATER = " > ";
     const string GreaterEquals = " >= ";
     const string LessOrEquals = " <= ";
+    const string IS = " is ";
+    const string IsNot = " is not ";
 
     //--- Logic Operators ---
     const string AND = " and ";

@@ -50,6 +50,8 @@ namespace Chow.Bytecode
         BinaryUnion,
         BinaryIn,
         BinaryNotIn,
+        BinaryIs,
+        BinaryIsNot,
         PushNewIteratorWithValue,
         JumpOrForIteratorNext,
         Pop,

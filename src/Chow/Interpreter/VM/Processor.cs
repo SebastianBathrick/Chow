@@ -115,6 +115,12 @@ namespace Chow.Interpreter.VM
                     // TODO: Add 'not in' to the LogicEvaluator
                     EvaluateIn(negate: true);
                     break;
+                case OperationCode.BinaryIs:
+                    _valStack.Push(SourceValue.IsIdentical(_valStack.Pop(), _valStack.Pop()));
+                    break;
+                case OperationCode.BinaryIsNot:
+                    _valStack.Push(SourceValue.IsNotIdentical(_valStack.Pop(), _valStack.Pop()));
+                    break;
 
                 // -- Unary Operations-------------------------------------------------------------
                 case OperationCode.UnaryNot:

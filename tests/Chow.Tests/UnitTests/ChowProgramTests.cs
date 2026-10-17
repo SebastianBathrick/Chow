@@ -140,6 +140,8 @@ public class ChowProgramTests
     [TestCase("nonlocal x", typeof(SemanticException))]
     [TestCase("99999999999999999999", typeof(ScannerException))]
     [TestCase("a = [1, 2]\na[0:1] = [3]", typeof(SyntaxException))]
+    [TestCase("x = None\nx is", typeof(SyntaxException))]
+    [TestCase("x = None\nx is not", typeof(SyntaxException))]
     public void Compile_InvalidSource_ThrowsCompileException(string sourceCode, Type expectedType)
     {
         var exception = Assert.Catch<CompileException>(() => ChowEngine.Compile(sourceCode));

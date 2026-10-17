@@ -51,6 +51,12 @@ namespace Chow.Code
             },
             {
                 Operator.BinaryOr, "|"
+            },
+            {
+                Operator.Is, "is"
+            },
+            {
+                Operator.IsNot, "is not"
             }
         };
 

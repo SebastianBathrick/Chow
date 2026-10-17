@@ -492,6 +492,12 @@ namespace Chow.Interpreter.Syntax
                     _tokens.ConsumeMatch(TokenType.KeywordIn);
                     op = Operator.NotIn;
                 }
+                else if (_tokens.IsMatch(TokenType.KeywordIs))
+                {
+                    // Consumed here rather than via SyntaxMaps because 'is not' spans two tokens
+                    opLine = _tokens.Consume().LineNumber;
+                    op = _tokens.TryConsumeMatch(TokenType.KeywordNot) ? Operator.IsNot : Operator.Is;
+                }
                 else
                 {
                     break;
