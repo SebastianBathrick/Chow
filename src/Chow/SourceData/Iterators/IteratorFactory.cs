@@ -16,6 +16,8 @@ namespace Chow.SourceData
                 case DataType.DictKeys:
                 case DataType.DictValues:
                 case DataType.Iterator:
+                case DataType.Set:
+                case DataType.FrozenSet:
                     return source.ToISourceObject().GetIterator();
                 case DataType.Str:
                     return new SourceStringIterator(source);

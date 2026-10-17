@@ -66,6 +66,26 @@ namespace Chow.Bytecode
             return constIndex;
         }
 
+        /// <summary>
+        /// Registers an object constant, reusing an existing slot only for the same object. Frozensets
+        /// need this: equal sets such as <c>{1, 2, 3}</c> and <c>{True, 2, 3}</c> are distinct constants.
+        /// </summary>
+        public int RegisterConstantByReference(SourceValue newConst)
+        {
+            var newObject = newConst.ToObject();
+
+            for (var i = 0; i < _constPool.Count; i++)
+            {
+                if (ReferenceEquals(_constPool[i].ToObject(), newObject))
+                {
+                    return i;
+                }
+            }
+
+            _constPool.Add(newConst);
+            return _constPool.Count - 1;
+        }
+
         #endregion
 
         #region Variable Name Methods

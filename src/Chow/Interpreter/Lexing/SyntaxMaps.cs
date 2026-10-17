@@ -122,6 +122,10 @@ namespace Chow.Interpreter.Lexing
                     return Operator.Or;
                 case TokenType.SymbolPipe:
                     return Operator.BinaryOr;
+                case TokenType.SymbolAmpersand:
+                    return Operator.BinaryAnd;
+                case TokenType.SymbolCaret:
+                    return Operator.BinaryXor;
                 case TokenType.KeywordIn:
                     return Operator.In;
                 default:

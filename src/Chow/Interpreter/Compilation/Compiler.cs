@@ -14,6 +14,9 @@ namespace Chow.Interpreter.Compilation
         readonly Stack<LoopContext> _loopContextStack;
         readonly Node _root;
 
+        // Shared with the compilers of nested functions and methods, as CPython shares its constant cache.
+        readonly ConstantSetCache _constantSets;
+
         List<int> _pendingEndJumps;
 
         sealed class LoopContext
@@ -26,10 +29,17 @@ namespace Chow.Interpreter.Compilation
 
         #region Primary Methods
 
-        public Compiler(Node root)
+        /// <param name="root">The module to compile.</param>
+        /// <param name="programNames">Every identifier in the program; see <see cref="ConstantSetCache"/>.</param>
+        public Compiler(Node root, HashSet<string> programNames) : this(root, new ConstantSetCache(programNames))
+        {
+        }
+
+        Compiler(Node root, ConstantSetCache constantSets)
         {
             _bytecodeChunk = new BytecodeChunk();
             _root = root;
+            _constantSets = constantSets;
             _pendingEndJumps = new List<int>();
             _loopContextStack = new Stack<LoopContext>();
         }
@@ -136,6 +146,10 @@ namespace Chow.Interpreter.Compilation
                     // TODO: Check if CompileListLiteral & CompileDictLiteral should be grouped with all the other literals
                     CompileListLiteral(listLiteralNode);
                     break;
+                case SetNode setLiteralNode:
+                    CompileSetLiteral(setLiteralNode);
+                    break;
+
                 case DictionaryNode dictLiteralNode:
                     CompileDictLiteral(dictLiteralNode);
                     break;
@@ -181,7 +195,7 @@ namespace Chow.Interpreter.Compilation
 
         void CompileFunctionDeclaration(FunctionNode funcNode)
         {
-            var funcCompiler = new Compiler(funcNode);
+            var funcCompiler = new Compiler(funcNode, _constantSets);
             var funcChunk = funcCompiler.CompileFunctionBody();
 
             var def = new FunctionDefinition(funcChunk, funcNode.Name, funcNode.Params.Count);
@@ -216,7 +230,7 @@ namespace Chow.Interpreter.Compilation
             for (var i = 0; i < classNode.Methods.Count; i++)
             {
                 var methodNode = classNode.Methods[i];
-                var methodChunk = new Compiler(methodNode).CompileFunctionBody();
+                var methodChunk = new Compiler(methodNode, _constantSets).CompileFunctionBody();
 
                 methodDefs[i] = new FunctionDefinition(methodChunk, methodNode.Name, methodNode.Params.Count);
             }
@@ -406,7 +420,17 @@ namespace Chow.Interpreter.Compilation
         void CompileForStatement(ForStatementNode forNode)
         {
             // 1. Push iterable, convert to iterator. Iterator stays on the stack for the loop's lifetime.
-            CompileTargetNode(forNode.Iterable);
+            //    CPython's fold_iter compiles a set display of constants to a frozenset constant that
+            //    the loop iterates directly, so its order is the constant's, not a freshly built set's.
+            if (forNode.Iterable is SetNode setNode && TryGetConstantSet(setNode, out var setConstIdx))
+            {
+                _bytecodeChunk.Add(OperationCode.PushConstantValue, setNode.LineNumber, setConstIdx);
+            }
+            else
+            {
+                CompileTargetNode(forNode.Iterable);
+            }
+
             _bytecodeChunk.Add(OperationCode.PushNewIteratorWithValue, forNode.LineNumber);
 
             // 2. Loop head: JumpOrForIteratorNext peeks the iterator; on success pushes the next value, on exhaustion pops + jumps.
@@ -551,7 +575,7 @@ namespace Chow.Interpreter.Compilation
 
         void CompileLiteral(LiteralNode literalNode)
         {
-            var constValue = BuildLiteralValue(literalNode);
+            var constValue = ConstantFolder.LiteralValue(literalNode);
 
             // If a constant of the same value already exists in the bytecodeChunk, the operand of the existing constant will be returned.
             // Otherwise, the new constant will be added to the bytecodeChunk and its new operand will be returned.
@@ -576,51 +600,6 @@ namespace Chow.Interpreter.Compilation
             }
         }
 
-        static SourceValue BuildLiteralValue(LiteralNode literalNode)
-        {
-            // Cases for LiteralNodeType where the boxed Value is the wrong CLR type should not occur unless the Parser is bugged
-            switch (literalNode.Type)
-            {
-                case LiteralNodeType.Integer:
-                    if (literalNode.Value is long intVal)
-                    {
-                        return new SourceValue(intVal);
-                    }
-
-                    break;
-                case LiteralNodeType.Float:
-                    if (literalNode.Value is double floatVal)
-                    {
-                        return new SourceValue(floatVal);
-                    }
-
-                    break;
-
-                case LiteralNodeType.Boolean:
-                    if (literalNode.Value is bool boolVal)
-                    {
-                        return new SourceValue(boolVal);
-                    }
-
-                    break;
-                case LiteralNodeType.None:
-                    return SourceValue.None;
-                case LiteralNodeType.String:
-                    if (literalNode.Value is string strVal)
-                    {
-                        return new SourceValue(strVal);
-                    }
-
-                    break;
-                default:
-                    throw new NotImplementedException(
-                        $"Compilation of literal type {literalNode.Type} is not implemented.");
-            }
-
-            // Reached only when the boxed Value's CLR type doesn't match its declared LiteralNodeType (parser bug).
-            throw new InvalidOperationException();
-        }
-
         void CompileListLiteral(ListNode node)
         {
             foreach (var element in node.Elements)
@@ -640,6 +619,44 @@ namespace Chow.Interpreter.Compilation
             }
 
             _bytecodeChunk.Add(OperationCode.PushNewSourceDictionary, node.LineNumber, node.Keys.Count);
+        }
+
+        void CompileSetLiteral(SetNode node)
+        {
+            // CPython compiles three or more constant elements to a frozenset constant merged into a new
+            // set (BUILD_SET 0, LOAD_CONST, SET_UPDATE), which can lay the set out differently than adding
+            // the elements one at a time (BUILD_SET n).
+            if (node.Elements.Count > 2 && TryGetConstantSet(node, out var constIdx))
+            {
+                _bytecodeChunk.Add(OperationCode.PushNewSourceSetFromConstant, node.LineNumber, constIdx);
+                return;
+            }
+
+            foreach (var element in node.Elements)
+            {
+                CompileTargetNode(element);
+            }
+
+            _bytecodeChunk.Add(OperationCode.PushNewSourceSet, node.LineNumber, node.Elements.Count);
+        }
+
+        bool TryGetConstantSet(SetNode node, out int constIdx)
+        {
+            var values = new List<SourceValue>(node.Elements.Count);
+
+            foreach (var element in node.Elements)
+            {
+                if (!ConstantFolder.TryFold(element, out var value))
+                {
+                    constIdx = -1;
+                    return false;
+                }
+
+                values.Add(value);
+            }
+
+            constIdx = _bytecodeChunk.RegisterConstantByReference(new SourceValue(_constantSets.GetOrBuild(values)));
+            return true;
         }
 
         void CompileSubscript(SubscriptNode node)
@@ -786,7 +803,13 @@ namespace Chow.Interpreter.Compilation
                     return OperationCode.UnaryNot;
 
                 case Operator.BinaryOr:
-                    return OperationCode.BinaryUnion;
+                    return OperationCode.BinaryOr;
+
+                case Operator.BinaryAnd:
+                    return OperationCode.BinaryAnd;
+
+                case Operator.BinaryXor:
+                    return OperationCode.BinaryXor;
 
                 case Operator.In:
                     return OperationCode.BinaryIn;

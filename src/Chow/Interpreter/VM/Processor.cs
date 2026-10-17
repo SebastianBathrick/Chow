@@ -104,8 +104,10 @@ namespace Chow.Interpreter.VM
                 case OperationCode.BinaryGreaterEqual:
                     _valStack.Push(SourceValue.IsGreaterOrEqual(_valStack.Pop(), _valStack.Pop()));
                     break;
-                case OperationCode.BinaryUnion:
-                    ExecuteBinaryUnion();
+                case OperationCode.BinaryOr:
+                case OperationCode.BinaryAnd:
+                case OperationCode.BinaryXor:
+                    ExecuteBitwise(instr.Code);
                     break;
                 case OperationCode.BinaryIn:
                     // TODO: Add 'in' to the LogicEvaluator
@@ -175,6 +177,12 @@ namespace Chow.Interpreter.VM
                     break;
                 case OperationCode.PushNewSourceDictionary:
                     ExecutePushNewSourceDict(instr.Operand);
+                    break;
+                case OperationCode.PushNewSourceSet:
+                    ExecutePushNewSourceSet(instr.Operand);
+                    break;
+                case OperationCode.PushNewSourceSetFromConstant:
+                    ExecutePushNewSourceSetFromConstant(instr.Operand);
                     break;
 
                 // -- Iterator Operations ---------------------------------------------------------
@@ -261,9 +269,25 @@ namespace Chow.Interpreter.VM
 
         #region Binary Operations
 
-        void ExecuteBinaryUnion()
+        // Kept out of Execute's switch: written inline there, these three cases slowed every
+        // instruction by about 10% in a Release build, presumably by worsening that large method's codegen.
+        void ExecuteBitwise(OperationCode code)
         {
-            _valStack.Push(SourceValue.Unite(_valStack.Pop(), _valStack.Pop()));
+            var r = _valStack.Pop();
+            var l = _valStack.Pop();
+
+            switch (code)
+            {
+                case OperationCode.BinaryOr:
+                    _valStack.Push(SourceValue.BitwiseOr(r, l));
+                    break;
+                case OperationCode.BinaryAnd:
+                    _valStack.Push(SourceValue.BitwiseAnd(r, l));
+                    break;
+                default:
+                    _valStack.Push(SourceValue.BitwiseXor(r, l));
+                    break;
+            }
         }
 
         void EvaluateIn(bool negate)
@@ -279,6 +303,8 @@ namespace Chow.Interpreter.VM
                 case DataType.DictKeys:
                 case DataType.DictValues:
                 case DataType.Iterator:
+                case DataType.Set:
+                case DataType.FrozenSet:
                     found = container.ToISourceObject().Contains(needle);
                     break;
                 default:
@@ -490,11 +516,14 @@ namespace Chow.Interpreter.VM
                     break;
                 }
                 case DataType.Dict:
+                case DataType.DictKeys:
+                case DataType.Set:
+                case DataType.FrozenSet:
                 {
                     // TODO: Create a ToInternalDict and ToInternalList to clean this up
-                    var dict = target.ToISourceObject();
+                    var collection = target.ToISourceObject();
 
-                    if (!dict.Directory.Contains(attrName))
+                    if (!collection.Directory.Contains(attrName))
                     {
                         throw new AttributeException(
                             DataTypeNames.GetTypeName(target),
@@ -503,7 +532,7 @@ namespace Chow.Interpreter.VM
                     }
 
                     // TODO: Add implicit overloads to convert strings/longs/ints/doubles/etc to SourceValues
-                    _valStack.Push(dict.GetAttribute(new SourceValue(attrName)));
+                    _valStack.Push(collection.GetAttribute(new SourceValue(attrName)));
                     break;
                 }
                 default:
@@ -552,6 +581,36 @@ namespace Chow.Interpreter.VM
 
             // Built the way CPython compiles a literal, so the entry layout matches CPython.
             _valStack.Push(new SourceValue(SourceDict.FromLiteral(keys, values)));
+        }
+
+        void ExecutePushNewSourceSet(int elementCount)
+        {
+            // Pop N values; reverse so they're added in source order, as CPython's BUILD_SET does.
+            var elements = new SourceValue[elementCount];
+
+            for (var i = elementCount - 1; i >= 0; i--)
+            {
+                elements[i] = _valStack.Pop();
+            }
+
+            var set = new SourceSet(isFrozen: false);
+
+            foreach (var element in elements)
+            {
+                set.Add(element);
+            }
+
+            _valStack.Push(new SourceValue(set));
+        }
+
+        void ExecutePushNewSourceSetFromConstant(int constIdx)
+        {
+            // BUILD_SET 0 + SET_UPDATE: a new set merged from the frozenset constant. The constant is
+            // shared by every run of the program, so it is only ever read.
+            var constant = (SourceSet)_callStack.CurrentBytecodeChunk.ReadConstant(constIdx).ToObject();
+            var set = new SourceSet(isFrozen: false);
+            set.Merge(constant);
+            _valStack.Push(new SourceValue(set));
         }
 
         #endregion

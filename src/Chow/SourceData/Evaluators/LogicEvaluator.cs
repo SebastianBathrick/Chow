@@ -1,5 +1,3 @@
-using Chow.Code;
-using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.VM;
 
 namespace Chow.SourceData
@@ -22,18 +20,6 @@ namespace Chow.SourceData
         {
             // Python `or` returns the first truthy operand, otherwise the right operand.
             return IsTruthy(ref l) ? l : r;
-        }
-
-        public static SourceValue EvaluateUnion(ref SourceValue r, ref SourceValue l)
-        {
-            // Among Chow's current types, Python only defines `|` for dicts (PEP 584 merge).
-            if (l.DataType == DataType.Dict && r.DataType == DataType.Dict)
-            {
-                return new SourceValue(
-                    SourceDict.Merge((SourceDict)l.ToObject(), (SourceDict)r.ToObject()));
-            }
-
-            throw UnsupportedBinary(ref l, ref r, Operator.BinaryOr);
         }
 
         #endregion
@@ -66,18 +52,6 @@ namespace Chow.SourceData
         {
             // `or` stops at the first truthy value and leaves that value on the stack.
             return IsTruthy(ref operand);
-        }
-
-        #endregion
-
-        #region Error Helpers
-
-        static DataTypeException UnsupportedBinary(ref SourceValue l, ref SourceValue r, Operator op)
-        {
-            // Message shape mirrors Python's TypeError wording and type names.
-            return new DataTypeException(
-                $"unsupported operand type(s) for {OperatorStrings.ToSource(op)}: "
-                + $"'{DataTypeNames.GetTypeName(l)}' and '{DataTypeNames.GetTypeName(r)}'");
         }
 
         #endregion

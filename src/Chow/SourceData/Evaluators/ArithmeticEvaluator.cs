@@ -102,10 +102,32 @@ namespace Chow.SourceData
 
         public static SourceValue Subtract(ref SourceValue r, ref SourceValue l)
         {
-            var convDataType = GetConversionDataType(NumericConversionMap, ref l, ref r, Operator.Subtract);
+            var convDataType = NumericConversionMap[(int)l.DataType, (int)r.DataType];
+
+            if (!convDataType.HasValue)
+            {
+                return SubtractSets(ref l, ref r);
+            }
+
             return convDataType == DataType.Long
                 ? new SourceValue(l.ToLong()   - r.ToLong())
                 : new SourceValue(l.ToDouble() - r.ToDouble());
+        }
+
+        // Set difference: two sets, or a keys view on either side with any iterable on the other.
+        static SourceValue SubtractSets(ref SourceValue l, ref SourceValue r)
+        {
+            if (SourceSet.IsAnySet(l) && SourceSet.IsAnySet(r))
+            {
+                return new SourceValue(((SourceSet)l.ToObject()).Difference(r));
+            }
+
+            if (l.DataType == DataType.DictKeys || r.DataType == DataType.DictKeys)
+            {
+                return new SourceValue(SourceDictKeys.Subtract(l, r));
+            }
+
+            throw UnsupportedBinary(ref l, ref r, Operator.Subtract);
         }
 
         public static SourceValue Multiply(ref SourceValue r, ref SourceValue l)

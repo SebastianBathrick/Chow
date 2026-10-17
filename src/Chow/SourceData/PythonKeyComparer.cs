@@ -38,6 +38,9 @@ namespace Chow.SourceData
                     return true;
                 case DataType.Str:
                     return string.Equals((string)x.ToObject(), (string)y.ToObject(), StringComparison.Ordinal);
+                case DataType.FrozenSet:
+                    // Same elements, regardless of order.
+                    return ((SourceSet)x.ToObject()).EqualsTo((SourceSet)y.ToObject());
                 default:
                     return ReferenceEquals(x.ToObject(), y.ToObject());
             }
@@ -63,13 +66,15 @@ namespace Chow.SourceData
                 }
                 case DataType.Str:
                     return key.ToObject().GetHashCode();
+                case DataType.FrozenSet:
+                    return ((SourceSet)key.ToObject()).FrozenSetHash.GetHashCode();
                 default:
                     return RuntimeHelpers.GetHashCode(key.ToObject());
             }
         }
 
         /// <summary>
-        /// Throws a <c>TypeError</c> if <paramref name="key"/> cannot be used as a dict key.
+        /// Throws a <c>TypeError</c> if <paramref name="key"/> cannot be used as a dict key or set element.
         /// </summary>
         public static void ValidateHashable(SourceValue key)
         {
@@ -82,6 +87,7 @@ namespace Chow.SourceData
                 case DataType.Str:
                 case DataType.DictValues:
                 case DataType.Iterator:
+                case DataType.FrozenSet:
                     return;
                 default:
                     throw new DataTypeException($"unhashable type: '{DataTypeNames.GetTypeName(key)}'");

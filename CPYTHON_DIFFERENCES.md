@@ -43,9 +43,7 @@ fail with `NameError` rather than `SyntaxError`.
 | Semicolons | `a = 1; b = 2` | `SyntaxError: Unexpected character ';'` | Not supported |
 | Backslash line continuation | `1 + \` | `SyntaxError: Unexpected character '\'` (lines continue fine inside brackets) | Not supported |
 | Unary `+` | `+1` | `SyntaxError` | Not supported |
-| `&`, `^` and `\|` on integers | `5 & 3`, `1 \| 2` | `SyntaxError` for `&`/`^`; `\|` raises `TypeError` (Chow only defines it for dict merge) | Planned |
 | `~`, `<<`, `>>` | `~5`, `1 << 2` | `SyntaxError` | Not supported |
-| Set literals | `{1, 2}` | `SyntaxError` | Planned |
 | Slice assignment | `a[0:1] = [9]` | `SyntaxError: slice assignment is not supported` | Not supported |
 | `for` targets other than a plain name | `for p.x in items:` | `SyntaxError` | Not supported |
 | Class inheritance | `class B(A):` | `SyntaxError` | Not supported |
@@ -101,9 +99,9 @@ fail with `NameError` rather than `SyntaxError`.
 | Ordering comparisons on lists | `[1] < [2]` | `True` | `TypeError` | Not supported |
 | List methods beyond append, clear, insert, pop, remove, reverse | `a.sort()`, `a.index(x)`, `a.count(x)`, `a.extend(b)`, `a.copy()` | works | `AttributeError` | Not supported |
 | Dict methods beyond clear, get, keys, pop, setdefault, update, values | `d.items()`, `d.copy()`, `d.popitem()`, `dict.fromkeys(k)` | works | `AttributeError` (`items()` needs tuples) | Not supported |
-| Set operations on `dict_keys` | `d.keys() & {'a'}` | a `set` | `SyntaxError` | Planned |
 | `dict_keys.mapping`, `dict_values.mapping` | `d.keys().mapping` | a `mappingproxy` | `AttributeError` | Not supported |
-| `set` and `frozenset` | `set([1])` | a set | `NameError` | Planned |
+| Sets holding `None` or NaN | `str(set([None, 1, 2, 9]))` | `{1, 2, None, 9}` (CPython 3.11 hashes `None` and NaN by memory address, so this can vary) | `{None, 1, 2, 9}` | By design |
+| Constant set literals with strings CPython had already interned (see below) | `str({'count', 'zork', 'plugh', 'xyzzy'})` | `{'count', 'plugh', 'xyzzy', 'zork'}` | `{'count', 'zork', 'xyzzy', 'plugh'}` | By design |
 | Range indexing, slicing and `in` | `range(5)[2]`, `2 in range(5)` | `2`, `True` | `TypeError` | Not supported |
 | Range equality | `range(3) == range(3)` | `True` | `False` (compares identity) | Bug |
 | Hashing ranges, functions, classes and instances | `{range(3): 1}`, `{f: 1}`, `{P(): 1}` | works | `TypeError: unhashable type` | Not supported |
@@ -116,11 +114,24 @@ yielded first. Chow models CPython 3.11's dict internals as built on 64-bit plat
 CPython versions, or 32-bit builds, may size tables differently and so give different results in
 those edge cases. (By design.)
 
+Sets are ordered exactly as in 64-bit CPython 3.11 run with `PYTHONHASHSEED=0`. Chow uses
+CPython's hash functions, including SipHash-1-3 for strings, and models its set table. By default
+CPython randomizes string hashes, so there a set of strings is ordered differently from run to run.
+Sets of numbers are ordered the same either way. (By design.)
+
+A set literal of three or more constants, such as `{'a', 'b', 'c'}`, is one exception. CPython
+compiles it to a frozenset constant and rebuilds that constant once more when any of its strings
+had already been interned, which can change the order. Only strings made of ASCII letters, digits
+and underscores are interned. Chow knows which strings are interned in two cases: names used in the
+program, and the single characters CPython interns at startup. It doesn't know about the many longer
+names CPython interns at startup, such as `count` or `name`. Nor does it know about strings interned
+by code that ran earlier in the same CPython process, such as an earlier input in the REPL. (By design.)
+
 ## Built-in functions
 
 Chow has `print`, `input`, `len`, `abs`, `round`, `min`, `max`, `range`, `iter`, `next`,
-`reversed` and the type constructors `int`, `float`, `str`, `bool`, `list` and `dict`. Any other
-built-in raises `NameError`.
+`reversed` and the type constructors `int`, `float`, `str`, `bool`, `list`, `dict`, `set` and
+`frozenset`. Any other built-in raises `NameError`.
 
 | Behavior | Example | CPython | Chow | Status |
 |---|---|---|---|---|
@@ -129,6 +140,7 @@ built-in raises `NameError`.
 | `iter(callable, sentinel)` | `iter(f, None)` | a `callable_iterator` | `TypeError: iter() takes 1 to 1 arguments` | Not supported |
 | `clear()` | `clear()` | `NameError` | clears the console | By design (Chow-only) |
 | Built-in arity errors | `len()` | `len() takes exactly one argument (0 given)` | `len() takes 1 to 1 arguments` | Bug (wording) |
+| Method arity errors | `{1}.symmetric_difference()`, `[].append()` | `set.symmetric_difference() takes exactly one argument (0 given)` | `Method requires 1 arguments, but 0 were provided` | Bug (wording) |
 
 ## Functions, scope and classes
 

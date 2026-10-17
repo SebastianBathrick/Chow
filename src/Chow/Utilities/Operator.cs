@@ -20,6 +20,8 @@ namespace Chow.Code
         Or,
         Not,
         BinaryOr,
+        BinaryAnd,
+        BinaryXor,
         In,
         NotIn,
         Is,

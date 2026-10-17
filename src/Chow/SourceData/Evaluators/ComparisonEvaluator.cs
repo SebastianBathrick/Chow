@@ -104,7 +104,12 @@ namespace Chow.SourceData
 
         static bool EvaluateOrdering(ref SourceValue l, ref SourceValue r, Operator op)
         {
-            switch (GetConversionDataType(ref l, ref r, op))
+            if (!DataTypeConversionMap.TryGetValue((l.DataType, r.DataType), out var convDataType))
+            {
+                return EvaluateSubsetOrdering(ref l, ref r, op);
+            }
+
+            switch (convDataType)
             {
                 case DataType.Long:
                     return CompareLong(l.ToLong(), r.ToLong(), op);
@@ -116,6 +121,48 @@ namespace Chow.SourceData
                     return CompareResult(string.CompareOrdinal(l.ToString(), r.ToString()), op);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(op), op, null);
+            }
+        }
+
+        // Sets and keys views order by subset: `a < b` means a is a proper subset of b.
+        static bool EvaluateSubsetOrdering(ref SourceValue l, ref SourceValue r, Operator op)
+        {
+            if (SourceSet.IsAnySet(l) && SourceSet.IsAnySet(r))
+            {
+                return ((SourceSet)l.ToObject()).Compare((SourceSet)r.ToObject(), op);
+            }
+
+            if (l.DataType == DataType.DictKeys && SourceDictKeys.IsComparableWith(r))
+            {
+                return SourceDictKeys.Compare(l, r, op);
+            }
+
+            // A set declines to compare with a view, so the view's reflected comparison runs.
+            if (SourceSet.IsAnySet(l) && r.DataType == DataType.DictKeys)
+            {
+                return SourceDictKeys.Compare(r, l, Reflect(op));
+            }
+
+            throw new DataTypeException(
+                $"unsupported operand type(s) for {OperatorStrings.ToSource(op)}: "
+                + $"'{DataTypeNames.GetTypeName(l)}' and '{DataTypeNames.GetTypeName(r)}'");
+        }
+
+        // The comparison that holds with the operands swapped: a < b is b > a.
+        static Operator Reflect(Operator op)
+        {
+            switch (op)
+            {
+                case Operator.Less:
+                    return Operator.Greater;
+                case Operator.Greater:
+                    return Operator.Less;
+                case Operator.LessEqual:
+                    return Operator.GreaterEqual;
+                case Operator.GreaterEqual:
+                    return Operator.LessEqual;
+                default:
+                    return op;
             }
         }
 
@@ -186,6 +233,23 @@ namespace Chow.SourceData
                 }
             }
 
+            if (SourceSet.IsAnySet(l) && SourceSet.IsAnySet(r))
+            {
+                // A set and a frozenset with the same elements are equal.
+                return ((SourceObject)l.ToObject()).EqualsTo((SourceObject)r.ToObject());
+            }
+
+            // A keys view equals a set with the same elements, from either side.
+            if (l.DataType == DataType.DictKeys && SourceSet.IsAnySet(r))
+            {
+                return SourceDictKeys.Compare(l, r, Operator.Equal);
+            }
+
+            if (SourceSet.IsAnySet(l) && r.DataType == DataType.DictKeys)
+            {
+                return SourceDictKeys.Compare(r, l, Operator.Equal);
+            }
+
             if (l.DataType != r.DataType)
             {
                 // Python equality across unrelated types returns False instead of raising TypeError.
@@ -243,20 +307,6 @@ namespace Chow.SourceData
                 default:
                     return ReferenceEquals(l.ToObject(), r.ToObject());
             }
-        }
-
-        static DataType GetConversionDataType(ref SourceValue l, ref SourceValue r, Operator op)
-        {
-            var mapKey = (left: l.DataType, right: r.DataType);
-
-            if (DataTypeConversionMap.TryGetValue(mapKey, out var convDataType))
-            {
-                return convDataType;
-            }
-
-            throw new DataTypeException(
-                $"unsupported operand type(s) for {OperatorStrings.ToSource(op)}: "
-                + $"'{DataTypeNames.GetTypeName(l)}' and '{DataTypeNames.GetTypeName(r)}'");
         }
 
         #endregion

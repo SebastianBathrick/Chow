@@ -81,6 +81,8 @@ namespace Chow.SourceData
                 case DataType.DictKeys:
                 case DataType.DictValues:
                 case DataType.Iterator:
+                case DataType.Set:
+                case DataType.FrozenSet:
                 case DataType.Str:
                 case DataType.None:
                 case DataType.Long:
@@ -203,6 +205,8 @@ namespace Chow.SourceData
                 case DataType.DictKeys:
                 case DataType.DictValues:
                 case DataType.Iterator:
+                case DataType.Set:
+                case DataType.FrozenSet:
                     return ((ISourceObject)_obj).Truthiness;
                 default:
                     throw new DataTypeException(GetConversionErrorMessage(this, DataType.Bool));
@@ -603,9 +607,19 @@ namespace Chow.SourceData
             return ComparisonEvaluator.EvaluateGreaterEqual(ref r, ref l);
         }
 
-        public static SourceValue Unite(SourceValue r, SourceValue l)
+        public static SourceValue BitwiseOr(SourceValue r, SourceValue l)
         {
-            return LogicEvaluator.EvaluateUnion(ref r, ref l);
+            return BitwiseEvaluator.Or(ref r, ref l);
+        }
+
+        public static SourceValue BitwiseAnd(SourceValue r, SourceValue l)
+        {
+            return BitwiseEvaluator.And(ref r, ref l);
+        }
+
+        public static SourceValue BitwiseXor(SourceValue r, SourceValue l)
+        {
+            return BitwiseEvaluator.Xor(ref r, ref l);
         }
 
         public static SourceValue Not(SourceValue operand)

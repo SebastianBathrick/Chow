@@ -77,8 +77,14 @@ namespace Chow.Tokens
         /// <summary>Less-than-or-equal comparison operator: <c>&lt;=</c>.</summary>
         SymbolLessEqual,
 
-        /// <summary>Pipe operator, used for dictionary merge: <c>|</c>.</summary>
+        /// <summary>Pipe operator: bitwise or, set union, and dictionary merge: <c>|</c>.</summary>
         SymbolPipe,
+
+        /// <summary>Ampersand operator: bitwise and, and set intersection: <c>&amp;</c>.</summary>
+        SymbolAmpersand,
+
+        /// <summary>Caret operator: bitwise xor, and set symmetric difference: <c>^</c>.</summary>
+        SymbolCaret,
 
         /// <summary>User-defined name or non-keyword identifier.</summary>
         Name,

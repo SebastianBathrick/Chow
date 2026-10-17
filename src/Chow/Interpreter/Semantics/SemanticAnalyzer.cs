@@ -210,6 +210,14 @@ namespace Chow.Interpreter.Semantics
 
                     break;
 
+                case SetNode setNode:
+                    foreach (var element in setNode.Elements)
+                    {
+                        PreScan(element);
+                    }
+
+                    break;
+
                 case SubscriptNode subscriptNode:
                     PreScan(subscriptNode.Target);
                     PreScan(subscriptNode.Index);
@@ -364,6 +372,13 @@ namespace Chow.Interpreter.Semantics
                         {
                             Annotate(dictNode.Keys[i]);
                             Annotate(dictNode.Values[i]);
+                        }
+                        break;
+
+                    case SetNode setNode:
+                        foreach (var element in setNode.Elements)
+                        {
+                            Annotate(element);
                         }
                         break;
 

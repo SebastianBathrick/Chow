@@ -78,6 +78,8 @@ namespace Chow.StandardLibrary.BuiltIns
             var iterDef = new BuiltInDefinition(BuiltInNameIter, Iter, 1, 1);
             var nextDef = new BuiltInDefinition(BuiltInNameNext, Next, 1, 2);
             var reversedDef = new BuiltInDefinition(BuiltInNameReversed, Reversed, 1, 1);
+            var setDef = new BuiltInDefinition(BuiltInNameSet, Set, 0, 1);
+            var frozenSetDef = new BuiltInDefinition(BuiltInNameFrozenSet, FrozenSet, 0, 1);
 
             return new List<(string, object)>
             {
@@ -98,7 +100,9 @@ namespace Chow.StandardLibrary.BuiltIns
                 (rangeDef.Name, BuildGuardedBuiltIn(rangeDef)),
                 (iterDef.Name, BuildGuardedBuiltIn(iterDef)),
                 (nextDef.Name, BuildGuardedBuiltIn(nextDef)),
-                (reversedDef.Name, BuildGuardedBuiltIn(reversedDef))
+                (reversedDef.Name, BuildGuardedBuiltIn(reversedDef)),
+                (setDef.Name, BuildGuardedBuiltIn(setDef)),
+                (frozenSetDef.Name, BuildGuardedBuiltIn(frozenSetDef))
             };
         }
 
@@ -280,6 +284,8 @@ namespace Chow.StandardLibrary.BuiltIns
                 case DataType.Range:
                 case DataType.DictKeys:
                 case DataType.DictValues:
+                case DataType.Set:
+                case DataType.FrozenSet:
                     return new SourceValue(value.ToISourceObject().Length);
             }
 
@@ -430,6 +436,26 @@ namespace Chow.StandardLibrary.BuiltIns
             return new SourceValue(IteratorFactory.GetReversedIterator(args[0]));
         }
 
+        static SourceValue Set(SourceValue[] args)
+        {
+            return HasZeroArguments(args)
+                ? new SourceValue(new SourceSet(isFrozen: false))
+                : new SourceValue(SourceSet.FromIterable(args[0], isFrozen: false));
+        }
+
+        static SourceValue FrozenSet(SourceValue[] args)
+        {
+            if (HasZeroArguments(args))
+            {
+                return new SourceValue(new SourceSet(isFrozen: true));
+            }
+
+            // frozenset(f) is f itself, as in CPython.
+            return args[0].DataType == DataType.FrozenSet
+                ? args[0]
+                : new SourceValue(SourceSet.FromIterable(args[0], isFrozen: true));
+        }
+
         static long RequireRangeInt(SourceValue arg)
         {
             if (arg.DataType != DataType.Long)
@@ -468,6 +494,8 @@ namespace Chow.StandardLibrary.BuiltIns
         const string BuiltInNameIter = "iter";
         const string BuiltInNameNext = "next";
         const string BuiltInNameReversed = "reversed";
+        const string BuiltInNameSet = "set";
+        const string BuiltInNameFrozenSet = "frozenset";
 
         #endregion
     }

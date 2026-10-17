@@ -58,6 +58,12 @@ namespace Chow.Code
             {
                 // Each kind of iterator names itself; see GetTypeName(SourceValue).
                 DataType.Iterator, "iterator"
+            },
+            {
+                DataType.Set, "set"
+            },
+            {
+                DataType.FrozenSet, "frozenset"
             }
         };
 

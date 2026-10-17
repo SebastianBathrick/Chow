@@ -15,6 +15,8 @@ public class LanguageFeatureTests
     [TestCaseSource(nameof(ExecuteIterationCases))]
     [TestCaseSource(nameof(ExecuteDictionaryCases))]
     [TestCaseSource(nameof(ExecuteIteratorCases))]
+    [TestCaseSource(nameof(ExecuteSetCases))]
+    [TestCaseSource(nameof(ExecuteSetAlgebraCases))]
     [TestCaseSource(nameof(ExecuteCollectionSubscriptAndAssignmentCases))]
     [TestCaseSource(nameof(ExecuteFunctionScopeAndClosureCases))]
     [TestCaseSource(nameof(ExecuteClassCases))]
@@ -52,6 +54,30 @@ public class LanguageFeatureTests
         Assert.That(exception!.Message, Does.StartWith("KeyError: 'missing'"));
     }
 
+    [TestCase("set([1, 2]).remove(3)", "3")]
+    [TestCase("set([1, 2]).remove('k')", "'k'")]
+    [TestCase("set().pop()", "'pop from an empty set'")]
+    public void Execute_MissingSetElement_ThrowsKeyErrorWithPythonMessage(string sourceCode, string expectedKey)
+    {
+        var exception = Assert.Throws<SubscriptException>(() => ChowEngine.Run(sourceCode));
+
+        Assert.That(exception!.Message, Does.StartWith($"KeyError: {expectedKey} on line "));
+    }
+
+    [TestCase("frozenset().add(1)", "frozenset", "add")]
+    [TestCase("frozenset([1]).discard(1)", "frozenset", "discard")]
+    [TestCase("frozenset().intersection_update([1])", "frozenset", "intersection_update")]
+    [TestCase("frozenset().difference_update()", "frozenset", "difference_update")]
+    [TestCase("{1: 2}.values().isdisjoint([])", "dict_values", "isdisjoint")]
+    public void Execute_MissingCollectionMethod_ThrowsAttributeErrorWithPythonMessage(
+        string sourceCode, string typeName, string method)
+    {
+        var exception = Assert.Throws<AttributeException>(() => ChowEngine.Run(sourceCode));
+
+        Assert.That(exception!.Message,
+            Does.StartWith($"AttributeError: '{typeName}' object has no attribute '{method}' on line "));
+    }
+
     [TestCase("{'a': 1}.keys()[0]")]
     [TestCase("{'a': 1}.values()[0]")]
     [TestCase("{[1]: 2}")]
@@ -79,7 +105,8 @@ public class LanguageFeatureTests
     }
 
     [TestCaseSource(nameof(DictMutatedDuringIterationCases))]
-    public void Execute_DictMutatedDuringIteration_ThrowsRuntimeErrorWhereCPythonDoes(
+    [TestCaseSource(nameof(SetMutatedDuringIterationCases))]
+    public void Execute_CollectionMutatedDuringIteration_ThrowsRuntimeErrorWhereCPythonDoes(
         string sourceCode, string expectedLog, string expectedMessage)
     {
         var scope = new ChowScope();
@@ -3029,6 +3056,493 @@ public class LanguageFeatureTests
         #endregion
     ];
 
+    // Expected orders come from CPython 3.11 run with PYTHONHASHSEED=0, which Chow's sets reproduce.
+    static readonly IReadOnlyList<CaseExecute> ExecuteSetCases =
+    [
+        #region Construction and order
+
+        new(
+            "str([set(), frozenset(), set([3, 1, 2]), frozenset('abc')])",
+            "[set(), frozenset(), {1, 2, 3}, frozenset({'c', 'a', 'b'})]"
+        ),
+
+        // Colliding hashes: -1 hashes to -2, and 2**61 - 1 to 0.
+        new(
+            "str([list(set([8, 16, 1, 9, 0, 24])), set([2**61 - 1, 2**61, -2, -1, 2**62])])",
+            "[[0, 1, 8, 9, 16, 24], {2305843009213693951, 2305843009213693952, 4611686018427387904, -1, -2}]"
+        ),
+
+        // Equal numbers are one element, and the first one added is kept.
+        new(
+            "str(set([1.5, True, 0, 2.25, -1, 'x', 1, 1.0]))",
+            "{0, 1.5, 2.25, True, 'x', -1}"
+        ),
+
+        // String order comes from SipHash-1-3, CPython's string hash.
+        new(
+            "str(set(['apple', 'banana', 'cherry', 'date', 'elderberry', 'fig', 'grape']))",
+            "{'banana', 'apple', 'cherry', 'fig', 'date', 'grape', 'elderberry'}"
+        ),
+
+        new(
+            "str([set({'b': 1, 'a': 2}), set('hello'), set(range(20, 0, -3))])",
+            "[{'a', 'b'}, {'e', 'h', 'l', 'o'}, {2, 5, 8, 11, 14, 17, 20}]"
+        ),
+
+        new(
+            "str([set(frozenset(range(100, 0, -7))), frozenset(set([5, 13, 21]))])",
+            "[{65, 2, 100, 37, 72, 9, 44, 79, 16, 51, 86, 23, 58, 93, 30}, frozenset({13, 21, 5})]"
+        ),
+
+        // frozenset() of a frozenset, and its copy(), return it unchanged.
+        new(
+            """
+            fs = frozenset([1, 2])
+            str([frozenset(fs) is fs, set(fs) is fs, fs.copy() is fs])
+            """,
+            "[True, False, True]"
+        ),
+
+        new(
+            "str([set([frozenset([1, 2]), frozenset(), 3]), frozenset([frozenset('ab')])])",
+            "[{frozenset(), 3, frozenset({1, 2})}, frozenset({frozenset({'a', 'b'})})]"
+        ),
+
+        #endregion
+
+        #region Methods
+
+        new(
+            """
+            s = set()
+            log = []
+            for i in range(20):
+                s.add(i * 7 % 13)
+            s.discard(3)
+            s.discard(99)
+            s.remove(5)
+            log.append(s.pop())
+            log.append(s.pop())
+            s.add('k')
+            str([log, s, len(s)])
+            """,
+            "[[0, 1], {2, 4, 6, 7, 8, 9, 10, 11, 12, 'k'}, 10]"
+        ),
+
+        // New elements reuse the slots of removed ones.
+        new(
+            """
+            s = set(range(10))
+            for i in range(0, 10, 2):
+                s.remove(i)
+            s.update([40, 32, 8, 24])
+            str(s)
+            """,
+            "{1, 3, 5, 32, 7, 40, 9, 8, 24}"
+        ),
+
+        // pop() carries on from where the last pop stopped, even across clear().
+        new(
+            """
+            s = set([1, 2, 3])
+            a = s.pop()
+            s.clear()
+            s.update([1, 2, 3, 4])
+            str([a, s.pop(), s])
+            """,
+            "[1, 2, {1, 3, 4}]"
+        ),
+
+        new(
+            """
+            s = set(range(5, 50, 5))
+            log = []
+            while s:
+                log.append(s.pop())
+            str(log)
+            """,
+            "[35, 5, 40, 10, 45, 15, 20, 25, 30]"
+        ),
+
+        new(
+            """
+            s = set([1])
+            s.update([3, 2], 'ab', {'k': 0}, frozenset([9]))
+            s.update()
+            str(s)
+            """,
+            "{1, 2, 3, 9, 'k', 'b', 'a'}"
+        ),
+
+        new(
+            """
+            s = set([1, 2])
+            t = s.copy()
+            t.add(3)
+            str([s, t, s.copy() is s, s.copy() == s])
+            """,
+            "[{1, 2}, {1, 2, 3}, False, True]"
+        ),
+
+        new(
+            "str([set([1, 2]).isdisjoint([3, 4]), set([1, 2]).isdisjoint({2: 0}), set('ab').issubset('abc'), set([1, 2]).issubset([1]), set([1, 2, 3]).issuperset([1, 3]), frozenset([1]).issuperset(set()), set().issubset([])])",
+            "[True, False, True, False, True, True, True]"
+        ),
+
+        new(
+            "str([set([1, 2]).add(3), set([1]).discard(1), set().clear(), set().update([1])])",
+            "[None, None, None, None]"
+        ),
+
+        // Only a size change is detected, so a discard followed by an add goes unnoticed, as in CPython.
+        new(
+            """
+            log = []
+            s = set([1, 2, 3])
+            for x in s:
+                log.append(x)
+                if x == 1:
+                    s.discard(3)
+                    s.add(4)
+            str(log)
+            """,
+            "[1, 2, 4]"
+        ),
+
+        #endregion
+
+        #region Equality, membership, and hashing
+
+        new(
+            "str([set([1, 2]) == frozenset([2, 1]), set() == frozenset(), set([1]) == [1], set([1]) != set([1.0]), frozenset([True]) == set([1]), set([1]) == set([2])])",
+            "[True, True, False, False, True, False]"
+        ),
+
+        // A set needle is looked up as the equal frozenset.
+        new(
+            """
+            s = set([frozenset([1, 2]), 3])
+            str([set([2, 1]) in s, frozenset([1]) in s, 3.0 in s, 'x' not in s])
+            """,
+            "[True, False, True, True]"
+        ),
+
+        new(
+            """
+            s = set([frozenset([1, 2]), frozenset([3]), 5])
+            s.discard(set([1, 2]))
+            s.remove(set([3]))
+            str(s)
+            """,
+            "{5}"
+        ),
+
+        new(
+            """
+            d = {frozenset([1, 2]): 'a'}
+            str([d[frozenset([2, 1])], frozenset() in {frozenset(): 0}, {frozenset('ab'): 1}])
+            """,
+            "['a', True, {frozenset({'a', 'b'}): 1}]"
+        ),
+
+        new(
+            "str([bool(set()), bool(frozenset([0])), len(set('aab')), len(frozenset()), set() is set()])",
+            "[False, True, 2, 0, False]"
+        ),
+
+        #endregion
+
+        #region Literals
+
+        // {} is an empty dict, not a set.
+        new(
+            "str([{1, 2, 3}, {'a'}, {1, True, 1.0}, {0.5, -0.0, 0}, {1, 2,}, {}, set()])",
+            "[{1, 2, 3}, {'a'}, {1}, {0.5, -0.0}, {1, 2}, {}, set()]"
+        ),
+
+        // Three or more constants compile to a frozenset constant that is rebuilt from its own order,
+        // so they can be ordered differently than a literal with a variable, or with two elements.
+        new(
+            """
+            x = 7
+            str([list({7, 15, 0}), list({x, 15, 0}), list({7, 15}), list({15, 7})])
+            """,
+            "[[0, 7, 15], [0, 15, 7], [15, 7], [7, 15]]"
+        ),
+
+        // A for loop iterates a constant literal's frozenset directly, whatever its size.
+        new(
+            """
+            log = []
+            for v in {7, 15, 0}:
+                log.append(v)
+            for v in {7, 15}:
+                log.append(v)
+            str(log)
+            """,
+            "[0, 7, 15, 7, 15]"
+        ),
+
+        // Literals with the same constants share the first one's frozenset, across functions too.
+        new("str(list({0, 15, 7}))", "[0, 15, 7]"),
+        new("str([list({7, 15, 0}), list({0, 15, 7})])", "[[0, 7, 15], [0, 7, 15]]"),
+        new(
+            """
+            def f():
+                return list({0, 15, 7})
+            str([list({7, 15, 0}), f()])
+            """,
+            "[[0, 15, 7], [0, 15, 7]]"
+        ),
+
+        // Constant expressions are folded first, as CPython's AST optimizer does.
+        new(
+            "str([{-1, 2 * 3, 7, 10 // 3, 2 ** 3}, {'ab' * 2, 'x' + 'y', 'z'}, {-7, 1 - 8, 2.0 * 3}])",
+            "[{3, 6, 7, 8, -1}, {'xy', 'abab', 'z'}, {-7, 6.0}]"
+        ),
+
+        // A string CPython had already interned makes it rebuild the frozenset once more. That includes
+        // any name in the program, even one after the literal...
+        new("str(list({'red', 'green', 'blue', 'cyan'}))", "['red', 'green', 'blue', 'cyan']"),
+        new(
+            """
+            red = 1
+            str(list({'red', 'green', 'blue', 'cyan'}))
+            """,
+            "['red', 'blue', 'green', 'cyan']"
+        ),
+        new(
+            """
+            s = str(list({'red', 'green', 'blue', 'cyan'}))
+            red = 1
+            s
+            """,
+            "['red', 'blue', 'green', 'cyan']"
+        ),
+
+        // ...and some single characters, interned at CPython's startup. A one-character name doesn't
+        // count, because it is the same object as the literal.
+        new("str(list({'a', 'b', 'f'}))", "['f', 'a', 'b']"),
+        new(
+            """
+            g = 1
+            D = 2
+            str(list({'g', 'D', 'G'}))
+            """,
+            "['g', 'D', 'G']"
+        ),
+
+        #endregion
+    ];
+
+    // Expected values come from CPython 3.11 run with PYTHONHASHSEED=0.
+    static readonly IReadOnlyList<CaseExecute> ExecuteSetAlgebraCases =
+    [
+        #region Bitwise operators on ints and bools
+
+        // & binds tighter than ^, ^ tighter than |, and all three looser than + and -.
+        new(
+            "str([1 | 2 ^ 3 & 4, 1 + 2 & 3, 5 & 3 == 1, not 1 & 0, -1 & 3, -8 | 3, -5 ^ 3])",
+            "[3, 3, True, True, 3, -5, -8]"
+        ),
+
+        // Two bools give a bool; a bool with an int gives an int.
+        new(
+            "str([True & False, True | False, True ^ True, True & 1, True | 2, 1 ^ True, False | False])",
+            "[False, True, False, 1, 3, 0, False]"
+        ),
+
+        new(
+            "str([9223372036854775807 & -1, -9223372036854775807 - 1 | 1, 2 ** 40 ^ 2 ** 40 - 1])",
+            "[9223372036854775807, -9223372036854775807, 2199023255551]"
+        ),
+
+        // Constant bitwise expressions are folded, so this literal compiles to a frozenset constant.
+        new(
+            """
+            x = 7
+            str([list({3 | 4, 15 & 15, 0 ^ 0}), list({x, 15, 0})])
+            """,
+            "[[0, 7, 15], [0, 15, 7]]"
+        ),
+
+        #endregion
+
+        #region Set operators
+
+        // The result takes the left operand's type.
+        new(
+            """
+            a = set([1, 2, 3])
+            b = frozenset([2, 3, 4])
+            str([a | b, a & b, a - b, a ^ b, b | a, b & a, b - a, b ^ a])
+            """,
+            "[{1, 2, 3, 4}, {2, 3}, {1}, {1, 4}, frozenset({1, 2, 3, 4}), frozenset({2, 3}), frozenset({4}), frozenset({1, 4})]"
+        ),
+
+        // Which of two equal elements survives depends on the operand iterated: & walks the smaller
+        // set (the right one on a tie), and | keeps the left operand's elements.
+        new(
+            "str([{1, 2} & {1.0, 3}, {1} & {1.0, 2}, set([1, 2]).intersection([True, 5]), {1, 2} | {True}, {True} | {1, 2}])",
+            "[{1.0}, {1}, {True}, {1, 2}, {True, 2}]"
+        ),
+
+        // Ordering compares as subsets.
+        new(
+            "str([{1} < {1, 2}, {1, 2} < {1, 2}, {1, 2} <= {1, 2}, {1, 2} > {1}, frozenset([1]) >= set(), {1, 3} <= {1, 2}, {1} != frozenset([1])])",
+            "[True, False, True, True, True, False, False]"
+        ),
+
+        // The same set on both sides. s ^ s leaves a table of dummies, which decides where 9 goes.
+        new(
+            """
+            s = {1, 2}
+            t = s ^ s
+            t.add(9)
+            str([t, s | s, s - s, s & s, s.union(s), s.intersection(s, s)])
+            """,
+            "[{9}, {1, 2}, set(), {1, 2}, {1, 2}, {1, 2}]"
+        ),
+
+        #endregion
+
+        #region Methods
+
+        // Methods take any number of iterables of any kind.
+        new(
+            """
+            s = set(range(10))
+            str([s.union([20], 'ab', {30: 0}), s.intersection(range(5), [3, 4, 99]), s.difference([1, 2], {3: 0}, 'ab'), s.symmetric_difference({5: 0, 50: 0}), s.union(), s.intersection(), s.difference()])
+            """,
+            "[{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'b', 'a', 20, 30}, {3, 4}, {0, 4, 5, 6, 7, 8, 9}, {0, 1, 2, 3, 4, 6, 7, 8, 9, 50}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}]"
+        ),
+
+        // A frozenset's methods return new frozensets; only copy() returns it unchanged.
+        new(
+            """
+            fs = frozenset([1, 2])
+            str([fs.union([3]), fs.intersection([2]), fs.difference([1]), fs.symmetric_difference([9]), fs.union() is fs, fs.copy() is fs])
+            """,
+            "[frozenset({1, 2, 3}), frozenset({2}), frozenset({2}), frozenset({9, 2, 1}), False, True]"
+        ),
+
+        // intersection_update takes over a new table but keeps pop()'s place.
+        new(
+            """
+            s = set(range(5))
+            a = s.pop()
+            s.intersection_update(range(1, 4))
+            str([a, s, s.pop(), s])
+            """,
+            "[0, {2, 3}, 1, {2, 3}]"
+        ),
+
+        // Once more than a quarter of its slots are dummies, difference_update rebuilds the table at
+        // four times the size of what's left, which decides where 100 goes.
+        new(
+            """
+            s = set(range(40))
+            s.difference_update(range(0, 40, 2))
+            s.add(100)
+            str(s)
+            """,
+            "{1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 100}"
+        ),
+
+        // Past 50,000 elements it rebuilds at only twice the size, where 131073 lands in slot 1.
+        new(
+            """
+            s = set(range(120000))
+            s.difference_update(range(66000))
+            s.add(131073)
+            l = list(s)
+            str([len(s), l[:2], l[-2:]])
+            """,
+            "[54001, [131073, 66000], [119998, 119999]]"
+        ),
+
+        // Against a set over 8 times larger, only the common elements are looked for.
+        new(
+            """
+            s = set(range(3))
+            s.difference_update(set(range(100)))
+            s.add(7)
+            str(s)
+            """,
+            "{7}"
+        ),
+
+        new(
+            """
+            s = set([1, 2, 3])
+            s.symmetric_difference_update([3, 4])
+            t = str(s)
+            s.symmetric_difference_update(s)
+            str([t, s])
+            """,
+            "['{1, 2, 4}', set()]"
+        ),
+
+        new(
+            """
+            s = set([1, 2])
+            str([s.intersection_update(), s.difference_update(), s.symmetric_difference_update([]), s])
+            """,
+            "[None, None, None, {1, 2}]"
+        ),
+
+        #endregion
+
+        #region dict_keys
+
+        // A keys view combines with any iterable on either side, and the result is always a set.
+        new(
+            """
+            d = {1: 'a', 2: 'b', 3: 'c'}
+            str([d.keys() | {4}, d.keys() & {2, 9}, d.keys() - {1}, d.keys() ^ {3, 4}, {4} | d.keys(), [1, 2] - d.keys(), 'ab' | d.keys(), d.keys() | d.values(), d.values() | d.keys()])
+            """,
+            "[{1, 2, 3, 4}, {2}, {2, 3}, {1, 2, 4}, {1, 2, 3, 4}, set(), {1, 2, 3, 'b', 'a'}, {1, 2, 3, 'b', 'c', 'a'}, {1, 2, 3, 'b', 'c', 'a'}]"
+        ),
+
+        new(
+            """
+            d = {1: 'a', 2: 'b', 3: 'c'}
+            str([d.keys() & {1: 0}.keys(), d.keys() & frozenset([1, 9]), frozenset([1]) | d.keys(), {1: 0} | {2: 0}.keys()])
+            """,
+            "[{1}, {1}, {1, 2, 3}, {1, 2}]"
+        ),
+
+        // A keys view compares with sets and other keys views from either side, but not with lists.
+        new(
+            """
+            d = {1: 'a', 2: 'b', 3: 'c'}
+            str([{1, 2, 3} == d.keys(), d.keys() == {1, 2, 3}, d.keys() != {1}, {1} < d.keys(), d.keys() >= {1}, d.keys() > d.keys(), d.keys() <= {1: 0, 2: 0, 3: 0, 4: 0}.keys(), d.keys() == [1, 2, 3]])
+            """,
+            "[True, True, True, True, True, False, True, False]"
+        ),
+
+        new(
+            """
+            d = {1: 'a', 2: 'b', 3: 'c'}
+            str([d.keys().isdisjoint([4, 5]), d.keys().isdisjoint({1}), d.keys().isdisjoint(d.keys()), {}.keys().isdisjoint({}.keys())])
+            """,
+            "[True, False, False, True]"
+        ),
+
+        // The view reads the dict as it is now.
+        new(
+            """
+            d = {1: 'a', 2: 'b', 3: 'c'}
+            k = d.keys()
+            d[9] = 0
+            str(k & {9, 1})
+            """,
+            "{9, 1}"
+        ),
+
+        #endregion
+    ];
+
     static IEnumerable<TestCaseData> TypeErrorMessageCases()
     {
         const string pointClass = "class Point:\n    pass\n";
@@ -3043,6 +3557,33 @@ public class LanguageFeatureTests
         yield return new TestCaseData("iter(5)", "'int' object is not iterable");
         yield return new TestCaseData("iter([]) + 1", "unsupported operand type(s) for +: 'list_iterator' and 'int'");
         yield return new TestCaseData("-iter([])", "bad operand type for unary -: 'list_iterator'");
+
+        yield return new TestCaseData("set([[1]])", "unhashable type: 'list'");
+        yield return new TestCaseData("{[1], 2}", "unhashable type: 'list'");
+        yield return new TestCaseData("{set(), 1, 2}", "unhashable type: 'set'");
+        yield return new TestCaseData("set().add(set())", "unhashable type: 'set'");
+        yield return new TestCaseData("[1] in set()", "unhashable type: 'list'");
+        yield return new TestCaseData("set([1]).remove([1])", "unhashable type: 'list'");
+        yield return new TestCaseData("{1: 2}[set()]", "unhashable type: 'set'");
+        yield return new TestCaseData("set()[0]", "'set' object is not subscriptable");
+        yield return new TestCaseData("reversed(set())", "'set' object is not reversible");
+        yield return new TestCaseData("set(5)", "'int' object is not iterable");
+        yield return new TestCaseData("set() + set()", "unsupported operand type(s) for +: 'set' and 'set'");
+        yield return new TestCaseData("-frozenset()", "bad operand type for unary -: 'frozenset'");
+        yield return new TestCaseData("next(set())", "'set' object is not an iterator");
+        yield return new TestCaseData("set().isdisjoint(5)", "'int' object is not iterable");
+        yield return new TestCaseData("set([1]).issubset(5)", "'int' object is not iterable");
+        yield return new TestCaseData("set([1]).update(5)", "'int' object is not iterable");
+        yield return new TestCaseData("1.5 & 1", "unsupported operand type(s) for &: 'float' and 'int'");
+        yield return new TestCaseData("'a' ^ 'b'", "unsupported operand type(s) for ^: 'str' and 'str'");
+        yield return new TestCaseData("{1} & [1]", "unsupported operand type(s) for &: 'set' and 'list'");
+        yield return new TestCaseData("{1: 2}.values() | {1}", "unsupported operand type(s) for |: 'dict_values' and 'set'");
+        yield return new TestCaseData("{} | set()", "unsupported operand type(s) for |: 'dict' and 'set'");
+        yield return new TestCaseData("5 | {1: 2}.keys()", "'int' object is not iterable");
+        yield return new TestCaseData("{1: 2}.keys() & 5", "'int' object is not iterable");
+        yield return new TestCaseData("{1}.union(5)", "'int' object is not iterable");
+        yield return new TestCaseData("{1}.difference_update([set()])", "unhashable type: 'set'");
+        yield return new TestCaseData("{1}.intersection([[1]])", "unhashable type: 'list'");
 
         // Instances report their class's name; a class itself is a 'type'.
         yield return new TestCaseData(pointClass + "iter(Point())", "'Point' object is not iterable");
@@ -3153,6 +3694,24 @@ public class LanguageFeatureTests
             """,
             "['b']",
             "dictionary changed size during iteration").SetName("ReverseIteratorChecksSize");
+    }
+
+    // A set iterator only checks the size, so each of these is caught on the next step.
+    static IEnumerable<TestCaseData> SetMutatedDuringIterationCases()
+    {
+        const string setup = "log = []\ns = set([1, 2, 3])\n";
+        const string message = "Set changed size during iteration";
+
+        yield return new TestCaseData(setup + "for x in s:\n    log.append(x)\n    s.add(x + 10)", "[1]", message)
+            .SetName("SetAddChangesSize");
+        yield return new TestCaseData(setup + "for x in s:\n    log.append(x)\n    s.discard(x)", "[1]", message)
+            .SetName("SetDiscardChangesSize");
+        yield return new TestCaseData(setup + "for x in s:\n    log.append(x)\n    s.pop()", "[1]", message)
+            .SetName("SetPopChangesSize");
+        yield return new TestCaseData(setup + "for x in s:\n    log.append(x)\n    s.clear()", "[1]", message)
+            .SetName("SetClearChangesSize");
+        yield return new TestCaseData(setup + "it = iter(s)\nlog.append(next(it))\ns.add(9)\nlog.append(next(it))",
+            "[1]", message).SetName("SetIteratorChecksSize");
     }
 
     static readonly IReadOnlyList<CaseExecute> ExecuteIterationCases =

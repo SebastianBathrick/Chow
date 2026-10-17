@@ -21,15 +21,20 @@ namespace Chow.Interpreter.Syntax
         const string ClassMemberExpected = "def, pass, or a class variable assignment";
 
         readonly ITokenStream _tokens;
+        readonly HashSet<string> _names;
 
         /// <summary>Initializes a new instance with the tokens it will analyze.</summary>
         /// <param name="tokens">
         /// The stream of tokens used to build an AST upon calling
         /// <see cref="BuildAst"/>.
         /// </param>
-        public Parser(ITokenStream tokens)
+        /// <param name="names">
+        /// Receives the identifiers in f-string expressions, which are scanned during parsing.
+        /// </param>
+        public Parser(ITokenStream tokens, HashSet<string> names)
         {
             _tokens = tokens;
+            _names = names;
         }
 
         /// <summary>
@@ -412,7 +417,7 @@ namespace Chow.Interpreter.Syntax
                     return ParseListLiteral();
 
                 case TokenType.SymbolLeftCurly:
-                    return ParseDictLiteral();
+                    return ParseDictOrSetLiteral();
 
                 default:
                     _tokens.ConsumeMatch(TokenType.Name);
@@ -531,9 +536,20 @@ namespace Chow.Interpreter.Syntax
             return ParseBinaryLevel(ParseAnd, TokenType.KeywordOr);
         }
 
+        // Python binds & tighter than ^, and ^ tighter than |; all three bind looser than + and -.
         Node ParseBitOr()
         {
-            return ParseBinaryLevel(ParseAddOrSubtract, TokenType.SymbolPipe);
+            return ParseBinaryLevel(ParseBitXor, TokenType.SymbolPipe);
+        }
+
+        Node ParseBitXor()
+        {
+            return ParseBinaryLevel(ParseBitAnd, TokenType.SymbolCaret);
+        }
+
+        Node ParseBitAnd()
+        {
+            return ParseBinaryLevel(ParseAddOrSubtract, TokenType.SymbolAmpersand);
         }
 
         Node ParseNot()
@@ -651,7 +667,7 @@ namespace Chow.Interpreter.Syntax
         #region FString Methods
 
         // TODO: Entirely refactor FString parsing
-        static Node ParseFString(FStringTokenPayload payload, int lineNum)
+        Node ParseFString(FStringTokenPayload payload, int lineNum)
         {
             var exprParts = new List<Node>();
 
@@ -659,10 +675,11 @@ namespace Chow.Interpreter.Syntax
             {
                 var subTokens = new Scanner(
                         exprSource,
-                        TokenStreamFactory.Create())
+                        TokenStreamFactory.Create(),
+                        _names)
                     .TokenizeSourceCode();
 
-                var subParser = new Parser(subTokens);
+                var subParser = new Parser(subTokens, _names);
                 var exprNode = subParser.ParseSingleExpression();
 
                 exprParts.Add(exprNode);
@@ -704,21 +721,51 @@ namespace Chow.Interpreter.Syntax
             return new ListNode(elements, lineNum);
         }
 
-        Node ParseDictLiteral()
+        Node ParseDictOrSetLiteral()
         {
             var lineNum = _tokens.ConsumeMatch(TokenType.SymbolLeftCurly).LineNumber;
-            var keys = new List<Node>();
-            var values = new List<Node>();
 
-            if (!_tokens.IsMatch(TokenType.SymbolRightCurly))
+            // {} is an empty dict, not a set.
+            if (_tokens.TryConsumeMatch(TokenType.SymbolRightCurly))
             {
-                ParseCommaSeparatedElements(
-                    () => ParseDictEntry(keys, values),
-                    TokenType.SymbolRightCurly);
+                return new DictionaryNode(new List<Node>(), new List<Node>(), lineNum);
+            }
+
+            var first = ParseExpression();
+
+            // The first element decides: `key: value` makes a dict, a bare expression a set.
+            return _tokens.TryConsumeMatch(TokenType.SymbolColon)
+                ? ParseDictLiteralRest(first, lineNum)
+                : ParseSetLiteralRest(first, lineNum);
+        }
+
+        Node ParseDictLiteralRest(Node firstKey, int lineNum)
+        {
+            var keys = new List<Node> { firstKey };
+            var values = new List<Node> { ParseExpression() };
+
+            // Allow trailing comma: `{1: 2,}`
+            while (_tokens.TryConsumeMatch(TokenType.SymbolComma) && !_tokens.IsMatch(TokenType.SymbolRightCurly))
+            {
+                ParseDictEntry(keys, values);
             }
 
             _tokens.ConsumeMatch(TokenType.SymbolRightCurly);
             return new DictionaryNode(keys, values, lineNum);
+        }
+
+        Node ParseSetLiteralRest(Node first, int lineNum)
+        {
+            var elements = new List<Node> { first };
+
+            // Allow trailing comma: `{1, 2,}`
+            while (_tokens.TryConsumeMatch(TokenType.SymbolComma) && !_tokens.IsMatch(TokenType.SymbolRightCurly))
+            {
+                elements.Add(ParseExpression());
+            }
+
+            _tokens.ConsumeMatch(TokenType.SymbolRightCurly);
+            return new SetNode(elements, lineNum);
         }
 
         void ParseDictEntry(List<Node> keys, List<Node> values)

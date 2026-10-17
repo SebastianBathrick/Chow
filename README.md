@@ -42,7 +42,7 @@ differently from CPython, including missing features and known bugs, see
 ### Data Types
 
 - int, float, bool, str, None
-- list, dict, range
+- list, dict, set, frozenset, range
 - functions (first-class objects)
 - classes and their instances
 
@@ -52,7 +52,7 @@ differently from CPython, including missing features and known bugs, see
 - Strings: "hello"
 - F-strings: f"hi {name}"
 - True, False, None
-- List [1, 2, 3] and dict {"a": 1} literals
+- List [1, 2, 3], dict {"a": 1}, and set {1, 2} literals
 - Comments: # This is a comment
 
 ### Operators
@@ -61,6 +61,8 @@ differently from CPython, including missing features and known bugs, see
 - Comparison: ==  !=  <  <=  >  >=
 - Logical: and  or  not (short-circuit)
 - Identity/membership: is, in, not in
+- Bitwise on ints and bools: &  |  ^
+- Sets: |  &  -  ^, and subset comparisons <  <=  >  >=
 - Dict merge: |
 - Unary: -x, not x
 
@@ -99,7 +101,18 @@ differently from CPython, including missing features and known bugs, see
 - Iteration in insertion order (for k in d, list(d), etc.)
 - Methods: clear, get, keys, pop, setdefault, update, values
 - keys() and values() return live views of the dict
+- keys() views work like sets: | & - ^ with any iterable, comparisons with sets, and isdisjoint
 - Changing a dict while iterating it raises RuntimeError exactly when CPython does
+
+### Sets
+- set and frozenset, with membership (in), equality between the two, len(), and iteration
+- Operators: union |, intersection &, difference -, symmetric difference ^, and subset
+  comparisons < <= > >=
+- Methods: add, clear, copy, difference, difference_update, discard, intersection,
+  intersection_update, isdisjoint, issubset, issuperset, pop, remove, symmetric_difference,
+  symmetric_difference_update, union, update (frozenset has only the non-mutating ones)
+- frozensets are hashable, so they can be set elements and dict keys
+- Iteration order matches CPython run with PYTHONHASHSEED=0
 
 ### Ranges
 - range(stop), range(start, stop), range(start, stop, step)
@@ -111,7 +124,7 @@ differently from CPython, including missing features and known bugs, see
 
 ### Built-in Functions
 - print, input, clear, len, abs, round, min, max, range, iter, next, reversed, and type
-  constructors int, float, str, bool, list, and dict.
+  constructors int, float, str, bool, list, dict, set, and frozenset.
 
 ## Getting Started
 

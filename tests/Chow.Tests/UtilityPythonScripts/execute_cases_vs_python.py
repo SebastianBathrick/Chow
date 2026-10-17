@@ -538,6 +538,8 @@ class PythonReplRunner:
             stderr=subprocess.PIPE,
             text=True,
             encoding="utf-8",
+            # Chow's sets are ordered as CPython orders them without string-hash randomization.
+            env={**os.environ, "PYTHONHASHSEED": "0"},
         )
 
     def run_source(self, source: str) -> str:

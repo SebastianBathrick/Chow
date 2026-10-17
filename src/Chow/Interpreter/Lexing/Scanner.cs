@@ -26,7 +26,8 @@ namespace Chow.Interpreter.Lexing
     
             readonly string _sourceCode;
             readonly ITokenStream _tokenStream;
-    
+            readonly HashSet<string> _names;
+
             readonly Stack<int> _indentLevels;
             readonly Stack<char> _openingBrackets;
     
@@ -37,10 +38,12 @@ namespace Chow.Interpreter.Lexing
             /// <summary>Initializes a new Scanner instance using Chow source code.</summary>
             /// <param name="sourceCode">Null or string containing raw Chow source code or whitespace.</param>
             /// <param name="tokenStream">Stream instance to inject that will store analyzed tokens.</param>
-            public Scanner(string sourceCode, ITokenStream tokenStream)
+            /// <param name="names">Receives every identifier scanned, the names CPython interns while parsing.</param>
+            public Scanner(string sourceCode, ITokenStream tokenStream, HashSet<string> names)
             {
                 _sourceCode = sourceCode;
                 _tokenStream = tokenStream;
+                _names = names;
                 _charIdx = 0;
                 _lineNum = 1;
                 _indentLevels = new Stack<int>();
@@ -151,9 +154,14 @@ namespace Chow.Interpreter.Lexing
     
                 var lexeme = _sourceCode.Substring(startIdx, _charIdx - startIdx);
 
-                AddNewToken(Keywords.Contains(lexeme) 
-                        ? Keywords.GetTokenType(lexeme) 
-                        : TokenType.Name, lexeme, _lineNum);
+                if (Keywords.Contains(lexeme))
+                {
+                    AddNewToken(Keywords.GetTokenType(lexeme), lexeme, _lineNum);
+                    return;
+                }
+
+                _names.Add(lexeme);
+                AddNewToken(TokenType.Name, lexeme, _lineNum);
             }
     
             void ScanNewlineToken()
@@ -303,6 +311,12 @@ namespace Chow.Interpreter.Lexing
     
                     case '|':
                         tokenType = TokenType.SymbolPipe;
+                        break;
+                    case '&':
+                        tokenType = TokenType.SymbolAmpersand;
+                        break;
+                    case '^':
+                        tokenType = TokenType.SymbolCaret;
                         break;
                     case '!':
                         return TryScanCompoundOp('=', TokenType.SymbolNotEqual, "!=");

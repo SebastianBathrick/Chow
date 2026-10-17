@@ -18,6 +18,8 @@ namespace Chow.SourceData
         Instance,
         DictKeys,
         DictValues,
-        Iterator
+        Iterator,
+        Set,
+        FrozenSet
     }
 }
