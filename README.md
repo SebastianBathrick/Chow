@@ -26,9 +26,7 @@ A Python sublanguage interpreter written entirely in C# for embedding in .NET pr
 - Add functionality to an application after it's already built using Chow scripts (even AOT-compiled applications).
 
 ## Features
-The following is a list of features already implemented in Chow. For every known way Chow behaves
-differently from CPython, including missing features and known bugs, see
-[Differences from CPython](https://github.com/SebastianBathrick/Chow/blob/master/CPYTHON_DIFFERENCES.md).
+The following is a list of features already implemented in Chow.
 
 ### API
 
