@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Chow.Bytecode;
+using Chow.Interpreter.Exceptions;
 using Chow.Interpreter.VM;
 using Chow.SourceData;
 
@@ -7,6 +9,9 @@ namespace Chow.Interpreter
 {
     static class VirtualMachine
     {
+        const string HostStackExhaustedMessage =
+            "maximum recursion depth exceeded while calling into Chow from the host";
+
         public static BytecodeChunk Compile(string srcCode)
         {
             return BytecodeConverter.Compile(srcCode);
@@ -14,6 +19,7 @@ namespace Chow.Interpreter
 
         public static void Run(BytecodeChunk chunk, Scope globalScope, out SourceValue result)
         {
+            ThrowIfHostStackExhausted();
             var processor = new Processor(globalScope, chunk);
             
             // Returns the result of the last expression statement to execute or SourceValue.None
@@ -32,8 +38,28 @@ namespace Chow.Interpreter
 
             // Everything else — Chow closures, bound methods, classes, other host delegate shapes —
             // is run by a Processor, which applies the same call rules compiled code goes through.
+            ThrowIfHostStackExhausted();
             var processor = new Processor(FindModuleScope(ref func));
             returnVal = processor.CallValue(func, args);
+        }
+
+        /// <summary>
+        /// Throws a <see cref="RecursionException"/> when the C# stack is close to overflowing. Chow
+        /// calls don't use the C# stack, but a host callback that calls back into Chow nests a new
+        /// Processor on it each time, and an overflow would end the host's process instead of raising
+        /// an error. The recursion limit can't rule this out, because the stack's size depends on the
+        /// host's thread.
+        /// </summary>
+        static void ThrowIfHostStackExhausted()
+        {
+            try
+            {
+                RuntimeHelpers.EnsureSufficientExecutionStack();
+            }
+            catch (InsufficientExecutionStackException)
+            {
+                throw new RecursionException(HostStackExhaustedMessage);
+            }
         }
 
         /// <summary>

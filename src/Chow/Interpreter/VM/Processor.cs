@@ -690,8 +690,21 @@ namespace Chow.Interpreter.VM
                 return ExecuteConstructInstance((SourceClass)calleeValue.ToISourceObject(), args);
             }
 
+            // The host may call back into Chow, which has to keep counting this call stack's frames.
+            SourceValue result;
+            _callStack.EnterHostCall();
+
+            try
+            {
+                result = CallInteropFunction(calleeValue, args);
+            }
+            finally
+            {
+                _callStack.ExitHostCall();
+            }
+
             // Pushed here rather than inside, so every interop shape leaves exactly one value behind.
-            _valStack.Push(CallInteropFunction(calleeValue, args));
+            _valStack.Push(result);
             return GoToNextInstruction;
         }
 

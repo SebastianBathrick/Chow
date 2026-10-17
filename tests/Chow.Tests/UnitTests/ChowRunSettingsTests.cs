@@ -214,4 +214,112 @@ public class ChowRunSettingsTests
     }
 
     #endregion
+
+    #region Host Callbacks
+
+    // Like countdown, but every recursive call goes through the host, which calls back into Chow.
+    const string HostCountdownSourceCode = """
+                                           def countdown(n):
+                                               if n == 0:
+                                                   return 0
+                                               return host_countdown(n - 1)
+                                           """;
+
+    // Exposes host_countdown, which calls the scope's countdown function from the host.
+    static ChowScope CreateHostCountdownScope(ChowRunSettings settings)
+    {
+        var scope = new ChowScope();
+        scope["host_countdown"] = ChowObject.Create(
+            (Func<ChowObject, ChowObject>)(n => scope["countdown"].CallSelf(n)));
+        ChowEngine.Run(HostCountdownSourceCode, scope, settings);
+
+        return scope;
+    }
+
+    [Test]
+    public void HostCallbackRecursion_AtLimit_Succeeds()
+    {
+        var scope = CreateHostCountdownScope(WithDepth(10));
+
+        Assert.That(ChowEngine.Run("countdown(9)", scope, WithDepth(10)), Is.EqualTo((ChowObject)0L));
+    }
+
+    // Each host call into Chow runs on a new call stack, which must keep counting the frames of the
+    // call stacks waiting on the host.
+    [Test]
+    public void HostCallbackRecursion_PastLimit_ThrowsRecursionErrorOnCallLine()
+    {
+        var scope = CreateHostCountdownScope(WithDepth(10));
+
+        var exception = Assert.Throws<RecursionException>(
+            () => ChowEngine.Run("countdown(10)", scope, WithDepth(10)));
+
+        Assert.That(exception!.LineNumber, Is.EqualTo(4));
+    }
+
+    // Every level nests a new Processor on the C# stack, which may run out before the limit is
+    // reached. Either way it must be a RecursionError rather than a stack overflow ending the process.
+    [TestCase(ChowRunSettings.DefaultMaxRecursionDepth)]
+    [TestCase(ChowRunSettings.NoRecursionLimit)]
+    public void HostCallbackInfiniteRecursion_ThrowsRecursionError(int maxRecursionDepth)
+    {
+        var scope = new ChowScope();
+        scope["host_call"] = ChowObject.Create((Func<ChowObject>)(() => scope["f"].CallSelf()));
+
+        var exception = Assert.Throws<RecursionException>(
+            () => ChowEngine.Run(
+                """
+                def f():
+                    return host_call()
+                f()
+                """,
+                scope,
+                WithDepth(maxRecursionDepth)));
+
+        Assert.That(exception!.Message, Does.StartWith("RecursionError: maximum recursion depth"));
+    }
+
+    // A host callback that runs a whole program, rather than calling a function, is guarded too.
+    [Test]
+    public void HostCallbackRunningProgram_InfiniteRecursion_ThrowsRecursionError()
+    {
+        var scope = new ChowScope();
+        var program = ChowEngine.Compile("host_run()");
+        scope["host_run"] = ChowObject.Create((Action)(() => ChowEngine.Run(program, scope)));
+
+        Assert.Throws<RecursionException>(() => ChowEngine.Run(program, scope));
+    }
+
+    // Host calls made one after another, rather than nested, must not add up.
+    [Test]
+    public void HostCallbacksInSequence_DoNotAccumulateDepth()
+    {
+        var scope = CreateHostCountdownScope(WithDepth(10));
+
+        Assert.DoesNotThrow(
+            () => ChowEngine.Run(
+                """
+                def repeat():
+                    for i in range(100):
+                        countdown(5)
+                repeat()
+                """,
+                scope,
+                WithDepth(10)));
+    }
+
+    [Test]
+    public void HostCallbackRecursionError_LaterRunsStartFromZeroDepth()
+    {
+        var scope = CreateHostCountdownScope(WithDepth(10));
+        Assert.Catch<RecursionException>(() => ChowEngine.Run("countdown(10)", scope, WithDepth(10)));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(ChowEngine.Run("countdown(9)", scope, WithDepth(10)), Is.EqualTo((ChowObject)0L));
+            Assert.That(ChowEngine.Run(CountdownFrom(999)), Is.EqualTo((ChowObject)0L));
+        });
+    }
+
+    #endregion
 }
