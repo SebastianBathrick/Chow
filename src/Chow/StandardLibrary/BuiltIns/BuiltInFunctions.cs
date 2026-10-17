@@ -272,6 +272,8 @@ namespace Chow.StandardLibrary.BuiltIns
                 case DataType.List:
                 case DataType.Dict:
                 case DataType.Range:
+                case DataType.DictKeys:
+                case DataType.DictValues:
                     return new SourceValue(value.ToISourceObject().Length);
             }
 

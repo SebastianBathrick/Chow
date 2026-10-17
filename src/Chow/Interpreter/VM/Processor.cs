@@ -272,14 +272,17 @@ namespace Chow.Interpreter.VM
             var needle = _valStack.Pop();
             bool found;
 
-            if (container.DataType == DataType.Dict || container.DataType == DataType.List)
+            switch (container.DataType)
             {
-                found = container.ToISourceObject().Contains(needle);
-            }
-            else
-            {
-                throw new DataTypeException(
-                    $"argument of type '{DataTypeNames.GetTypeName(container.DataType)}' is not iterable");
+                case DataType.Dict:
+                case DataType.List:
+                case DataType.DictKeys:
+                case DataType.DictValues:
+                    found = container.ToISourceObject().Contains(needle);
+                    break;
+                default:
+                    throw new DataTypeException(
+                        $"argument of type '{DataTypeNames.GetTypeName(container.DataType)}' is not iterable");
             }
 
             _valStack.Push(new SourceValue(negate ? !found : found));
@@ -546,7 +549,8 @@ namespace Chow.Interpreter.VM
                 keys[i] = _valStack.Pop();
             }
 
-            var dict = SourceObjectFactory.CreateNewObject(DataType.Dict);
+            // Presized by pair count, like CPython's BUILD_MAP, so the entry layout matches CPython.
+            var dict = new SourceDict(pairCount);
 
             for (var i = 0; i < pairCount; i++)
             {

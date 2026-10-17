@@ -205,9 +205,14 @@ namespace Chow.SourceData
                     return SourceDict.ElementsEqual(
                         (SourceDict)l.ToObject(),
                         (SourceDict)r.ToObject());
+                case DataType.DictKeys:
+                    // Keys views compare like sets: same size and same keys, order ignored.
+                    return ((SourceObject)l.ToObject()).EqualsTo((SourceObject)r.ToObject());
                 case DataType.Range:
                 case DataType.Object:
+                case DataType.DictValues:
                     // Chow ranges/objects do not have Python structural equality yet; preserve identity behavior.
+                    // Values views have no structural equality in Python either.
                     return ReferenceEquals(l.ToObject(), r.ToObject());
                 default:
                     return false;

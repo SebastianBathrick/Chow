@@ -23,7 +23,7 @@ namespace Chow.SourceData
 
         public override string ToRepresentation()
         {
-            return string.Format(ReprFormat, Start, Stop, Step);
+            return string.Format(ReprFormat, Start.ToRepresentation(), Stop.ToRepresentation(), Step.ToRepresentation());
         }
     }
 }

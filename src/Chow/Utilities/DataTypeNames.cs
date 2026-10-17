@@ -48,6 +48,12 @@ namespace Chow.Code
             },
             {
                 DataType.Instance, "object"
+            },
+            {
+                DataType.DictKeys, "dict_keys"
+            },
+            {
+                DataType.DictValues, "dict_values"
             }
         };
 

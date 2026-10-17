@@ -77,6 +77,8 @@ namespace Chow.SourceData
                 case DataType.Scope:
                 case DataType.Class:
                 case DataType.Instance:
+                case DataType.DictKeys:
+                case DataType.DictValues:
                 case DataType.Str:
                 case DataType.None:
                 case DataType.Long:
@@ -196,6 +198,8 @@ namespace Chow.SourceData
                 case DataType.Slice:
                 case DataType.Class:
                 case DataType.Instance:
+                case DataType.DictKeys:
+                case DataType.DictValues:
                     return ((ISourceObject)_obj).Truthiness;
                 default:
                     throw new DataTypeException(GetConversionErrorMessage(DataType, DataType.Bool));
@@ -315,6 +319,28 @@ namespace Chow.SourceData
 
                 default:
                     return _obj.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Python's <c>repr()</c>: the same as <see cref="ToString"/> except that strings are quoted
+        /// and escaped. Containers use it for their elements.
+        /// </summary>
+        internal string ToRepresentation()
+        {
+            switch (DataType)
+            {
+                case DataType.Str:
+                    return StringRepresentation.Format((string)_obj);
+
+                case DataType.None:
+                case DataType.Bool:
+                case DataType.Long:
+                case DataType.Double:
+                    return ToString();
+
+                default:
+                    return _obj is ISourceObject srcObj ? srcObj.ToRepresentation() : ToString();
             }
         }
 

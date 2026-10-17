@@ -13,6 +13,7 @@ public class LanguageFeatureTests
     [TestCaseSource(nameof(ExecuteStringConcatenationAndFStringCases))]
     [TestCaseSource(nameof(ExecuteBuiltInFunctionCases))]
     [TestCaseSource(nameof(ExecuteIterationCases))]
+    [TestCaseSource(nameof(ExecuteDictionaryCases))]
     [TestCaseSource(nameof(ExecuteCollectionSubscriptAndAssignmentCases))]
     [TestCaseSource(nameof(ExecuteFunctionScopeAndClosureCases))]
     [TestCaseSource(nameof(ExecuteClassCases))]
@@ -38,6 +39,41 @@ public class LanguageFeatureTests
     public void Execute_InvalidClassCallArity_ThrowsDataTypeException(string sourceCode)
     {
         Assert.Throws<DataTypeException>(() => ChowEngine.Run(sourceCode));
+    }
+
+    [TestCase("{'a': 1}['missing']")]
+    [TestCase("{'a': 1}.pop('missing')")]
+    public void Execute_MissingDictKey_ThrowsSubscriptException(string sourceCode)
+    {
+        var exception = Assert.Throws<SubscriptException>(() => ChowEngine.Run(sourceCode));
+
+        // Python: KeyError: 'missing'
+        Assert.That(exception!.Message, Does.StartWith("KeyError: 'missing'"));
+    }
+
+    [TestCase("{'a': 1}.keys()[0]")]
+    [TestCase("{'a': 1}.values()[0]")]
+    [TestCase("{[1]: 2}")]
+    [TestCase("{'a': 1}.keys() in {}")]
+    public void Execute_InvalidDictViewOrKeyUse_ThrowsDataTypeException(string sourceCode)
+    {
+        Assert.Throws<DataTypeException>(() => ChowEngine.Run(sourceCode));
+    }
+
+    [TestCaseSource(nameof(DictMutatedDuringIterationCases))]
+    public void Execute_DictMutatedDuringIteration_ThrowsRuntimeErrorWhereCPythonDoes(
+        string sourceCode, string expectedLog, string expectedMessage)
+    {
+        var scope = new ChowScope();
+
+        var exception = Assert.Throws<RuntimeErrorException>(() => ChowEngine.Run(sourceCode, scope));
+
+        Assert.Multiple(() =>
+        {
+            // The keys yielded before the error must match CPython's too.
+            Assert.That(scope["log"].ToString(), Is.EqualTo(expectedLog));
+            Assert.That(exception!.Message, Does.StartWith($"RuntimeError: {expectedMessage}"));
+        });
     }
 
     [TestCaseSource(nameof(ClassSyntaxErrorCases))]
@@ -2555,6 +2591,221 @@ public class LanguageFeatureTests
         // NOTE: Deferred niche collection syntax not yet confirmed in Chow:
         // string indexing/slicing, extended slicing edge cases, and complex destructuring assignment targets.
     ];
+
+    // Expected values verified against Python 3.11.0. The mutation cases depend on CPython's dict
+    // layout (presizing, holes, resize compaction), which SourceDict reproduces.
+    static readonly IReadOnlyList<CaseExecute> ExecuteDictionaryCases =
+    [
+        #region Iteration
+
+        new(
+            """
+            d = {'a': 1, 'b': 2}
+            out = []
+            for k in d:
+                out.append(k)
+            str(out)
+            """,
+            "['a', 'b']"
+        ),
+
+        new(
+            """
+            d = {'a': 1, 'b': 2}
+            out = []
+            for k in d.keys():
+                out.append(k)
+            for v in d.values():
+                out.append(v)
+            str(out)
+            """,
+            "['a', 'b', 1, 2]"
+        ),
+
+        new(
+            """
+            d = {'b': 1, 'a': 2}
+            str([list(d), min(d), max(d), list(d.values())])
+            """,
+            "[['b', 'a'], 'a', 'b', [1, 2]]"
+        ),
+
+        #endregion
+
+        #region Views
+
+        // Views are live: they see keys added after they were created.
+        new(
+            """
+            d = {'a': 1}
+            k = d.keys()
+            d['b'] = 2
+            str([len(k), 'b' in k, 2 in d.values(), bool({}.keys())])
+            """,
+            "[2, True, True, False]"
+        ),
+
+        // Keys views compare like sets; values views compare by identity.
+        new(
+            "str([{'a': 1}.keys() == {'a': 2}.keys(), {'a': 1}.keys() == {'b': 1}.keys(), {'a': 1}.values() == {'a': 1}.values()])",
+            "[True, False, False]"
+        ),
+
+        new(
+            """
+            d = {'a': 1, 'b': 'x'}
+            str(d.keys()) + ' ' + str(d.values())
+            """,
+            "dict_keys(['a', 'b']) dict_values([1, 'x'])"
+        ),
+
+        #endregion
+
+        #region Keys and Repr
+
+        // Equal numbers are the same key; the first key object is kept.
+        new(
+            "str({1: 'a', 1.0: 'b', True: 'c'})",
+            "{1: 'c'}"
+        ),
+
+        new(
+            "str({'k': 'v', 'n': [\"it's\"]})",
+            "{'k': 'v', 'n': [\"it's\"]}"
+        ),
+
+        #endregion
+
+        #region Mutation During Iteration
+
+        // Changing values is allowed.
+        new(
+            """
+            d = {'a': 1}
+            for k in d:
+                d[k] = 5
+            str(d)
+            """,
+            "{'a': 5}"
+        ),
+
+        // Same size and the new key lands where iteration hasn't reached yet: no error.
+        new(
+            """
+            log = []
+            d = {'a': 1, 'b': 2, 'c': 3}
+            for x in d:
+                log.append(x)
+                if x == 'a':
+                    d.pop('c')
+                    d['q'] = 9
+            str(log)
+            """,
+            "['a', 'b', 'q']"
+        ),
+
+        // clear() swaps in a fresh table, so re-adding the same keys keeps iterating.
+        new(
+            """
+            log = []
+            d = {'a': 1, 'b': 2}
+            for x in d:
+                log.append(x)
+                d.clear()
+                d['a'] = 1
+                d['b'] = 2
+            str(log)
+            """,
+            "['a', 'b']"
+        ),
+
+        // The insert triggers a resize that compacts the hole, so 'b' is skipped.
+        new(
+            """
+            log = []
+            d = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5}
+            for x in d:
+                log.append(x)
+                if x == 'a':
+                    d.pop('a')
+                    d['f'] = 6
+            str(log)
+            """,
+            "['a', 'c', 'd', 'e', 'f']"
+        ),
+
+        new(
+            """
+            log = []
+            d = {}
+            for ch in 'abcde':
+                d[ch] = 0
+            for x in d:
+                log.append(x)
+                if x == 'a':
+                    d.pop('a')
+                    d['f'] = 6
+            str(log)
+            """,
+            "['a', 'c', 'd', 'e', 'f']"
+        ),
+
+        #endregion
+    ];
+
+    static IEnumerable<TestCaseData> DictMutatedDuringIterationCases()
+    {
+        yield return new TestCaseData(
+            """
+            log = []
+            d = {'a': 1, 'b': 2}
+            for x in d:
+                log.append(x)
+                d.pop(x)
+                d['z' + x] = 0
+            """,
+            "['a', 'b']",
+            "dictionary keys changed during iteration").SetName("PopAndInsertEachStep");
+
+        yield return new TestCaseData(
+            """
+            log = []
+            d = {'a': 1}
+            for x in d:
+                log.append(x)
+                d['b'] = 2
+            """,
+            "['a']",
+            "dictionary changed size during iteration").SetName("InsertChangesSize");
+
+        // A 4-entry literal still has a free slot, so no resize: the swapped-in key is reached.
+        yield return new TestCaseData(
+            """
+            log = []
+            d = {'a': 1, 'b': 2, 'c': 3, 'd': 4}
+            for x in d:
+                log.append(x)
+                if x == 'a':
+                    d.pop('a')
+                    d['f'] = 6
+            """,
+            "['a', 'b', 'c', 'd']",
+            "dictionary keys changed during iteration").SetName("SwapInFourEntryLiteral");
+
+        // A 6-entry literal is presized to 16 slots, so again no resize.
+        yield return new TestCaseData(
+            """
+            log = []
+            d = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'g': 7}
+            for x in d:
+                log.append(x)
+                if x == 'a':
+                    d.pop('a')
+                    d['f'] = 6
+            """,
+            "['a', 'b', 'c', 'd', 'e', 'g']",
+            "dictionary keys changed during iteration").SetName("SwapInSixEntryLiteral");
+    }
 
     static readonly IReadOnlyList<CaseExecute> ExecuteIterationCases =
     [

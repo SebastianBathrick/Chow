@@ -15,6 +15,8 @@ namespace Chow.SourceData
         Slice,
         Scope,
         Class,
-        Instance
+        Instance,
+        DictKeys,
+        DictValues
     }
 }
