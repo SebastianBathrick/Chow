@@ -14,6 +14,7 @@ public class LanguageFeatureTests
     [TestCaseSource(nameof(ExecuteBuiltInFunctionCases))]
     [TestCaseSource(nameof(ExecuteIterationCases))]
     [TestCaseSource(nameof(ExecuteDictionaryCases))]
+    [TestCaseSource(nameof(ExecuteIteratorCases))]
     [TestCaseSource(nameof(ExecuteCollectionSubscriptAndAssignmentCases))]
     [TestCaseSource(nameof(ExecuteFunctionScopeAndClosureCases))]
     [TestCaseSource(nameof(ExecuteClassCases))]
@@ -58,6 +59,23 @@ public class LanguageFeatureTests
     public void Execute_InvalidDictViewOrKeyUse_ThrowsDataTypeException(string sourceCode)
     {
         Assert.Throws<DataTypeException>(() => ChowEngine.Run(sourceCode));
+    }
+
+    [TestCaseSource(nameof(TypeErrorMessageCases))]
+    public void Execute_UnsupportedOperation_ThrowsTypeErrorWithPythonMessage(string sourceCode, string expectedMessage)
+    {
+        var exception = Assert.Throws<DataTypeException>(() => ChowEngine.Run(sourceCode));
+
+        Assert.That(exception!.Message, Does.StartWith($"TypeError: {expectedMessage} on line "));
+    }
+
+    [Test]
+    public void Execute_NextOnExhaustedIteratorWithoutDefault_ThrowsBareStopIteration()
+    {
+        var exception = Assert.Throws<StopIterationException>(() => ChowEngine.Run("next(iter([]))"));
+
+        // Python: StopIteration carries no description.
+        Assert.That(exception!.Message, Is.EqualTo("StopIteration on line 1"));
     }
 
     [TestCaseSource(nameof(DictMutatedDuringIterationCases))]
@@ -2820,6 +2838,221 @@ public class LanguageFeatureTests
         #endregion
     ];
 
+    // Expected values verified against Python 3.11.0. Iterator reprs omit Python's memory address,
+    // following Chow's <Point object> / <function f> convention.
+    static readonly IReadOnlyList<CaseExecute> ExecuteIteratorCases =
+    [
+        #region reversed()
+
+        new(
+            "str([list(reversed([1, 2, 3])), list(reversed(range(0, 10, 3))), list(reversed(range(5, -6, -4)))])",
+            "[[3, 2, 1], [9, 6, 3, 0], [-3, 1, 5]]"
+        ),
+
+        new(
+            "str([list(reversed(range(0))), list(reversed(range(3, 3))), list(reversed(range(-1, -10, -3)))])",
+            "[[], [], [-7, -4, -1]]"
+        ),
+
+        new(
+            "str([list(reversed('abc')), list(reversed('')), list(reversed([]))])",
+            "[['c', 'b', 'a'], [], []]"
+        ),
+
+        new(
+            """
+            d = {'a': 1, 'b': 2, 'c': 3}
+            str([list(reversed(d)), list(reversed(d.keys())), list(reversed(d.values()))])
+            """,
+            "[['c', 'b', 'a'], ['c', 'b', 'a'], [3, 2, 1]]"
+        ),
+
+        #endregion
+
+        #region iter() and next()
+
+        // A for loop over a partly used iterator carries on from where it is.
+        new(
+            """
+            it = iter([1, 2, 3])
+            first = next(it)
+            rest = []
+            for x in it:
+                rest.append(x)
+            str([first, rest, next(it, 'done')])
+            """,
+            "[1, [2, 3], 'done']"
+        ),
+
+        new(
+            """
+            it = iter([1])
+            str([iter(it) is it, it == it, bool(it), next(it), next(it, None)])
+            """,
+            "[True, True, True, 1, None]"
+        ),
+
+        // Iterators hash by identity, so they work as dict keys.
+        new(
+            """
+            it = iter(range(3))
+            d = {it: 'v'}
+            str([d[it], next(it), list(it), list(it)])
+            """,
+            "['v', 0, [1, 2], []]"
+        ),
+
+        new(
+            "str([next(iter('ab')), next(reversed('ab')), next(iter({'k': 1})), next(iter({'k': 1}.values()))])",
+            "['a', 'b', 'k', 1]"
+        ),
+
+        new(
+            """
+            it = iter({'a': 1, 'b': 2}.keys())
+            str([next(it), list(it)])
+            """,
+            "['a', ['b']]"
+        ),
+
+        #endregion
+
+        #region Single Use
+
+        // Exhausted stays exhausted, even after the list grows.
+        new(
+            """
+            l = [1]
+            it = iter(l)
+            a = list(it)
+            l.append(2)
+            str([a, next(it, 'done')])
+            """,
+            "[[1], 'done']"
+        ),
+
+        // A reverse iterator stops if the list shrinks past it, and never sees appended items.
+        new(
+            """
+            l = [1, 2, 3]
+            r = reversed(l)
+            a = next(r)
+            l.pop()
+            l.pop()
+            str([a, next(r, 'done')])
+            """,
+            "[3, 'done']"
+        ),
+
+        new(
+            """
+            l = [1, 2, 3]
+            r = reversed(l)
+            a = next(r)
+            l.append(9)
+            str([a, list(r)])
+            """,
+            "[3, [2, 1]]"
+        ),
+
+        // `in` consumes the iterator up to the match.
+        new(
+            """
+            it = iter([1, 2, 3])
+            str([2 in it, list(it), 5 in it])
+            """,
+            "[True, [3], False]"
+        ),
+
+        new(
+            "str([3 in reversed([1, 2, 3]), 'b' in iter('abc'), 1 not in iter([])])",
+            "[True, True, True]"
+        ),
+
+        #endregion
+
+        #region Repr
+
+        new(
+            "str([iter([]), reversed([]), iter(range(1)), reversed(range(1)), iter('a'), reversed('a')])",
+            "[<list_iterator object>, <list_reverseiterator object>, <range_iterator object>, <range_iterator object>, <str_ascii_iterator object>, <reversed object>]"
+        ),
+
+        new(
+            """
+            d = {'a': 1}
+            str([iter(d), reversed(d), iter(d.values()), reversed(d.values()), iter(d.keys())])
+            """,
+            "[<dict_keyiterator object>, <dict_reversekeyiterator object>, <dict_valueiterator object>, <dict_reversevalueiterator object>, <dict_keyiterator object>]"
+        ),
+
+        #endregion
+
+        #region Reverse Dict Iteration With Mutation
+
+        // CPython's reverse dict iterator checks only the size, never for swapped keys.
+        new(
+            """
+            d = {'a': 1, 'b': 2, 'c': 3}
+            r = reversed(d)
+            a = next(r)
+            d.pop('a')
+            d['z'] = 0
+            str([a, list(r)])
+            """,
+            "['c', ['b']]"
+        ),
+
+        new(
+            """
+            d = {'a': 1, 'b': 2, 'c': 3}
+            r = reversed(d)
+            a = next(r)
+            d['c'] = 9
+            str([a, list(r)])
+            """,
+            "['c', ['b', 'a']]"
+        ),
+
+        new(
+            """
+            d = {'a': 1, 'b': 2, 'c': 3}
+            r = reversed(d)
+            a = next(r)
+            d.pop('b')
+            d['q'] = 1
+            str([a, list(r)])
+            """,
+            "['c', ['a']]"
+        ),
+
+        #endregion
+    ];
+
+    static IEnumerable<TestCaseData> TypeErrorMessageCases()
+    {
+        const string pointClass = "class Point:\n    pass\n";
+
+        yield return new TestCaseData("len(iter([]))", "object of type 'list_iterator' has no len()");
+        yield return new TestCaseData("iter([])[0]", "'list_iterator' object is not subscriptable");
+        yield return new TestCaseData("reversed(5)", "'int' object is not reversible");
+        yield return new TestCaseData("reversed(iter([]))", "'list_iterator' object is not reversible");
+        yield return new TestCaseData("reversed(3.5)", "'float' object is not reversible");
+        yield return new TestCaseData("next([1])", "'list' object is not an iterator");
+        yield return new TestCaseData("next([1], 0)", "'list' object is not an iterator");
+        yield return new TestCaseData("iter(5)", "'int' object is not iterable");
+        yield return new TestCaseData("iter([]) + 1", "unsupported operand type(s) for +: 'list_iterator' and 'int'");
+        yield return new TestCaseData("-iter([])", "bad operand type for unary -: 'list_iterator'");
+
+        // Instances report their class's name; a class itself is a 'type'.
+        yield return new TestCaseData(pointClass + "iter(Point())", "'Point' object is not iterable");
+        yield return new TestCaseData(pointClass + "len(Point())", "object of type 'Point' has no len()");
+        yield return new TestCaseData(pointClass + "Point()[0]", "'Point' object is not subscriptable");
+        yield return new TestCaseData(pointClass + "Point() + 1", "unsupported operand type(s) for +: 'Point' and 'int'");
+        yield return new TestCaseData(pointClass + "Point + 1", "unsupported operand type(s) for +: 'type' and 'int'");
+        yield return new TestCaseData(pointClass + "for x in Point():\n    pass", "'Point' object is not iterable");
+    }
+
     static IEnumerable<TestCaseData> DictMutatedDuringIterationCases()
     {
         yield return new TestCaseData(
@@ -2909,6 +3142,17 @@ public class LanguageFeatureTests
             """,
             "[1, 21, 3, 8]",
             "dictionary changed size during iteration").SetName("CopyUsesCPythonTableSizeFormula");
+
+        yield return new TestCaseData(
+            """
+            d = {'a': 1, 'b': 2}
+            r = reversed(d)
+            log = [next(r)]
+            d['c'] = 3
+            log.append(next(r))
+            """,
+            "['b']",
+            "dictionary changed size during iteration").SetName("ReverseIteratorChecksSize");
     }
 
     static readonly IReadOnlyList<CaseExecute> ExecuteIterationCases =

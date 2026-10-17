@@ -17,6 +17,7 @@ namespace Chow.SourceData
         Class,
         Instance,
         DictKeys,
-        DictValues
+        DictValues,
+        Iterator
     }
 }

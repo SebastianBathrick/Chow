@@ -23,14 +23,12 @@ namespace Chow.SourceData
 
         public override DataType Type => DataType.Class;
 
-        /// <summary>The class name as written in source. Used for diagnostics and instance repr.</summary>
-        public string Name { get; }
-
         /// <summary>
-        /// The name reported in error messages. A class names itself rather than its type, so a
-        /// missing attribute reads <c>'Counter' object has no attribute 'x'</c>.
+        /// The class name as written in source. Used for diagnostics and instance repr. Attribute
+        /// errors name the class itself, so a missing attribute reads
+        /// <c>'Counter' object has no attribute 'x'</c>; anywhere else a class's type is <c>type</c>.
         /// </summary>
-        public string TypeName => Name;
+        public string Name { get; }
 
         public SourceClass(string name, Dictionary<string, SourceValue> attributes)
         {
@@ -70,7 +68,7 @@ namespace Chow.SourceData
 
             return TryGetAttribute(attrName, out var value)
                 ? value
-                : throw new AttributeException(TypeName, attrName, NoLineNumber);
+                : throw new AttributeException(Name, attrName, NoLineNumber);
         }
 
         public override void SetAttribute(SourceValue name, SourceValue value)

@@ -37,9 +37,14 @@ namespace Chow.SourceData
             return false;
         }
 
-        public override IIterator GetIterator()
+        public override SourceIterator GetIterator()
         {
             return new SourceDictIterator(_dict, yieldValues: true);
+        }
+
+        public override SourceIterator GetReversedIterator()
+        {
+            return new SourceDictReverseIterator(_dict, yieldValues: true);
         }
 
         public override string ToRepresentation()

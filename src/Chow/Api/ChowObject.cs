@@ -147,7 +147,7 @@ namespace Chow
         AttributeException AttributeNotSupported(ChowObject name)
         {
             return new AttributeException(
-                DataTypeNames.GetTypeName(SourceValue.DataType),
+                DataTypeNames.GetTypeName(SourceValue),
                 name.ToString(),
                 NoLineNumber);
         }

@@ -24,10 +24,10 @@ namespace Chow.SourceData
         public SourceClass Class { get; }
 
         /// <summary>
-        /// The name reported in error messages. Instances report their class, so a missing attribute
-        /// reads <c>'Counter' object has no attribute 'x'</c>.
+        /// The name reported in error messages. Instances report their class, as in Python, so a
+        /// missing attribute reads <c>'Counter' object has no attribute 'x'</c>.
         /// </summary>
-        public string TypeName => Class.Name;
+        public override string TypeName => Class.Name;
 
         public SourceClassInstance(SourceClass sourceClass)
         {

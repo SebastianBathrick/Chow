@@ -26,9 +26,14 @@ namespace Chow.SourceData
             return _dict.ContainsKey(value);
         }
 
-        public override IIterator GetIterator()
+        public override SourceIterator GetIterator()
         {
             return new SourceDictIterator(_dict, yieldValues: false);
+        }
+
+        public override SourceIterator GetReversedIterator()
+        {
+            return new SourceDictReverseIterator(_dict, yieldValues: false);
         }
 
         public override bool EqualsTo(SourceObject other)

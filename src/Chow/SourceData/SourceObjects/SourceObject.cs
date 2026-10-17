@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Chow.Code;
 
 namespace Chow.SourceData
 {
@@ -25,6 +26,12 @@ namespace Chow.SourceData
         // ---------------- Type ----------------
 
         public abstract DataType Type { get; }
+
+        /// <summary>
+        /// (Python: <c>type(x).__name__</c>) The name error messages report for this object. Defaults
+        /// to the data type's name; types like iterators and class instances name themselves.
+        /// </summary>
+        public virtual string TypeName => DataTypeNames.GetTypeName(Type);
 
         // ---------------- String representations ----------------
 
@@ -162,13 +169,13 @@ namespace Chow.SourceData
         /// (Python: <c>__iter__</c>) Returns a fresh iterator for the
         /// VM's for-loop dispatcher.
         /// </summary>
-        public virtual IIterator GetIterator()
+        public virtual SourceIterator GetIterator()
         {
             throw new NotSupportedException(nameof(GetIterator));
         }
 
         /// <summary>(Python: <c>__reversed__</c>)</summary>
-        public virtual IIterator GetReversedIterator()
+        public virtual SourceIterator GetReversedIterator()
         {
             throw new NotSupportedException(nameof(GetReversedIterator));
         }

@@ -54,8 +54,22 @@ namespace Chow.Code
             },
             {
                 DataType.DictValues, "dict_values"
+            },
+            {
+                // Each kind of iterator names itself; see GetTypeName(SourceValue).
+                DataType.Iterator, "iterator"
             }
         };
+
+        /// <summary>
+        /// The name Python's <c>type(value).__name__</c> would give, for error messages. Objects that
+        /// name themselves, like iterators (<c>list_iterator</c>) and class instances (their class),
+        /// report that name; everything else reports its data type's.
+        /// </summary>
+        public static string GetTypeName(SourceValue value)
+        {
+            return value.ToObject() is ISourceObject srcObj ? srcObj.TypeName : GetTypeName(value.DataType);
+        }
 
         public static string GetTypeName(DataType dataType)
         {

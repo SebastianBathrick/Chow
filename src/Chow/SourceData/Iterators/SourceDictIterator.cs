@@ -3,14 +3,17 @@ using Chow.Interpreter.Exceptions;
 namespace Chow.SourceData
 {
     /// <summary>
-    /// Iterates a dict's keys or values. A port of CPython 3.11's <c>dictiter_iternextkey</c>, so
-    /// mutating the dict mid-loop raises (or doesn't) exactly when CPython does.
+    /// Iterates a dict's keys or values. (Python: <c>dict_keyiterator</c> / <c>dict_valueiterator</c>)
+    /// A port of CPython 3.11's <c>dictiter_iternextkey</c>, so mutating the dict mid-loop raises (or
+    /// doesn't) exactly when CPython does.
     /// </summary>
-    sealed class SourceDictIterator : IIterator
+    sealed class SourceDictIterator : SourceIterator
     {
-        const string ChangedSizeError = "dictionary changed size during iteration";
+        internal const string ChangedSizeError = "dictionary changed size during iteration";
+        internal const int InvalidatedUsed = -1;
         const string KeysChangedError = "dictionary keys changed during iteration";
-        const int InvalidatedUsed = -1;
+        const string KeyIteratorTypeName = "dict_keyiterator";
+        const string ValueIteratorTypeName = "dict_valueiterator";
 
         readonly SourceDict _dict;
         readonly bool _yieldValues;
@@ -27,7 +30,9 @@ namespace Chow.SourceData
             _remaining = dict.Length;
         }
 
-        public bool TryMoveNext(out SourceValue current)
+        public override string TypeName => _yieldValues ? ValueIteratorTypeName : KeyIteratorTypeName;
+
+        public override bool TryMoveNext(out SourceValue current)
         {
             current = SourceValue.None;
 

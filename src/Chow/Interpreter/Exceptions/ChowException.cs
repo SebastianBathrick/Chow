@@ -25,12 +25,18 @@ namespace Chow.Interpreter.Exceptions
 
         /// <summary>
         /// The error formatted as <c>ErrorName: description on line N</c>, omitting the line suffix
-        /// when <see cref="LineNumber"/> is <c>null</c>.
+        /// when <see cref="LineNumber"/> is <c>null</c>. An error with no description, such as
+        /// <c>StopIteration</c>, is just its name, as Python prints it.
         /// </summary>
         // TODO: Add the line's source code to the exception message
-        public override string Message => LineNumber.HasValue
-            ? $"{ErrorName}: {_description} on line {LineNumber.Value}"
-            : $"{ErrorName}: {_description}";
+        public override string Message
+        {
+            get
+            {
+                var error = string.IsNullOrEmpty(_description) ? ErrorName : $"{ErrorName}: {_description}";
+                return LineNumber.HasValue ? $"{error} on line {LineNumber.Value}" : error;
+            }
+        }
 
         private protected ChowException(string errorName, string description, int? lineNumber)
         {

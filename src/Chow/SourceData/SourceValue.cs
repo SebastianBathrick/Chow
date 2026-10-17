@@ -80,6 +80,7 @@ namespace Chow.SourceData
                 case DataType.Instance:
                 case DataType.DictKeys:
                 case DataType.DictValues:
+                case DataType.Iterator:
                 case DataType.Str:
                 case DataType.None:
                 case DataType.Long:
@@ -160,7 +161,7 @@ namespace Chow.SourceData
             }
 
             // A host object that isn't a delegate is as uncallable as any Chow value.
-            throw new DataTypeException($"'{DataTypeNames.GetTypeName(DataType)}' object is not callable");
+            throw new DataTypeException($"'{DataTypeNames.GetTypeName(this)}' object is not callable");
         }
 
         #endregion
@@ -201,9 +202,10 @@ namespace Chow.SourceData
                 case DataType.Instance:
                 case DataType.DictKeys:
                 case DataType.DictValues:
+                case DataType.Iterator:
                     return ((ISourceObject)_obj).Truthiness;
                 default:
-                    throw new DataTypeException(GetConversionErrorMessage(DataType, DataType.Bool));
+                    throw new DataTypeException(GetConversionErrorMessage(this, DataType.Bool));
             }
         }
 
@@ -226,7 +228,7 @@ namespace Chow.SourceData
                     return StringToLong();
 
                 default:
-                    throw new DataTypeException(GetConversionErrorMessage(DataType, DataType.Long));
+                    throw new DataTypeException(GetConversionErrorMessage(this, DataType.Long));
             }
 
         }
@@ -248,7 +250,7 @@ namespace Chow.SourceData
                     return StringToDouble();
 
                 default:
-                    throw new DataTypeException(GetConversionErrorMessage(DataType, DataType.Double));
+                    throw new DataTypeException(GetConversionErrorMessage(this, DataType.Double));
             }
         }
 
@@ -360,10 +362,10 @@ namespace Chow.SourceData
             sb.Append(ToRepresentation());
         }
 
-        static string GetConversionErrorMessage(DataType fromDataType, DataType toDataType)
+        static string GetConversionErrorMessage(SourceValue fromValue, DataType toDataType)
         {
             return
-                $"Cannot convert {DataTypeNames.GetTypeName(fromDataType)} to {DataTypeNames.GetTypeName(toDataType)}";
+                $"Cannot convert {DataTypeNames.GetTypeName(fromValue)} to {DataTypeNames.GetTypeName(toDataType)}";
         }
 
         #endregion

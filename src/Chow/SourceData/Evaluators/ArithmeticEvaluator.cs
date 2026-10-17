@@ -85,7 +85,7 @@ namespace Chow.SourceData
 
         public static SourceValue Add(ref SourceValue r, ref SourceValue l)
         {
-            switch (GetConversionDataType(AdditionConversionMap, l.DataType, r.DataType, Operator.Add))
+            switch (GetConversionDataType(AdditionConversionMap, ref l, ref r, Operator.Add))
             {
                 case DataType.Long:   return new SourceValue(l.ToLong()   + r.ToLong());
                 case DataType.Double: return new SourceValue(l.ToDouble() + r.ToDouble());
@@ -102,7 +102,7 @@ namespace Chow.SourceData
 
         public static SourceValue Subtract(ref SourceValue r, ref SourceValue l)
         {
-            var convDataType = GetConversionDataType(NumericConversionMap, l.DataType, r.DataType, Operator.Subtract);
+            var convDataType = GetConversionDataType(NumericConversionMap, ref l, ref r, Operator.Subtract);
             return convDataType == DataType.Long
                 ? new SourceValue(l.ToLong()   - r.ToLong())
                 : new SourceValue(l.ToDouble() - r.ToDouble());
@@ -110,7 +110,7 @@ namespace Chow.SourceData
 
         public static SourceValue Multiply(ref SourceValue r, ref SourceValue l)
         {
-            switch (GetConversionDataType(MultiplicationConversionMap, l.DataType, r.DataType, Operator.Multiply))
+            switch (GetConversionDataType(MultiplicationConversionMap, ref l, ref r, Operator.Multiply))
             {
                 case DataType.Long:   return new SourceValue(l.ToLong()   * r.ToLong());
                 case DataType.Double: return new SourceValue(l.ToDouble() * r.ToDouble());
@@ -150,8 +150,8 @@ namespace Chow.SourceData
             // Lookup validates operand types; result type is always double regardless of map value.
             GetConversionDataType(
                 NumericConversionMap,
-                l.DataType,
-                r.DataType,
+                ref l,
+                ref r,
                 Operator.Divide);
 
             var rightDbl = r.ToDouble();
@@ -171,8 +171,8 @@ namespace Chow.SourceData
         {
             var convDataType = GetConversionDataType(
                 NumericConversionMap,
-                l.DataType,
-                r.DataType,
+                ref l,
+                ref r,
                 Operator.Modulus);
 
             if (convDataType == DataType.Long)
@@ -214,8 +214,8 @@ namespace Chow.SourceData
         {
             var convDataType = GetConversionDataType(
                 NumericConversionMap,
-                l.DataType,
-                r.DataType,
+                ref l,
+                ref r,
                 Operator.FloorDivide);
 
             if (convDataType == DataType.Long)
@@ -267,8 +267,8 @@ namespace Chow.SourceData
         {
             var convDataType = GetConversionDataType(
                 NumericConversionMap,
-                l.DataType,
-                r.DataType,
+                ref l,
+                ref r,
                 Operator.Exponentiate);
 
             if (convDataType == DataType.Long)
@@ -331,7 +331,7 @@ namespace Chow.SourceData
                 case DataType.Double:
                     return new SourceValue(-operand.ToDouble());
                 default:
-                    throw UnsupportedUnary(operand.DataType, Operator.Negate);
+                    throw UnsupportedUnary(ref operand, Operator.Negate);
             }
 
         }
@@ -340,32 +340,34 @@ namespace Chow.SourceData
 
         #region Helper Methods
 
+        // Operands are passed by ref, as everywhere in the evaluators, so the hot path doesn't copy
+        // them; only the error path reads more than their DataType.
         static DataType GetConversionDataType(
-            DataType?[,] map, DataType leftDataType, DataType rightDataType, Operator op)
+            DataType?[,] map, ref SourceValue l, ref SourceValue r, Operator op)
         {
-            var convDataType = map[(int)leftDataType, (int)rightDataType];
+            var convDataType = map[(int)l.DataType, (int)r.DataType];
 
             if (convDataType.HasValue)
             {
                 return convDataType.Value;
             }
 
-            throw UnsupportedBinary(leftDataType, rightDataType, op);
+            throw UnsupportedBinary(ref l, ref r, op);
         }
 
-        static DataTypeException UnsupportedBinary(DataType leftDataType, DataType rightDataType, Operator op)
+        static DataTypeException UnsupportedBinary(ref SourceValue l, ref SourceValue r, Operator op)
         {
             // Message shape mirrors Python's TypeError wording and type names.
             return new DataTypeException(
                 $"unsupported operand type(s) for {OperatorStrings.ToSource(op)}: "
-                + $"'{DataTypeNames.GetTypeName(leftDataType)}' and '{DataTypeNames.GetTypeName(rightDataType)}'");
+                + $"'{DataTypeNames.GetTypeName(l)}' and '{DataTypeNames.GetTypeName(r)}'");
         }
 
-        static DataTypeException UnsupportedUnary(DataType operandDataType, Operator op)
+        static DataTypeException UnsupportedUnary(ref SourceValue operand, Operator op)
         {
             return new DataTypeException(
                 $"bad operand type for unary {OperatorStrings.ToSource(op)}: "
-                + $"'{DataTypeNames.GetTypeName(operandDataType)}'");
+                + $"'{DataTypeNames.GetTypeName(operand)}'");
         }
 
         static bool IsDoubleValueZero(double divisor)

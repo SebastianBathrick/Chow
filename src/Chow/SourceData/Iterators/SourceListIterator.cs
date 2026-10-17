@@ -1,8 +1,12 @@
 namespace Chow.SourceData
 {
-    sealed class SourceListIterator : IIterator
+    /// <summary>Iterates a list front to back. (Python: <c>list_iterator</c>)</summary>
+    sealed class SourceListIterator : SourceIterator
     {
-        readonly SourceList _list;
+        const string IteratorTypeName = "list_iterator";
+
+        // Dropped once exhausted, so items appended later don't revive the iterator.
+        SourceList _list;
         int _index;
 
         public SourceListIterator(SourceList list)
@@ -11,17 +15,20 @@ namespace Chow.SourceData
             _index = 0;
         }
 
-        public bool TryMoveNext(out SourceValue current)
+        public override string TypeName => IteratorTypeName;
+
+        public override bool TryMoveNext(out SourceValue current)
         {
-            if (_index >= _list.Count)
+            if (_list != null && _index < _list.Count)
             {
-                current = SourceValue.None;
-                return false;
+                current = _list[_index];
+                _index++;
+                return true;
             }
 
-            current = _list[_index];
-            _index++;
-            return true;
+            _list = null;
+            current = SourceValue.None;
+            return false;
         }
     }
 }

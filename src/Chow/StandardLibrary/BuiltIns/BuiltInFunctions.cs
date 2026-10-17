@@ -75,6 +75,9 @@ namespace Chow.StandardLibrary.BuiltIns
             var minDef = new BuiltInDefinition(BuiltInNameMin, Min, 1, short.MaxValue);
             var maxDef = new BuiltInDefinition(BuiltInNameMax, Max, 1, short.MaxValue);
             var rangeDef = new BuiltInDefinition(BuiltInNameRange, Range, 1, 3);
+            var iterDef = new BuiltInDefinition(BuiltInNameIter, Iter, 1, 1);
+            var nextDef = new BuiltInDefinition(BuiltInNameNext, Next, 1, 2);
+            var reversedDef = new BuiltInDefinition(BuiltInNameReversed, Reversed, 1, 1);
 
             return new List<(string, object)>
             {
@@ -92,7 +95,10 @@ namespace Chow.StandardLibrary.BuiltIns
                 (roundDef.Name, BuildGuardedBuiltIn(roundDef)),
                 (minDef.Name, BuildGuardedBuiltIn(minDef)),
                 (maxDef.Name, BuildGuardedBuiltIn(maxDef)),
-                (rangeDef.Name, BuildGuardedBuiltIn(rangeDef))
+                (rangeDef.Name, BuildGuardedBuiltIn(rangeDef)),
+                (iterDef.Name, BuildGuardedBuiltIn(iterDef)),
+                (nextDef.Name, BuildGuardedBuiltIn(nextDef)),
+                (reversedDef.Name, BuildGuardedBuiltIn(reversedDef))
             };
         }
 
@@ -253,7 +259,7 @@ namespace Chow.StandardLibrary.BuiltIns
             if (args[0].DataType != DataType.Dict)
             {
                 // Python: TypeError. Chow has no kwargs/mapping protocol yet, so only dict copy is supported.
-                throw new DataTypeException($"'{DataTypeNames.GetTypeName(args[0].DataType)}' object is not iterable");
+                throw new DataTypeException($"'{DataTypeNames.GetTypeName(args[0])}' object is not iterable");
             }
 
             result.GetMethod("update")(new[] { args[0] });
@@ -277,7 +283,7 @@ namespace Chow.StandardLibrary.BuiltIns
                     return new SourceValue(value.ToISourceObject().Length);
             }
 
-            throw new DataTypeException($"object of type '{DataTypeNames.GetTypeName(value.DataType)}' has no len()");
+            throw new DataTypeException($"object of type '{DataTypeNames.GetTypeName(value)}' has no len()");
         }
 
         static SourceValue Abs(SourceValue[] args)
@@ -294,7 +300,7 @@ namespace Chow.StandardLibrary.BuiltIns
                     return new SourceValue(value.ToBool() ? 1L : 0L);
             }
 
-            throw new DataTypeException($"bad operand type for abs(): '{DataTypeNames.GetTypeName(value.DataType)}'");
+            throw new DataTypeException($"bad operand type for abs(): '{DataTypeNames.GetTypeName(value)}'");
         }
 
         static SourceValue Round(SourceValue[] args)
@@ -322,7 +328,7 @@ namespace Chow.StandardLibrary.BuiltIns
 
         static SourceValue MinMax(SourceValue[] args, bool findLess, string name)
         {
-            IIterator iterator;
+            SourceIterator iterator;
 
             if (args.Length == 1)
             {
@@ -396,12 +402,40 @@ namespace Chow.StandardLibrary.BuiltIns
             return new SourceValue(new SourceRange(start, stop, step));
         }
 
+        static SourceValue Iter(SourceValue[] args)
+        {
+            return new SourceValue(IteratorFactory.GetIterator(args[0]));
+        }
+
+        static SourceValue Next(SourceValue[] args)
+        {
+            if (args[0].DataType != DataType.Iterator)
+            {
+                throw new DataTypeException($"'{DataTypeNames.GetTypeName(args[0])}' object is not an iterator");
+            }
+
+            var iterator = (SourceIterator)args[0].ToObject();
+
+            if (iterator.TryMoveNext(out var next))
+            {
+                return next;
+            }
+
+            // Python only raises StopIteration when no default is given.
+            return args.Length == 2 ? args[1] : throw new StopIterationException();
+        }
+
+        static SourceValue Reversed(SourceValue[] args)
+        {
+            return new SourceValue(IteratorFactory.GetReversedIterator(args[0]));
+        }
+
         static long RequireRangeInt(SourceValue arg)
         {
             if (arg.DataType != DataType.Long)
             {
                 throw new DataTypeException(
-                    $"'{DataTypeNames.GetTypeName(arg.DataType)}' object cannot be interpreted as an integer");
+                    $"'{DataTypeNames.GetTypeName(arg)}' object cannot be interpreted as an integer");
             }
 
             return arg;
@@ -431,6 +465,9 @@ namespace Chow.StandardLibrary.BuiltIns
         const string BuiltInNameMin = "min";
         const string BuiltInNameMax = "max";
         const string BuiltInNameRange = "range";
+        const string BuiltInNameIter = "iter";
+        const string BuiltInNameNext = "next";
+        const string BuiltInNameReversed = "reversed";
 
         #endregion
     }

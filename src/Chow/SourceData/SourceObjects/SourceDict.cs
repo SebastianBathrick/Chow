@@ -150,9 +150,14 @@ namespace Chow.SourceData
             return ContainsKey(value);
         }
 
-        public override IIterator GetIterator()
+        public override SourceIterator GetIterator()
         {
             return new SourceDictIterator(this, yieldValues: false);
+        }
+
+        public override SourceIterator GetReversedIterator()
+        {
+            return new SourceDictReverseIterator(this, yieldValues: false);
         }
 
         public override SourceValue GetAttribute(SourceValue name)
@@ -282,7 +287,7 @@ namespace Chow.SourceData
 
             if (args[0].DataType != DataType.Dict)
             {
-                throw new DataTypeException($"'{DataTypeNames.GetTypeName(args[0].DataType)}' object is not a dict");
+                throw new DataTypeException($"'{DataTypeNames.GetTypeName(args[0])}' object is not a dict");
             }
 
             MergeFrom((SourceDict)args[0].ToObject());

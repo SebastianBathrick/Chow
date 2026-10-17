@@ -61,9 +61,14 @@ namespace Chow.SourceData
             }
         }
 
-        public override IIterator GetIterator()
+        public override SourceIterator GetIterator()
         {
-            return new SourceRangeIterator(this);
+            return new SourceRangeIterator(this, isReversed: false);
+        }
+
+        public override SourceIterator GetReversedIterator()
+        {
+            return new SourceRangeIterator(this, isReversed: true);
         }
 
         public override string ToRepresentation()

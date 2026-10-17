@@ -33,7 +33,7 @@ namespace Chow.SourceData
                     SourceDict.Merge((SourceDict)l.ToObject(), (SourceDict)r.ToObject()));
             }
 
-            throw UnsupportedBinary(l.DataType, r.DataType, Operator.BinaryOr);
+            throw UnsupportedBinary(ref l, ref r, Operator.BinaryOr);
         }
 
         #endregion
@@ -72,12 +72,12 @@ namespace Chow.SourceData
 
         #region Error Helpers
 
-        static DataTypeException UnsupportedBinary(DataType leftDataType, DataType rightDataType, Operator op)
+        static DataTypeException UnsupportedBinary(ref SourceValue l, ref SourceValue r, Operator op)
         {
             // Message shape mirrors Python's TypeError wording and type names.
             return new DataTypeException(
                 $"unsupported operand type(s) for {OperatorStrings.ToSource(op)}: "
-                + $"'{DataTypeNames.GetTypeName(leftDataType)}' and '{DataTypeNames.GetTypeName(rightDataType)}'");
+                + $"'{DataTypeNames.GetTypeName(l)}' and '{DataTypeNames.GetTypeName(r)}'");
         }
 
         #endregion

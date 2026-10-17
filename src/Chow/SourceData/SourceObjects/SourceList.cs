@@ -54,7 +54,7 @@ namespace Chow.SourceData
                 }
                 default:
                     throw new DataTypeException(
-                        string.Format(IndexTypeErrorFormat, DataTypeNames.GetTypeName(key.DataType)));
+                        string.Format(IndexTypeErrorFormat, DataTypeNames.GetTypeName(key)));
             }
 
         }
@@ -64,7 +64,7 @@ namespace Chow.SourceData
             if (key.DataType != DataType.Long)
             {
                 throw new DataTypeException(
-                    string.Format(IndexTypeErrorFormat, DataTypeNames.GetTypeName(key.DataType)));
+                    string.Format(IndexTypeErrorFormat, DataTypeNames.GetTypeName(key)));
             }
 
             this[(int)key.ToLong()] = value;
@@ -107,9 +107,14 @@ namespace Chow.SourceData
             return false;
         }
 
-        public override IIterator GetIterator()
+        public override SourceIterator GetIterator()
         {
             return new SourceListIterator(this);
+        }
+
+        public override SourceIterator GetReversedIterator()
+        {
+            return new SourceListReverseIterator(this);
         }
 
         public override bool EqualsTo(SourceObject other)
@@ -164,7 +169,7 @@ namespace Chow.SourceData
             if (args[0].DataType != DataType.Long)
             {
                 throw new DataTypeException(
-                    string.Format(IntegerArgErrorFormat, DataTypeNames.GetTypeName(args[0].DataType)));
+                    string.Format(IntegerArgErrorFormat, DataTypeNames.GetTypeName(args[0])));
             }
 
             var idx = (int)args[0];
@@ -201,7 +206,7 @@ namespace Chow.SourceData
                 if (args[0].DataType != DataType.Long)
                 {
                     throw new DataTypeException(
-                        string.Format(IntegerArgErrorFormat, DataTypeNames.GetTypeName(args[0].DataType)));
+                        string.Format(IntegerArgErrorFormat, DataTypeNames.GetTypeName(args[0])));
                 }
 
                 index = (int)args[0];
@@ -472,7 +477,7 @@ namespace Chow.SourceData
 
                 throw new DataTypeException(
                     $"Argument {i} must be of type {DataTypeNames.GetTypeName(reqTypes[i])}, "
-                    + $"but was {DataTypeNames.GetTypeName(args[i].DataType)}");
+                    + $"but was {DataTypeNames.GetTypeName(args[i])}");
             }
         }
     }

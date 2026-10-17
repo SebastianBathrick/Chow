@@ -5,7 +5,8 @@ namespace Chow.SourceData
 {
     static class IteratorFactory
     {
-        public static IIterator GetIterator(SourceValue source)
+        /// <summary>Python's <c>iter()</c>: an iterator over <paramref name="source"/>.</summary>
+        public static SourceIterator GetIterator(SourceValue source)
         {
             switch (source.DataType)
             {
@@ -14,12 +15,32 @@ namespace Chow.SourceData
                 case DataType.Dict:
                 case DataType.DictKeys:
                 case DataType.DictValues:
+                case DataType.Iterator:
                     return source.ToISourceObject().GetIterator();
                 case DataType.Str:
                     return new SourceStringIterator(source);
                 default:
                     throw new DataTypeException(
-                        $"'{DataTypeNames.GetTypeName(source.DataType)}' object is not iterable");
+                        $"'{DataTypeNames.GetTypeName(source)}' object is not iterable");
+            }
+        }
+
+        /// <summary>Python's <c>reversed()</c>: an iterator over <paramref name="source"/> back to front.</summary>
+        public static SourceIterator GetReversedIterator(SourceValue source)
+        {
+            switch (source.DataType)
+            {
+                case DataType.List:
+                case DataType.Range:
+                case DataType.Dict:
+                case DataType.DictKeys:
+                case DataType.DictValues:
+                    return source.ToISourceObject().GetReversedIterator();
+                case DataType.Str:
+                    return new SourceReversedIterator(source);
+                default:
+                    throw new DataTypeException(
+                        $"'{DataTypeNames.GetTypeName(source)}' object is not reversible");
             }
         }
     }

@@ -104,7 +104,7 @@ namespace Chow.SourceData
 
         static bool EvaluateOrdering(ref SourceValue l, ref SourceValue r, Operator op)
         {
-            switch (GetConversionDataType(l.DataType, r.DataType, op))
+            switch (GetConversionDataType(ref l, ref r, op))
             {
                 case DataType.Long:
                     return CompareLong(l.ToLong(), r.ToLong(), op);
@@ -211,8 +211,9 @@ namespace Chow.SourceData
                 case DataType.Range:
                 case DataType.Object:
                 case DataType.DictValues:
+                case DataType.Iterator:
                     // Chow ranges/objects do not have Python structural equality yet; preserve identity behavior.
-                    // Values views have no structural equality in Python either.
+                    // Values views and iterators have no structural equality in Python either.
                     return ReferenceEquals(l.ToObject(), r.ToObject());
                 default:
                     return false;
@@ -244,9 +245,9 @@ namespace Chow.SourceData
             }
         }
 
-        static DataType GetConversionDataType(DataType leftDataType, DataType rightDataType, Operator op)
+        static DataType GetConversionDataType(ref SourceValue l, ref SourceValue r, Operator op)
         {
-            var mapKey = (left: leftDataType, right: rightDataType);
+            var mapKey = (left: l.DataType, right: r.DataType);
 
             if (DataTypeConversionMap.TryGetValue(mapKey, out var convDataType))
             {
@@ -255,7 +256,7 @@ namespace Chow.SourceData
 
             throw new DataTypeException(
                 $"unsupported operand type(s) for {OperatorStrings.ToSource(op)}: "
-                + $"'{DataTypeNames.GetTypeName(leftDataType)}' and '{DataTypeNames.GetTypeName(rightDataType)}'");
+                + $"'{DataTypeNames.GetTypeName(l)}' and '{DataTypeNames.GetTypeName(r)}'");
         }
 
         #endregion

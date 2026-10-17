@@ -81,9 +81,10 @@ namespace Chow.SourceData
                 case DataType.Double:
                 case DataType.Str:
                 case DataType.DictValues:
+                case DataType.Iterator:
                     return;
                 default:
-                    throw new DataTypeException($"unhashable type: '{DataTypeNames.GetTypeName(key.DataType)}'");
+                    throw new DataTypeException($"unhashable type: '{DataTypeNames.GetTypeName(key)}'");
             }
         }
 

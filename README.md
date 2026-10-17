@@ -93,14 +93,23 @@ The following is a list of features already implemented in Chow:
 - Membership (in), structural equality, len()
 
 ### Dictionaries
-- Key access/assignment, merge
-- Methods: clear, copy, get, items, keys, pop, popitem, update, values
+- Key access/assignment, membership (in), structural equality, len(), merge (|)
+- Iteration in insertion order (for k in d, list(d), etc.)
+- Methods: clear, get, keys, pop, setdefault, update, values
+- keys() and values() return live views of the dict
+- Changing a dict while iterating it raises RuntimeError exactly when CPython does
 
 ### Ranges
 - range(stop), range(start, stop), range(start, stop, step)
 
+### Iterators
+- iter(), next(), and reversed() return and advance lazy, single-use iterator objects
+  (list_iterator, range_iterator, dict_keyiterator, etc.), as in Python
+- Lists, ranges, strings, dicts, and dict views can all be reversed
+
 ### Built-in Functions
-- print, input, clear, len, abs, round, min, max, range, and type constructors int, float, str, bool, list, and dict.
+- print, input, clear, len, abs, round, min, max, range, iter, next, reversed, and type
+  constructors int, float, str, bool, list, and dict.
 
 ## Getting Started
 

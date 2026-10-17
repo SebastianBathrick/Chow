@@ -278,11 +278,12 @@ namespace Chow.Interpreter.VM
                 case DataType.List:
                 case DataType.DictKeys:
                 case DataType.DictValues:
+                case DataType.Iterator:
                     found = container.ToISourceObject().Contains(needle);
                     break;
                 default:
                     throw new DataTypeException(
-                        $"argument of type '{DataTypeNames.GetTypeName(container.DataType)}' is not iterable");
+                        $"argument of type '{DataTypeNames.GetTypeName(container)}' is not iterable");
             }
 
             _valStack.Push(new SourceValue(negate ? !found : found));
@@ -428,7 +429,7 @@ namespace Chow.Interpreter.VM
                     break;
                 default:
                     throw new AttributeException(
-                        DataTypeNames.GetTypeName(target.DataType),
+                        DataTypeNames.GetTypeName(target),
                         attrName,
                         _callStack.CurrentLineNum);
             }
@@ -465,7 +466,7 @@ namespace Chow.Interpreter.VM
                     if (!sourceClass.TryGetAttribute(attrName, out var attrValue))
                     {
                         throw new AttributeException(
-                            sourceClass.TypeName,
+                            sourceClass.Name,
                             attrName,
                             _callStack.CurrentLineNum);
                     }
@@ -480,7 +481,7 @@ namespace Chow.Interpreter.VM
                     if (!list.Directory.Contains(attrName))
                     {
                         throw new AttributeException(
-                            DataTypeNames.GetTypeName(target.DataType),
+                            DataTypeNames.GetTypeName(target),
                             attrName,
                             _callStack.CurrentLineNum);
                     }
@@ -496,7 +497,7 @@ namespace Chow.Interpreter.VM
                     if (!dict.Directory.Contains(attrName))
                     {
                         throw new AttributeException(
-                            DataTypeNames.GetTypeName(target.DataType),
+                            DataTypeNames.GetTypeName(target),
                             attrName,
                             _callStack.CurrentLineNum);
                     }
@@ -507,7 +508,7 @@ namespace Chow.Interpreter.VM
                 }
                 default:
                     throw new AttributeException(
-                        DataTypeNames.GetTypeName(target.DataType),
+                        DataTypeNames.GetTypeName(target),
                         attrName,
                         _callStack.CurrentLineNum);
             }
@@ -568,7 +569,7 @@ namespace Chow.Interpreter.VM
         {
             // PeekType the iterator (kept on stack for the whole loop); push next value or jump to
             // exhaust target.
-            var iter = (IIterator)_valStack.Peek().ToObject();
+            var iter = (SourceIterator)_valStack.Peek().ToObject();
 
             if (iter.TryMoveNext(out var current))
             {
@@ -599,13 +600,13 @@ namespace Chow.Interpreter.VM
                     break;
                 case DataType.List when index.DataType != DataType.Long:
                     throw new DataTypeException(
-                        $"list indices must be integers, not {DataTypeNames.GetTypeName(index.DataType)}");
+                        $"list indices must be integers, not {DataTypeNames.GetTypeName(index)}");
                 case DataType.List:
                     target.ToISourceObject().SetItem(index, value);
                     break;
                 default:
                     throw new DataTypeException(
-                        $"'{DataTypeNames.GetTypeName(target.DataType)}'"
+                        $"'{DataTypeNames.GetTypeName(target)}'"
                         + " object does not support item assignment");
             }
         }
@@ -632,13 +633,13 @@ namespace Chow.Interpreter.VM
                     break;
                 case DataType.List when index.DataType != DataType.Long:
                     throw new DataTypeException(
-                        $"list indices must be integers, not {DataTypeNames.GetTypeName(index.DataType)}");
+                        $"list indices must be integers, not {DataTypeNames.GetTypeName(index)}");
                 case DataType.List:
                     _valStack.Push(target.ToISourceObject().GetItem(index));
                     break;
                 default:
                     throw new DataTypeException(
-                        $"'{DataTypeNames.GetTypeName(target.DataType)}' object is not subscriptable");
+                        $"'{DataTypeNames.GetTypeName(target)}' object is not subscriptable");
             }
         }
 
@@ -653,7 +654,7 @@ namespace Chow.Interpreter.VM
             if (target.DataType != DataType.List)
             {
                 throw new DataTypeException(
-                    $"'{DataTypeNames.GetTypeName(target.DataType)}' object is not subscriptable");
+                    $"'{DataTypeNames.GetTypeName(target)}' object is not subscriptable");
             }
 
             var slice = new SourceValue(new SourceSlice(start, stop, step));
@@ -833,7 +834,7 @@ namespace Chow.Interpreter.VM
             if (args != null && args.Length != 0)
             {
                 throw new DataTypeException(
-                    $"'{DataTypeNames.GetTypeName(calleeValue.DataType)}' does not support arguments");
+                    $"'{DataTypeNames.GetTypeName(calleeValue)}' does not support arguments");
             }
         }
 
@@ -843,7 +844,7 @@ namespace Chow.Interpreter.VM
             if (actualArgsCount != expectedArgsCount)
             {
                 throw new DataTypeException(
-                    $"'{DataTypeNames.GetTypeName(calleeValue.DataType)}' expects {expectedArgsCount} "
+                    $"'{DataTypeNames.GetTypeName(calleeValue)}' expects {expectedArgsCount} "
                     + $"argument(s), got {actualArgsCount}");
             }
         }

@@ -1,28 +1,47 @@
 namespace Chow.SourceData
 {
-    sealed class SourceRangeIterator : IIterator
+    /// <summary>
+    /// Iterates a range forward or in reverse. (Python: <c>range_iterator</c>) Counts down the
+    /// remaining values like CPython's, so stepping past the last value can't overflow the bounds check.
+    /// </summary>
+    sealed class SourceRangeIterator : SourceIterator
     {
-        readonly long _stop;
+        const string IteratorTypeName = "range_iterator";
+
         readonly long _step;
         long _next;
+        int _remaining;
 
-        public SourceRangeIterator(SourceRange range)
+        public SourceRangeIterator(SourceRange range, bool isReversed)
         {
-            _next = range.Start;
-            _stop = range.Stop;
-            _step = range.Step;
+            _remaining = range.Count;
+
+            if (isReversed)
+            {
+                // CPython's range_reverse: start from the last value and step back toward the first.
+                _next = unchecked(range.Start + (_remaining - 1) * range.Step);
+                _step = unchecked(-range.Step);
+            }
+            else
+            {
+                _next = range.Start;
+                _step = range.Step;
+            }
         }
 
-        public bool TryMoveNext(out SourceValue current)
+        public override string TypeName => IteratorTypeName;
+
+        public override bool TryMoveNext(out SourceValue current)
         {
-            if (_step > 0 ? _next >= _stop : _next <= _stop)
+            if (_remaining <= 0)
             {
                 current = SourceValue.None;
                 return false;
             }
 
             current = new SourceValue(_next);
-            _next += _step;
+            _next = unchecked(_next + _step);
+            _remaining--;
             return true;
         }
     }

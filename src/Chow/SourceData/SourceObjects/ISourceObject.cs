@@ -8,6 +8,8 @@ namespace Chow.SourceData
 
         DataType Type { get; }
 
+        string TypeName { get; }
+
         // ---------------- String representations ----------------
 
         string ToRepresentation();
@@ -41,9 +43,9 @@ namespace Chow.SourceData
 
         bool Contains(SourceValue value);
 
-        IIterator GetIterator();
+        SourceIterator GetIterator();
 
-        IIterator GetReversedIterator();
+        SourceIterator GetReversedIterator();
 
         // ---------------- Equality & hashing ----------------
 
