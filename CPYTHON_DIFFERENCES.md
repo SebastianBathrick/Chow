@@ -41,6 +41,7 @@ fail with `NameError` rather than `SyntaxError`.
 | `while`/`else` | `while c: ... else: ...` | `SyntaxError` (`for`/`else` works) | Not supported |
 | Assignment expressions | `(n := 3)` | `SyntaxError` | Not supported |
 | Semicolons | `a = 1; b = 2` | `SyntaxError: Unexpected character ';'` | Not supported |
+| Statements on one line with nothing between them | `x = 1 y = 2`, `x = 1 2` | runs each statement. CPython raises `SyntaxError: invalid syntax` | Bug |
 | Backslash line continuation | `1 + \` | `SyntaxError: Unexpected character '\'` (lines continue fine inside brackets) | Not supported |
 | Unary `+` | `+1` | `SyntaxError` | Not supported |
 | `~`, `<<`, `>>` | `~5`, `1 << 2` | `SyntaxError` | Not supported |
@@ -55,8 +56,9 @@ fail with `NameError` rather than `SyntaxError`.
 | Float exponents | `1e3` | `NameError: name 'e3' is not defined` (read as `1` followed by a name) | Not supported |
 | Hex, octal and binary integers | `0x1F`, `0b101` | `NameError: name 'x1F' is not defined` | Not supported |
 | Underscores in numbers | `1_000` | `NameError: name '_000' is not defined` | Not supported |
-| Integers beyond 64 bits | `99999999999999999999` | `SyntaxError: int literal out of range` | Value model |
-| Triple-quoted strings | `'''a'''` | `SyntaxError: Unterminated string literal` | Not supported |
+| Integers beyond 64 bits | `99999999999999999999` | `SyntaxError: int literal out of range: 99999999999999999999` | Value model |
+| Triple-quoted strings | `'''a'''` | `''`, with no error: read as the adjacent literals `''`, `'a'` and `''` (see the next row). Across lines, `SyntaxError: Unterminated string literal` | Not supported |
+| Adjacent string literals | `x = 'a' 'b'` | `x` is `'a'`, with no error. The later literals run as separate statements (see "Statements on one line" below), so CPython's `'ab'` never forms | Bug |
 | Raw and bytes strings | `r'a\n'`, `b'a'` | `NameError: name 'r' is not defined` | Not supported |
 | `\x`, `\u`, `\U`, `\N{...}` and octal escapes | `'\x41'` | `SyntaxError: Unknown escape sequence '\x'`. Only `\n \t \r \\ \' \" \0 \a \b \f \v` are supported. | Not supported |
 | Unrecognized escapes | `'\d'` | `SyntaxError`. CPython keeps the backslash and warns. | Not supported |
@@ -147,6 +149,7 @@ Chow has `print`, `input`, `len`, `abs`, `round`, `min`, `max`, `range`, `iter`,
 | Behavior | Example | CPython | Chow | Status |
 |---|---|---|---|---|
 | Reading a local before it's assigned | `x = 1`, then `def f(): y = x; x = 2` | `UnboundLocalError` | reads the global `x` | Bug |
+| Chained comparisons evaluate the middle operand twice | `1 < f() < 3` | calls `f()` once | calls `f()` twice, so its side effects happen twice | Bug |
 | Missing-argument message | `f(1)` for `def f(a, b)` | `f() missing 1 required positional argument: 'b'` | `f() takes 2 positional arguments but 1 were given` | Bug (wording) |
 | Recursion limit | runaway recursion | `RecursionError: maximum recursion depth exceeded` | `RecursionError: maximum recursion depth of 1000 exceeded`. Default limit 1000, as in CPython; configurable through `ChowRunSettings`, and host callbacks count toward it. | By design |
 | Reprs leave out memory addresses and the module | `str(f)`, `str(P())`, `str(P)`, `str(iter([]))` | `<function f at 0x…>`, `<__main__.P object at 0x…>`, `<class '__main__.P'>`, `<list_iterator object at 0x…>` | `<function f>`, `<P object>`, `<class 'P'>`, `<list_iterator object>` | By design |

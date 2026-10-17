@@ -43,6 +43,7 @@ differently from CPython, including missing features and known bugs, see
 
 - int, float, bool, str, None
 - list, dict, set, frozenset, range
+- dict views (keys(), values()) and iterators
 - functions (first-class objects)
 - classes and their instances
 
@@ -75,7 +76,7 @@ differently from CPython, including missing features and known bugs, see
 
 - if / elif / else
 - while loops
-- for ... in ... loops
+- for ... in ... loops, with an optional else
 - break, continue, pass
 
 ### Functions
