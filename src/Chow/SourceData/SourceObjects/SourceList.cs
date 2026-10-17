@@ -440,7 +440,7 @@ namespace Chow.SourceData
                     sb.Append(", ");
                 }
 
-                sb.Append(_elements[i].ToRepresentation());
+                _elements[i].AppendRepresentation(sb);
             }
 
             sb.Append(']');

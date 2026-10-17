@@ -5,7 +5,7 @@ namespace Chow
     /// <summary>
     /// A piece of Chow source code that has already been compiled, created by
     /// <see cref="ChowEngine.Compile"/> and executed by
-    /// <see cref="ChowEngine.Run(ChowProgram, IChowObject, bool)"/>.
+    /// <see cref="ChowEngine.Run(ChowProgram, IChowObject, ChowRunSettings)"/>.
     /// <para>
     /// Compiling once and running the program many times skips the cost of compiling the source code
     /// on every run. A program is not tied to any scope, so the same program can run against

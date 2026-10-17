@@ -162,6 +162,20 @@ foreach (var (price, quantity) in new[] { (3L, 4L), (10L, 2L) })
 }
 ```
 
+**Configure a run:**
+
+```csharp
+using Chow;
+
+var settings = new ChowRunSettings()
+    .WithExcludeBuiltIns()          // leave out print, len, range, etc.
+    .WithMaxRecursionDepth(5000);   // defaults to 1000; 0 means no limit
+
+ChowEngine.Run("x = 1 + 2", new ChowScope(), settings);
+```
+
+Exceeding the recursion limit raises `RecursionError: maximum recursion depth of 5000 exceeded`. A scope's first run decides whether it has built-ins, so later runs on the same scope must pass the same `ExcludeBuiltIns` value.
+
 **Handle errors:**
 
 ```csharp

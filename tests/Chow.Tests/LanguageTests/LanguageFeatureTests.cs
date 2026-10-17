@@ -2674,6 +2674,12 @@ public class LanguageFeatureTests
             "{'k': 'v', 'n': [\"it's\"]}"
         ),
 
+        // Int/float keys match exactly: 2**53 + 1 is not 2.0**53.
+        new(
+            "str({9007199254740993: 'a'}.get(9007199254740992.0, 'missing'))",
+            "missing"
+        ),
+
         #endregion
 
         #region Mutation During Iteration
@@ -2750,6 +2756,67 @@ public class LanguageFeatureTests
             "['a', 'c', 'd', 'e', 'f']"
         ),
 
+        // A str-only table is rebuilt (compacting the hole) before it takes its first non-str key.
+        new(
+            """
+            log = []
+            d = {'k0': 0}
+            for x in d:
+                log.append(x)
+                d.pop('k0', 0)
+                d[5] = 0
+            str(log) + ' ' + str(d)
+            """,
+            "['k0'] {5: 0}"
+        ),
+
+        new(
+            """
+            log = []
+            d = {'a': 1, 'b': 2, 'c': 3}
+            for x in d:
+                log.append(x)
+                if x == 'a':
+                    d.pop('a')
+                    d[5] = 0
+            str(log)
+            """,
+            "['a', 'c', 5]"
+        ),
+
+        // Literals of 16+ pairs are built one key at a time, so repeated keys leave a small table
+        // that resizes (and compacts) during the loop. The 15-pair version raises instead.
+        new(
+            """
+            log = []
+            d = {'k0': 0, 'k1': 1, 'k2': 2, 'k0': 3, 'k1': 4, 'k2': 5, 'k0': 6, 'k1': 7, 'k2': 8, 'k0': 9, 'k1': 10, 'k2': 11, 'k0': 12, 'k1': 13, 'k2': 14, 'k0': 15}
+            step = 0
+            for x in d:
+                log.append(x)
+                d.pop(x, 0)
+                d['n' + str(step)] = 0
+                step = step + 1
+            str(log)
+            """,
+            "['k0', 'k1', 'k2']"
+        ),
+
+        // 20 pairs: a 17-pair chunk built key by key, then the last 3 merged in.
+        new(
+            """
+            log = []
+            d = {'k0': 0, 'k1': 1, 'k2': 2, 'k0': 3, 'k1': 4, 'k2': 5, 'k0': 6, 'k1': 7, 'k2': 8, 'k0': 9, 'k1': 10, 'k2': 11, 'k0': 12, 'k1': 13, 'k2': 14, 'k0': 15, 'k1': 16, 'k2': 17, 'k0': 18, 'k1': 19}
+            step = 0
+            for x in d:
+                log.append(x)
+                d.pop(x, 0)
+                d['n' + str(step)] = 0
+                step = step + 1
+            str(log)
+            """,
+            "['k0', 'k1', 'k2']"
+        ),
+
         #endregion
     ];
 
@@ -2805,6 +2872,43 @@ public class LanguageFeatureTests
             """,
             "['a', 'b', 'c', 'd', 'e', 'g']",
             "dictionary keys changed during iteration").SetName("SwapInSixEntryLiteral");
+
+        // 15 pairs is the largest literal CPython presizes, so the repeated keys leave a roomy table
+        // that never resizes. Compare the 16-pair case in ExecuteDictionaryCases.
+        yield return new TestCaseData(
+            """
+            log = []
+            d = {'k0': 0, 'k1': 1, 'k2': 2, 'k0': 3, 'k1': 4, 'k2': 5, 'k0': 6, 'k1': 7, 'k2': 8, 'k0': 9, 'k1': 10, 'k2': 11, 'k0': 12, 'k1': 13, 'k2': 14}
+            step = 0
+            for x in d:
+                log.append(x)
+                d.pop(x, 0)
+                d['n' + str(step)] = 0
+                step = step + 1
+            """,
+            "['k0', 'k1', 'k2']",
+            "dictionary keys changed during iteration").SetName("SwapInPresizedFifteenPairLiteral");
+
+        // CPython sizes tables with bit_length((n | 8) - 1), so copying this 4-key dict gives 16
+        // slots, not 8. With 8, the setdefault would resize and compact the table instead.
+        yield return new TestCaseData(
+            """
+            log = []
+            d = dict({5: 38, 1: 32, 21: 92, True: 72, 1: 8, 3: 42, True: 75})
+            d.pop(5, 0)
+            d[8] = 41
+            step = 0
+            for x in d:
+                log.append(x)
+                if step == 0:
+                    d.pop(1, 0)
+                    d.setdefault(2.5, 7)
+                if step == 3:
+                    d.clear()
+                step = step + 1
+            """,
+            "[1, 21, 3, 8]",
+            "dictionary changed size during iteration").SetName("CopyUsesCPythonTableSizeFormula");
     }
 
     static readonly IReadOnlyList<CaseExecute> ExecuteIterationCases =

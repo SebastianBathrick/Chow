@@ -549,15 +549,8 @@ namespace Chow.Interpreter.VM
                 keys[i] = _valStack.Pop();
             }
 
-            // Presized by pair count, like CPython's BUILD_MAP, so the entry layout matches CPython.
-            var dict = new SourceDict(pairCount);
-
-            for (var i = 0; i < pairCount; i++)
-            {
-                dict.SetItem(keys[i], values[i]);
-            }
-
-            _valStack.Push(new SourceValue(dict));
+            // Built the way CPython compiles a literal, so the entry layout matches CPython.
+            _valStack.Push(new SourceValue(SourceDict.FromLiteral(keys, values)));
         }
 
         #endregion
@@ -890,8 +883,9 @@ namespace Chow.Interpreter.VM
 
         void PushClosureStackFrame(int argCount, ISourceObject function, SourceValue[] args)
         {
-            // Checked while the caller's IP is still on the call, so an arity error reports its line.
+            // Checked while the caller's IP is still on the call, so these errors report its line.
             CallStack.ThrowIfArityMismatch(function, argCount);
+            _callStack.ThrowIfRecursionLimitReached();
 
             // A bound method's receiver goes on first so it lands in the first parameter: the body
             // binds params in reverse, popping the last one off the top.

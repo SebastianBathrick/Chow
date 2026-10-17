@@ -69,8 +69,8 @@
 
             // input() reads from Console by default, which has nothing attached in a browser.
             // Warm up a fresh scope with built-ins, then override "input" with a popup — this
-            // must happen on a scope that already has HasBuiltIns set, otherwise the next Run
-            // call would re-populate built-ins and clobber the override.
+            // must happen after the scope's first Run, which is when built-ins are added, otherwise
+            // that Run would clobber the override.
             var scope = new ChowScope();
             ChowEngine.Run(string.Empty, scope);
             scope["input"] = ChowObject.Create((Func<object[], object>)InputOverride);

@@ -13,7 +13,11 @@ namespace Chow.SourceData
     {
         readonly Dictionary<string, SourceValue> _varMap;
 
-        public bool HasBuiltIns {get; set;}
+        /// <summary>
+        /// The settings of the most recent run against this scope, or <c>null</c> if it has never
+        /// been run. Only meaningful on a module-level scope.
+        /// </summary>
+        public ChowRunSettings? RunSettings { get; set; }
 
         /// <summary>The number of variables bound in this scope. Does not consult <see cref="Parent"/>.</summary>
         public int Count => _varMap.Count;

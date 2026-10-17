@@ -112,11 +112,12 @@ public class ChowProgramTests
     }
 
     [Test]
-    public void Run_UseBuiltInsFalse_BuiltInUndefined()
+    public void Run_ExcludeBuiltIns_BuiltInUndefined()
     {
         var program = ChowEngine.Compile("len([1])");
+        var settings = new ChowRunSettings().WithExcludeBuiltIns();
 
-        Assert.Throws<UndefinedNameException>(() => ChowEngine.Run(program, useBuiltIns: false));
+        Assert.Throws<UndefinedNameException>(() => ChowEngine.Run(program, settings: settings));
     }
 
     // Source code is compiled before the scope is set up, so a compile error must not leave the

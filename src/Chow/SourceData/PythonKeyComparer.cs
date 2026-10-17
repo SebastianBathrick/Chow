@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Chow.Code;
 using Chow.Interpreter.Exceptions;
@@ -7,35 +6,25 @@ using Chow.Interpreter.Exceptions;
 namespace Chow.SourceData
 {
     /// <summary>
-    /// Compares dict keys the way Python does: equal numbers are the same key across bool, int,
-    /// and float, so <c>1</c>, <c>1.0</c>, and <c>True</c> collide. <see cref="SourceValue.Equals(SourceValue)"/>
-    /// stays type-strict because the constant pool and the public API depend on it.
+    /// Compares and hashes dict keys the way Python does: equal numbers are the same key across
+    /// bool, int, and float, so <c>1</c>, <c>1.0</c>, and <c>True</c> collide.
+    /// <see cref="SourceValue.Equals(SourceValue)"/> stays type-strict because the constant pool and
+    /// the public API depend on it.
     /// </summary>
-    sealed class PythonKeyComparer : IEqualityComparer<SourceValue>
+    static class PythonKeyComparer
     {
         // 2^63: integral doubles at or past it don't fit in a long.
         const double LongExclusiveUpperBound = 9223372036854775808.0;
 
-        public static readonly PythonKeyComparer Instance = new PythonKeyComparer();
-
-        PythonKeyComparer()
-        {
-        }
-
-        public bool Equals(SourceValue x, SourceValue y)
+        /// <summary>
+        /// Whether two hashable keys are the same key. Equal keys always have equal
+        /// <see cref="GetHash"/> values.
+        /// </summary>
+        public static bool AreEqual(SourceValue x, SourceValue y)
         {
             if (IsNumeric(x.DataType) && IsNumeric(y.DataType))
             {
-                if (x.DataType != DataType.Double && y.DataType != DataType.Double)
-                {
-                    return x.ToLong() == y.ToLong();
-                }
-
-                var l = x.ToDouble();
-                var r = y.ToDouble();
-
-                // A NaN has no object identity in a SourceValue, so it matches a NaN with the same bits.
-                return l == r || BitConverter.DoubleToInt64Bits(l) == BitConverter.DoubleToInt64Bits(r);
+                return NumbersEqual(x, y);
             }
 
             if (x.DataType != y.DataType)
@@ -48,37 +37,34 @@ namespace Chow.SourceData
                 case DataType.None:
                     return true;
                 case DataType.Str:
-                    return string.Equals(x.ToString(), y.ToString(), StringComparison.Ordinal);
+                    return string.Equals((string)x.ToObject(), (string)y.ToObject(), StringComparison.Ordinal);
                 default:
                     return ReferenceEquals(x.ToObject(), y.ToObject());
             }
         }
 
-        public int GetHashCode(SourceValue obj)
+        public static int GetHash(SourceValue key)
         {
-            switch (obj.DataType)
+            switch (key.DataType)
             {
                 case DataType.None:
                     return 0;
                 case DataType.Bool:
                 case DataType.Long:
-                    return obj.ToLong().GetHashCode();
+                    return key.ToLong().GetHashCode();
                 case DataType.Double:
                 {
-                    var value = obj.ToDouble();
+                    var value = key.ToDouble();
 
                     // Integral doubles hash like the equal int, so 1.0 and -0.0 land with 1 and 0.
-                    if (Math.Floor(value) == value && value >= long.MinValue && value < LongExclusiveUpperBound)
-                    {
-                        return ((long)value).GetHashCode();
-                    }
-
-                    return BitConverter.DoubleToInt64Bits(value).GetHashCode();
+                    return IsLongValued(value)
+                        ? ((long)value).GetHashCode()
+                        : BitConverter.DoubleToInt64Bits(value).GetHashCode();
                 }
                 case DataType.Str:
-                    return StringComparer.Ordinal.GetHashCode(obj.ToString());
+                    return key.ToObject().GetHashCode();
                 default:
-                    return RuntimeHelpers.GetHashCode(obj.ToObject());
+                    return RuntimeHelpers.GetHashCode(key.ToObject());
             }
         }
 
@@ -99,6 +85,36 @@ namespace Chow.SourceData
                 default:
                     throw new DataTypeException($"unhashable type: '{DataTypeNames.GetTypeName(key.DataType)}'");
             }
+        }
+
+        // Exact, as in Python: 2**53 + 1 is not 2.0**53, even though converting it to float would say so.
+        static bool NumbersEqual(SourceValue x, SourceValue y)
+        {
+            var isXDouble = x.DataType == DataType.Double;
+            var isYDouble = y.DataType == DataType.Double;
+
+            if (!isXDouble && !isYDouble)
+            {
+                return x.ToLong() == y.ToLong();
+            }
+
+            if (isXDouble && isYDouble)
+            {
+                var l = x.ToDouble();
+                var r = y.ToDouble();
+
+                // A NaN has no object identity in a SourceValue, so it matches a NaN with the same bits.
+                return l == r || BitConverter.DoubleToInt64Bits(l) == BitConverter.DoubleToInt64Bits(r);
+            }
+
+            var dbl = isXDouble ? x.ToDouble() : y.ToDouble();
+            var lng = isXDouble ? y.ToLong() : x.ToLong();
+            return IsLongValued(dbl) && (long)dbl == lng;
+        }
+
+        static bool IsLongValued(double value)
+        {
+            return Math.Floor(value) == value && value >= long.MinValue && value < LongExclusiveUpperBound;
         }
 
         static bool IsNumeric(DataType dataType)

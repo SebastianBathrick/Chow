@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Text;
 using Chow.Code;
 using Chow.Interpreter.Exceptions;
 
@@ -342,6 +343,21 @@ namespace Chow.SourceData
                 default:
                     return _obj is ISourceObject srcObj ? srcObj.ToRepresentation() : ToString();
             }
+        }
+
+        /// <summary>
+        /// Appends <see cref="ToRepresentation"/> to <paramref name="sb"/>, writing strings straight
+        /// into it so containers don't allocate a string per element.
+        /// </summary>
+        internal void AppendRepresentation(StringBuilder sb)
+        {
+            if (DataType == DataType.Str)
+            {
+                StringRepresentation.Append(sb, (string)_obj);
+                return;
+            }
+
+            sb.Append(ToRepresentation());
         }
 
         static string GetConversionErrorMessage(DataType fromDataType, DataType toDataType)

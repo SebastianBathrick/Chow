@@ -16,14 +16,52 @@ namespace Chow.Code
 
         public static string Format(string value)
         {
-            // Single quotes unless that would need escaping and double quotes wouldn't.
-            var quote = value.IndexOf(SingleQuote) >= 0 && value.IndexOf(DoubleQuote) < 0
-                ? DoubleQuote
-                : SingleQuote;
-
             var sb = new StringBuilder(value.Length + 2);
-            sb.Append(quote);
+            Append(sb, value);
+            return sb.ToString();
+        }
 
+        /// <summary>Appends the repr of <paramref name="value"/> to <paramref name="sb"/>.</summary>
+        public static void Append(StringBuilder sb, string value)
+        {
+            var hasSingleQuote = false;
+            var hasDoubleQuote = false;
+            var needsEscapes = false;
+
+            foreach (var ch in value)
+            {
+                if (ch == SingleQuote)
+                {
+                    hasSingleQuote = true;
+                }
+                else if (ch == DoubleQuote)
+                {
+                    hasDoubleQuote = true;
+                }
+                else if (ch < FirstPrintableAscii || ch >= AsciiDelete || ch == Backslash)
+                {
+                    // Conservative: non-ASCII may be printable, but the slow path decides.
+                    needsEscapes = true;
+                }
+            }
+
+            // Single quotes unless that would need escaping and double quotes wouldn't.
+            var quote = hasSingleQuote && !hasDoubleQuote ? DoubleQuote : SingleQuote;
+
+            // Fast path: nothing to escape, and the chosen quote never appears in the string.
+            if (!needsEscapes && !(hasSingleQuote && hasDoubleQuote))
+            {
+                sb.Append(quote).Append(value).Append(quote);
+                return;
+            }
+
+            sb.Append(quote);
+            AppendEscaped(sb, value, quote);
+            sb.Append(quote);
+        }
+
+        static void AppendEscaped(StringBuilder sb, string value, char quote)
+        {
             for (var i = 0; i < value.Length; i++)
             {
                 var ch = value[i];
@@ -81,9 +119,6 @@ namespace Chow.Code
                     i++;
                 }
             }
-
-            sb.Append(quote);
-            return sb.ToString();
         }
 
         static void AppendEscape(StringBuilder sb, int codePoint)

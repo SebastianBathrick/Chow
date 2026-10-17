@@ -14,12 +14,14 @@ namespace Chow.Interpreter.VM
     class CallStack
     {
         const string ArityErrorFormat = "{0}() takes {1} positional arguments but {2} were given";
+        const string RecursionErrorFormat = "maximum recursion depth of {0} exceeded";
 
         // The Processor attaches the current instruction's line to errors raised here.
         const int NoLineNumber = -1;
 
         readonly StackFrame _moduleLvl;
         readonly Stack<StackFrame> _callFrames;
+        readonly int _maxRecursionDepth;
 
         // Cached active frame (module frame or top call frame); kept in sync by
         // EnterFunctionCall/ExitFunctionCall so per-instruction reads avoid Count/PeekType.
@@ -65,6 +67,10 @@ namespace Chow.Interpreter.VM
             _moduleLvl = new StackFrame(moduleBytecodeChunk, moduleScope);
             _callFrames = new Stack<StackFrame>();
             CurrFrame = _moduleLvl;
+
+            // A host call into a callee that carries no scope (e.g. a class) has no module scope,
+            // and a scope that was never run has no settings, so both fall back to the defaults.
+            _maxRecursionDepth = (moduleScope?.RunSettings ?? default(ChowRunSettings)).MaxRecursionDepth;
         }
 
         /// <summary>
@@ -207,6 +213,20 @@ namespace Chow.Interpreter.VM
             {
                 throw new DataTypeException(
                     string.Format(ArityErrorFormat, sourceFunc.Name, expectedArgCount, argCount));
+            }
+        }
+
+        /// <summary>
+        /// Throws a <see cref="RecursionException"/> when entering another function call would
+        /// exceed the recursion limit. Like <see cref="ThrowIfArityMismatch"/>, it must be called
+        /// before the caller's instruction pointer moves past the call.
+        /// </summary>
+        public void ThrowIfRecursionLimitReached()
+        {
+            // The module frame isn't in _callFrames, so a limit of N allows N nested calls.
+            if (_maxRecursionDepth != ChowRunSettings.NoRecursionLimit && _callFrames.Count >= _maxRecursionDepth)
+            {
+                throw new RecursionException(string.Format(RecursionErrorFormat, _maxRecursionDepth));
             }
         }
 
